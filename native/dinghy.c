@@ -4,9 +4,9 @@
 #define FELUCCA_ID "FM-1_949"
 #include "platform.c"
 static uint32_t phase;
-static volatile uint32_t step=365072220u,gate=0,vowel=0,playing=0;
+static volatile uint32_t step=25480161u,gate=0,vowel=0,playing=0;
 static int32_t env;
-static const uint32_t tune[8]={365072220u,409868193u,460121920u,547063359u,460121920u,409868193u,365072220u,307010551u};
+static const uint32_t tune[8]={25480161u,28600489u,32102981u,38177000u,32102981u,28600489u,25480161u,21426141u};
 static int32_t sine(uint32_t ph){
     int32_t x=(int32_t)ph>>16, ax=x<0?-x:x, y=(x*(32768-ax))>>13;
     int32_t ay=y<0?-y:y;

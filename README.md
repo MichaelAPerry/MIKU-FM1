@@ -1,32 +1,34 @@
 # MIKU-FM1
 
-An experimental, original **four-track songwriting workstation** targeting the M-VAVE FM-1, with a retro digital-idol-inspired synthetic singer.
+An experimental **four-track, retro virtual-idol-inspired songwriting workstation** for the M-VAVE FM-1.
 
-**Current status: host prototype only.** No FM-1 firmware image, device validation, or hardware audio integration exists yet.
+**Status: host-only functional audio prototype.** Not a flashable FM-1 firmware.
 
-## Host prototype
+## Build and render an editable eight-bar song
 
-Requires a C11 compiler, CMake 3.16+, and Python 3.
+Requires a C11 compiler and CMake 3.16+.
 
 ```sh
 cmake -S . -B build
 cmake --build build
 ctest --test-dir build --output-on-failure
-./build/miku_demo demo.wav
+./build/miku_demo demo.wav demo.mik
 ```
 
-The demo renders a manually authored eight-note vowel melody as 16-bit mono PCM WAV using a deterministic tick-based sequencer and a three-formant synthetic voice. No proprietary voicebank, artwork, or external assets are included.
+The demo composes four patterns in C: vowel-melody, three-note FM-like chords, FM bass, and kick/snare/hat rhythm. It serializes the song to versioned CRC-checked `MIK1` bytes, decodes back to editable notes, and **renders from the decoded song** into 16-bit mono 22,050 Hz WAV.
 
-## Modules
+`demo.mik` is a structured editable event file, **not** rendered audio. The demo is fixed eight bars (120 BPM); the UI, arrangement chaining, Japanese consonants, lyrics editing, and physical instrument support remain future work.
 
-- `shared/song.h`: fixed-capacity editable note and pattern data, four track roles
-- `firmware/sequencer/`: musical time to sample time, independent of audio block size
-- `firmware/audio/vocal/`: original lightweight source-filter vowel synthesizer
-- `tools/demo.c`: command-line song-to-WAV host harness
-- `tests/`: C unit tests and WAV smoke testing
+## Architecture
 
-The host engine intentionally makes no assumptions about verified FM-1 storage, processor capacity, display driver, or firmware layout. See `docs/RESEARCH.md` and `docs/ROADMAP.md`.
+- `shared/song.h` — editable fixed-capacity 4-track event model
+- `shared/song_io.c` — versioned little-endian binary codec and CRC32
+- `firmware/sequencer/` — precomputed sorted sample-time event queues
+- `firmware/audio/vocal/` — independently written five-vowel formant synthesizer
+- `firmware/audio/band/` — original polyphonic chord FM, monophonic FM bass, electronic drums
+- `tools/demo.c` — independent host harness rendering an eight-bar song
+- `tests/` — unit, serialization, and host-demo smoke tests
 
-## Legal
+The current instruments use simplified synthesis and no effects, and there is no claim of measured audio or CPU quality on FM-1 hardware. See `docs/RESEARCH.md`, `docs/SONG_FORMAT.md`.
 
-Project-original code is MIT licensed. MIKU-FM is a working title and is not affiliated with Crypton Future Media, Yamaha, or VOCALOID. No third-party DSP or artwork was copied.
+MIT licensed original code. MIKU-FM is an unofficial working title and has no relationship to Crypton, Yamaha or VOCALOID. No voicebanks or proprietary assets are included.

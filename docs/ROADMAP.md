@@ -1,13 +1,12 @@
-# Engineering backlog
+# Progress and technical debt
 
-Completed: C11 host build, fixed-capacity song and note representation, 96 PPQN clock, precomputed sorted event queue, five vowels, song binary codec with validation and CRC32, host WAV demo, basic tests.
+Implemented: host C11 synth; 96 PPQN event queue; four sequenced track identities; simple FM-like polyphonic chords, bass, kick/snare/hat; eight-bar WAV from re-decoded MIK1 editable notes; little-endian versioned CRC32 song codec; GitHub CI tests.
 
-Next critical milestones:
-1. Add arrangement references and editing API with pattern duplication, removal and track locks.
-2. Four-track audio playback with basic FM chords, bass and synthesized drums.
-3. Consonant events, smooth formant transitions, anti-aliased excitation and envelope/release.
-4. Build an eight-bar composed four-track song that roundtrips through the file codec.
-5. Profile CPU/RAM/flash with actual FM-1 SDK and create platform adapter.
-6. Browser composer and matching codec importer/exporter.
+Limitations in current slice: 128-note maximum per pattern; the 8-bar demo uses 32 vocal, 24 chord, 32 bass and 64 drum notes. Drum engine currently single-voice (overlapping hats and kicks may choke), and the chord voice allocator supports four simultaneous notes. The vocal synth has abrupt releases and lacks consonants. No pattern chaining, song sections, external disk APIs, track solo, live editor, transport pause, MIDI or device integration.
 
-Not working: actual FM-1 firmware, file IO on device, Japanese lyrics beyond vowel index, full arranger, generative tools, UI, hardware simulator.
+Next:
+1. Polyphonic percussion and per-note ADSR releases; fix overlapping vocal note-off identity.
+2. Pattern/section arrangement references, track editing commands, undo and actual multi-song persistence.
+3. Introduce phoneme/consonant envelope and syllable editor.
+4. Add browser editor to author MIK1 files and preview rendered events.
+5. Measure on JieLi FM-1 SDK, implement hardware callback/HAL safely, then run emulator/hardware verification.

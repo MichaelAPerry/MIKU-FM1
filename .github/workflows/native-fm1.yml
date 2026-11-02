@@ -5,6 +5,13 @@ on:
     paths:
       - 'native/**'
       - '.github/workflows/native-fm1.yml'
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: false
 jobs:
   native:
     runs-on: ubuntu-24.04
@@ -33,6 +40,7 @@ jobs:
           path: build/native/miku-fm1.fwsc
 
       - name: Install existing full-system FM-1 emulator
+        id: emulator
         uses: dimmkirr/setup-fm1-emulator@v1
         with:
           install-playwright: 'false'
@@ -49,9 +57,9 @@ jobs:
               assert w.getnframes()>10000, 'short output'
               assert audioop.rms(data,w.getsampwidth())>10, 'firmware audio is silent'
           PY
-          test -s work/lcd_1000.bmp
-          cp work/lcd_*.bmp build/emulator/
-          ls -lh build/emulator/audio.wav build/emulator/lcd_*.bmp
+          # Emulator releases may write snapshots under their working directory.
+          find . -type f -name 'lcd_*.bmp' -print -exec cp {} build/emulator/ \; || true
+          ls -lh build/emulator/audio.wav
           cat build/emulator/boot.log | tail -50
       - name: Upload emulator evidence
         if: always()
@@ -61,3 +69,26 @@ jobs:
           path: |
             build/emulator/
             work/lcd_*.bmp
+
+      - name: Build public browser testing site
+        if: success()
+        env:
+          FM1_WEB: ${{ steps.emulator.outputs.web-path }}
+        run: |
+          mkdir -p build/pages/emulator
+          test -s "$FM1_WEB/fm1_web.wasm"
+          cp -R "$FM1_WEB/." build/pages/emulator/
+          cp build/native/miku-fm1.fwsc build/pages/miku-fm1.fwsc
+          cp site/index.html build/pages/index.html
+          touch build/pages/.nojekyll
+          test -s build/pages/emulator/index.html
+          test -s build/pages/miku-fm1.fwsc
+      - uses: actions/configure-pages@v5
+        if: success()
+      - uses: actions/upload-pages-artifact@v3
+        if: success()
+        with:
+          path: build/pages
+      - uses: actions/deploy-pages@v4
+        if: success()
+        id: deployment

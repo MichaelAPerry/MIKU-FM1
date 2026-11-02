@@ -31,3 +31,23 @@ jobs:
         with:
           name: experimental-miku-fm1-fwsc
           path: build/native/miku-fm1.fwsc
+
+      - name: Install existing full-system FM-1 emulator
+        uses: dimmkirr/setup-fm1-emulator@v1
+        with:
+          install-playwright: 'false'
+      - name: Boot native firmware in actual FM-1 emulator
+        run: |
+          mkdir -p build/emulator
+          fm1-emu --fwsc build/native/miku-fm1.fwsc --ms 1500 --snap 300,1000 --wav build/emulator/audio.wav > build/emulator/boot.log 2>&1
+          test -s build/emulator/audio.wav
+          ls -lh build/emulator/audio.wav
+          cat build/emulator/boot.log | tail -50
+      - name: Upload emulator evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: miku-emulator-evidence
+          path: |
+            build/emulator/
+            work/lcd_*.bmp

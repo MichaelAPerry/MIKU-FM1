@@ -79,6 +79,12 @@ jobs:
           mkdir -p build/pages/emulator
           test -s "$FM1_WEB/fm1_web.wasm"
           cp -R "$FM1_WEB/." build/pages/emulator/
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          catalog = {"default":"miku","firmwares":[{"id":"miku","name":"MIKU-FM1","version":"prototype","author":"MichaelAPerry","license":"GPL-3.0","about":"Native singing synth prototype","repo":"https://github.com/MichaelAPerry/MIKU-FM1","package":"../miku-fm1.fwsc"}]}
+          Path("build/pages/emulator/firmwares.json").write_text(json.dumps(catalog))
+          PY
           cp build/native/miku-fm1.fwsc build/pages/miku-fm1.fwsc
           cp site/index.html build/pages/index.html
           touch build/pages/.nojekyll

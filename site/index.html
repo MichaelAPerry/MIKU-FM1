@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MIKU-FM1 | Native firmware browser test</title>
+<style>
+:root{color-scheme:dark;font:16px/1.5 system-ui,sans-serif;background:#101522;color:#eaf7fb}
+body{margin:0}main{max-width:900px;margin:auto;padding:clamp(20px,6vw,60px)}
+h1{font-size:clamp(2.2rem,7vw,4rem);letter-spacing:-.055em;margin:0}
+h1 span{color:#59f1dc}p{max-width:68ch}.sub{color:#adbfcc}
+a.btn{display:inline-block;background:#58e7db;color:#10202e;padding:14px 20px;border-radius:12px;text-decoration:none;font-weight:750;margin:8px 9px 8px 0}
+a.alt{background:#232d45;color:#eff9ff}section{background:#1a2235;border:1px solid #33405a;padding:24px;border-radius:20px;margin-top:24px}
+code{background:#0b1220;padding:3px 6px;border-radius:5px}
+ol li{padding:7px 0}small{color:#abc1d0}.pill{font-size:.8em;color:#10202e;background:#f6d184;border-radius:20px;padding:4px 12px}
+</style></head>
+<body><main>
+<p class="sub">M-VAVE FM-1 · Experimental native firmware</p>
+<h1>MIKU<span>-FM1</span></h1>
+<p>A tiny early-stage singing synthesizer built for the actual FM-1 processor. This page hosts a genuine firmware package and the existing open-source full-system FM-1 browser emulator.</p>
+<p><span class="pill">Prototype — not the four-track songwriter yet</span></p>
+<section>
+<h2>Try it in your browser</h2>
+<p>The emulator currently opens its own firmware picker. Load MIKU-FM1 using these steps:</p>
+<ol>
+<li>Download the firmware package below (keep the <code>.fwsc</code> extension).</li>
+<li>Open the emulator and choose <strong>Open .fwsc…</strong>, selecting the downloaded package.</li>
+<li>Press <strong>Start</strong> in the emulator if prompted. On the virtual device press <strong>PLAY</strong> to hear the repeating melody, <strong>SEQ</strong> to stop, or turn <strong>ALGORITHM</strong> to change vowel.</li>
+</ol>
+<a class="btn" href="./miku-fm1.fwsc" download="miku-fm1.fwsc">1 · Download MIKU-FM firmware</a>
+<a class="btn alt" href="./emulator/">2 · Open FM-1 emulator</a>
+<p><small>The native demo contains five harmonic vowel colors and a fixed eight-step melody. Its interface and sound are experimental. Do not flash this package onto physical hardware yet.</small></p>
+</section>
+<section><h2>Project and credits</h2>
+<p>MIKU-FM1 is an original demonstration app built on the GPL-3.0-only <a href="https://github.com/zvenson/dinghy">Dinghy firmware platform</a>. The embedded emulator is by <a href="https://github.com/joakimeriksson/fm1-emu">Joakim Eriksson</a>. This is an unofficial community project with no association with Crypton Future Media, Yamaha or VOCALOID.</p>
+<p><a href="https://github.com/MichaelAPerry/MIKU-FM1">Source code and build logs</a></p></section>
+</main></body></html>

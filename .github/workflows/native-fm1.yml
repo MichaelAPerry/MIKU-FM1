@@ -39,9 +39,19 @@ jobs:
       - name: Boot native firmware in actual FM-1 emulator
         run: |
           mkdir -p build/emulator
-          fm1-emu --fwsc build/native/miku-fm1.fwsc --ms 1500 --snap 300,1000 --wav build/emulator/audio.wav > build/emulator/boot.log 2>&1
+          fm1-emu --fwsc build/native/miku-fm1.fwsc --ms 1500 --keys '100:PLAY' --snap 300,1000 --wav build/emulator/audio.wav > build/emulator/boot.log 2>&1
           test -s build/emulator/audio.wav
-          ls -lh build/emulator/audio.wav
+          python3 - <<'PY'
+          import wave, audioop
+          with wave.open('build/emulator/audio.wav','rb') as w:
+              data=w.readframes(w.getnframes())
+              print('Audio frames:',w.getnframes(),'RMS:',audioop.rms(data,w.getsampwidth()))
+              assert w.getnframes()>10000, 'short output'
+              assert audioop.rms(data,w.getsampwidth())>10, 'firmware audio is silent'
+          PY
+          test -s work/lcd_1000.bmp
+          cp work/lcd_*.bmp build/emulator/
+          ls -lh build/emulator/audio.wav build/emulator/lcd_*.bmp
           cat build/emulator/boot.log | tail -50
       - name: Upload emulator evidence
         if: always()

@@ -1,45 +1,20 @@
-# Emulator-first device integration (current blocker)
+# Native FM-1 emulator acceptance gate
 
-Full-system emulator: https://joakimeriksson.github.io/fm1-emu/
-MONK-1 has a separate WebAssembly app preview: https://charlesvestal.github.io/fm1-monk/emu/
+Target: https://joakimeriksson.github.io/fm1-emu/
+Source: https://github.com/joakimeriksson/fm1-emu
+Automation: https://github.com/DimmKirr/setup-fm1-emulator
 
-These are not interchangeable: the full-system FM-1 emulator consumes installable FM-1 firmware, while the MONK browser preview compiles MONK's source for WebAssembly.
+The emulator runs **actual .fwsc firmware packages** (JieLi pi32v2) unchanged. MONK-1's separate WebAssembly web preview is *not* a substitute for a native emulated boot.
 
-## Verified by source inspection
+Source inspection of https://github.com/charlesvestal/fm1-monk confirms a 240x240 display and 256-frame 44.1 kHz stereo (24-bit PCM in int32) audio half buffers. Its board implementation, packager, and linker are GPL-3.0-only and require a JieLi toolchain and AC79 SDK.
 
-MONK-1 firmware (https://github.com/charlesvestal/fm1-monk) includes
-`firmware/src/main.c` and `app/main_fm1.c`. It drives an audio DMA
-half-buffer of 256 stereo frames at 44,100 Hz, using int32 sample words
-with 24-bit amplitude; it has a 240x240 framebuffer/panel platform layer,
-flash storage, and an OTA packaging script.
+MIKU-FM components now provide:
+- `firmware/ui/stage.c`: original screen renderer to a 240x240 RGB565 pixel buffer, with play/stop/page/vowel controls.
+- `firmware/platform/fm1_runtime.c`: four-part synthesis into 44.1 kHz stereo half buffers.
+- Host tests of both components.
 
-Its build requires the external JieLi pi32v2 compiler and JieLi AC79 SDK
-(see upstream BUILDING.md). MONK's firmware is GPL-3.0-only, so it cannot
-simply be transplanted into this MIT repository while retaining MIT as
-the license for the combined derived firmware.
+**Not yet a device firmware.** A real native board entry point must call the UI, update it via mapped panel buttons, and transfer its framebuffer to the LCD. The audio ISR must call the runtime, with XIP/stack/CPU budgets measured. We must generate a valid .fwsc, boot in fm1-emu, and confirm the device UI and sound. No such boot has been performed. Do not substitute a static framebuffer test or a WebAssembly reimplementation for this milestone.
 
-## Implemented in this repository
+Potential command line once the binary exists: `fm1-emu --fwsc build/miku.fwsc --ms 5000 --snap build/screen.png --wav build/boot.wav`. Confirm exact flags with the installed emulator version. Physical flashing should follow only after emulation and on-device risk review.
 
-`firmware/platform/fm1_runtime.c` now exposes
-`miku_runtime_render(..., int32_t *stereo, 256)` at 44,100 Hz with
-track-event scheduling and 24-bit PCM words suitable for integration
-into an existing FM-1 audio-half callback. Host tests exercise repeated
-256-frame renders.
-
-This is an **audio callback adapter, not a device HAL, firmware image,
-or emulator test**. No screenshot or boot is asserted.
-
-## Next required work (blocking emulator milestone)
-
-1. Select a GPL-compatible device HAL path and document corresponding
-   redistribution terms; keep original MIT core notices intact.
-2. Implement the actual PI32v2 reset/boot, LCD, buttons, encoder, flash,
-   USB update and DMA interrupt using a supported upstream platform.
-3. Link this runtime into that build and produce a `.fwsc` with JieLi
-   tools, then inspect size/map and watchdog startup.
-4. Boot the package in the **existing full-system FM-1 emulator** and
-   test UI, controls, synthesis and song persistence. Hardware flashing
-   is strictly a separate validation gate.
-
-The unavailable external toolchain and missing board application are
-currently explicit blockers, not evidence that firmware works.
+Licensing: a device integration derived from MONK-1/Felucca must respect GPL-3.0-only and other notices. The independently authored MIT engine may remain MIT as a component, but the linked derived firmware must satisfy GPL distribution requirements.

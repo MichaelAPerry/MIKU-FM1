@@ -1,14 +1,13 @@
 # Engineering backlog
 
-Completed in first host slice: fixed-capacity pattern and note representation, sample-time musical transport, five vowels, deterministic demo WAV generator, basic host tests.
+Completed: C11 host build, fixed-capacity song and note representation, 96 PPQN clock, precomputed sorted event queue, five vowels, song binary codec with validation and CRC32, host WAV demo, basic tests.
 
-Next:
-1. Replace current O(N^2) transport scan with precomputed bounded event queue and explicit overlapping-note policy.
-2. Add versioned binary song serialization with header, CRC and rigorous bounds checks, plus multi-pattern arrangement.
-3. Integrate consonant event/timing model and smooth formant morphing; add anti-aliased excitation and envelope/release.
-4. Add chords, bass, drums and a four-track mix engine to render an editable eight-bar composition.
-5. Profile CPU/RAM/flash against measured FM-1 toolchain and define board adapter.
-6. Implement local browser composer and matching import/export tests.
-7. Add hardware simulator and physical verification once available.
+Next critical milestones:
+1. Add arrangement references and editing API with pattern duplication, removal and track locks.
+2. Four-track audio playback with basic FM chords, bass and synthesized drums.
+3. Consonant events, smooth formant transitions, anti-aliased excitation and envelope/release.
+4. Build an eight-bar composed four-track song that roundtrips through the file codec.
+5. Profile CPU/RAM/flash with actual FM-1 SDK and create platform adapter.
+6. Browser composer and matching codec importer/exporter.
 
-**Not yet implemented:** device firmware, saving/reloading, lyrics/consonants, chords/bass/drums, generators, UI, or browser composer. No claims of audio quality or performance on the hardware are made.
+Not working: actual FM-1 firmware, file IO on device, Japanese lyrics beyond vowel index, full arranger, generative tools, UI, hardware simulator.

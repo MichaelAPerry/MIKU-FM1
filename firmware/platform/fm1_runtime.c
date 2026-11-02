@@ -28,13 +28,11 @@ void miku_runtime_render(MikuRuntime *r,int32_t *dst,uint32_t frames){
                 }else if(t==MIKU_DRUMS){
                     if(e.kind==MIKU_NOTE_ON && !r->mute[t])
                         miku_drums_trigger(&r->drums,e.note.pitch,e.note.velocity,r->sample_rate);
-                }else miku_band_note(&r->band,&e.note,e.kind==MIKU_NOTE_ON);
+                }else if(!r->mute[t]) miku_band_note(&r->band,&e.note,e.kind==MIKU_NOTE_ON);
             }
         }
         float vocal=miku_voice_render(&r->vocal), band=miku_band_render(&r->band);
         float drums=miku_drums_render(&r->drums,r->sample_rate);
-        /* Muting chords or bass here requires separate buses: until then, notes
-           remain clocked but mute is applied on note-on by the adapter below. */
         float mix=(r->mute[MIKU_VOCAL]?0.f:vocal*.34f)+band+drums;
         if(mix>1.f)mix=1.f;if(mix< -1.f)mix=-1.f;
         /* FM-1 DMA uses signed 24-bit audio carried in int32 words. */

@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - 'native/**'
+      - 'site/**'
       - '.github/workflows/native-fm1.yml'
 permissions:
   contents: read

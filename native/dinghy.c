@@ -165,9 +165,10 @@ static void edit_full(void){
     }
     num(s+4,song.bpm);
     draw_text_box(0,150,240,&FONT_S,s,C_WHITE,1);
-    num(s,cursor+1u);
+    s[0]=0;cat(s,"STEP ");num(t,cursor+1u);cat(s,t);
     draw_text_box(0,171,240,&FONT_S,s,RGB(249,207,94),1);
-    draw_text_box(0,190,240,&FONT_S,vs[song.vowel[cursor]],RGB(247,123,180),1);
+    s[0]=0;cat(s,"VOWEL ");cat(s,vs[song.vowel[cursor]]);
+    draw_text_box(0,190,240,&FONT_S,s,RGB(247,123,180),1);
     draw_text_box(0,213,240,&FONT_S,playing?"PLAY: PAUSE SEQ: STOP":"KEY: WRITE REC: REST",C_WHITE,1);
 }
 static void app_main(void){

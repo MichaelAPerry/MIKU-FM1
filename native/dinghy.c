@@ -1,62 +1,160 @@
 /* SPDX-License-Identifier: GPL-3.0-only
- * MIKU-FM1 native, editable 16-step melody for the FM-1, on Dinghy.
- * Experimental monophonic harmonic-vowel instrument, not a voicebank. */
+ * MIKU-FM1 native: a singing synthesizer for the FM-1 on Dinghy. Formant voice (fvoice), 16-step eighth-note melody,
+ * singer face on the STAGE page, the step grid on the EDIT page. Unofficial fan project, not a voicebank. */
 #define APP_NAME "MIKU-FM"
 #include "platform.c"
+#include "firmware/audio/fvoice/fvoice.c"
+#include "firmware/ui/singer_sprites.h"
 #define STEPS 16u
-static uint32_t phase;
-static volatile uint32_t step=25480161u,gate,vowel,playing;
-static int32_t env;
-static const uint32_t notes[27]={17005939u,18017165u,19088521u,20223584u,21426141u,22700205u,24050030u,25480119u,26995246u,28600467u,30301139u,32102938u,34011878u,36034330u,38177043u,40447168u,42852281u,45400411u,48100060u,50960238u,53990491u,57200933u,60602278u,64205876u,68023757u,72068660u,76354085u};
-static struct {uint8_t pitch[STEPS], vowel[STEPS], bpm;} song;
-static uint32_t cursor,playhead,last_ms,dirty=1,prev_keys;
-static int32_t sine(uint32_t ph){
-    int32_t x=(int32_t)ph>>16,ax=x<0?-x:x,y=(x*(32768-ax))>>13;
-    int32_t ay=y<0?-y:y;
-    y+=((((y*ay)>>15)-y)*7373)>>15;
-    return y>32767?32767:y< -32767?-32767:y;
-}
+#define BUDGET_TICKS (5805u*FM1_TICKS_PER_US)       /* 256 frames at 44.1 kHz */
+static FvVoice fv;
+/* main loop -> ISR: one word, written whole (a counter makes every request new); ISR -> main: published copies */
+static volatile uint32_t rq,pv,pp,pb,pt,pub_mouth=5,pub_level,pub_peak;
+static struct {uint8_t pitch[STEPS], vowel[STEPS], bpm, kn[4];} song;   /* kn: vibrato, portamento, breath, brightness 0..100 */
+static uint32_t cursor,playhead,last_ms,off_ms,off_done=1,dirty=1,prev_keys,playing,page,cpu_ms,cpu_pct,
+    face_cur,face_ms,blink_until,next_blink,happy_until;
+static uint8_t hw[2u*SINGER_FACE_H];
+static uint16_t pw[16],c_bg,c_disc;
+static const uint8_t demo_p[STEPS]={15,15,17,20,17,15,12,15,17,17,20,22,24,22,20,0},demo_v[STEPS]={4,4,4,0,4,4,0,0,0,0,1,0,0,2,4,0};
+static const char *const mora[STEPS]={"O","TO","NO","HA","KO","NO","NA","KA","WA","TA","SHI","WA","MA","TSU","YO",""};
 static void app_audio(int32_t *out,uint32_t n){
-    uint32_t p=phase,i,inc=step,v=vowel;int32_t a=env,target=gate?10000:0;
-    for(i=0;i<n;i++){
-        if(a<target){a+=48;if(a>target)a=target;}
-        else if(a>target){a-=12;if(a<target)a=target;}
-        p+=inc;
-        int32_t x=sine(p),h=sine(p*2u),j=sine(p*3u);
-        switch(v%5u){
-            case 0:x=(x*5+h*3+j*2)/10;break;
-            case 1:x=(x*3+h+j*6)/10;break;
-            case 2:x=(x*7+h*2+j)/10;break;
-            case 3:x=(x*4+h*4+j*2)/10;break;
-            default:x=(x*8+h+j)/10;break;
-        }
-        x=(x*a)>>15;out[2*i]+=x;out[2*i+1]+=x;
+    static uint32_t seen,up,pk;
+    uint32_t t0=fm1_ticks(),r=rq,c;
+    if(!up){fv_init(&fv);fv.vib_rate=55;fv.vib_delay=200;up=1;}
+    if(r!=seen){
+        seen=r;
+        if(((r>>12)&3u)==1u)fv_note_on(&fv,(uint8_t)(r&127u),(uint8_t)((r>>8)&7u),100);
+        else if(((r>>12)&3u)==0u)fv_note_off(&fv);
+        else fv_set_vowel(&fv,(uint8_t)((r>>8)&7u));
     }
-    phase=p;env=a;
+    fv.vib_depth=(uint16_t)pv;fv.porta=(uint16_t)pp;fv.breath=(uint8_t)pb;fv.bright=(uint8_t)pt;
+    fv_render(&fv,out,n);
+    pub_mouth=fv_mouth(&fv);pub_level=fv_level(&fv);
+    c=fm1_ticks()-t0;
+    if(c>pk)pk=c;else pk-=pk>>6;
+    pub_peak=pk;
+}
+static void post(uint32_t kind,uint32_t note,uint32_t vw){
+    static uint32_t cnt;
+    rq=(++cnt<<16)|kind<<12|vw<<8|note;
+}
+static void knobs(void){pv=song.kn[0];pp=song.kn[1]*5u;pb=song.kn[2]*127u/100u;pt=song.kn[3]*127u/100u;}
+static void defaults(void){
+    static const uint8_t kn[4]={35,12,5,71};
+    uint32_t i;
+    for(i=0;i<STEPS;i++){song.pitch[i]=demo_p[i];song.vowel[i]=demo_v[i];}
+    for(i=0;i<4;i++)song.kn[i]=kn[i];
+    song.bpm=148;
 }
 static void apply_step(uint32_t index){
     uint32_t n=song.pitch[index];
-    vowel=song.vowel[index];
-    if(n){step=notes[n-1u];gate=1;}else gate=0;
+    if(n)post(1,52u+n,song.vowel[index]);
+    else if(!fm1_in.notes)post(0,0,0);
+    off_done=0;
 }
-static void defaults(void){
-    static const uint8_t demo[16]={8,10,12,15,12,10,8,5,8,10,13,12,15,13,10,8};
-    uint32_t i;
-    for(i=0;i<STEPS;i++){song.pitch[i]=demo[i];song.vowel[i]=(uint8_t)(i%5u);}
-    song.bpm=120;
+static uint32_t is_demo(void){
+    uint32_t i,same=1;
+    for(i=0;i<STEPS;i++)same&=song.pitch[i]==demo_p[i] && song.vowel[i]==demo_v[i];
+    return same;
 }
-static void print_number(char *s,uint32_t n){
-    s[0]=(char)('0'+(n/100u)%10u);
-    s[1]=(char)('0'+(n/10u)%10u);
-    s[2]=(char)('0'+n%10u);
-    s[3]=0;
+static uint32_t period(void){return 30000u/(uint32_t)song.bpm;}      /* one eighth note, ms */
+static void num(char *s,uint32_t n){
+    char t[6];uint32_t i=0,j=0;
+    do{t[i++]=(char)('0'+n%10u);n/=10u;}while(n&&i<5u);
+    while(i)s[j++]=t[--i];
+    s[j]=0;
 }
-static void redraw(void){
+static void cat(char *d,const char *s){while(*d)d++;while((*d++=*s++)!=0);}
+/* ---- face: 4bpp sprite rows, 2x, into the canvas buffer, blitted (the panel wants bytes swapped: swap16) */
+#define FX 30u
+#define FY 2u
+static void face_draw(uint32_t f,uint32_t sx,uint32_t sy,uint32_t w,uint32_t h){
+    const uint8_t *d=SINGER_FACES[f];
+    uint32_t cr=CV_MAX/(4u*w),r0,r,c,k;
+    for(r0=sy;r0<sy+h;r0+=cr){
+        uint32_t nr=sy+h-r0<cr?sy+h-r0:cr;
+        lcd_sync();
+        for(r=0;r<nr;r++){
+            uint16_t *o=cv_px+r*2u*2u*w;
+            int32_t hh=hw[2u*(r0+r)];
+            for(c=0;c<w;c++){
+                uint32_t x=sx+c,b=d[((r0+r)*SINGER_FACE_W+x)>>1],i=(x&1u)?b&15u:b>>4;
+                int32_t dx=(int32_t)(2u*x)-89;
+                uint16_t p=i?pw[i]:((dx<0?-dx:dx)<=hh?c_disc:c_bg);
+                o[2u*c]=o[2u*c+1u]=p;
+            }
+            for(k=0;k<2u*w;k++)o[2u*w+k]=o[k];
+        }
+        lcd_blit(FX+2u*sx,FY+2u*r0,2u*w,2u*nr,cv_px);
+    }
+}
+static void face_set(uint32_t f){
+    uint32_t a=face_cur,x0,y0,x1,y1;
+    const uint8_t *p=SINGER_FACE_DIRTY[a],*q=SINGER_FACE_DIRTY[f];
+    if(f==a)return;
+    face_cur=f;
+    if(page)return;
+    if(!p[2]){x0=q[0];y0=q[1];x1=x0+q[2];y1=y0+q[3];}
+    else if(!q[2]){x0=p[0];y0=p[1];x1=x0+p[2];y1=y0+p[3];}
+    else{
+        x0=p[0]<q[0]?p[0]:q[0];y0=p[1]<q[1]?p[1]:q[1];
+        x1=p[0]+p[2]>q[0]+q[2]?p[0]+p[2]:q[0]+q[2];y1=p[1]+p[3]>q[1]+q[3]?p[1]+p[3]:q[1]+q[3];
+    }
+    face_draw(f,x0,y0,x1-x0,y1-y0);
+}
+static void face_update(void){
+    static const uint8_t vf[5]={SF_A,SF_I,SF_U,SF_E,SF_O};
+    uint32_t now=fm1_ms,m=pub_mouth,w;
+    if((int32_t)(now-happy_until)<0)w=SF_HAPPY;
+    else if(m<5u)w=pub_level>=100u?vf[m]:SF_N;
+    else if((int32_t)(now-blink_until)<0)w=SF_BLINK;
+    else if((int32_t)(now-next_blink)>=0){
+        blink_until=now+120u;next_blink=now+2500u+(rng()>>16)%2500u;w=SF_BLINK;
+    }else w=SF_NEUTRAL;
+    if(w!=face_cur && (uint32_t)(now-face_ms)>=40u){face_ms=now;face_set(w);}
+}
+static void stage_init(void){
+    uint32_t i,v,h;
+    for(i=0;i<16;i++)pw[i]=swap16(SINGER_FACE_PAL[i]);
+    c_bg=swap16(RGB(12,20,40));c_disc=swap16(RGB(40,66,120));
+    for(i=0;i<2u*SINGER_FACE_H;i++){        /* half-width of a disc (r=90) behind the head, per output row */
+        int32_t dy=(int32_t)i-90;
+        v=(uint32_t)(8100-dy*dy);h=0;
+        while((h+1u)*(h+1u)<=v)h++;
+        hw[i]=(uint8_t)h;
+    }
+}
+static void stage_text(void){
+    char s[12]="BPM ",c[12]="CPU ";
+    const char *m=is_demo()?mora[playing?playhead:cursor]:"";
+    uint32_t i,x=playing?playhead:cursor;
     static const char *const vs[5]={"A","I","U","E","O"};
-    uint32_t i;char num[4],line[30]="BPM ";
+    if(!is_demo())m=vs[song.vowel[x]];
+    num(s+4,song.bpm);num(c+4,cpu_pct);cat(c,"%");
+    cv_begin(240,56,RGB(12,20,40));
+    cv_text(120-text_w(&FONT_L,m)/2,0,&FONT_L,m,C_WHITE);
+    cv_text(4,14,&FONT_S,s,RGB(249,207,94));
+    cv_text(236-text_w(&FONT_S,c),14,&FONT_S,c,RGB(150,160,190));
+    for(i=0;i<STEPS;i++){
+        uint16_t col=song.pitch[i]?RGB(35,182,176):RGB(49,54,78);
+        if(cursor==i)col=RGB(247,123,180);
+        if(playing && playhead==i)col=RGB(249,207,94);
+        cv_rect(9+(int32_t)i*14,40,12,12,col);
+    }
+    cv_blit(0,184);
+}
+static void stage_full(void){
+    lcd_fill(0,0,240,240,RGB(12,20,40));
+    face_draw(face_cur,0,0,SINGER_FACE_W,SINGER_FACE_H);
+    stage_text();
+}
+static void edit_full(void){
+    static const char *const vs[5]={"A","I","U","E","O"};
+    uint32_t i;char s[30]="BPM ",k[30]="V",t[8];
     lcd_fill(0,0,240,240,RGB(7,17,34));
     draw_text_box(0,5,240,&FONT_L,"MIKU-FM",RGB(64,222,209),1);
-    draw_text_box(0,43,240,&FONT_S,"EDITABLE MELODY",C_WHITE,1);
+    num(k+1,song.kn[0]);cat(k," P");num(t,song.kn[1]);cat(k,t);cat(k," B");num(t,song.kn[2]);cat(k,t);cat(k," T");num(t,song.kn[3]);cat(k,t);
+    draw_text_box(0,43,240,&FONT_S,k,C_WHITE,1);
     for(i=0;i<STEPS;i++){
         uint32_t x=12u+(i%8u)*28u,y=75u+(i/8u)*33u;
         uint16_t c=song.pitch[i]?RGB(35,182,176):RGB(49,54,78);
@@ -65,38 +163,40 @@ static void redraw(void){
         lcd_fill(x,y,23,25,c);
         if(song.pitch[i])lcd_fill(x+8u,y+4u,7u,7u,RGB(16,31,50));
     }
-    print_number(num,(uint32_t)song.bpm);
-    line[4]=num[0];line[5]=num[1];line[6]=num[2];line[7]=0;
-    draw_text_box(0,150,240,&FONT_S,line,C_WHITE,1);
-    print_number(num,cursor+1u);
-    draw_text_box(0,171,240,&FONT_S,num,RGB(249,207,94),1);
+    num(s+4,song.bpm);
+    draw_text_box(0,150,240,&FONT_S,s,C_WHITE,1);
+    num(s,cursor+1u);
+    draw_text_box(0,171,240,&FONT_S,s,RGB(249,207,94),1);
     draw_text_box(0,190,240,&FONT_S,vs[song.vowel[cursor]],RGB(247,123,180),1);
     draw_text_box(0,213,240,&FONT_S,playing?"PLAY: PAUSE SEQ: STOP":"KEY: WRITE REC: REST",C_WHITE,1);
 }
 static void app_main(void){
-    uint32_t last_input=fm1_ms;
+    uint32_t last_input=fm1_ms,full=1;
     defaults();
     if(settings_load(&song,sizeof song)==0){
         uint32_t valid=song.bpm>=40u && song.bpm<=240u;
         for(uint32_t i=0;i<STEPS;i++)valid&=song.pitch[i]<=27u && song.vowel[i]<5u;
+        for(uint32_t i=0;i<4;i++)valid&=song.kn[i]<=100u;
         if(!valid)defaults();
     }
-    last_ms=fm1_ms;
+    knobs();stage_init();
+    last_ms=fm1_ms;next_blink=fm1_ms+3000u;
     for(;;){
-        uint32_t released,b,keys,down;
+        uint32_t released,b,keys,down,i;
         int32_t delta;
         platform_poll();
         b=fm1_input_edges(&released);
+        if(b&(1u<<BTN_HOME)){page^=1u;full=1;}
         if(b&(1u<<BTN_PLAY)){
             playing=!playing;playhead=cursor;
-            if(playing){apply_step(playhead);last_ms=fm1_ms;}
-            else gate=0;
+            if(playing){apply_step(playhead);last_ms=fm1_ms;off_ms=last_ms+period()*85u/100u;happy_until=fm1_ms+500u;}
+            else post(0,0,0);
             dirty=1;
         }
-        if(b&(1u<<BTN_SEQ)){playing=0;gate=0;dirty=1;}
+        if(b&(1u<<BTN_SEQ)){playing=0;post(0,0,0);dirty=1;}
         if(b&(1u<<BTN_REC)){song.pitch[cursor]=0;dirty=1;last_input=fm1_ms;}
         if(b&(1u<<BTN_SAVE)){
-            if(!playing){gate=0;settings_save(&song,sizeof song);}
+            if(!playing){post(0,0,0);settings_save(&song,sizeof song);}
             dirty=1;
         }
         delta=fm1_enc_take(ENC_SELECT);
@@ -106,7 +206,7 @@ static void app_main(void){
             int32_t v=(int32_t)song.vowel[cursor]+delta;
             while(v<0)v+=5;
             song.vowel[cursor]=(uint8_t)(v%5);
-            if(!playing)vowel=song.vowel[cursor];
+            if(!playing)post(2,0,song.vowel[cursor]);
             last_input=fm1_ms;dirty=1;
         }
         delta=fm1_enc_take(ENC_PRESETS);
@@ -115,18 +215,37 @@ static void app_main(void){
             song.bpm=(uint8_t)(bpm<40?40:bpm>240?240:bpm);
             last_input=fm1_ms;dirty=1;
         }
+        for(i=0;i<4;i++){
+            delta=fm1_enc_take(ENC_KNOB1+i)*2;
+            if(delta){
+                delta+=(int32_t)song.kn[i];
+                song.kn[i]=(uint8_t)(delta<0?0:delta>100?100:delta);
+                knobs();last_input=fm1_ms;dirty=1;
+            }
+        }
         keys=fm1_in.notes;down=keys&~prev_keys;
         if(down){
             uint32_t k=0;while(k<26u && !(down&(1u<<k)))k++;
             song.pitch[cursor]=(uint8_t)(k+1u);
-            if(!playing){step=notes[k];gate=1;vowel=song.vowel[cursor];}
+            post(1,53u+k,song.vowel[cursor]);
             last_input=fm1_ms;dirty=1;
         }
-        if(!keys && prev_keys && !playing){gate=0;dirty=1;}
+        if(!keys && prev_keys)post(0,0,0);
         prev_keys=keys;
-        if(playing && (uint32_t)(fm1_ms-last_ms)>=60000u/((uint32_t)song.bpm*4u)){
-            last_ms=fm1_ms;playhead=(playhead+1u)%STEPS;apply_step(playhead);dirty=1;
+        if(playing){
+            if(!off_done && (int32_t)(fm1_ms-off_ms)>=0){off_done=1;if(!keys)post(0,0,0);}
+            if((uint32_t)(fm1_ms-last_ms)>=period()){
+                last_ms+=period();playhead=(playhead+1u)%STEPS;apply_step(playhead);
+                off_ms=last_ms+period()*85u/100u;dirty=1;
+            }
         }
-        if(dirty){redraw();dirty=0;}
+        face_update();
+        if((uint32_t)(fm1_ms-cpu_ms)>=500u){
+            uint32_t p=pub_peak*100u/BUDGET_TICKS;
+            cpu_ms=fm1_ms;
+            if(p!=cpu_pct){cpu_pct=p;if(!page)dirty=1;}
+        }
+        if(full){page?edit_full():stage_full();full=dirty=0;}
+        else if(dirty){page?edit_full():stage_text();dirty=0;}
     }
 }

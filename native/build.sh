@@ -17,6 +17,10 @@ git clean -qfd
 git fetch --depth 1 origin "$DINGHY_COMMIT"
 git checkout -q --detach "$DINGHY_COMMIT"
 cp "$ROOT/native/dinghy.c" firmware/src/dinghy.c
+# fvoice and the singer sprites keep their repo paths (fvoice.c includes "firmware/audio/fvoice/fvoice.h"; -Ifirmware/src finds them)
+mkdir -p firmware/src/firmware/audio/fvoice firmware/src/firmware/ui
+for f in fvoice.c fvoice.h fvoice_tables.h; do cp "$ROOT/firmware/audio/fvoice/$f" firmware/src/firmware/audio/fvoice/; done
+cp "$ROOT/firmware/ui/singer_sprites.h" firmware/src/firmware/ui/
 python3 - <<'PY'
 from pathlib import Path
 p=Path('tools/build.py')

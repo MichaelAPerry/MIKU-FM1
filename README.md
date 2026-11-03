@@ -2,7 +2,7 @@
 
 An experimental **four-track, retro virtual-idol-inspired songwriting workstation** for the M-VAVE FM-1.
 
-**Status: native FM-1 firmware (Dinghy), version 0.4: a four-track songwriter (sung vocal, FM chords, bass, drums; patterns, arrangement, mixer, 8 song slots) with an animated singer; emulator-tested; not yet tested on hardware.** The host engine below is a separate MIT-licensed prototype.
+**Status: native FM-1 firmware (Dinghy), version 0.5: a four-track songwriter (sung Japanese vocal with consonants, FM chords, bass, drums; patterns, arrangement, mixer, 8 song slots) with an animated singer; emulator-tested; not yet tested on hardware.** The host engine below is a separate MIT-licensed prototype.
 
 ## Build and render an editable eight-bar song
 
@@ -28,7 +28,7 @@ The demo composes four patterns in C: vowel-melody, three-note FM-like chords, F
 - `firmware/audio/band/` — original polyphonic chord FM, monophonic FM bass, electronic drums
 - `tools/demo.c` — independent host harness rendering an eight-bar song
 
-The 0.4 firmware (`native/dinghy.c`) is built from newer modules: `firmware/song/` (song model, MKS2 file format, sequencer, mora table, demo song), `firmware/audio/fmband/` (FM chords, bass, drums, mixer), `firmware/audio/fvoice/` (the voice) and `firmware/app/engine.c` (the dispatch that runs in the audio interrupt). `tools/song_render.c` renders the demo through the same engine on the host: `./build/firmware/app/song_render otonohako.wav`.
+The 0.5 firmware (`native/dinghy.c`) is built from newer modules: `firmware/song/` (song model, MKS2 file format, sequencer, mora table, demo song), `firmware/audio/fmband/` (FM chords, bass, drums, mixer), `firmware/audio/fvoice/` (the voice) and `firmware/app/engine.c` (the dispatch that runs in the audio interrupt). `tools/song_render.c` renders the demo through the same engine on the host: `./build/firmware/app/song_render otonohako.wav`.
 - `tests/` — unit, serialization, and host-demo smoke tests
 
 The current instruments use simplified synthesis and no effects, and there is no claim of measured audio or CPU quality on FM-1 hardware. See `docs/RESEARCH.md`, `docs/SONG_FORMAT.md`.

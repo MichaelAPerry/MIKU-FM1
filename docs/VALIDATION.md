@@ -119,3 +119,54 @@ Single-step edits are volatile byte writes in a safe order; structural edits sto
   save across a real power cycle, the newer UC25HQ80 flash.
 - The release and Pages workflows on GitHub (written after MPFM1's; not yet run).
 - MIDI, USB audio and the USB rescue with Miku-FM.
+
+## Step 3 (0.5): Japanese consonants (2026-11-03)
+
+Design: source-filter, no samples. `fv_note_on_mora(note, cons, vowel, vel)`: per consonant class a table of up to 4 phases
+(`tools/gen_fvoice_tables.py`, reproducible) drives per control block (16 frames) the formant shape (vowels plus voice bar,
+nasal n, nasal m, flap), voicing, output level, one noise band (LFSR through a 2-pole resonator, added after the envelope)
+and aspiration (LFSR through the vowel formants). The consonant starts AT the note start; the vowel is in place
+`fv_cons_ms(cons)` (10-66 ms) later, so the vowel onset lands that late (no look-ahead; a sequencer could start the note that
+much earlier). Durations are counted in blocks, so they do not depend on pitch or tempo.
+
+### Host (`tests/test_mora_voice.c`, measured on the rendered signal; `ctest` 11/11, 0 warnings in the touched files)
+- Plosives (note 55): closure RMS is digital silence (>= 250 dB below the vowel; target 12 dB); burst onset 8.0-13.4 ms;
+  burst centroid t 4.4-4.5 kHz > k 1.0 (o), 1.4 (a, u), 2.1 (e), 2.8 (i) kHz > p 0.6 kHz, for all five vowels.
+- Fricatives: s centroid 6.0 kHz > sh 3.4 kHz > 2 kHz; 93% (s) and 81% (sh) of the first 40 ms is above 2 kHz (voicing off);
+  level -7 dB (s) / -6 dB (sh) re the vowel on "a" (-14/-13 on "u").
+- Nasals: energy <500 Hz is 0.90-0.98 of the total at notes 48 and 55 (n, m, ん); level -6 to -8 dB (n, m) and -3 to -5 dB (ん)
+  re the vowel. At 72 and 84 the f0 is above 500 Hz, so the measure is <1 kHz (0.97-1.00); level -8 to -10 dB. The murmur
+  level is raised with pitch by a table (`fv_nbo`), otherwise it was -15 to -17 dB at notes 72 and 84.
+- Periodicity (autocorrelation at the f0 lag, 8-22 ms, note 55): voiced g d b n m 1.00, z j 0.82-0.83; unvoiced k t p s sh h f 0.01-0.12.
+- Glides: F2-band centroid of ya 2909 -> 1825, yu 2909 -> 1829, yo 2205 -> 1115 Hz over 4-250 ms; wa F1-band 415 -> 1010; wo F2-band 1558 -> 1113.
+- Flap r (legato after a vowel): dip 7.8-9.7 dB, 14-25 ms below -3 dB (limit 30).
+- Pitch independence (notes 60 vs 84): `fv_cons()` run-out identical for all classes (exact); the settling time of (mora minus
+  plain vowel) agrees within 1.3 ms for all classes except y and w (not checked: the soprano zone tables bring i, u and the vowel closer at 84).
+- Vowel after the consonant equals the plain vowel: worst harmonic level difference 0.015 dB (all consonants x all vowels).
+- Mouth: closed (5) during m, b, p closure and the whole ん hum, the vowel mouth for the others (k s sh t ch ts n h f y r w g z j d).
+- Legato after a sustained "a": the consonant is articulated (dips 12 to 78 dB deep) and the envelope is not re-triggered; note-off
+  during a consonant ends cleanly.
+- Stress: 30 s of random morae x notes 48-96 x legato/non-legato (799 notes, velocity 64-127): peak 24,877, no sample at the clip, deterministic (bit-identical hash).
+- Existing tests unchanged. One behaviour change: the vowel morph now arrives exactly (it used to stall a few LSB short), so
+  steady vowels differ from 0.4 by a rounding amount.
+- `fvoice` with consonant NONE was bit-identical to 0.4 before that rounding fix (hash of 40 notes).
+
+### Device
+- Compile gate (`pi32v2/bin/clang -target pi32v2 -Os -ffunction-sections -fno-builtin -Wall`): no warnings, no libc calls;
+  `nm` shows only module symbols undefined in engine.o, nothing in fvoice.o. fvoice.o .text 1,900 -> 3,058 B, .rodata 4,976 -> 6,492 B;
+  engine.o .text 1,422 -> 1,444 B. `FvVoice` is 376 B. mora.c unchanged.
+- Per-sample multiplies (read from the code): 26 before; 28 always now (voicing, aspiration); 32 while a noise band sounds
+  (noise resonator 3 + level 1), i.e. in the 5-65 ms of a consonant. Block work: 18 formant coefficients with an extra branch each, a few eases.
+- Host, `fv_render` 256 frames, -O2, noisy machine, best of 7: 5.8 us (0.4) -> about 6.5 us steady vowel, 7.2 us with the noise band.
+- `native/build.sh --release 0.5`: Dinghy's checks all ok: image 146,172 B of 581,564 (0.4: 143,596), RAM .data+.bss 30,032 B of
+  98,304 (0.4: 29,952), pool 30,720 B, `.ram_text` 916 insns, no calls. `miku-fm-0.5.fwsc` 612,223 B, identity FM-1_39000500.
+
+### Emulator (fm1-emu)
+- `tools/emu_smoke.sh`: 124,928 frames, RMS 1504, 22 screen colours.
+- PLAY of the demo at 200 ms, 11.5 s: STAGE CPU 11% on the verse (R4), 12% in the chorus (R7) (0.4: 10-13% / 11%).
+  **This is the emulator's clock, not a device figure**; the device figure is still to be measured. No screenshot of m/b/p/n lips caught.
+
+### Not verified
+- Nothing was listened to (no audio output here); levels and timbres are tuned by measurement and spectrograms only. The weakest
+  guesses: h, fu, the voiced fricatives and the nasal murmur timbre. Not tested on hardware.
+- Renders: `tools/mora_render` (every mora, note 72), `tools/song_render --solo vocal --rows 2 5` (verse vocal alone).

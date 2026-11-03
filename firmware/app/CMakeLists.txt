@@ -1,0 +1,17 @@
+# SPDX-License-Identifier: GPL-3.0-only
+# Step 2c: the song engine (sequencer events -> voice + band), shared by the device app and the host render tool.
+add_library(miku_engine STATIC engine.c)
+target_link_libraries(miku_engine PUBLIC miku_song fmband miku_core)
+target_include_directories(miku_engine PUBLIC ${CMAKE_SOURCE_DIR})
+if(NOT MSVC)
+  target_compile_options(miku_engine PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+add_executable(song_render ${CMAKE_SOURCE_DIR}/tools/song_render.c)
+target_link_libraries(song_render PRIVATE miku_engine m)
+add_executable(engine_tests ${CMAKE_SOURCE_DIR}/tests/test_engine.c)
+target_link_libraries(engine_tests PRIVATE miku_engine m)
+if(NOT MSVC)
+  target_compile_options(engine_tests PRIVATE -Wall -Wextra -Wpedantic)
+  target_compile_options(song_render PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+add_test(NAME engine COMMAND engine_tests)

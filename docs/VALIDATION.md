@@ -53,7 +53,7 @@ Levels, never interchangeable: **built** (compiled), **host tests**, **emulator*
   restored shows V55 and the changed first steps (C4 sung at step 1).
 - CPU% shown by the firmware: 3% (worst 256-frame block over 5.8 ms, decaying). The emulator's clock is not the
   device's, so this is not a device measurement; the device figure is still to be measured.
-- Screens: `docs/screens/stage_singing.png`, `docs/screens/edit.png`.
+- Screens: `stage_singing.png`, `edit.png` (replaced by the four pages of 0.4 in `docs/screens/`).
 
 ### 0.3: level and octave (2026-11-03)
 - Defaults now match the demo the owner chose (variant A): breath 10, brightness 100, portamento 50 ms, velocity 110;
@@ -62,6 +62,53 @@ Levels, never interchangeable: **built** (compiled), **host tests**, **emulator*
 - OCT+ during playback: the melody's f0 went G4 392 → G5 788, then A5 865/882, C6 1026, D6 1131 (vibrato and scoop
   account for the spread); STAGE shows "148 OCT+1". CPU shown: 5% (emulator clock).
 - Device build `--release 0.3`: image 113,740 B; identity FM-1_39000300; Dinghy's checks ok.
+
+## Step 2 (0.4): the four-track songwriter on the device (2026-11-03)
+
+### Host
+- `ctest`: 10/10 pass (core, song_io, band, runtime, stage, demo_wav, fvoice, song2, fmband, engine); the build has 0 warnings
+  (`-Wall -Wextra -Wpedantic`). `tools/sprite_pack.py --check`: header up to date.
+- `engine` test (`tests/test_engine.c`): the demo from row 2 for two bars (3.3 s): peak 27,775 of 32,767 (no hard clip),
+  playhead on row 4 afterwards; with only VOCAL soloed, the first vocal note has f0 390.3 Hz (G4 = 392.0, -0.4%); `lock`
+  holds the sequencer and `unlock` resumes it.
+- `tools/song_render` (the same `firmware/app/engine.c` as the audio interrupt) renders the whole demo once through:
+  22.5 s, peak 28,916 (soft limiter above 24,576), `otonohako.wav` (not committed).
+
+### Device build
+- `native/build.sh` and `--release 0.4`: Dinghy's checks ok. Image 143,596 of 581,564 B (0.3: 113,740), RAM .data+.bss
+  29,952 of 98,304 B, pool 30,720 of 344,064 B, `.ram_text` 916 instructions, no calls, register access in hal/ only.
+  `miku-fm-0.4.fwsc` 612,223 B, identity FM-1_39000400. RAM: Song 4,462 B, Undo 2,594 B, slot buffer 4,476 B, engine (voice,
+  chords, bass, drums, sequencer) a few KB.
+
+### Emulator (fm1-emu, same build as Step 0)
+- `tools/emu_smoke.sh`: 124,928 frames, RMS 1392, 22 screen colours (PLAY at 200 ms is audible, the screen is not blank).
+- PLAY of the demo from row 1 at 200 ms, 6.5 s (0.4 package): WAV 279,296 frames, peak 10,135, RMS 1,754 (the emulator's
+  MASTER position is low); the intro (2 bars, 3.2 s) is chords, bass and drums, the vocal enters on row 3; its first note
+  has f0 390.3 Hz at three points 100 ms apart (G4, -0.4%).
+- CPU% shown on STAGE (worst 256-frame block as a share of 5.8 ms, decaying): 6% in the intro, 10-13% in the verse, 11% in the
+  chorus. **This is the emulator's clock, not a device figure**; the device figure is still to be measured.
+- Pages: `docs/screens/{stage,song,pattern,mixer}.png` (STAGE: the singer on "WA" or "DO", dots for the four tracks lit; SONG: row 7 playing, row 8 selected;
+  PATTERN: a chorus vocal bar with the playhead; MIXER).
+- Editing: PATTERN with DRUMS (keys 1-6 toggle, 7-12 accents) and VOCAL on a silent row (a free pattern is assigned, KNOB 1
+  length 2 to 4, ALGORITHM mora "u") looks as designed.
+- Save/reboot: on the vocal row 1 (silent in the demo) a key wrote a note at step 4 (a new pattern 9 was assigned), MIXER KNOB 1 +5
+  clicks (vocal level 110 to 120), SAVE: the screen says SAVED; flash dumped (`FM1_FLASH_OUT`) and restored (`FM1_FLASH_IN`)
+  into a fresh boot of the same package: SONG shows pattern 9 in row 1, PATTERN shows the note at step 4, MIXER shows the vocal level
+  at 119 of 127 px-measured (120). (The dump includes the app, so it only boots with the package that made it.)
+- Slots: in that boot, hold SAVE + ENV loads the demo ("DEMO LOADED", pattern 9 gone), hold SAVE + FX loads slot 1 again
+  ("LOADED", pattern 9 back). The unsaved-changes guard and the empty slot message are coded, not looked at.
+- A first version of the SAVE hold took the press edge of a bounce for a new press and saved after a chord; it now tracks its
+  own state (`sv_on`); the emulator run above is with the fix.
+
+### Concurrency (design, not measured)
+Single-step edits are volatile byte writes in a safe order; structural edits stop the sequencer for a few milliseconds via
+`en_lock`; see the comment at the top of `native/dinghy.c`. Not checked on a device, only in the emulator.
+
+### Not validated (Step 2)
+- Hardware: the sound of the band, CPU load (the emulator figure above is not a device figure), flash saves of the 4,476-byte
+  songs, key and encoder feel, the SAVE hold timing, screen drawing speed against the audio interrupt.
+- Long editing sessions while playing; 8 slots filled; a damaged slot (decode refuses it, not exercised on the emulator).
+- Pan is not part of the song file (MKS2 v1 has no pan field): it is a device setting saved with SAVE.
 
 ### Not validated (Step 1)
 - Hardware: sound, CPU load, face drawing speed against USB and key scan, flash save with the longer struct.

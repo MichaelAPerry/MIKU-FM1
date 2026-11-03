@@ -1,8 +1,8 @@
-# MIKU-FM1
+# Miku-FM
 
 An experimental **four-track, retro virtual-idol-inspired songwriting workstation** for the M-VAVE FM-1.
 
-**Status: host-only functional audio prototype.** Not a flashable FM-1 firmware.
+**Status: native FM-1 firmware (Dinghy) with an editable 16-step melody; emulator-tested; not yet tested on hardware.** The host engine below is a separate MIT-licensed prototype.
 
 ## Build and render an editable eight-bar song
 
@@ -31,4 +31,12 @@ The demo composes four patterns in C: vowel-melody, three-note FM-like chords, F
 
 The current instruments use simplified synthesis and no effects, and there is no claim of measured audio or CPU quality on FM-1 hardware. See `docs/RESEARCH.md`, `docs/SONG_FORMAT.md`.
 
-MIT licensed original code. MIKU-FM is an unofficial working title and has no relationship to Crypton, Yamaha or VOCALOID. No voicebanks or proprietary assets are included.
+Host-engine code is MIT licensed; the firmware package is GPL-3.0-only (see Licence). MIKU-FM is an unofficial working title and has no relationship to Crypton, Yamaha or VOCALOID. No voicebanks or proprietary assets are included.
+
+## Other firmwares' data
+
+Miku-FM does not read other firmwares' projects or samples. It stores its melody in Dinghy's settings sector (FM-1 flash 0xFC000), which other Felucca-family firmwares also use, so saving there replaces their settings. Back up first.
+
+## Licence
+
+The firmware package (`native/`, built on [Dinghy](https://github.com/zvenson/dinghy)) is GPL-3.0-only; see `LICENSE`. Files marked `SPDX-License-Identifier: MIT` (the host engine) remain MIT; see `LICENSES/MIT.txt`.

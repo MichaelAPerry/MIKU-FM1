@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: GPL-3.0-only
+add_library(fmband STATIC fmband_tables.c fmband_mx.c fmband_ch.c fmband_bs.c fmband_dr.c)
+target_include_directories(fmband PUBLIC ${CMAKE_SOURCE_DIR})
+if(NOT MSVC)
+  target_compile_options(fmband PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+add_executable(band_demo band_demo.c)
+target_link_libraries(band_demo PRIVATE fmband m)
+add_executable(fmband_tests tests/test_fmband.c)
+target_link_libraries(fmband_tests PRIVATE fmband m)
+add_test(NAME fmband COMMAND fmband_tests)

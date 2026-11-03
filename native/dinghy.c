@@ -2,7 +2,6 @@
  * MIKU-FM1 native, editable 16-step melody for the FM-1, on Dinghy.
  * Experimental monophonic harmonic-vowel instrument, not a voicebank. */
 #define APP_NAME "MIKU-FM"
-#define FELUCCA_ID "FM-1_949"
 #include "platform.c"
 #define STEPS 16u
 static uint32_t phase;

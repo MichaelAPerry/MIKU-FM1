@@ -90,7 +90,7 @@ static Step clip[NSTEP];
 static uint32_t clip_n,clip_t,anchor,arp_c;
 static int32_t oct;
 static uint32_t page,trk,crow,cstep,top,modified,playing,ppos,prev_keys,dirty,full,cpu_ms,cpu_pct,last_act,
-    pend,pend_t,menu,menu_slot,sv_t,sv_c,toast_until,toast_err,pv_off,u_kind,u_trk,u_pat,u_ms,lk_t0,
+    pend,pend_t,menu,menu_slot,sv_t,sv_c,sv_on,toast_until,toast_err,pv_off,u_kind,u_trk,u_pat,u_ms,lk_t0,
     face_cur,face_ms,blink_until,next_blink,happy_until;
 static const char *toast_s;
 static uint32_t ed_len[3]={2,8,2},ed_vel=12,ed_mora,ed_q,ed_mode,ed_bf;
@@ -552,8 +552,9 @@ static void app_main(void){
     pf_apply();
     stage_init();
     next_blink=fm1_ms+3000u;full=1;
+    fm1_led_key(BTN_FX,1);
     for(;;){
-        uint32_t released,b,keys,down,now,tb,oldpos=ppos;
+        uint32_t released,b,keys,down,now,tb,sh,oldpos=ppos;
         int32_t dS,dA,dP,dK[4];
         platform_poll();
         now=fm1_ms;
@@ -563,10 +564,10 @@ static void app_main(void){
         for(i=0;i<4;i++)dK[i]=fm1_enc_take(ENC_KNOB1+i);
         keys=fm1_in.notes;down=keys&~prev_keys;
         /* SAVE: tap = save to the slot; held = the slot menu (SELECT: slot, FX load, SCL new, ENV demo) */
-        if(b&(1u<<BTN_SAVE)){sv_t=now;sv_c=0;menu_slot=pf.slot;}
-        if(fm1_in.buttons&(1u<<BTN_SAVE)){
-            if(!menu && (now-sv_t>=350u || dS || dP)){menu=1;sv_c=1;menu_draw();}
-            if(!menu && (b&((1u<<BTN_FX)|(1u<<BTN_SEL)|(1u<<BTN_ENV)))){menu=1;sv_c=1;menu_draw();}
+        sh=(fm1_in.buttons>>BTN_SAVE)&1u;
+        if((sh||(b&(1u<<BTN_SAVE))) && !sv_on){sv_on=1;sv_t=now;sv_c=0;menu_slot=pf.slot;}   /* (own state: a bounce must not restart it) */
+        if(sh){
+            if(!menu && (now-sv_t>=350u || dS || dP || (b&((1u<<BTN_FX)|(1u<<BTN_SEL)|(1u<<BTN_ENV))))){menu=1;sv_c=1;menu_draw();}
             if(menu){
                 if(dS||dP){menu_slot=(uint32_t)wr((int32_t)menu_slot+dS+dP,(int32_t)NSLOT);menu_draw();}
                 if(b&(1u<<BTN_FX)){guarded(1,menu_slot);menu_draw();}
@@ -576,14 +577,15 @@ static void app_main(void){
             prev_keys=keys;
             continue;
         }
-        if(released&(1u<<BTN_SAVE)){
+        if(sv_on){
+            sv_on=0;
             if(!sv_c)do_save(menu_slot);
             menu=0;full=1;mk(0x3Fu);
             prev_keys=keys;
             continue;
         }
         if(b&(1u<<BTN_HOME)){page=(page+1u)&3u;full=1;mk(0x3Fu);}
-        for(tb=0;tb<4u;tb++)if(b&(1u<<(BTN_FX+tb))){trk=tb;mk(0x3Fu);}
+        for(tb=0;tb<4u;tb++)if(b&(1u<<(BTN_FX+tb))){trk=tb;mk(0x3Fu);for(i=0;i<4u;i++)fm1_led_key(BTN_FX+i,i==trk);}
         if(b&(1u<<BTN_OCT_UP) && oct<2){oct++;mk(0x21u);}
         if(b&(1u<<BTN_OCT_DOWN) && oct>-2){oct--;mk(0x21u);}
         if(b&(1u<<BTN_PLAY))do_play();

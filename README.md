@@ -2,7 +2,7 @@
 
 An experimental **four-track, retro virtual-idol-inspired songwriting workstation** for the M-VAVE FM-1.
 
-**Status: native FM-1 firmware (Dinghy) with an editable 16-step melody; emulator-tested; not yet tested on hardware.** The host engine below is a separate MIT-licensed prototype.
+**Status: native FM-1 firmware (Dinghy) with an editable 16-step melody sung by a formant voice, with an animated singer; emulator-tested; not yet tested on hardware.** The host engine below is a separate MIT-licensed prototype.
 
 ## Build and render an editable eight-bar song
 

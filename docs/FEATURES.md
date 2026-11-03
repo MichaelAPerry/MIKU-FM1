@@ -4,8 +4,11 @@ Status words: **emulator** = checked in fm1-emu on the real package; **hardware*
 
 | Feature | Status |
 |---|---|
-| 16-step monophonic melody, note per key, rests | emulator |
-| Five vowel colours per step (harmonic recipes, not formants) | emulator |
+| 16-step monophonic melody (eighth notes), note per key, rests | emulator |
+| Integer formant voice (fvoice): five vowels, vibrato, portamento, breath, brightness; no float | emulator |
+| Live keys with legato, KNOB 1-4 (vibrato, portamento, breath, brightness), saved with the melody | emulator |
+| STAGE page: singer face (mouth follows the voice, blink), syllable, step strip, CPU% | emulator |
+| EDIT page: step grid and knob values (HOME switches) | emulator |
 | Tempo 40–240 BPM | emulator |
 | Play from cursor, pause, stop | emulator |
 | Save melody and tempo to flash, reload at power-on | emulator (flash dump and restore) |

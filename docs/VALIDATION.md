@@ -33,6 +33,32 @@ Levels, never interchangeable: **built** (compiled), **host tests**, **emulator*
 - fm1-emu emulates the CPU and peripherals; it is not hardware. Timing, flash wear and the audio output stage are not
   reproduced faithfully.
 
+## Step 1: formant voice and singer on the device (2026-11-03)
+
+### Host
+- `tools/sprite_pack.py --check`: header up to date (65,928 B of pixel data). `ctest`: 6/7 at the time of writing; the
+  `fvoice` test failed while the voice was being retuned in the working tree (not part of this step).
+
+### Device build
+- `native/build.sh` and `--release 0.2` build. Dinghy's checks ok: image 111,540 of 581,564 B (0.1: 55,692); RAM
+  .data+.bss 16,400 of 98,304 B; pool 30,720 of 344,064 B (the face is drawn through Dinghy's canvas buffer);
+  `.ram_text` 916 instructions, no calls; register access in hal/ only. `miku-fm-0.2.fwsc` 612,223 B, identity FM-1_39000200.
+
+### Emulator (fm1-emu, same build as Step 0)
+- `tools/emu_smoke.sh build/native/miku-fm-0.2.fwsc`: 124,928 frames, RMS 1790, 23 screen colours.
+- PLAY at 300 ms: STAGE page with the face's mouth open on the syllable; the first note of the WAV has f0 390 Hz
+  (G4 = 392 Hz, -0.5%, autocorrelation at 44.1 kHz). Peak sample 4,915 of 32,767: the voice is quiet.
+- Key n7 pressed while stopped: sings C4 (f0 261 Hz).
+- Save/reboot: KNOB 1 +10 clicks (V 35 to 55), SELECT +1, a key written there, SAVE, flash dumped; a boot with that flash
+  restored shows V55 and the changed first steps (C4 sung at step 1).
+- CPU% shown by the firmware: 3% (worst 256-frame block over 5.8 ms, decaying). The emulator's clock is not the
+  device's, so this is not a device measurement; the device figure is still to be measured.
+- Screens: `docs/screens/stage_singing.png`, `docs/screens/edit.png`.
+
+### Not validated (Step 1)
+- Hardware: sound, CPU load, face drawing speed against USB and key scan, flash save with the longer struct.
+- Blink and SF_HAPPY on PLAY are coded but not looked at in a snapshot.
+
 ### Not validated
 - Anything on a physical FM-1: install from V15, from another firmware, installing another firmware from Miku-FM,
   save across a real power cycle, the newer UC25HQ80 flash.

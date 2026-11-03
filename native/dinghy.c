@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-3.0-only
  * MIKU-FM1 native: a singing songwriter for the FM-1 on Dinghy. Four tracks (VOCAL, CHORDS, BASS, DRUMS), patterns of 16 steps,
- * an arrangement of rows, 8 song slots. Pages: STAGE (the singer), SONG, PATTERN, MIXER. Unofficial fan project, not a voicebank.
+ * an arrangement of rows, 8 song slots. Pages: STAGE (the singer), SONG, PATTERN, MIXER, GEN (the song generator). Unofficial fan project, not a voicebank.
  *
  * Threads. The ISR (app_audio -> en_render) owns the sequencer and the instruments and READS the song; the main loop edits it.
  * - Single-step edits (st_put) are safe while playing: a step is 4 bytes, byte 0 is "is there anything" (note / mask). They are
@@ -74,14 +74,18 @@
 #include "firmware/song/song.c"
 #include "firmware/song/song_io.c"
 #include "firmware/song/mora.c"
+#include "firmware/song/gen.c"
 #include "firmware/app/engine.c"
 #define BUDGET_TICKS (5805u*FM1_TICKS_PER_US)       /* 256 frames at 44.1 kHz */
 #define BG RGB(7,17,34)
 #define FACE_Y 184u
-enum { PG_STAGE, PG_SONG, PG_PATTERN, PG_MIXER };
+enum { PG_STAGE, PG_SONG, PG_PATTERN, PG_MIXER, PG_GEN, PG_N };
 static Engine en;
 static Song sg;
 static Undo un;
+static Song gbak;                                   /* GEN: the song before the last take (GLO drops the take) */
+static GenCfg gcf={GS_POP,0,GK_MAJOR,0,1};
+static uint32_t take,take_mod,gvar;
 static uint8_t enc[SONG_ENC_SIZE];                 /* slot I/O buffer */
 static struct { uint32_t magic; uint8_t ver, slot, pan[NTRK], pad[2]; } pf;   /* settings: 0.3 saved 37 bytes, so its data never loads here */
 #define PF_MAGIC 0x4D4B5632u
@@ -219,7 +223,7 @@ static void pf_defaults(void){
 }
 static void pf_apply(void){uint32_t i;for(i=0;i<NTRK;i++)en.pan[i]=pf.pan[i];}
 static void after_load(void){
-    crow=cstep=top=0;un_init(&un);u_kind=0;modified=0;
+    crow=cstep=top=0;un_init(&un);u_kind=0;modified=0;take=0;
     en_post(&en,EN_PANIC,0,0,0);
     mk(0x3Fu);full=1;
 }
@@ -502,6 +506,66 @@ static void pg_stage(void){
     for(i=0;i<NTRK;i++)cv_rect(236-(int32_t)(NTRK-i)*16,40,12,12,(en.act>>i)&1u?tcol[i]:RGB(49,54,78));
     cv_blit(0,FACE_Y);
 }
+/* ---- GEN: a take is one generate (REC) or one new phrase (ARP); EDIT keeps it, GLO drops it (back to the song before it) */
+static void gen_go(uint32_t phrase){
+    uint32_t pl=playing,r=1;
+    if(phrase && (gcf.lock>>trk&1u)){toast("TRACK LOCKED",1);return;}
+    if(!phrase)stop_wait();
+    gbak=sg;take_mod=modified;take=1;un_init(&un);u_kind=0;
+    lk();
+    if(phrase)r=(uint32_t)gen_phrase(&sg,&gcf,(int)crow,(int)trk,++gvar);
+    else{gen_song(&sg,&gcf);gvar=0;}
+    ulk();
+    if(!r){take=0;toast("NO FREE PATTERN",1);return;}
+    modified=1;
+    if(!phrase){crow=top=0;if(pl)en_post(&en,EN_PLAY,0,0,0);}
+    if(crow>=sg.nrows)crow=sg.nrows?sg.nrows-1u:0;
+    toast(phrase?"NEW PHRASE":"NEW SONG",0);mk(0x1Fu);
+}
+static void gen_drop(void){
+    uint32_t pl=playing;
+    if(!take){toast("NO TAKE TO DROP",1);return;}
+    stop_wait();
+    lk();sg=gbak;ulk();
+    take=0;modified=take_mod;
+    if(crow>=sg.nrows)crow=sg.nrows?sg.nrows-1u:0;
+    if(pl && sg.nrows)en_post(&en,EN_PLAY,crow,0,0);
+    toast("DROPPED",0);mk(0x1Fu);
+}
+static void pg_gen(uint32_t b){
+    static const char *const kn12[12]={"C","C#","D","D#","E","F","F#","G","G#","A","A#","B"};
+    char s[30];
+    uint32_t t;
+    if(!b){
+        head("GEN",take?"EDIT KEEP   GLO DROP":"REC SONG   ARP PHRASE",take?RGB(249,207,94):RGB(150,160,190));
+        s[0]=0;cat(s,"ROW ");catn(s,crow+1u);txt(236,32,&FONT_S,s,RGB(249,207,94),2);
+        return;
+    }
+    if(b==1u){
+        txt(4,52,&FONT_S,"STYLE  K1",RGB(100,110,140),0);
+        txt(4,66,&FONT_L,gen_style(gcf.style),RGB(64,222,209),0);
+        txt(236,52,&FONT_S,"KEY K2  K3",RGB(100,110,140),2);
+        s[0]=0;cat(s,kn12[gcf.key%12u]);cat(s,gcf.scale?" MIN":" MAJ");
+        txt(236,66,&FONT_L,s,RGB(249,207,94),2);
+    }else if(b==2u){
+        txt(4,100,&FONT_S,"SEED  K4  ALG x100",RGB(100,110,140),0);
+        s[0]=0;catn(s,gcf.seed);txt(4,114,&FONT_L,s,C_WHITE,0);
+        s[0]=0;cat(s,"BPM ");catn(s,sg.bpm);txt(236,124,&FONT_S,s,RGB(249,207,94),2);
+    }else if(b==3u){
+        txt(4,146,&FONT_S,"PRESS TRACK AGAIN: LOCK",RGB(100,110,140),0);
+        for(t=0;t<NTRK;t++){
+            uint32_t lkd=gcf.lock>>t&1u;
+            int32_t x=4+(int32_t)t*59;
+            if(t==trk)cv_rect(x-2,164,59,26,C_WHITE);
+            cell(x,166,55,22,tname[t],lkd?RGB(150,160,190):BG,lkd?RGB(49,54,78):tcol[t]);
+        }
+    }else{
+        s[0]=0;
+        for(t=0;t<NTRK;t++)if(gcf.lock>>t&1u){if(s[0])cat(s," ");cat(s,tname[t]);}
+        txt(4,196,&FONT_S,s[0]?"LOCKED:":"NOTHING LOCKED",RGB(150,160,190),0);
+        if(s[0])txt(4,216,&FONT_S,s,RGB(255,110,110),0);
+    }
+}
 static void redraw(void){
     uint32_t b;
     if(full){
@@ -514,7 +578,7 @@ static void redraw(void){
     for(b=0;b<5u;b++)if(dirty&(1u<<b)){
         dirty&=~(1u<<b);
         band_begin(b);
-        if(page==PG_SONG)pg_song(b);else if(page==PG_PATTERN)pg_pattern(b);else pg_mixer(b);
+        if(page==PG_SONG)pg_song(b);else if(page==PG_PATTERN)pg_pattern(b);else if(page==PG_GEN)pg_gen(b);else pg_mixer(b);
         band_end(b);
         return;                                            /* one band per pass: the main loop polls between */
     }
@@ -587,20 +651,22 @@ static void app_main(void){
             prev_keys=keys;
             continue;
         }
-        if(b&(1u<<BTN_HOME)){page=(page+1u)&3u;full=1;mk(0x3Fu);}
-        for(tb=0;tb<4u;tb++)if(b&(1u<<(BTN_FX+tb))){trk=tb;mk(0x3Fu);for(i=0;i<4u;i++)fm1_led_key(BTN_FX+i,i==trk);}
+        if(b&(1u<<BTN_HOME)){if(page==PG_GEN)take=0;page=page+1u<PG_N?page+1u:0;full=1;mk(0x3Fu);}
+        for(tb=0;tb<4u;tb++)if(b&(1u<<(BTN_FX+tb))){if(page==PG_GEN && tb==trk)gcf.lock^=(uint8_t)(1u<<tb);trk=tb;mk(0x3Fu);for(i=0;i<4u;i++)fm1_led_key(BTN_FX+i,i==trk);}
         if(b&(1u<<BTN_OCT_UP) && oct<2){oct++;mk(0x21u);}
         if(b&(1u<<BTN_OCT_DOWN) && oct>-2){oct--;mk(0x21u);}
         if(b&(1u<<BTN_PLAY))do_play();
         if(b&(1u<<BTN_SEQ)){stop_play();}
-        if(b&(1u<<BTN_GLO)){if(page==PG_SONG||page==PG_PATTERN)do_undo();}
+        if(b&(1u<<BTN_GLO)){if(page==PG_SONG||page==PG_PATTERN)do_undo();else if(page==PG_GEN)gen_drop();}
         if(b&(1u<<BTN_ARP)){anchor=cstep;arp_c=0;if(page==PG_SONG && sg.nrows && sg.nrows<NROW){u_pushrows();lk();sg_row_dup(&sg,(int)crow);ulk();crow++;modified=1;mk(0x1Fu);}
-            if(page==PG_MIXER){sg.trk[trk].solo^=1u;modified=1;mk(0x1Fu);}}
+            if(page==PG_MIXER){sg.trk[trk].solo^=1u;modified=1;mk(0x1Fu);}
+            if(page==PG_GEN)gen_go(1);}
         if(b&(1u<<BTN_REC)){
             if(page==PG_PATTERN){
                 uint32_t p=pat_of();Step z={{0,0,0,0}};
                 if(p!=ROW_OFF){u_pushpat(trk,p);st_put(trk,p,cstep,&z);mk(0x1Eu);}
-            }else if(page==PG_SONG && sg.nrows){u_pushrows();lk();sg_row_delete(&sg,(int)crow);ulk();modified=1;if(crow && crow>=sg.nrows)crow=sg.nrows-1u;mk(0x1Fu);}
+            }else if(page==PG_GEN)gen_go(0);
+            else if(page==PG_SONG && sg.nrows){u_pushrows();lk();sg_row_delete(&sg,(int)crow);ulk();modified=1;if(crow && crow>=sg.nrows)crow=sg.nrows-1u;mk(0x1Fu);}
         }
         if(b&(1u<<BTN_EDIT)){
             if(page==PG_SONG){
@@ -620,6 +686,7 @@ static void app_main(void){
                 if(d<0)toast("NO FREE PATTERN",1);
                 else{u_pushrows();sg_row_set(&sg,(int)crow,(int)trk,d);modified=1;toast("DUPLICATED",0);mk(0x1Fu);}
             }else if(page==PG_MIXER){sg.trk[trk].mute^=1u;modified=1;mk(0x1Fu);}
+            else if(page==PG_GEN && take){take=0;toast("KEPT",0);}
         }
         if((released&(1u<<BTN_ARP)) && !arp_c && page==PG_PATTERN){
             uint32_t p=pat_of(),lo=anchor<cstep?anchor:cstep,hi=anchor<cstep?cstep:anchor;
@@ -663,6 +730,13 @@ static void app_main(void){
                 if(p!=ROW_OFF){u_pushpat(trk,p);lk();i=(uint32_t)sg_transpose(&sg,(int)trk,(int)p,dK[2]>0?1:-1);ulk();modified|=i;mk(0x1Eu);if(!i)toast("OUT OF RANGE",1);}
             }
             if(dK[3]&&sg.nrows){crow=(uint32_t)cl((int32_t)crow+dK[3],0,(int32_t)sg.nrows-1);mk(0x1Fu);}
+        }else if(page==PG_GEN){
+            if(dS&&sg.nrows){crow=(uint32_t)cl((int32_t)crow+dS,0,(int32_t)sg.nrows-1);mk(1u);}
+            if(dP){tweak(&sg.bpm,dP,40,240);if(playing)en_post(&en,EN_BPM,sg.bpm,0,0);mk(4u);}
+            if(dK[0]){gcf.style=(uint8_t)wr(gcf.style+dK[0],GS_N);mk(2u);}
+            if(dK[1]){gcf.key=(uint8_t)wr(gcf.key+dK[1],12);mk(2u);}
+            if(dK[2]){gcf.scale^=1u;mk(2u);}
+            if(dA||dK[3]){gcf.seed=(uint16_t)(gcf.seed+dK[3]+dA*100);mk(4u);}
         }else{
             if(dS){trk=(uint32_t)wr((int32_t)trk+dS,NTRK);mk(0x1Fu);}
             if(dA&&trk){tweak(&sg.trk[trk].preset,dA,0,(int32_t)npst[trk]-1);mk(0x1Fu);}

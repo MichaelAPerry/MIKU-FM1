@@ -187,3 +187,29 @@ in `fv_cpn`); k/t/p burst starts 0.55/0.50/0.50 -> 0.32.
 - The other plosive checks hold: closure is digital silence, burst onset 8.0-13.2 ms, centroids t 4.6 > k 1.0-2.6 > p 0.6 kHz.
 - Stress (30 s random morae): peak 24,877, no clip, deterministic (new hash, as the bursts changed). `ctest` 11/11, 0 warnings.
 
+## Step 4: song generator, GEN page (2026-11-03)
+
+Design: `firmware/song/gen.c` (integer, no libc, deterministic). `gen_song` writes chords from a diatonic progression per
+section (6 per scale, verse and chorus different), then bass, melody and drums against the chord of each row as it is in the
+song; patterns with the same musical context are shared (a 20-row song uses 7-10 patterns per track). `gen_phrase` rewrites
+one pattern with another variation. Locked tracks are never touched; with a lock the arrangement stays.
+
+### Host (`firmware/song/tests/test_gen.c`; `ctest` 12/12, 0 warnings)
+- 288 songs (4 styles x 2 scales x 12 keys x 3 seeds): every song encodes and decodes (all fields in range); 20 rows,
+  intro/verse/chorus/outro in place, vocal silent in intro and outro; every chord root, melody and bass note in the key;
+  bass on the chord root or fifth; melody 51..82 (MIDI); on beats 1 and 3 the melody is a chord tone in 8996 of 8996 notes.
+- Deterministic: same settings, same song, whatever song was there before (the mix levels stay); seeds 1234 and 1235 differ.
+- Locks (over the demo): each locked track keeps its patterns and rows byte for byte, the others change, name and tempo stay;
+  with the demo's chords locked, the new melody is on a chord tone on all 16 strong beats. All four locked: nothing changes.
+- Phrase: variation 0 equals what gen_song wrote; another variation changes that one pattern only (other patterns, tracks
+  and rows identical) and is reproducible; a silent row gets a free pattern; a locked track and a row past the end are refused.
+- Renders (`song_render --gen STYLE KEY SCALE SEED`): POP C major 1, BALLAD A minor 7, DANCE A minor 42, CHIP G major 300:
+  35-60 s, peak 28,570-32,518, no sample at full scale (3 samples above 32,000 in the ballad).
+
+### Device
+- Build: Dinghy checks ok; image 146,440 -> 152,924 B; RAM .data+.bss 30,032 -> 34,544 B (4,462 B of it the take backup).
+- fm1-emu (scripted keys): HOME x4 opens GEN; K1/K2/K3 set DANCE, A, MIN; SCL twice locks CHORDS (shown dark); REC "NEW SONG";
+  PLAY sounds; ARP on CHORDS "TRACK LOCKED"; FX, ARP "NEW PHRASE"; GLO "DROPPED" and playback goes on. emu_smoke unchanged
+  (RMS 1504, 22 colours).
+- Not checked: the sound of generated songs on hardware; how long REC takes on the device (on the host it is well under 1 ms).
+

@@ -25,7 +25,7 @@ At power-on the firmware loads the slot you last used. The first time (or if tha
 ## Playing the demo
 
 1. **PLAY** starts the song from the cursor row; **SEQ** or **PLAY** again stops it.
-2. **HOME** moves through STAGE (the singer), SONG, PATTERN and MIXER.
+2. **HOME** moves through STAGE (the singer), SONG, PATTERN, MIXER and GEN.
 3. On SONG, **SELECT** picks a row, **PLAY** starts there.
 
 ## Writing a song
@@ -44,6 +44,25 @@ At power-on the firmware loads the slot you last used. The first time (or if tha
 Edits while the song plays are allowed: single steps change at once; changes to the row list or undo pause the sequencer for
 a few milliseconds. The firmware asks for a second press before dropping unsaved changes.
 
+## Generating a song (GEN)
+
+The GEN page writes a song for you, as ordinary patterns and rows: everything it makes can be edited on the other pages.
+
+1. Pick the **style** (KNOB 1: POP, BALLAD, DANCE, CHIP), the **key** (KNOB 2) and **major / minor** (KNOB 3). The **seed**
+   (KNOB 4, ALGORITHM in hundreds) picks one song among many: the same settings always give the same song.
+2. **REC** writes a whole song: intro (2 bars), verse (4), chorus (4), verse, chorus, outro (2); chords, bass, a sung melody
+   with lyrics, and drums; the style sets tempo and sounds. The song you had is replaced (it comes back with GLO).
+3. **Lock** a track to keep it: press its track button (FX / SCL / ENV / LFO) a second time on GEN. With a track locked, REC
+   keeps the rows and the locked track and rewrites the rest to fit, e.g. lock CHORDS and REC again for a new melody, bass
+   and drums over the same chords (also over chords you wrote yourself).
+4. **ARP** writes a new **phrase**: the pattern of the current track in the cursor row (SELECT), a different one on each
+   press. A pattern used in several rows changes in all of them.
+5. Each REC or ARP is a **take**: **EDIT** keeps it, **GLO** drops it and brings back the song as it was before it. Leaving the
+   page keeps it. The undo history of the other pages starts again after a take.
+
+The melody stays in the key, lands on a chord tone on beats 1 and 3 and ends each section on the chord's root; the lyrics are
+random morae (sing-able, not words). GEN settings and locks are not saved.
+
 ## STAGE
 
 The singer's mouth follows the voice; her face blinks and smiles on PLAY. Below: the syllable that is sounding (or the
@@ -60,7 +79,7 @@ installing. Saving erases flash, so it only happens while stopped and silent.
 
 ## Limits of this version
 
-No song renaming on the device (a new song is "NEW SONG"). Pan is a device setting, not part of the song file. Lyrics, other
+No song renaming on the device (a new song is "NEW SONG", a generated one is named after its style and seed, e.g. "POP 0001"). Pan is a device setting, not part of the song file. Lyrics, other
 vocal consonants, MIDI sync and WAV export from the device are not there yet (see [ROADMAP](ROADMAP.md)).
 
 ## When something goes wrong

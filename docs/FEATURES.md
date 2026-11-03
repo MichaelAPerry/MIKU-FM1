@@ -16,6 +16,7 @@ Status words: **emulator** = checked in fm1-emu on the real package; **hardware*
 | Copy / paste steps, duplicate pattern, insert / duplicate / delete rows, undo | emulator |
 | 8 song slots (MKS2, CRC-checked), load / new / demo with an unsaved-changes guard | emulator (flash dump and restore) |
 | Demo song 「おとのはこ」 (intro, verse, chorus, outro) | emulator |
+| GEN page: song generator (4 styles, key, major/minor, seed, track locks, new phrase, keep/drop a take); writes ordinary editable patterns | emulator |
 | Host render of the demo through the same engine code (`song_render`) | host |
 | Own identity FM-1_39XXYYZZ, own store magic | built |
 | Dinghy platform: USB/TRS MIDI, USB audio, USB rescue, update loader | from Dinghy; not checked with Miku-FM |

@@ -1,15 +1,16 @@
-# Handoff (2026-11-03, after Step 3 / firmware 0.5)
+# Handoff (2026-11-03, after Step 4 generator / firmware 0.5 + crackle fix)
 
 ## Where things stand
 
-- **main** at the merge of PR #6. Firmware **0.5** (identity `FM-1_39000500`), built on Dinghy `f77bf03`
+- **main** at the merge of the Step 4 PR (generator), after PR #9 (crackle fix). Firmware **0.5** (identity `FM-1_39000500`), built on Dinghy `f77bf03`
   (GPL-3.0-only). Not yet tested on a physical FM-1 and never flashed. No GitHub release made yet.
 - Site (GitHub Pages, dev build from main, labelled "not attested"): https://michaelaperry.github.io/MIKU-FM1/
   with fm1-emu at `/fm1-emu/`.
 - Done: Step 0 (identity, licence, release/pages workflows, docs), Step 1 (integer formant voice `fvoice`, singer
   sprites, STAGE face), 0.3 (level, OCT transpose), Step 2 (four-track songwriter: `firmware/song/`,
   `firmware/audio/fmband/`, `firmware/app/engine.c`, SONG/PATTERN/MIXER pages, 8 song slots), Step 3 (Japanese
-  consonants in `fvoice`, ん hum, lips-shut face).
+  consonants in `fvoice`, ん hum, lips-shut face), crackle fix (plosive bursts), Step 4 (song generator, GEN page:
+  `firmware/song/gen.c`, `song_render --gen`).
 - Owner decisions: Dinghy platform; name Miku-FM; pitch variant A (transpose 0); the ChatGPT Miku-inspired art is the
   main art (unofficial, non-commercial fan work, `assets/NOTICE.md`); the agent merges PRs itself.
 
@@ -68,9 +69,10 @@ three detectors (>16 kHz ticks, 2-10 kHz 1 ms energy vs a 30 ms median, LPC-resi
 
 ## Next
 
-1. Owner listening pass on consonants (h, fu, z, j, nasals, fricative level); consonant look-ahead so the vowel lands
+1. Step 4 generator: done (GEN page, `firmware/song/gen.c`, see VALIDATION). Owner listening pass on the generated songs
+   (`song_render --gen STYLE KEY SCALE SEED`); ideas: more styles and progressions, a bridge, melody motifs, real lyrics.
+2. Owner listening pass on consonants (h, fu, z, j, nasals, fricative level); consonant look-ahead so the vowel lands
    on the beat (the sequencer can start VOCAL notes `fv_cons_ms()` early).
-2. Step 4: generator (styles, key/scale, seeds, track locks, regenerate a phrase, accept/reject; all output editable).
 3. First hardware test with the owner (install from V15, from another firmware, install another firmware from it;
    measure CPU% on STAGE; save across power cycles). Then a tagged release (v0.x → attested via zvenson/fm1-build),
    the `github-pages` environment tag rule `v*`, and the Firmware Hub mail (fmhub.json is in place).

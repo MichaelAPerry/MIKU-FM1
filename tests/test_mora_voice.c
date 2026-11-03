@@ -255,6 +255,48 @@ static void t_off(void) {
         CHECK(fv_cons(&V) == FC_NONE && fv_mouth(&V) == 5 && fv_level(&V) == 0, "%s: consonant state left behind", CN[oc[i]]);
     }
 }
+/* Crackle regression (owner report, 0.5): k/t/p release bursts were 6-7 ms blocks of flat noise at vowel level (above it on high notes),
+   heard as white-noise crackle on every plosive syllable. Bursts must sit 6 dB below the voice (power mean of the five vowels on that
+   note: one vowel alone can dip far on a high note), pooled per consonant and note, each one at least 3 dB below, and decay (energy of the
+   first third over the last third, pooled per consonant): one 6 ms burst of narrow-band noise varies by +-2 dB. Fresh notes and notes sung over the release of the previous one (as in the demo). */
+static void t_burst(void) {
+    static const int bc[3] = { FC_K, FC_T, FC_P }, bn[3] = { 48, 72, 96 };
+    static int32_t b[2 * 16];
+    double vp[3], wl = -99;
+    for (int k = 0; k < 3; k++) { double s = 0; for (int w = 0; w < 5; w++) { double r = vref(bn[k], w, 110); s += r * r; } vp[k] = sqrt(s / 5); }
+    printf("plosive bursts (k t p x a i u e o x notes 48 72 96 x fresh / over a release): level re voice dB, first/last third dB\n");
+    for (int c = 0; c < 3; c++) {
+        double e1 = 0, e3 = 0, eb[3] = { 0, 0, 0 };
+        for (int w = 0; w < 5; w++) for (int k = 0; k < 6; k++) {
+            int note = bn[k % 3], n = 0, a = -1, e = -1;
+            setup(&V);
+            if (k >= 3) { fv_note_on(&V, (uint8_t)note, FV_O, 110); for (int i = 0; i < 400; i++) { memset(b, 0, sizeof b); fv_render(&V, b, 16); } fv_note_off(&V); for (int i = 0; i < 80; i++) { memset(b, 0, sizeof b); fv_render(&V, b, 16); } }
+            fv_note_on_mora(&V, (uint8_t)note, (uint8_t)bc[c], (uint8_t)w, 110);
+            for (; n < ms(80); n += 16) {
+                memset(b, 0, sizeof b); fv_render(&V, b, 16);
+                if (V.cons == bc[c] && V.cph == 1) { if (a < 0) a = n; e = n + 16; }
+                for (int j = 0; j < 16; j++) X[n + j] = b[2 * j];
+            }
+            CHECK(a >= 0, "%s%c: no burst phase", CN[bc[c]], VN[w]);
+            if (a < 0) continue;
+            int t = (e - a) / 3;
+            double lv = db(rms(a, e), vp[k % 3]), r1 = rms(a, a + t), r3 = rms(e - t, e);
+            e1 += r1 * r1; e3 += r3 * r3; eb[k % 3] += rms(a, e) * rms(a, e) / 10;
+            CHECK(lv < -3, "%s%c note %d %s: burst %.1f dB re voice", CN[bc[c]], VN[w], note, k < 3 ? "fresh" : "over a release", lv);
+        }
+        double sl = 10 * log10((e1 + 1e-9) / (e3 + 1e-9));
+        printf("  %s: first/last third %.1f dB, level", CN[bc[c]], sl);
+        for (int k = 0; k < 3; k++) {
+            double lv = db(sqrt(eb[k]), vp[k]);
+            if (lv > wl) wl = lv;
+            printf(" %.1f", lv);
+            CHECK(lv < -6, "%s bursts on note %d: %.1f dB re voice", CN[bc[c]], bn[k], lv);
+        }
+        printf(" dB\n");
+        CHECK(sl > 4, "%s burst does not decay (first/last third %.1f dB)", CN[bc[c]], sl);
+    }
+    printf("  worst pooled level %.1f dB re voice\n", wl);
+}
 static uint32_t hash_run(int stress, double *peak, int *clips, int *notes_done) {
     static int32_t b[2 * 256]; uint32_t h = 2166136261u, rng = 12345; FvVoice v; fv_init(&v);
     long total = 0; int ms_ = 0;
@@ -281,7 +323,7 @@ static void t_stress(void) {
     CHECK(h1 == h2 && pk1 == pk2, "not deterministic");
 }
 int main(void) {
-    t_enums(); t_plosive(); t_fric(); t_nasal(); t_period(); t_glide(); t_flap(); t_duration(); t_vowel(); t_mouth(); t_hum(); t_legato(); t_off(); t_stress();
+    t_enums(); t_plosive(); t_fric(); t_nasal(); t_period(); t_glide(); t_flap(); t_duration(); t_vowel(); t_mouth(); t_hum(); t_legato(); t_off(); t_burst(); t_stress();
     if (fails) { printf("%d FAILED\n", fails); return 1; }
     printf("mora voice tests passed\n"); return 0;
 }

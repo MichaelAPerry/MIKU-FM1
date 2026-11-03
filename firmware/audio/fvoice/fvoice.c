@@ -10,10 +10,12 @@
    Consonants (fv_note_on_mora): a per-class table of up to 4 phases (fv_cph/fv_cpn) drives, once per block, the formant
    shape (vowels + voice bar, nasals, flap), voicing (glottal gain vg), output level cl, a noise band (LFSR through one
    2-pole resonator, added after the envelope: bursts, frication) and aspiration (LFSR through the vowel formants).
+   A release burst reaches its level in one block and decays exponentially to the next phase's noise level (a flat block of noise
+   at vowel level sounds like a crackle of white noise).
    Every level is eased toward its phase target and ramped linearly inside a block. Durations are counted in blocks, so
    they do not depend on pitch or tempo. Cost: vg 1 + aspiration 1 multiplies always, noise band 4 only while it sounds. */
 #define CPH(c, i) (fv_cph + ((c) * FV_NPH + (i)) * 5)    /* phase rows of the generated tables */
-#define CPN(c, i) (fv_cpn + ((c) * FV_NPH + (i)) * 2)
+#define CPN(c, i) (fv_cpn + ((c) * FV_NPH + (i)) * 3)
 #define PMAX 45055
 #define P_C5 24576              /* pitch units of MIDI 72 */
 static void quiet(FvVoice *v) { v->lp = v->sp = v->np = v->ny1 = v->ny2 = 0; for (int i = 0; i < FV_NR; i++) v->y1[i] = v->y2[i] = 0; }
@@ -50,7 +52,7 @@ static void enter(FvVoice *v) {                 /* load phase v->cph of class v-
     v->cshp = p[1] & 15; v->lip = p[1] >> 6 & 1; v->tail = p[1] >> 7; v->km = fv_kmt[p[1] >> 4 & 3];
     v->vgt = p[2] << 9; v->clt = p[3] << 8;
     if (v->cshp == FV_NAS0 || v->cshp == FV_NAS1) { v->clt = (v->clt * fv_nbo[clampi((v->ptgt * 3) >> 10, 0, 127)]) >> 12; if (v->clt > 40000) v->clt = 40000; }
-    v->nlt = (int32_t)(q[0] * vs) >> 14; v->apt = q[1] << 1;
+    v->nlt = (int32_t)(q[0] * vs) >> 14; v->apt = q[1] << 1; v->nkd = q[2]; v->nab = q[2] != 0;
     if (p[4]) for (int i = 0; i < 3; i++) v->nbc[i] = fv_nbt[((p[4] - 1) * 5 + v->vowel) * 3 + i];
 }
 void fv_init(FvVoice *v) {
@@ -136,7 +138,9 @@ static void block(FvVoice *v) {
     int32_t tg = (v->env * (8192 + v->velg * 193)) >> 16;                 /* half scale: pgain carries the other 6 dB */
     tg = (tg * (32768 + ((v->dr[2] * h) >> 9))) >> 15;                    /* shimmer */
     v->cl = ease(v->cl, v->clt, FV_KL); tg = (tg * v->cl) >> 15;          /* consonant level */
-    ramp(&v->vg, &v->vgs, v->vgt, FV_KV); ramp(&v->nl, &v->nls, v->nlt, FV_KN); ramp(&v->ap, &v->aps, v->apt, FV_KN);
+    if (v->nab) { v->nls = (v->nlt - v->nl) >> 4; v->nab = 0; }        /* release burst: full level within one block, */
+    else { if (v->nkd) v->nlt -= ((v->nlt >> 4) * v->nkd) >> 11; ramp(&v->nl, &v->nls, v->nlt, FV_KN); }   /* then it decays */
+    ramp(&v->vg, &v->vgs, v->vgt, FV_KV); ramp(&v->ap, &v->aps, v->apt, FV_KN);
     v->nzon = v->nl || v->nls; if (!v->nzon) v->ny1 = v->ny2 = 0;
     tg = clampi((tg * fv_pgain[clampi((v->pcur * 3) >> 10, 0, 127)]) >> 12, 0, 49152);
     int32_t df = tg - v->gcur;

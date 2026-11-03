@@ -31,8 +31,8 @@ typedef struct {
     uint8_t gated, vowel, velg, left;
     /* consonant state (fv_note_on_mora): smoothed voicing / level / noise / aspiration, noise band, phase machine */
     int32_t vg, vgs, vgt, nl, nls, nlt, ap, aps, apt, cl, clt, ny1, ny2, nbc[3];
-    uint16_t km;
-    uint8_t cons, cph, cleft, cshp, lip, nzon, tail;
+    uint16_t km, nkd;
+    uint8_t cons, cph, cleft, cshp, lip, nzon, tail, nab;
 } FvVoice;
 void fv_init(FvVoice *v);
 void fv_note_on(FvVoice *v, uint8_t midi_note, uint8_t vowel, uint8_t velocity); /* gated: legato */

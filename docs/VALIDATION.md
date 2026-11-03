@@ -170,3 +170,20 @@ much earlier). Durations are counted in blocks, so they do not depend on pitch o
 - Nothing was listened to (no audio output here); levels and timbres are tuned by measurement and spectrograms only. The weakest
   guesses: h, fu, the voiced fricatives and the nasal murmur timbre. Not tested on hardware.
 - Renders: `tools/mora_render` (every mora, note 72), `tools/song_render --solo vocal --rows 2 5` (verse vocal alone).
+
+## Crackle fix: plosive release bursts (2026-11-03)
+
+Owner: white-noise crackle in the vocal solo, about every other syllable. Diagnosis in `docs/HANDOFF.md`: the k/t/p release
+bursts were 6-7 ms blocks of flat noise at the vowel's level (higher than the vowel on high notes). A burst phase now reaches
+its level within one block and decays exponentially to the next phase (`bst=1` in `tools/gen_fvoice_tables.py`; per-phase decay
+in `fv_cpn`); k/t/p burst starts 0.55/0.50/0.50 -> 0.32.
+
+### Host
+- `t_burst` (k t p x a i u e o x notes 48/72/96 x fresh / over the release of a previous note), level re the power mean of the
+  five vowels on that note, pooled: k -9.3/-10.7/-7.3, t -8.9/-10.3/-6.9, p -9.7/-11.1/-7.7 dB (limit -6; each burst < -3);
+  first-third over last-third energy k 5.5, t 7.6, p 6.2 dB (limit 4). The 0.5 voice fails it 67 times (bursts at -2 dB that grow).
+- Demo vocal solo, burst RMS re the following vowel (k 69, t 69, k 72, t 76, t 81): before -0.1/-0.6/-3.5/+4.9/+0.8 dB,
+  after -6.3/-6.6/-11.2/-1.8/-6.0 dB. Strong >16 kHz events 21 -> 12 (the rest are burst onsets). No events in vowels before or after.
+- The other plosive checks hold: closure is digital silence, burst onset 8.0-13.2 ms, centroids t 4.6 > k 1.0-2.6 > p 0.6 kHz.
+- Stress (30 s random morae): peak 24,877, no clip, deterministic (new hash, as the bursts changed). `ctest` 11/11, 0 warnings.
+

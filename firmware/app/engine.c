@@ -115,7 +115,7 @@ void en_render(Engine *e, int32_t *out, uint32_t n) {
     }
     seg(e, out, pos, n - pos);
     m = g->master > 127u ? 127u : g->master;
-    mg = (int32_t)(m * m * 3482u / 10000u);        /* Q12, master 100 = 0.85 (-1.4 dB): the voice alone peaks near -3 dBFS, the full band needs the head room */
+    mg = (int32_t)(m * m * 3072u / 10000u);        /* Q12, master 100 = 0.75 (-2.5 dB): the voice alone peaks near -3 dBFS, the full band needs the head room */
     for (i = 0; i < 2u * n; i++) {
         int32_t x = out[i];
         x = x > 131071 ? 131071 : x < -131071 ? -131071 : x;

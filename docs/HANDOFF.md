@@ -2,6 +2,10 @@
 
 ## Where things stand
 
+**Read [PROJECT_STATE.md](PROJECT_STATE.md) too:** every asset and its intended use (e.g. the packed but unused dancing
+sprites), and the original master prompt checked item by item (done / partial / missing).
+
+
 - **main** at the merge of the Step 4 PR (generator), after PR #9 (crackle fix). Firmware **0.5** (identity `FM-1_39000500`), built on Dinghy `f77bf03`
   (GPL-3.0-only). Not yet tested on a physical FM-1 and never flashed. No GitHub release made yet.
 - Site (GitHub Pages, dev build from main, labelled "not attested"): https://michaelaperry.github.io/MIKU-FM1/

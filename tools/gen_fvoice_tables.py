@@ -56,22 +56,25 @@ NB = {
     "H":  ((3600, 3600, 3600, 3600, 3600), 2500, (0.0, 1.0, 0.0, 0.0, 0.0)),   # c-like friction of "hi" only
 }
 NASAL_DB = ((55, -5.0), (72, 7.0))   # murmur level vs note: the nasal formant sits below f0 when singing high, so the murmur is raised there
+BURST_END = 0.25                    # burst into a vowel: the noise falls to this fraction of its start
 NRMS = 8192                         # noise level 1.0 = this RMS at the band output
 KV_TAU, KL_TAU, KN_TAU = 3.0, 1.5, 0.8   # ms: voicing, level, noise/aspiration smoothing
 KM_TAU = {"std": 8.0, "fast": 5.0, "slow": 12.0}   # ms: formant morph speed
 KMI = {"std": 0, "fast": 1, "slow": 2}
-def P(ms, sh="V", vg=1.0, lv=1.0, nk=None, nl=0.0, asp=0.0, km="std", lip=0):
-    return (ms, sh, vg, lv, nk, nl, asp, km, lip)
+def P(ms, sh="V", vg=1.0, lv=1.0, nk=None, nl=0.0, asp=0.0, km="std", lip=0, bst=0):
+    return (ms, sh, vg, lv, nk, nl, asp, km, lip, bst)
 HOLD = 255
-# MC_* order: NONE K S SH T CH TS N H F M Y R W G Z J D B P NN.  Phase: P(ms, shape, voicing, level, noise band, noise, aspiration, morph, lips closed)
+# MC_* order: NONE K S SH T CH TS N H F M Y R W G Z J D B P NN.  Phase: P(ms, shape, voicing, level, noise band, noise, aspiration, morph, lips closed,
+# burst: the noise starts at nl and falls exponentially to the next phase's noise (BURST_END of nl if that is 0) by the phase end; a flat
+# block of noise at vowel level sounds like a crackle of white noise, a release transient does not)
 CONS = [
     [],
-    [P(11, vg=0, lv=0), P(7, vg=0, lv=0, nk="K", nl=0.55), P(22, vg=0, lv=0.35, nk="K", nl=0.10, asp=0.10)],             # K
+    [P(11, vg=0, lv=0), P(7, vg=0, lv=0, nk="K", nl=0.32, bst=1), P(22, vg=0, lv=0.35, nk="K", nl=0.10, asp=0.10)],             # K
     [P(48, vg=0, lv=0, nk="S", nl=0.22), P(14, vg=0.5, lv=0.6, nk="S", nl=0.05)],                                           # S
     [P(52, vg=0, lv=0, nk="SH", nl=0.26), P(14, vg=0.5, lv=0.6, nk="SH", nl=0.05)],                                         # SH
-    [P(9, vg=0, lv=0), P(6, vg=0, lv=0, nk="T", nl=0.50), P(18, vg=0, lv=0.35, nk="T", nl=0.08, asp=0.08)],                # T
-    [P(9, vg=0, lv=0), P(4, vg=0, lv=0, nk="SH", nl=0.45), P(34, vg=0, lv=0.2, nk="SH", nl=0.36), P(10, vg=0.5, lv=0.6, nk="SH", nl=0.08)],   # CH
-    [P(9, vg=0, lv=0), P(4, vg=0, lv=0, nk="T", nl=0.45), P(30, vg=0, lv=0.2, nk="S", nl=0.38), P(10, vg=0.5, lv=0.6, nk="S", nl=0.08)],      # TS
+    [P(9, vg=0, lv=0), P(6, vg=0, lv=0, nk="T", nl=0.32, bst=1), P(18, vg=0, lv=0.35, nk="T", nl=0.08, asp=0.08)],                # T
+    [P(9, vg=0, lv=0), P(4, vg=0, lv=0, nk="SH", nl=0.45, bst=1), P(34, vg=0, lv=0.2, nk="SH", nl=0.36), P(10, vg=0.5, lv=0.6, nk="SH", nl=0.08)],   # CH
+    [P(9, vg=0, lv=0), P(4, vg=0, lv=0, nk="T", nl=0.45, bst=1), P(30, vg=0, lv=0.2, nk="S", nl=0.38), P(10, vg=0.5, lv=0.6, nk="S", nl=0.08)],      # TS
     [P(50, "NN", lv=0.38), P(60, km="fast")],                                                                                 # N
     [P(40, vg=0, lv=0.55, nk="H", nl=0.12, asp=0.22), P(12, vg=0.5, lv=0.8, asp=0.06)],                                      # H (hi also gets the c-like band)
     [P(40, vg=0, lv=0.25, nk="F", nl=0.07, asp=0.06), P(10, vg=0.5, lv=0.6)],                                                # F
@@ -79,12 +82,12 @@ CONS = [
     [P(10, "I", lv=0.55), P(50, km="slow")],                                                                                 # Y
     [P(16, "FL", lv=0.4, km="fast"), P(20, km="fast")],                                                                      # R
     [P(10, "U", lv=0.5), P(50, km="slow")],                                                                                  # W
-    [P(24, "BAR", lv=0.22, km="fast"), P(5, lv=0.45, nk="K", nl=0.18, km="fast")],                                           # G
+    [P(24, "BAR", lv=0.22, km="fast"), P(5, lv=0.45, nk="K", nl=0.18, km="fast", bst=1)],                                           # G
     [P(40, "BAR", lv=0.5, nk="S", nl=0.15, km="fast"), P(12, lv=0.8, nk="S", nl=0.05, km="fast")],                         # Z
     [P(40, "BAR", lv=0.5, nk="SH", nl=0.17, km="fast"), P(12, lv=0.8, nk="SH", nl=0.05, km="fast")],                       # J
-    [P(24, "BAR", lv=0.22, km="fast"), P(5, lv=0.45, nk="T", nl=0.18, km="fast")],                                           # D
-    [P(24, "BAR", lv=0.22, km="fast", lip=1), P(5, lv=0.45, nk="P", nl=0.18, km="fast")],                             # B
-    [P(14, vg=0, lv=0, lip=1), P(6, vg=0, lv=0, nk="P", nl=0.50), P(16, vg=0, lv=0.35, nk="P", nl=0.06, asp=0.08)],         # P
+    [P(24, "BAR", lv=0.22, km="fast"), P(5, lv=0.45, nk="T", nl=0.18, km="fast", bst=1)],                                           # D
+    [P(24, "BAR", lv=0.22, km="fast", lip=1), P(5, lv=0.45, nk="P", nl=0.18, km="fast", bst=1)],                             # B
+    [P(14, vg=0, lv=0, lip=1), P(6, vg=0, lv=0, nk="P", nl=0.32, bst=1), P(16, vg=0, lv=0.35, nk="P", nl=0.06, asp=0.08)],         # P
     [P(HOLD, "NN", lv=0.55, lip=1)],                                                                                          # NN (moraic n: hum)
 ]
 
@@ -191,17 +194,20 @@ def main():
         assert len(ph) <= 4
         for i in range(4):
             if i < len(ph):
-                ms, sh, vg, lv, nk, nl, asp, kmn, lip = ph[i]
+                ms, sh, vg, lv, nk, nl, asp, kmn, lip, bst = ph[i]
                 n = HOLD if ms == HOLD else max(1, int(round(ms / (BT * 1000))))
                 assert n <= 255 and (ms != HOLD or n == 255)
                 tail = sh == "V" and vg >= 1 and lv >= 1 and nk is None and not nl and not asp and ms != HOLD   # pure vowel: the consonant is over
                 cph += [n, SHI[sh] | KMI[kmn] << 4 | lip << 6 | tail << 7, int(round(vg * 128)), int(round(lv * 128)), 0 if nk is None else NBN.index(nk) + 1]
-                cpn += [min(65535, int(round(nl * 32768))), min(65535, int(round(asp * 32768)))]
+                nx = ph[i + 1][5] if i + 1 < len(ph) else 0.0
+                kd = 0 if not bst else int(round(32768 * (1 - ((nx if nx else BURST_END * nl) / nl) ** (1 / n))))
+                assert not bst or 0 < kd < 32768
+                cpn += [min(65535, int(round(nl * 32768))), min(65535, int(round(asp * 32768))), kd]
             else:
-                cph += [0, 15, 128, 128, 0]; cpn += [0, 0]
+                cph += [0, 15, 128, 128, 0]; cpn += [0, 0, 0]
     out.append("#define FV_NPH 4\n#define FV_NCLS %d\n" % len(CONS))
     out.append(arr("fv_cph", "uint8_t", cph, 20))          # [class][phase]{blocks (255 = hold), shape | morph<<4 | lips<<6 | vowel-tail<<7, voicing, level (128 = 1.0), noise kind+1}
-    out.append(arr("fv_cpn", "uint16_t", cpn, 8))          # [class][phase]{noise level, aspiration} Q15
+    out.append(arr("fv_cpn", "uint16_t", cpn, 12))         # [class][phase]{noise level, aspiration, burst decay per block} Q15
     def nbo(n):
         (n0, d0), (n1, d1) = NASAL_DB
         return d0 if n <= n0 else d1 if n >= n1 else d0 + (d1 - d0) * (n - n0) / (n1 - n0)

@@ -13,38 +13,26 @@
 - Owner decisions: Dinghy platform; name Miku-FM; pitch variant A (transpose 0); the ChatGPT Miku-inspired art is the
   main art (unofficial, non-commercial fan work, `assets/NOTICE.md`); the agent merges PRs itself.
 
-## Open bug (top priority): white-noise crackles on some consonants
+## Crackle bug: fixed (2026-11-03, this branch)
 
-The owner hears **crackles like white noise on some sounds that are hard to tell apart**, in the Step 3 renders
-(`tools/mora_render` all 70 morae on note 72; `tools/song_render` the demo). Not yet diagnosed. Suspects, in order:
-
-1. The consonant noise band (`fvoice.c`, the noise resonator(s) driven by the LFSR) clipping or wrapping: a high-Q
-   2-pole band at full-scale noise, the `clampi(y,-32767,32767)` per resonator turning overload into hard-clipped
-   crackle, or int32 overflow in `g*x + a1*y1 + a2*y2` before the shift.
-2. Abrupt gating: noise switched on/off (or level/coefficient changes applied per 16-frame block) without a ramp,
-   giving clicks at block edges. Same for the plosive closure (digital silence) cutting in and out.
-3. Aspiration / glottal-phase-gated noise (`nz = noise * |a|`) producing buzzy spikes when `a` has a sharp edge.
-4. The final limiter (`mx_limit`, hard cap 32767) or the app gain ×1.5 in `firmware/app/engine.c` hitting the cap
-   on fricative peaks.
-
-Already ruled out (2026-11-03, measured): no output clipping in `morae.wav`; inside the voice the six resonators,
-the noise band and the resonator sum clamp on only 3 samples in total over all 69 morae at notes 48/72/84 (on "hi"),
-so internal clamping is not the cause. A click-spike count on per-track solo renders of the demo
-(`song_render --solo …`, 22.5 s) gave chords 0, vocal 54, bass 83 (chip-square bass: naive square edges, a likely
-aliasing "crackle" source), drums 143 (hats/snare from naive squares and one-pole-filtered noise). Ask the owner
-which solo file crackles before changing code. Next suspects if it is the voice: noise-band coefficients swapped
-in one step at consonant phase changes (`enter()` sets `nbc` while `ny1/ny2` keep old state), the glottal-gated
-breath noise, the non-band-limited glottal pulse (aliasing at high notes). If bass/drums: band-limit the squares
-(polyBLEP or wavetables per octave) and use 2-pole noise filters.
-
-How to find it: render each mora alone (`tools/mora_render`), and for each one measure (a) the count of
-samples at or within 1% of ±32767 at every stage (per resonator before clamp, voice out, mix out), (b) the largest
-sample-to-sample jump relative to the local RMS, (c) energy above 10 kHz in 5 ms windows, (d) jumps that line up
-with 16-frame block boundaries. Rank the morae and fix the cause, not the symptom (ramps per sample for level and
-noise gain, lower noise drive / Q, headroom before the clamp, soft saturation instead of hard clamp). Add a
-regression test: for all 70 morae × notes 48/72/96, no clamp hits inside the voice and no block-edge jumps above
-a threshold. Then send the owner new `morae.wav`, `verse_vocal_solo.wav` and `otonohako_sung.wav` and ask which
-syllables still crackle.
+Owner report: white-noise crackle in the vocal solo only, on roughly every other syllable. Measured on `song_render --solo vocal`
+with an instrumented scratch copy of `fvoice.c` (logs note-ons, phase entries and filter resets with sample positions) and
+three detectors (>16 kHz ticks, 2-10 kHz 1 ms energy vs a 30 ms median, LPC-residual outliers vs block phase):
+- All 20 broadband events were inside consonants, none in vowels; 15 of them in the release-burst phase of k and t, the rest
+  nasal shape changes. Turning the noise band off removed 20 of the 21 strong >16 kHz events; breath noise and aspiration
+  did not matter. Every demo note starts over the previous note's release (none start fresh).
+- Ruled out: clamping (0 hits at every stage in the demo), block edges (outliers evenly spread over the 16 block positions),
+  note-start filter resets, the `nbc` swap with carried `ny1/ny2` (no event at the ts T->S switch), the gated breath noise
+  (only the per-period glottal edge at about -40 dB, normal buzz).
+- Cause: each k/t/p release burst was a 6-7 ms block of flat noise at the vowel's own level (0 dB; up to +5 dB on high
+  notes, where the vowel is quieter; +8 dB for "ka" at note 96), with a 0.8 ms fade-in so it even grew over the burst.
+- Fix (`gen_fvoice_tables.py` `bst=1`, `fvoice.c`): a burst phase reaches its level within one block, then decays
+  exponentially to the next phase's noise (to 25% when a vowel follows) by its end; k/t/p burst starts 0.55/0.50/0.50 -> 0.32.
+  Demo bursts now -6 to -11 dB re the vowel. Regression test `t_burst` (k t p x 5 vowels x notes 48/72/96 x fresh / over a
+  release): the old voice fails it 67 times.
+- Open, separate: the vowel level swings with pitch ("a" is 19 dB down at note 96, 8 dB at 78: harmonics miss F1), so "ta"
+  on note 76 in the demo is still only -2 dB under its vowel. A per-vowel loudness table against pitch would fix that.
+  Bass and drum crackle counts (naive squares) are unchanged; the owner hears them as clean.
 
 ## How to build, test, run (verified recipe)
 
@@ -78,7 +66,7 @@ syllables still crackle.
 - **Hardware: never flash or tell the owner to flash without their explicit go-ahead in that session.** One flash
   bank. Dinghy recovery: hold OCT− at power-on (USB rescue); two failed boots go there by themselves.
 
-## Next, after the crackle fix
+## Next
 
 1. Owner listening pass on consonants (h, fu, z, j, nasals, fricative level); consonant look-ahead so the vowel lands
    on the beat (the sequencer can start VOCAL notes `fv_cons_ms()` early).

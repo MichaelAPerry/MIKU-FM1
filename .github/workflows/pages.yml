@@ -1,0 +1,101 @@
+# SPDX-License-Identifier: MIT
+# The site (GitHub Pages): the front page (site/index.html, tools/site_front.sh), the package in firmware/, and
+# fm1-emu/ = that package emulated (tools/site_emu.sh). After MPFM1's pages.yml. Two ways in:
+#   - a published release, or a manual run with a release tag: the attested release package is downloaded;
+#   - a push to main, or a manual run without a tag: the package is built here (a development build, labelled
+#     "not attested" on the page), so the site follows main.
+# Either way the package is booted in fm1-emu first (tools/emu_smoke.sh): it must sound and draw.
+# The github-pages environment must allow tags v* (Settings > Environments), or run this by hand from main with a tag.
+name: Pages
+
+on:
+  release:
+    types: [published]
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "a release tag (vX.Y) whose attested package the site carries; empty: build main here (development build)"
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name || inputs.tag || '' }}
+      - name: Package
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.event.release.tag_name || inputs.tag }}
+        run: |
+          set -euo pipefail
+          python3 -m pip install -q Pillow
+          mkdir -p build/site/firmware
+          if [ -n "$TAG" ]; then
+            # a release: its attested package
+            version=${TAG#v}; kind=release
+            gh release download "$TAG" --pattern "miku-fm-$version.fwsc" --dir build/site/firmware
+          else
+            # main: built here, the way release.yml does (JieLi toolchain, AC79 SDK at its pinned tag and commit)
+            version=dev; kind=dev
+            mkdir -p "$RUNNER_TEMP/tc" && cd "$RUNNER_TEMP/tc"
+            curl -fL --retry 3 https://pkgman.jieliapp.com/s/linux-toolchain | tar -xJ
+            cd "$GITHUB_WORKSPACE"
+            tc=$(find "$RUNNER_TEMP/tc" -maxdepth 1 -mindepth 1 -type d | head -n 1)
+            sdk="$RUNNER_TEMP/ac79sdk"
+            for i in 1 2 3 4; do
+              rm -rf "$sdk"
+              git clone -q --depth 1 --branch AC79NN_SDK_V1.2.1_2023-12-13 https://gitee.com/Jieli-Tech/fw-AC79_AIoT_SDK.git "$sdk" && break
+              [ "$i" = 4 ] && { echo "SDK clone failed"; exit 1; }
+              sleep $((i * 10))
+            done
+            test "$(git -C "$sdk" rev-parse HEAD)" = d179b4484759423312073f5fbb232501aa491047
+            JIELI_TOOLCHAIN="$tc" AC79_SDK="$sdk" bash native/build.sh
+            cp build/native/miku-fm.fwsc build/site/firmware/miku-fm-dev.fwsc
+          fi
+          echo "VERSION=$version" >> "$GITHUB_ENV"
+          echo "KIND=$kind" >> "$GITHUB_ENV"
+      - name: Boot it in fm1-emu
+        run: |
+          set -euo pipefail
+          git clone -q https://github.com/joakimeriksson/fm1-emu build/fm1-emu-src
+          git -C build/fm1-emu-src -c advice.detachedHead=false checkout -q 9de1ef0
+          (cd build/fm1-emu-src && cargo build -q --release -p fm1-emu)
+          tools/emu_smoke.sh "build/site/firmware/miku-fm-$VERSION.fwsc" build/emu build/fm1-emu-src/target/release/fm1-emu
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: emulator-evidence
+          path: build/emu/
+      - name: Site
+        run: |
+          set -euo pipefail
+          tools/site_emu.sh build/site "$VERSION" build/fm1-emu-src
+          tools/site_front.sh build/site "$VERSION" "$KIND" "$GITHUB_SHA"
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: build/site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

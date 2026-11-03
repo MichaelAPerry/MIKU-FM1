@@ -1,6 +1,6 @@
 # Controls
 
-Miku-FM 0.4 is a four-track songwriter. **HOME** cycles the pages: STAGE, SONG, PATTERN, MIXER (the page name is on
+Miku-FM 0.4 is a four-track songwriter. **HOME** cycles the pages: STAGE, SONG, PATTERN, MIXER, GEN (the page name is on
 the screen). One control map holds everywhere; the tables below list what each control does on each page.
 
 Everywhere:
@@ -15,7 +15,7 @@ Everywhere:
 | **HOME** | Next page |
 | **SAVE** (tap) | Save the song to the current slot (only while stopped): "SAVED" or "SAVE FAILED" |
 | **SAVE** (hold) | Slot menu, see below |
-| **GLO** | Undo (SONG, PATTERN): up to 8 steps back |
+| **GLO** | Undo (SONG, PATTERN): up to 8 steps back. GEN: drop the take |
 
 Keys sound the current track on every page. On PATTERN they also write the cursor step.
 
@@ -90,6 +90,25 @@ Four tracks: name, preset, level bar, pan marker, M (mute) and S (solo). The cur
 | PRESETS | Tempo |
 | EDIT | Mute |
 | ARP | Solo |
+
+## GEN
+
+The song generator (see [MANUAL](MANUAL.md)). Header: the take hint, the cursor row. Below: style, key and scale, seed, tempo,
+the four tracks (dark = locked; the white frame is the current track).
+
+| Control | What it does |
+|---|---|
+| KNOB 1 | Style: POP, BALLAD, DANCE, CHIP |
+| KNOB 2 | Key, C to B |
+| KNOB 3 | Major / minor |
+| KNOB 4 | Seed, by 1 (ALGORITHM: by 100) |
+| SELECT | Cursor row (where ARP writes a phrase) |
+| PRESETS | Tempo |
+| FX / SCL / ENV / LFO | Pick the track; pressing the current track's button again locks / unlocks it |
+| REC | Generate the song: all unlocked tracks (nothing locked: also new rows, name, tempo, sounds). Starts again from row 1 if playing |
+| ARP | New phrase: the current track's pattern in the cursor row (another variation each press) |
+| EDIT | Keep the take |
+| GLO | Drop the take: back to the song before the last REC / ARP |
 
 ## Songs and slots
 

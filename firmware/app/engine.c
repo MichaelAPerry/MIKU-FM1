@@ -17,14 +17,14 @@ uint32_t en_post(Engine *e, uint32_t kind, uint32_t a, uint32_t b, uint32_t c) {
     e->qh = h + 1u;
     return 1;
 }
-uint32_t en_lock(Engine *e, void (*poll)(void), uint32_t tries) {
+uint32_t en_lock(Engine *e, uint32_t (*wait)(void)) {
     e->lock = 1;
-    while (!e->ack && tries--) poll();
+    while (!e->ack && wait()) {}
     return e->ack;
 }
-void en_unlock(Engine *e, void (*poll)(void), uint32_t tries) {
+void en_unlock(Engine *e, uint32_t (*wait)(void)) {
     e->lock = 0;
-    while (e->ack && tries--) poll();
+    while (e->ack && wait()) {}
 }
 static void sing(Engine *e, uint32_t note, uint32_t mora, uint32_t vel) {   /* moraic n holds the vowel before it */
     uint32_t v = mora_vowel(mora);

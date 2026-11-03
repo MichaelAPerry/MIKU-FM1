@@ -28,7 +28,7 @@ typedef struct {
 void en_init(Engine *e, const Song *g);       /* instruments and sequencer only; does not touch the mailbox */
 uint32_t en_post(Engine *e, uint32_t kind, uint32_t a, uint32_t b, uint32_t c);   /* main side; 0 if the ring is full */
 void en_render(Engine *e, int32_t *out, uint32_t n);
-uint32_t en_lock(Engine *e, void (*poll)(void), uint32_t tries);   /* 1 = the ISR has stopped touching the song; poll() is called while waiting */
-void en_unlock(Engine *e, void (*poll)(void), uint32_t tries);
+uint32_t en_lock(Engine *e, uint32_t (*wait)(void));   /* main side. 1 = the ISR has stopped touching the song. wait() is called while waiting and returns 0 to give up */
+void en_unlock(Engine *e, uint32_t (*wait)(void));
 uint32_t en_pre(uint32_t trk, uint32_t p);    /* the preset that is actually used for p */
 #endif

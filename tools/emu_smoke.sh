@@ -6,6 +6,7 @@
 set -eu
 PKG="$(cd "$(dirname "${1:?usage: tools/emu_smoke.sh PACKAGE.fwsc OUT_DIR [FM1_EMU_BIN]}")" && pwd)/$(basename "$1")"
 OUT="${2:?out dir}"; EMU="${3:-fm1-emu}"
+case "$EMU" in */*) EMU="$(cd "$(dirname "$EMU")" && pwd)/$(basename "$EMU")";; esac   # (we cd below)
 mkdir -p "$OUT/work"
 cd "$OUT"
 "$EMU" --fwsc "$PKG" --ms 3000 --keys '200:PLAY,1500:enc0:+2' --snap 1000,2500 --wav audio.wav > boot.log 2>&1

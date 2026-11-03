@@ -64,7 +64,8 @@ void song_demo(Song *g){
     sg_init(g);
     for(i=0;i<8;i++)g->name[i]=nm[i];
     g->bpm=148;g->loop=1;
-    g->trk[TR_VOCAL].preset=0;g->trk[TR_CHORDS].preset=1;g->trk[TR_BASS].preset=2;g->trk[TR_DRUMS].preset=3;
+    g->trk[TR_VOCAL].preset=0;g->trk[TR_CHORDS].preset=0;g->trk[TR_BASS].preset=2;g->trk[TR_DRUMS].preset=0;   /* bells, chip square, 808 */
+    g->trk[TR_CHORDS].level=112;
     for(i=0;i<8;i++)line(g,i,ly[i],nt[i]);
     /* chords: 0-3 verse C F Am G arp up-down 16ths; 4-6 chorus F G Em stab + arp; 7 final C strum; 8 intro C arp up 32nds */
     for(i=0;i<4;i++)chord(g,i,cr[i],cq[i],CM_UPDOWN,0,16);

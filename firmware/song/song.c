@@ -9,7 +9,7 @@ void sg_init(Song *g){
     g->bpm=120;g->swing=0;g->master=100;g->loop=1;g->nrows=0;g->transpose=0;
     for(t=0;t<NTRK;t++){
         Trk *k2=&g->trk[t];
-        k2->level=lv[t];k2->mute=0;k2->solo=0;k2->preset=(uint8_t)t;
+        k2->level=lv[t];k2->mute=0;k2->solo=0;k2->preset=0;
         k2->vib=35;k2->porta=10;k2->breath=8;k2->bright=79;
     }
     for(i=0;i<NROW;i++){for(t=0;t<NTRK;t++)g->row[i].pat[t]=ROW_OFF;g->row[i].sect=SEC_NONE;}

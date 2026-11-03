@@ -15,7 +15,8 @@ Miku-FM is a singing synthesizer for the M-VAVE FM-1, growing into a songwriting
 6. **SAVE** (while stopped) keeps the melody, tempo and knobs in flash; they come back at the next power-on.
 
 You can also play the keys live, stopped or during playback. Holding one key and pressing another glides between
-them. KNOB 1-4 set vibrato depth, portamento time, breath and brightness.
+them. KNOB 1-4 set vibrato depth, portamento time, breath and brightness. OCT− / OCT+ move the voice down or up
+by octaves (up to two each way); the written notes stay as they are.
 
 **HOME** switches between STAGE (the singer, her mouth following the sound, the syllable, tempo, a step strip and the
 audio CPU load) and EDIT (the step grid and knob values). While the melody is the demo, STAGE shows its syllables;

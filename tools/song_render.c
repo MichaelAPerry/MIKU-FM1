@@ -1,6 +1,8 @@
 /* SPDX-License-Identifier: GPL-3.0-only */
 /* Host render of a song through the device engine (firmware/app/engine.c): song_render [out.wav] [song.mks]
- * Default: the built-in demo 「おとのはこ」, once through (no loop), plus a 3 s tail. The WAV is 44.1 kHz 16-bit stereo. */
+ * Default: the built-in demo 「おとのはこ」, once through (no loop), plus a 3 s tail. The WAV is 44.1 kHz 16-bit stereo.
+ * Options (host tool only; the song's own solo flag and PLAY row are what the device uses too):
+ *   --solo vocal|chords|bass|drums   solo that track    --rows A B   play from row A and cut exactly at the end of row B (0-based), 10 ms fade */
 #include "firmware/app/engine.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -8,31 +10,49 @@
 static Song g; static Engine en;
 static void w32(FILE *f, uint32_t v) { for (int i = 0; i < 4; i++) fputc((int)(v >> (8 * i)) & 255, f); }
 int main(int argc, char **argv) {
-    const char *path = argc > 1 ? argv[1] : "otonohako.wav";
+    const char *path = "otonohako.wav", *file = 0;
+    int solo = -1, r0 = 0, r1 = 255, np = 0;
+    for (int i = 1; i < argc; i++) {
+        if (!strcmp(argv[i], "--solo") && i + 1 < argc) {
+            const char *t = argv[++i];
+            solo = !strcmp(t, "vocal") ? TR_VOCAL : !strcmp(t, "chords") ? TR_CHORDS : !strcmp(t, "bass") ? TR_BASS : !strcmp(t, "drums") ? TR_DRUMS : -1;
+            if (solo < 0) { fprintf(stderr, "song_render: --solo vocal|chords|bass|drums\n"); return 1; }
+        } else if (!strcmp(argv[i], "--rows") && i + 2 < argc) { r0 = atoi(argv[i + 1]); r1 = atoi(argv[i + 2]); i += 2; }
+        else if (np == 0) { path = argv[i]; np++; }
+        else if (np == 1) { file = argv[i]; np++; }
+    }
     static int32_t o[2 * 256];
     static int16_t blk[2 * 256];
     uint32_t frames = 0, tail = 3 * 44100u, maxf = 44100u * 400u;
     song_demo(&g);
-    if (argc > 2) {
+    if (file) {
         static uint8_t b[SONG_ENC_SIZE];
-        FILE *s = fopen(argv[2], "rb");
-        if (!s || fread(b, 1, sizeof b, s) != sizeof b || song_decode(&g, b, sizeof b) != SIO_OK) { fprintf(stderr, "song_render: cannot load %s\n", argv[2]); return 1; }
+        FILE *s = fopen(file, "rb");
+        if (!s || fread(b, 1, sizeof b, s) != sizeof b || song_decode(&g, b, sizeof b) != SIO_OK) { fprintf(stderr, "song_render: cannot load %s\n", file); return 1; }
         fclose(s);
     }
     g.loop = 0;
+    if (solo >= 0) g.trk[solo].solo = 1;
     en_init(&en, &g);
     en.pan[0] = 64; en.pan[1] = 44; en.pan[2] = 64; en.pan[3] = 64;
     FILE *f = fopen(path, "wb");
     if (!f) { perror(path); return 1; }
     fwrite("RIFF", 1, 4, f); w32(f, 0); fwrite("WAVEfmt ", 1, 8, f);
     w32(f, 16); w32(f, 0x20001); w32(f, 44100); w32(f, 44100 * 4); w32(f, 0x100004); fwrite("data", 1, 4, f); w32(f, 0);
-    en_post(&en, EN_PLAY, 0, 0, 0);
+    if (r1 < 255) maxf = (uint32_t)((double)(r1 - r0 + 1) * 4.0 * 60.0 * 44100.0 / g.bpm + 0.5);   /* one row = 4 beats = 16 steps */
+    en_post(&en, EN_PLAY, (uint32_t)r0, 0, 0);
     int32_t peak = 0;
     while (frames < maxf) {
         memset(o, 0, sizeof o);
         en_render(&en, o, 256);
-        for (uint32_t i = 0; i < 512; i++) { blk[i] = (int16_t)o[i]; if (abs(o[i]) > peak) peak = abs(o[i]); }
-        fwrite(blk, 4, 256, f); frames += 256;
+        uint32_t nb = maxf - frames < 256 ? maxf - frames : 256;
+        for (uint32_t i = 0; i < 512; i++) {
+            uint32_t left = maxf - frames - i / 2;                 /* frames to the cut (host tool: --rows) */
+            if (r1 < 255 && left < 441) o[i] = (int32_t)((double)o[i] * left / 441.0);
+            blk[i] = (int16_t)o[i]; if (abs(o[i]) > peak) peak = abs(o[i]);
+        }
+        fwrite(blk, 4, nb, f); frames += nb;
+        if (nb < 256) break;
         if (!(en.pos >> 16 & 1u) && frames > 4096) { if (tail <= 256) break; tail -= 256; }
     }
     fseek(f, 4, SEEK_SET); w32(f, 36 + frames * 4); fseek(f, 40, SEEK_SET); w32(f, frames * 4); fclose(f);

@@ -26,10 +26,11 @@ void en_unlock(Engine *e, uint32_t (*wait)(void)) {
     e->lock = 0;
     while (e->ack && wait()) {}
 }
-static void sing(Engine *e, uint32_t note, uint32_t mora, uint32_t vel) {   /* moraic n holds the vowel before it */
+typedef char en_cons_chk[((int)MC_NONE == (int)FC_NONE && (int)MC_K == (int)FC_K && (int)MC_NN == (int)FC_NN && (int)MC_P == (int)FC_P && (int)MC_Y == (int)FC_Y) ? 1 : -1];
+static void sing(Engine *e, uint32_t note, uint32_t mora, uint32_t vel) {   /* consonant + vowel; moraic n is a hum (vowel ignored) */
     uint32_t v = mora_vowel(mora);
     if (v < 5u) e->vh = (uint8_t)v;
-    fv_note_on(&e->fv, (uint8_t)note, e->vh, (uint8_t)vel);
+    fv_note_on_mora(&e->fv, (uint8_t)note, (uint8_t)mora_cons(mora), v < 5u ? (uint8_t)v : e->vh, (uint8_t)vel);
     e->mora = mora;
 }
 static void command(Engine *e, uint32_t w) {

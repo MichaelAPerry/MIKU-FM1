@@ -20,6 +20,7 @@ eighth note.
 | **KNOB 2** | Portamento time (P), 0-100 (0-500 ms) |
 | **KNOB 3** | Breath (B), 0-100 |
 | **KNOB 4** | Brightness (T), 0-100 |
+| **OCT− / OCT+** | Transpose the voice by octaves, −2 to +2 (shown as OCT+1 on STAGE; not saved) |
 | **PLAY** | Play from the cursor; again to pause |
 | **SEQ** | Stop |
 | **SAVE** | Save the melody, tempo and knobs (only while stopped) |

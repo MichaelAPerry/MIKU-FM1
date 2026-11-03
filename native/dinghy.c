@@ -10,6 +10,8 @@
 static FvVoice fv;
 /* main loop -> ISR: one word, written whole (a counter makes every request new); ISR -> main: published copies */
 static volatile uint32_t rq,pv,pp,pb,pt,pub_mouth=5,pub_level,pub_peak;
+static volatile int32_t ptr;                 /* transpose (semitones), OCT- / OCT+ */
+static int32_t oct;
 static struct {uint8_t pitch[STEPS], vowel[STEPS], bpm, kn[4];} song;   /* kn: vibrato, portamento, breath, brightness 0..100 */
 static uint32_t cursor,playhead,last_ms,off_ms,off_done=1,dirty=1,prev_keys,playing,page,cpu_ms,cpu_pct,
     face_cur,face_ms,blink_until,next_blink,happy_until;
@@ -23,12 +25,13 @@ static void app_audio(int32_t *out,uint32_t n){
     if(!up){fv_init(&fv);fv.vib_rate=55;fv.vib_delay=200;up=1;}
     if(r!=seen){
         seen=r;
-        if(((r>>12)&3u)==1u)fv_note_on(&fv,(uint8_t)(r&127u),(uint8_t)((r>>8)&7u),100);
+        if(((r>>12)&3u)==1u)fv_note_on(&fv,(uint8_t)(r&127u),(uint8_t)((r>>8)&7u),110);
         else if(((r>>12)&3u)==0u)fv_note_off(&fv);
         else fv_set_vowel(&fv,(uint8_t)((r>>8)&7u));
     }
-    fv.vib_depth=(uint16_t)pv;fv.porta=(uint16_t)pp;fv.breath=(uint8_t)pb;fv.bright=(uint8_t)pt;
+    fv.vib_depth=(uint16_t)pv;fv.porta=(uint16_t)pp;fv.breath=(uint8_t)pb;fv.bright=(uint8_t)pt;fv.transpose=(int8_t)ptr;
     fv_render(&fv,out,n);
+    for(c=0;c<2u*n;c++){int32_t o=out[c]*3/2;out[c]=o>32767?32767:o<-32767?-32767:o;}   /* +3.5 dB: demo peaks ~-3 dBFS at full MASTER */
     pub_mouth=fv_mouth(&fv);pub_level=fv_level(&fv);
     c=fm1_ticks()-t0;
     if(c>pk)pk=c;else pk-=pk>>6;
@@ -40,7 +43,7 @@ static void post(uint32_t kind,uint32_t note,uint32_t vw){
 }
 static void knobs(void){pv=song.kn[0];pp=song.kn[1]*5u;pb=song.kn[2]*127u/100u;pt=song.kn[3]*127u/100u;}
 static void defaults(void){
-    static const uint8_t kn[4]={35,12,5,71};
+    static const uint8_t kn[4]={35,10,8,79};   /* = vibrato 35, portamento 50 ms, breath 10, brightness 100 */
     uint32_t i;
     for(i=0;i<STEPS;i++){song.pitch[i]=demo_p[i];song.vowel[i]=demo_v[i];}
     for(i=0;i<4;i++)song.kn[i]=kn[i];
@@ -131,6 +134,7 @@ static void stage_text(void){
     static const char *const vs[5]={"A","I","U","E","O"};
     if(!is_demo())m=vs[song.vowel[x]];
     num(s+4,song.bpm);num(c+4,cpu_pct);cat(c,"%");
+    if(oct){char o[8];num(s,song.bpm);cat(s,oct>0?" OCT+":" OCT-");num(o,(uint32_t)(oct>0?oct:-oct));cat(s,o);}
     cv_begin(240,56,RGB(12,20,40));
     cv_text(120-text_w(&FONT_L,m)/2,0,&FONT_L,m,C_WHITE);
     cv_text(4,14,&FONT_S,s,RGB(249,207,94));
@@ -188,6 +192,8 @@ static void app_main(void){
         platform_poll();
         b=fm1_input_edges(&released);
         if(b&(1u<<BTN_HOME)){page^=1u;full=1;}
+        if(b&(1u<<BTN_OCT_UP) && oct<2){oct++;ptr=oct*12;dirty=1;}
+        if(b&(1u<<BTN_OCT_DOWN) && oct>-2){oct--;ptr=oct*12;dirty=1;}
         if(b&(1u<<BTN_PLAY)){
             playing=!playing;playhead=cursor;
             if(playing){apply_step(playhead);last_ms=fm1_ms;off_ms=last_ms+period()*85u/100u;happy_until=fm1_ms+500u;}

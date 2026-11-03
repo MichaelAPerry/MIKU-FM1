@@ -55,6 +55,14 @@ Levels, never interchangeable: **built** (compiled), **host tests**, **emulator*
   device's, so this is not a device measurement; the device figure is still to be measured.
 - Screens: `docs/screens/stage_singing.png`, `docs/screens/edit.png`.
 
+### 0.3: level and octave (2026-11-03)
+- Defaults now match the demo the owner chose (variant A): breath 10, brightness 100, portamento 50 ms, velocity 110;
+  app gain ×1.5 with a clamp. fm1-emu: smoke RMS 1985 (0.2: 1226), PLAY peak 8,249 (0.2: 5,906) with the emulator's
+  MASTER position; the voice peaks ~16k on the host, so ~24k (−3 dBFS) at full MASTER.
+- OCT+ during playback: the melody's f0 went G4 392 → G5 788, then A5 865/882, C6 1026, D6 1131 (vibrato and scoop
+  account for the spread); STAGE shows "148 OCT+1". CPU shown: 5% (emulator clock).
+- Device build `--release 0.3`: image 113,740 B; identity FM-1_39000300; Dinghy's checks ok.
+
 ### Not validated (Step 1)
 - Hardware: sound, CPU load, face drawing speed against USB and key scan, flash save with the longer struct.
 - Blink and SF_HAPPY on PLAY are coded but not looked at in a snapshot.

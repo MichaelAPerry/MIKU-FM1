@@ -9,6 +9,8 @@ Status words: **emulator** = checked in fm1-emu on the real package; **hardware*
 | Live keys with legato, KNOB 1-4 (vibrato, portamento, breath, brightness), saved with the melody | emulator |
 | STAGE page: singer face (mouth follows the voice, blink), syllable, step strip, CPU% | emulator |
 | EDIT page: step grid and knob values (HOME switches) | emulator |
+| OCT− / OCT+ transpose the voice by octaves | emulator |
+| Voice level: +3.5 dB app gain, defaults matching the approved demo (breath 10, brightness 100, portamento 50 ms) | emulator |
 | Tempo 40–240 BPM | emulator |
 | Play from cursor, pause, stop | emulator |
 | Save melody and tempo to flash, reload at power-on | emulator (flash dump and restore) |

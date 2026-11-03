@@ -302,8 +302,11 @@ static void face_set(uint32_t f){
 }
 static void face_update(void){
     static const uint8_t vf[5]={SF_A,SF_I,SF_U,SF_E,SF_O};
+    static uint32_t lip_until;
     uint32_t now=fm1_ms,m=en.mouth,w;
+    if(m==5u && en.level>=6u)lip_until=now+70u;              /* lips shut while sounding (m b p closure, the n hum): hold so a 40 ms face update sees it */
     if((int32_t)(now-happy_until)<0)w=SF_HAPPY;
+    else if((int32_t)(now-lip_until)<0)w=SF_N;
     else if(m<5u)w=en.level>=100u?vf[m]:SF_N;
     else if((int32_t)(now-blink_until)<0)w=SF_BLINK;
     else if((int32_t)(now-next_blink)>=0){

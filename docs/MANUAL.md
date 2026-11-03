@@ -10,7 +10,14 @@ is in [CONTROLS](CONTROLS.md).
 - The **song** is a list of up to 64 **rows**. A row names one pattern per track (or silence) and carries a section
   label (INTRO, VERSE, CHORUS, BRIDGE, OUTRO). Rows play one after another; reusing a pattern in several rows is the point.
 - The **mixer** has a level, mute, solo and preset per track, plus swing, tempo and master for the song.
-- The vocal sings **moras** (a, i, u, e, o, ka, ki, ... n): each vocal step carries its mora, the vowel follows from it.
+- The vocal sings **moras** (a, i, u, e, o, ka, ki, ... n): each vocal step carries its mora (ALGORITHM on PATTERN picks it;
+  0 = plain "a"). The mora gives the consonant and the vowel. The consonant is a short sound at the start of the note
+  (30-70 ms, the same at any pitch or tempo), then the vowel. What each sounds like: k, t, p are a silent closure, a click
+  and a breathy puff; g, d, b the same with a quiet hum during the closure; s and sh a hiss (sh darker), z and j the same
+  with voice, h a breath through the vowel (hi a little brighter), fu a soft airy blow, ts and ch a stop then a hiss;
+  n and m a muffled nasal hum (the singer shuts her lips for m, b and p) sliding into the vowel; y and w glide in from
+  i and u; r is a very short tap. The mora "n" is a hum for the whole note. A live key or a
+  legato note articulates the consonant too, without restarting the note.
 
 At power-on the firmware loads the slot you last used. The first time (or if that slot is empty) it plays the demo
 「おとのはこ」: an intro, a verse and a chorus with chords, bass and drums.

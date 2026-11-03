@@ -32,6 +32,62 @@ for _kv in os.environ.get("FV_CFG", "").split(";"):
         elif _k == "PG": PG[:] = list(zip([36, 48, 60, 72, 84, 96], map(float, _v.split(","))))
         else: globals()[_k] = float(_v)
 
+# ---- Step 3: consonants (source-filter, no samples) -----------------------------------------------------------
+# Extra resonator "shapes" after the five vowels (same 6 slots): voice bar, nasal n, nasal m, flap r.
+# name: (freqs Hz, peak dB per slot, bandwidths Hz per slot)
+SHAPES = {
+    "BAR": ((250, 700, 1500, 2800, 3000, 5500), (0.0, -30.0, -38.0, -42.0, -45.0, -50.0), (100, 250, 300, 400, 500, 900)),
+    "NN":  ((380, 900, 1500, 2500, 3200, 5800), (0.0, -24.0, -24.0, -28.0, -34.0, -42.0), (200, 250, 250, 300, 400, 800)),
+    "NM":  ((360, 1000, 1250, 2200, 3000, 5600), (0.0, -26.0, -26.0, -32.0, -38.0, -45.0), (200, 250, 250, 300, 400, 800)),
+    "FL":  ((400, 900, 1400, 2400, 3000, 5600), (0.0, -12.0, -4.0, -6.0, -8.0, -20.0), (110, 200, 160, 200, 350, 800)),
+}
+SHN = list("AIUEO") + ["BAR", "NN", "NM", "FL"]
+SHI = {n: i for i, n in enumerate(SHN)}
+SHI["V"] = 15                      # "the sung vowel"
+# Noise bands (2-pole resonators on the LFSR): name: (centre Hz per vowel A I U E O, bandwidth Hz)
+NBN = ["K", "T", "P", "S", "SH", "F", "H"]
+NB = {
+    "K":  ((1900, 3100, 1700, 2600, 1300), 900),     # velar burst: follows F2 of the next vowel
+    "T":  ((4600, 4600, 4600, 4600, 4600), 1800),
+    "P":  ((800, 800, 800, 800, 800), 1400),
+    "S":  ((6500, 6500, 6500, 6500, 6500), 2500),
+    "SH": ((3800, 3800, 3800, 3800, 3800), 2200),
+    "F":  ((1800, 1800, 1800, 1800, 1800), 4000),
+    "H":  ((3600, 3600, 3600, 3600, 3600), 2500, (0.0, 1.0, 0.0, 0.0, 0.0)),   # c-like friction of "hi" only
+}
+NASAL_DB = ((55, -5.0), (72, 7.0))   # murmur level vs note: the nasal formant sits below f0 when singing high, so the murmur is raised there
+NRMS = 8192                         # noise level 1.0 = this RMS at the band output
+KV_TAU, KL_TAU, KN_TAU = 3.0, 1.5, 0.8   # ms: voicing, level, noise/aspiration smoothing
+KM_TAU = {"std": 8.0, "fast": 5.0, "slow": 12.0}   # ms: formant morph speed
+KMI = {"std": 0, "fast": 1, "slow": 2}
+def P(ms, sh="V", vg=1.0, lv=1.0, nk=None, nl=0.0, asp=0.0, km="std", lip=0):
+    return (ms, sh, vg, lv, nk, nl, asp, km, lip)
+HOLD = 255
+# MC_* order: NONE K S SH T CH TS N H F M Y R W G Z J D B P NN.  Phase: P(ms, shape, voicing, level, noise band, noise, aspiration, morph, lips closed)
+CONS = [
+    [],
+    [P(11, vg=0, lv=0), P(7, vg=0, lv=0, nk="K", nl=0.55), P(22, vg=0, lv=0.35, nk="K", nl=0.10, asp=0.10)],             # K
+    [P(48, vg=0, lv=0, nk="S", nl=0.22), P(14, vg=0.5, lv=0.6, nk="S", nl=0.05)],                                           # S
+    [P(52, vg=0, lv=0, nk="SH", nl=0.26), P(14, vg=0.5, lv=0.6, nk="SH", nl=0.05)],                                         # SH
+    [P(9, vg=0, lv=0), P(6, vg=0, lv=0, nk="T", nl=0.50), P(18, vg=0, lv=0.35, nk="T", nl=0.08, asp=0.08)],                # T
+    [P(9, vg=0, lv=0), P(4, vg=0, lv=0, nk="SH", nl=0.45), P(34, vg=0, lv=0.2, nk="SH", nl=0.36), P(10, vg=0.5, lv=0.6, nk="SH", nl=0.08)],   # CH
+    [P(9, vg=0, lv=0), P(4, vg=0, lv=0, nk="T", nl=0.45), P(30, vg=0, lv=0.2, nk="S", nl=0.38), P(10, vg=0.5, lv=0.6, nk="S", nl=0.08)],      # TS
+    [P(50, "NN", lv=0.38), P(60, km="fast")],                                                                                 # N
+    [P(40, vg=0, lv=0.55, nk="H", nl=0.12, asp=0.22), P(12, vg=0.5, lv=0.8, asp=0.06)],                                      # H (hi also gets the c-like band)
+    [P(40, vg=0, lv=0.25, nk="F", nl=0.07, asp=0.06), P(10, vg=0.5, lv=0.6)],                                                # F
+    [P(55, "NM", lv=0.38, lip=1), P(60, km="fast")],                                                                          # M
+    [P(10, "I", lv=0.55), P(50, km="slow")],                                                                                 # Y
+    [P(16, "FL", lv=0.4, km="fast"), P(20, km="fast")],                                                                      # R
+    [P(10, "U", lv=0.5), P(50, km="slow")],                                                                                  # W
+    [P(24, "BAR", lv=0.22, km="fast"), P(5, lv=0.45, nk="K", nl=0.18, km="fast")],                                           # G
+    [P(40, "BAR", lv=0.5, nk="S", nl=0.15, km="fast"), P(12, lv=0.8, nk="S", nl=0.05, km="fast")],                         # Z
+    [P(40, "BAR", lv=0.5, nk="SH", nl=0.17, km="fast"), P(12, lv=0.8, nk="SH", nl=0.05, km="fast")],                       # J
+    [P(24, "BAR", lv=0.22, km="fast"), P(5, lv=0.45, nk="T", nl=0.18, km="fast")],                                           # D
+    [P(24, "BAR", lv=0.22, km="fast", lip=1), P(5, lv=0.45, nk="P", nl=0.18, km="fast")],                             # B
+    [P(14, vg=0, lv=0, lip=1), P(6, vg=0, lv=0, nk="P", nl=0.50), P(16, vg=0, lv=0.35, nk="P", nl=0.06, asp=0.08)],         # P
+    [P(HOLD, "NN", lv=0.55, lip=1)],                                                                                          # NN (moraic n: hum)
+]
+
 def res(f, bw):
     r = math.exp(-math.pi * bw / FS)
     return 2 * r * math.cos(2 * math.pi * f / FS), -r * r
@@ -91,12 +147,12 @@ def main():
     # vowel resonators: {g,a1,a2} Q14 x 6 per vowel and zone; y=(g*x+a1*y1+a2*y2)>>14;
     # g carries the sign (+ - + - + -) and the peak-normalised amplitude, so each peak is its dB value.
     # zone 0 = normal; zone 1 = soprano (F1 pulled toward f0, F2 kept above it), blended per block by pitch
-    names = "AIUEO"
-    s = "static const int16_t fv_vow[2][5][6][3]={\n"
+    s = "static const int16_t fv_vow[2][%d][6][3]={\n" % len(SHN)
     for zone in (0, 1):
         s += "{\n"
-        for n in names:
-            fs, db, _ = VOW[n]
+        for n in SHN:
+            if n in VOW: fs, db, _ = VOW[n]; bws = BW
+            else: fs, db, bws = SHAPES[n]
             fs = list(fs)
             if zone:
                 fs[0] = max(fs[0], fs[0] + 0.55 * (F0HI - fs[0]))
@@ -104,9 +160,9 @@ def main():
                 fs[2] = max(fs[2], fs[0] + 450)
             s += " {"
             for i in range(6):
-                a1, a2 = res(fs[i], BW[i])
+                a1, a2 = res(fs[i], bws[i])
                 a = db[i] + TILT * math.log2(max(fs[i], 500) / 500)    # undo the source's residual tilt
-                g = 10 ** ((a + TRIM[n] + (ZB[n] if zone else 0.0)) / 20) * MASTER / peak(a1, a2) * (1 if i % 2 == 0 else -1)
+                g = 10 ** ((a + TRIM.get(n, 0.0) + (ZB.get(n, 0.0) if zone else 0.0)) / 20) * MASTER / peak(a1, a2) * (1 if i % 2 == 0 else -1)
                 assert abs(g) < 1.99, (n, i, g)
                 s += "{%d,%d,%d}," % (q14(g), q14(a1), q14(a2))
             s += "},\n"
@@ -118,7 +174,44 @@ def main():
             if n <= n1: return d0 + (d1 - d0) * (n - n0) / (n1 - n0)
         return PG[-1][1]
     out.append(arr("fv_pgain", "uint16_t", [int(round(8192 * 10 ** (pgdb(n) / 20))) for n in range(128)], 16))
+    # noise bands: {g,a1,a2} Q14 per kind and following vowel; g normalises the band output to NRMS (white input = uniform int16)
+    nb = []
+    for k in NBN:
+        cf, bw = NB[k][0], NB[k][1]
+        lvf = NB[k][2] if len(NB[k]) > 2 else (1.0,) * 5
+        for vi in range(5):
+            a1, a2 = res(cf[vi], bw)
+            gain = (1 - a2) / ((1 + a2) * ((1 - a2) ** 2 - a1 * a1))      # AR(2) variance gain
+            g = NRMS / (32768 / math.sqrt(3) * math.sqrt(gain)) * lvf[vi]
+            assert g < 1.99, (k, g)
+            nb += [q14(g), q14(a1), q14(a2)]
+    out.append(arr("fv_nbt", "int16_t", nb, 15))
+    cph, cpn = [], []
+    for ph in CONS:
+        assert len(ph) <= 4
+        for i in range(4):
+            if i < len(ph):
+                ms, sh, vg, lv, nk, nl, asp, kmn, lip = ph[i]
+                n = HOLD if ms == HOLD else max(1, int(round(ms / (BT * 1000))))
+                assert n <= 255 and (ms != HOLD or n == 255)
+                tail = sh == "V" and vg >= 1 and lv >= 1 and nk is None and not nl and not asp and ms != HOLD   # pure vowel: the consonant is over
+                cph += [n, SHI[sh] | KMI[kmn] << 4 | lip << 6 | tail << 7, int(round(vg * 128)), int(round(lv * 128)), 0 if nk is None else NBN.index(nk) + 1]
+                cpn += [min(65535, int(round(nl * 32768))), min(65535, int(round(asp * 32768)))]
+            else:
+                cph += [0, 15, 128, 128, 0]; cpn += [0, 0]
+    out.append("#define FV_NPH 4\n#define FV_NCLS %d\n" % len(CONS))
+    out.append(arr("fv_cph", "uint8_t", cph, 20))          # [class][phase]{blocks (255 = hold), shape | morph<<4 | lips<<6 | vowel-tail<<7, voicing, level (128 = 1.0), noise kind+1}
+    out.append(arr("fv_cpn", "uint16_t", cpn, 8))          # [class][phase]{noise level, aspiration} Q15
+    def nbo(n):
+        (n0, d0), (n1, d1) = NASAL_DB
+        return d0 if n <= n0 else d1 if n >= n1 else d0 + (d1 - d0) * (n - n0) / (n1 - n0)
+    out.append(arr("fv_nbo", "uint16_t", [int(round(4096 * 10 ** (nbo(n) / 20))) for n in range(128)], 16))   # Q12 level of the nasal shapes per note
+    out.append("#define FV_NAS0 %d\n#define FV_NAS1 %d\n" % (SHI["NN"], SHI["NM"]))
+    def ek(tau): return int(round(32768 * (1 - math.exp(-BT * 1000 / tau))))
+    out.append("#define FV_KV %d\n#define FV_KL %d\n#define FV_KN %d\n" % (ek(KV_TAU), ek(KL_TAU), ek(KN_TAU)))
+    out.append(arr("fv_kmt", "uint16_t", [int(round(4096 * (1 - math.exp(-BT * 1000 / KM_TAU[k])))) for k in ("std", "fast", "slow")], 3))
     km = int(round(4096 * (1 - math.exp(-BT / 0.008))))    # vowel morph: tau 8 ms (95% in 24 ms)
+    assert km == int(round(4096 * (1 - math.exp(-BT * 1000 / KM_TAU["std"]))))
     lfo = int(round(2 ** 32 * BLK / FS / 10))              # LFO phase per block per 0.1 Hz
     out.append("#define FV_KM %d\n#define FV_LFOK %d\n" % (km, lfo))
     hdr = ("/* SPDX-License-Identifier: GPL-3.0-only */\n"

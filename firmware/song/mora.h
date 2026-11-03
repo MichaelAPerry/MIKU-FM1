@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: GPL-3.0-only */
 /* Japanese mora table for lyrics. Index 0 = "no mora": the VOCAL step then sings the default vowel A (the vowel of a
- * VOCAL step always comes from its mora). Vowel codes match fvoice (A I U E O); moraic n has MV_N (hold the last vowel,
- * nasal). The consonant class is for the consonant engine of a later step. */
+ * VOCAL step always comes from its mora). Vowel codes match fvoice (A I U E O); moraic n has MV_N (a nasal hum, no vowel).
+ * The consonant class (MC_*, same numbers as FC_* of fvoice) is sung by fv_note_on_mora. */
 #ifndef MORA_H
 #define MORA_H
 #include <stdint.h>

@@ -34,7 +34,8 @@ void miku_runtime_render(MikuRuntime *r,int32_t *dst,uint32_t frames){
         float vocal=miku_voice_render(&r->vocal), band=miku_band_render(&r->band);
         float drums=miku_drums_render(&r->drums,r->sample_rate);
         float mix=(r->mute[MIKU_VOCAL]?0.f:vocal*.34f)+band+drums;
-        if(mix>1.f)mix=1.f;if(mix< -1.f)mix=-1.f;
+        if(mix>1.f)mix=1.f;
+        if(mix< -1.f)mix=-1.f;
         /* FM-1 DMA uses signed 24-bit audio carried in int32 words. */
         int32_t pcm=(int32_t)lrintf(mix*8388607.f);
         dst[2*i]=pcm;dst[2*i+1]=pcm;

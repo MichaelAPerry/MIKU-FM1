@@ -22,7 +22,8 @@ static void glyph(uint16_t *b,int x,int y,int digit,uint16_t color){
         if((bits>>(14-(dy*3+dx)))&1)rect(b,x+dx*3,y+dy*3,3,3,color);
 }
 void miku_stage_init(MikuStage *s){
-    if(!s)return;memset(s,0,sizeof(*s));s->bpm=120;
+    if(!s)return;
+    memset(s,0,sizeof(*s));s->bpm=120;
 }
 void miku_stage_button(MikuStage *s,uint32_t pressed){
     if(!s)return;

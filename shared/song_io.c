@@ -47,7 +47,8 @@ int miku_song_decode(MikuSong *s,const uint8_t *b,size_t len){
         if(nc>MIKU_MAX_NOTES || (size_t)nc>(len-4-o)/12)return 0;
         for(uint16_t j=0;j<nc;j++){
             MikuNote n={rd32(b+o),rd32(b+o+4),b[o+8],b[o+9],b[o+10],b[o+11]};
-            if(!miku_note_valid(&n))return 0;o+=12;
+            if(!miku_note_valid(&n))return 0;
+            o+=12;
         }
     }
     if(o!=len-4)return 0;

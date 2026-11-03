@@ -31,7 +31,8 @@ static double f0_est(const double *x, int n, double fmin, double fmax) {
     double d = a - 2 * b + c, off = d != 0 ? 0.5 * (a - c) / d : 0;
     return FS * m / (bl + off);
 }
-static void setup(FvVoice *v) { fv_init(v); v->vib_depth = 0; v->breath = 0; v->bright = 90; }
+/* machine-exact voice for the analytic tests: no human wander, no onset scoop */
+static void setup(FvVoice *v) { fv_init(v); v->vib_depth = 0; v->breath = 0; v->human = 0; v->scoop = 0; }
 
 static void t_f0(void) {
     for (int n = 48; n <= 84; n += 6) {
@@ -55,11 +56,11 @@ static void harm(int vow, double *H, double *f0o, int note, double bright) {
         H[k] = hypot(re, im) / N;
     }
 }
-static const double FT[5][2] = {{900, 1400}, {330, 2700}, {380, 1500}, {550, 2300}, {500, 900}};
+static const double FT[5][2] = {{1010, 1570}, {370, 2900}, {400, 1650}, {620, 2450}, {560, 1000}};   /* young-tract table */
 static void t_formants(void) {
     static double H[5][NH + 1]; double f0 = 0;
     for (int w = 0; w < 5; w++) {
-        harm(w, H[w], &f0, 45, 90);
+        harm(w, H[w], &f0, 45, 100);
         double pf[NH], pm[NH]; int np = 0;     /* local maxima, parabolic in dB */
         for (int k = 1; k * f0 <= 3300 + f0; k++) {
             double l = k > 1 ? H[w][k - 1] : 0, r = H[w][k + 1];
@@ -130,6 +131,63 @@ static void t_porta(void) {
     CHECK(worst < .02, "porta f0 not monotonic: %.2f%%", worst * 100);
     CHECK(f[nf - 1] > hz(72) * .99, "porta end");
 }
+/* onset scoop: starts below the note and settles within 100 ms */
+static void t_scoop(void) {
+    static double x[FS / 2], f[200]; FvVoice v; setup(&v); v.scoop = 40; v.scoop_ms = 75;
+    fv_note_on(&v, 69, FV_A, 127); rd(&v, x, FS / 2);
+    int hop = 110, win = 882, nf = track(x, FS / 2, win, hop, 360, 520, f);
+    double c0 = 1200 * log2(f[0] / 440), c1 = 1200 * log2(f[(50 * FS / 1000 - win / 2) / hop] / 440), late = 0;
+    for (int i = 0; i < nf; i++) if ((i * hop + win / 2) * 1000 / FS >= 100) late = fmax(late, fabs(1200 * log2(f[i] / 440)));
+    printf("  scoop: %.1f cents at %d ms, %.1f at 50 ms, worst after 100 ms %.2f\n", c0, win / 2 * 1000 / FS, c1, late);
+    CHECK(c0 < -12 && c0 > -45, "scoop start %.1f cents", c0);
+    CHECK(c1 > c0, "scoop not rising");
+    CHECK(late < 5, "scoop not settled by 100 ms: %.2f cents", late);
+    setup(&v); fv_note_on(&v, 69, FV_A, 127); rd(&v, x, FS / 2);   /* scoop = 0 -> flat from the start */
+    nf = track(x, FS / 2, win, hop, 360, 520, f);
+    CHECK(fabs(1200 * log2(f[0] / 440)) < 5, "scoop 0 not flat: %.1f", 1200 * log2(f[0] / 440));
+}
+/* human drift/jitter: bounded, present, deterministic */
+static void t_human(void) {
+    static double x[FS * 6], f[600]; FvVoice v, w; setup(&v); v.human = 127;
+    fv_note_on(&v, 69, FV_A, 127); rd(&v, x, FS * 6);
+    int hop = 2205, win = 2205, nf = track(x, FS * 6, win, hop, 380, 520, f);
+    double mx = 0, ss = 0; int c = 0;
+    for (int i = 1; i < nf; i++) { double cc = 1200 * log2(f[i] / 440); mx = fmax(mx, fabs(cc)); ss += cc * cc; c++; }
+    double rms = sqrt(ss / c);
+    printf("  human 127: worst %.2f cents, rms %.2f cents\n", mx, rms);
+    CHECK(mx < 10, "jitter %.2f cents", mx);
+    CHECK(rms > 0.3, "no jitter (rms %.2f cents)", rms);
+    setup(&w); w.human = 127; fv_note_on(&w, 69, FV_A, 127);
+    static double y[FS * 6]; rd(&w, y, FS * 6);
+    CHECK(!memcmp(x, y, sizeof x), "jitter not deterministic");
+    setup(&v); fv_note_on(&v, 69, FV_A, 127); rd(&v, x, FS * 6);   /* human 0: dead steady */
+    nf = track(x, FS * 6, win, hop, 380, 520, f); mx = 0;
+    for (int i = 1; i < nf; i++) mx = fmax(mx, fabs(1200 * log2(f[i] / 440)));
+    CHECK(mx < 0.5, "human 0 wanders %.2f cents", mx);
+}
+static void t_transpose(void) {
+    static double x[FS]; FvVoice v; setup(&v); v.transpose = 12;
+    fv_note_on(&v, 60, FV_A, 127); rd(&v, x, FS / 4); rd(&v, x, FS / 2);
+    double f = f0_est(x, 8192, hz(72) * .8, hz(72) * 1.25);
+    CHECK(fabs(f / hz(72) - 1) < .005, "transpose +12: %.1f vs %.1f", f, hz(72));
+    fv_init(&v); v.transpose = -100; fv_note_on(&v, 5, FV_A, 100); rd(&v, x, 1024);   /* clamps, no crash */
+    v.transpose = 100; fv_note_on(&v, 120, FV_A, 100); rd(&v, x, 1024);
+}
+/* spectral centroid (power-weighted, harmonics to 10 kHz) of each vowel at note 69, versus the pre-brightening engine */
+static void t_centroid(void) {
+    static const double old[5] = {1015, 1950, 775, 1958, 962};   /* measured on the previous engine (commit ca7c97e) */
+    for (int w = 0; w < 5; w++) {
+        static double x[FS / 2]; FvVoice v; setup(&v); fv_note_on(&v, 69, (uint8_t)w, 127); rd(&v, x, FS / 4); rd(&v, x, FS / 2);
+        double n = 0, d = 0;
+        for (int k = 1; k * 440.0 < 10000; k++) {
+            double re = 0, im = 0, w0 = 2 * M_PI * k * 440.0 / FS;
+            for (int i = 0; i < FS / 2; i++) { double hw = .5 - .5 * cos(2 * M_PI * i / (FS / 2)); re += hw * x[i] * cos(w0 * i); im += hw * x[i] * sin(w0 * i); }
+            double p = re * re + im * im; n += p * k * 440.0; d += p;
+        }
+        printf("  centroid vowel %d: %.0f Hz (was %.0f, %+.0f%%)\n", w, n / d, old[w], (n / d / old[w] - 1) * 100);
+        CHECK(n / d >= old[w] * 1.2, "vowel %d centroid %.0f not 20%% above %.0f", w, n / d, old[w]);
+    }
+}
 static void t_env(void) {
     static double x[FS]; FvVoice v; setup(&v); v.release = 50;
     fv_note_on(&v, 69, FV_A, 127); rd(&v, x, FS / 2);
@@ -159,7 +217,8 @@ static void t_robust(void) {
         if (a < 3) fv_note_on(&v, (uint8_t)(30 + rnd() % 79), (uint8_t)(rnd() % 5), (uint8_t)(1 + rnd() % 127));
         else if (a == 3) fv_note_off(&v);
         else if (a == 4) fv_set_vowel(&v, (uint8_t)(rnd() % 5));
-        else if (a == 5) { v.breath = ext ? 127 : 0; v.bright = (uint8_t)(rnd() & 1 ? 127 : 0); }
+        else if (a == 5) { v.breath = ext ? 127 : 0; v.bright = (uint8_t)(rnd() & 1 ? 127 : 0); v.human = (uint8_t)(ext ? 127 : rnd() % 128); }
+        else if (a == 6 && ext) { v.transpose = (int8_t)((int)(rnd() % 25) - 12); v.scoop = (uint8_t)(rnd() % 101); v.scoop_ms = (uint16_t)(rnd() % 600); }
         else if (a == 6) { v.vib_depth = (uint16_t)(ext ? 100 : rnd() % 101); v.vib_rate = (uint16_t)(30 + rnd() % 51); v.vib_delay = (uint16_t)(ext ? 0 : rnd() % 400); }
         else if (a == 7) { v.porta = (uint16_t)(ext ? 0 : rnd() % 600); v.attack = (uint16_t)(ext ? 0 : rnd() % 600); v.release = (uint16_t)(ext ? 0 : rnd() % 600); }
         else { v.breath = (uint8_t)(rnd() % 128); v.bright = (uint8_t)(rnd() % 128); }
@@ -175,6 +234,20 @@ static void t_robust(void) {
     printf("  random: peak %d, long gated chunks %d, quiet %d\n", worst, chunks, sil);
     CHECK(worst <= 32767, "overflow %d", worst);
     CHECK(sil * 20 <= chunks, "stuck/silent while gated: %d of %d", sil, chunks);
+}
+/* worst case: velocity 127, brightest, loudest breath, note 96 and transpose +12 (clamps at 127), every vowel */
+static void t_loud(void) {
+    static int32_t b[2 * 4096]; int worst = 0;
+    for (int cfg = 0; cfg < 4; cfg++) for (int w = 0; w < 5; w++) {
+        FvVoice v; fv_init(&v); v.bright = 127; v.breath = 127; v.human = 127; v.vib_depth = 100; v.vib_delay = 0;
+        v.transpose = (int8_t)(cfg & 1 ? 12 : 0);
+        for (int k = 0; k < 6; k++) {
+            fv_note_on(&v, (uint8_t)(cfg < 2 ? 96 : 40 + k * 17), (uint8_t)w, 127);
+            for (int i = 0; i < 8; i++) { memset(b, 0, sizeof b); fv_render(&v, b, 4096); for (int j = 0; j < 8192; j++) if (abs(b[j]) > worst) worst = abs(b[j]); }
+        }
+    }
+    printf("  loud worst peak %d\n", worst);
+    CHECK(worst <= 32767 && worst > 3000, "loud peak %d", worst);
 }
 static void t_det(void) {
     static int32_t a[2 * 20000], b[2 * 20000]; FvVoice u, w;
@@ -198,12 +271,23 @@ static void t_mouth(void) {
     CHECK(fv_mouth(&v) == 5 && fv_level(&v) == 0, "closed after release %d %d", fv_mouth(&v), fv_level(&v));
 }
 static void t_level(void) {
-    for (int w = 0; w < 5; w++) for (int n = 48; n <= 84; n += 12) {
+    double db[5][4];
+    for (int w = 0; w < 5; w++) for (int ni = 0; ni < 4; ni++) {
+        int n = 48 + 12 * ni;
         static double x[FS / 2]; FvVoice v; setup(&v); fv_note_on(&v, (uint8_t)n, (uint8_t)w, 127); rd(&v, x, FS / 4); rd(&v, x, FS / 4);
-        double mx = 0; for (int i = 0; i < FS / 4; i++) mx = fmax(mx, fabs(x[i]));
+        double mx = 0, ss = 0; for (int i = 0; i < FS / 4; i++) { mx = fmax(mx, fabs(x[i])); ss += x[i] * x[i]; }
+        db[w][ni] = 10 * log10(ss / (FS / 4));
         printf("  peak vowel %d note %d: %.0f\n", w, n, mx);
-        CHECK(mx > 3000 && mx <= 22000, "peak vowel %d note %d: %.0f", w, n, mx);
+        CHECK(mx > 3000 && mx <= 24000, "peak vowel %d note %d: %.0f", w, n, mx);
     }
+    /* even loudness: per-vowel mean within 2 dB of each other; per-pitch mean within 3 dB */
+    double vm[5], pm[4], lo = 1e9, hi = -1e9, plo = 1e9, phi = -1e9;
+    for (int w = 0; w < 5; w++) { vm[w] = 0; for (int ni = 0; ni < 4; ni++) vm[w] += db[w][ni] / 4; lo = fmin(lo, vm[w]); hi = fmax(hi, vm[w]); }
+    for (int ni = 0; ni < 4; ni++) { pm[ni] = 0; for (int w = 0; w < 5; w++) pm[ni] += db[w][ni] / 5; plo = fmin(plo, pm[ni]); phi = fmax(phi, pm[ni]); }
+    printf("  vowel means %.1f %.1f %.1f %.1f %.1f dB\n", vm[0], vm[1], vm[2], vm[3], vm[4]);
+    printf("  loudness spread: vowels %.1f dB, pitches %.1f dB\n", hi - lo, phi - plo);
+    CHECK(hi - lo < 2.0, "vowel loudness spread %.1f dB", hi - lo);
+    CHECK(phi - plo < 3.0, "pitch loudness spread %.1f dB", phi - plo);
 }
 static void t_cost(void) {
     static int32_t b[2 * 256]; FvVoice v; fv_init(&v); v.vib_depth = 30; fv_note_on(&v, 69, FV_A, 127);
@@ -214,7 +298,8 @@ static void t_cost(void) {
 int main(void) {
     printf("f0\n"); t_f0(); printf("formants\n"); t_formants(); printf("vibrato\n"); t_vibrato();
     printf("porta\n"); t_porta(); printf("env\n"); t_env(); printf("robust\n"); t_robust();
-    printf("det\n"); t_det(); printf("mouth\n"); t_mouth(); printf("level\n"); t_level(); t_cost();
+    printf("scoop\n"); t_scoop(); printf("human\n"); t_human(); printf("transpose\n"); t_transpose(); printf("centroid\n"); t_centroid();
+    printf("loud\n"); t_loud(); printf("det\n"); t_det(); printf("mouth\n"); t_mouth(); printf("level\n"); t_level(); t_cost();
     printf(fails ? "fvoice: %d FAILED\n" : "fvoice: ok\n", fails);
     return fails != 0;
 }

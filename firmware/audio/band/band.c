@@ -12,8 +12,9 @@ void miku_band_note(MikuBand *b,const MikuNote *n,int on){
         b->bass=(MikuTone){1,n->pitch,0,0,freq(n->pitch),n->velocity/127.f,0};return;
     }
     if(n->track!=MIKU_CHORDS)return;
-    if(!on){for(int i=0;i<MIKU_CHORD_VOICES;i++)
-        if(b->chords[i].active && b->chords[i].pitch==n->pitch){b->chords[i].active=0;break;}return;}
+    if(!on){for(int i=0;i<MIKU_CHORD_VOICES;i++){
+        if(b->chords[i].active && b->chords[i].pitch==n->pitch){b->chords[i].active=0;break;}}
+        return;}
     int slot=-1;float oldest=-1;
     for(int i=0;i<MIKU_CHORD_VOICES;i++){
         if(!b->chords[i].active){slot=i;break;}

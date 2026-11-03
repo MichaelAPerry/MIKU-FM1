@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>MIKU-FM1 | Native firmware browser test</title>
+<title>Miku-FM</title>
 <style>
 :root{color-scheme:dark;font:16px/1.5 system-ui,sans-serif;background:#101522;color:#eaf7fb}
 body{margin:0}main{max-width:900px;margin:auto;padding:clamp(20px,6vw,60px)}
@@ -13,23 +13,28 @@ code{background:#0b1220;padding:3px 6px;border-radius:5px}
 ol li{padding:7px 0}small{color:#abc1d0}.pill{font-size:.8em;color:#10202e;background:#f6d184;border-radius:20px;padding:4px 12px}
 </style></head>
 <body><main>
-<p class="sub">M-VAVE FM-1 · Experimental native firmware</p>
-<h1>MIKU<span>-FM1</span></h1>
-<p>A tiny early-stage singing synthesizer built for the actual FM-1 processor. This page hosts a genuine firmware package and the existing open-source full-system FM-1 browser emulator.</p>
-<p><span class="pill">Prototype — not the four-track songwriter yet</span></p>
+<p class="sub">M-VAVE FM-1 · Custom firmware · {{VERSION}}</p>
+<h1>Miku<span>-FM</span></h1>
+<p>A singing synthesizer for the FM-1, growing into a pocket songwriting workstation with a tiny animated singer. Today: an editable 16-step melody sung with five vowel colours, saved on the device.</p>
+<p><span class="pill">Early version: not yet tested on a real FM-1</span></p>
 <section>
 <h2>Try it in your browser</h2>
-<p>The embedded emulator now selects MIKU-FM1 by default. You do not need to download or select a different firmware:</p>
+<p>The emulator below runs the real firmware package, unchanged.</p>
+<a class="btn" href="./fm1-emu/">Play Miku-FM in the emulator</a>
 <ol>
-<li>Open the MIKU-FM1 emulator below.</li>
-<li>Press <strong>Start</strong> to run the included MIKU-FM1 firmware.</li>
-<li>Press <strong>Start</strong> in the emulator if prompted. On the virtual device: turn <strong>SELECT</strong> to choose a step, press a piano key to write its note, turn <strong>ALGORITHM</strong> to edit its vowel, and turn <strong>PRESETS</strong> to adjust tempo. Press <strong>PLAY</strong> to hear the sequence, <strong>SEQ</strong> to stop, <strong>REC</strong> to insert a rest, or <strong>SAVE</strong> while stopped to store your melody.</li>
+<li>Turn <strong>SELECT</strong> to choose a step, press a key to write its note, <strong>REC</strong> for a rest.</li>
+<li>Turn <strong>ALGORITHM</strong> to change the step's vowel, <strong>PRESETS</strong> for the tempo.</li>
+<li><strong>PLAY</strong> plays and pauses, <strong>SEQ</strong> stops, <strong>SAVE</strong> (stopped) keeps your melody.</li>
 </ol>
-<a class="btn" href="./miku-fm1.fwsc" download="miku-fm1.fwsc">Download firmware (optional)</a>
-<a class="btn alt" href="./emulator/">Play MIKU-FM1 in emulator</a>
-<p><small>The native demo contains five harmonic vowel colors and an editable 16-step melody. Its interface and sound are experimental. Do not flash this package onto physical hardware yet.</small></p>
+</section>
+<section>
+<h2>Firmware</h2>
+<p>{{BUILD}}</p>
+<a class="btn alt" href="./firmware/{{PACKAGE}}" download>{{PACKAGE}}</a>
+<p><small>SHA-256 <code>{{SHA256}}</code></small></p>
+<p><small>Install it with the <a href="https://thefirmwarehub.com">FM-1 Firmware Hub</a> once listed, or see <a href="https://github.com/MichaelAPerry/MIKU-FM1/blob/main/docs/INSTALL.md">INSTALL</a>. Miku-FM does not read other firmwares' projects or samples; back up first.</small></p>
 </section>
 <section><h2>Project and credits</h2>
-<p>MIKU-FM1 is an original demonstration app built on the GPL-3.0-only <a href="https://github.com/zvenson/dinghy">Dinghy firmware platform</a>. The embedded emulator is by <a href="https://github.com/joakimeriksson/fm1-emu">Joakim Eriksson</a>. This is an unofficial community project with no association with Crypton Future Media, Yamaha or VOCALOID.</p>
-<p><a href="https://github.com/MichaelAPerry/MIKU-FM1">Source code and build logs</a></p></section>
+<p>Miku-FM is built on the <a href="https://github.com/zvenson/dinghy">Dinghy</a> firmware platform (GPL-3.0-only). The emulator is <a href="https://github.com/joakimeriksson/fm1-emu">fm1-emu</a> by Joakim Eriksson (MIT). Miku-FM is an unofficial community project, not associated with Crypton Future Media, Yamaha, VOCALOID or M-VAVE.</p>
+<p><a href="https://github.com/MichaelAPerry/MIKU-FM1">Source code</a></p></section>
 </main></body></html>

@@ -11,7 +11,7 @@ int main(void){
     miku_stage_button(&s,MIKU_BTN_PLAY|MIKU_BTN_VOWEL);
     assert(s.playing&&s.vowel==1);
     miku_stage_draw(&s,pixels,240*240);
-    assert(pixels[223*240+15]!=pixels[10*240+10]);
+    assert(pixels[223*240+15]!=pixels[0]);
     miku_stage_button(&s,MIKU_BTN_STOP|MIKU_BTN_NEXT);
     assert(!s.playing&&s.page==1);
     miku_stage_button(&s,MIKU_BTN_PREV);assert(s.page==0);

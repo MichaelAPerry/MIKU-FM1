@@ -6,6 +6,8 @@
 #define FV_NR 6                 /* resonators: F1 nasal F2 F3 singer air */
 #define FV_BLK 16               /* frames per control block */
 enum { FV_A, FV_I, FV_U, FV_E, FV_O };
+/* consonant classes: same numbering as MC_* of firmware/song/mora.h (checked by tests/test_mora_voice.c) */
+enum { FC_NONE, FC_K, FC_S, FC_SH, FC_T, FC_CH, FC_TS, FC_N, FC_H, FC_F, FC_M, FC_Y, FC_R, FC_W, FC_G, FC_Z, FC_J, FC_D, FC_B, FC_P, FC_NN };
 typedef struct { int32_t g, a1, a2; } FvRes;
 typedef struct {
     /* params: set directly (fv_init gives defaults) */
@@ -27,12 +29,23 @@ typedef struct {
     FvRes r[FV_NR];
     uint16_t vt, ovd;
     uint8_t gated, vowel, velg, left;
+    /* consonant state (fv_note_on_mora): smoothed voicing / level / noise / aspiration, noise band, phase machine */
+    int32_t vg, vgs, vgt, nl, nls, nlt, ap, aps, apt, cl, clt, ny1, ny2, nbc[3];
+    uint16_t km;
+    uint8_t cons, cph, cleft, cshp, lip, nzon, tail;
 } FvVoice;
 void fv_init(FvVoice *v);
 void fv_note_on(FvVoice *v, uint8_t midi_note, uint8_t vowel, uint8_t velocity); /* gated: legato */
+/* A mora: the consonant `cons` (FC_*) is a pitch- and tempo-independent event that starts AT the note start
+   (fv_cons_ms(cons) later the vowel is fully there, so the vowel onset lands that much after the beat; a sequencer may
+   start the note that early to put the vowel on the beat). A gated voice (legato) still articulates the consonant but
+   keeps its envelope and pitch glide. FC_NN (moraic n) is a hum for the whole note and ignores `vowel`. */
+void fv_note_on_mora(FvVoice *v, uint8_t midi_note, uint8_t cons, uint8_t vowel, uint8_t velocity);
+uint32_t fv_cons_ms(uint8_t cons);                  /* ms from the note start until the vowel phase begins (0 for FC_NONE, FC_NN) */
 void fv_note_off(FvVoice *v);
 void fv_set_vowel(FvVoice *v, uint8_t vowel);       /* 0..4 = A I U E O */
 void fv_render(FvVoice *v, int32_t *out, uint32_t frames); /* ADDS stereo Q15 L R */
-uint8_t fv_mouth(const FvVoice *v);                 /* 0..4 vowel, 5 closed */
+uint8_t fv_mouth(const FvVoice *v);                 /* 0..4 vowel, 5 closed (silent, or lips shut: m b p closure, the n hum) */
+uint8_t fv_cons(const FvVoice *v);                  /* FC_* while a consonant sounds, else FC_NONE */
 uint8_t fv_level(const FvVoice *v);                 /* envelope 0..255 */
 #endif

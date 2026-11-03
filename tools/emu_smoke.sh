@@ -15,7 +15,7 @@ from PIL import Image
 with wave.open("audio.wav", "rb") as w:
     n, a = w.getnframes(), array.array("h", w.readframes(w.getnframes()))
 rms = (sum(x * x for x in a) / max(len(a), 1)) ** 0.5
-colours = len(set(Image.open("work/lcd_2500.bmp").convert("RGB").getdata()))
+colours = len(Image.open("work/lcd_2500.bmp").convert("RGB").getcolors(1 << 16))
 print(f"emu_smoke: {n} frames, RMS {rms:.0f}, {colours} screen colours")
 assert n > 10000, "short audio"
 assert rms > 10, "silent"

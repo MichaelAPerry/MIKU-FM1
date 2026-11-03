@@ -27,6 +27,16 @@ The owner hears **crackles like white noise on some sounds that are hard to tell
 4. The final limiter (`mx_limit`, hard cap 32767) or the app gain ×1.5 in `firmware/app/engine.c` hitting the cap
    on fricative peaks.
 
+Already ruled out (2026-11-03, measured): no output clipping in `morae.wav`; inside the voice the six resonators,
+the noise band and the resonator sum clamp on only 3 samples in total over all 69 morae at notes 48/72/84 (on "hi"),
+so internal clamping is not the cause. A click-spike count on per-track solo renders of the demo
+(`song_render --solo …`, 22.5 s) gave chords 0, vocal 54, bass 83 (chip-square bass: naive square edges, a likely
+aliasing "crackle" source), drums 143 (hats/snare from naive squares and one-pole-filtered noise). Ask the owner
+which solo file crackles before changing code. Next suspects if it is the voice: noise-band coefficients swapped
+in one step at consonant phase changes (`enter()` sets `nbc` while `ny1/ny2` keep old state), the glottal-gated
+breath noise, the non-band-limited glottal pulse (aliasing at high notes). If bass/drums: band-limit the squares
+(polyBLEP or wavetables per octave) and use 2-pole noise filters.
+
 How to find it: render each mora alone (`tools/mora_render`), and for each one measure (a) the count of
 samples at or within 1% of ±32767 at every stage (per resonator before clamp, voice out, mix out), (b) the largest
 sample-to-sample jump relative to the local RMS, (c) energy above 10 kHz in 5 ms windows, (d) jumps that line up

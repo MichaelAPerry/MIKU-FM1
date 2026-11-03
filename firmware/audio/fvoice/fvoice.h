@@ -3,6 +3,7 @@
 #ifndef FVOICE_H
 #define FVOICE_H
 #include <stdint.h>
+#define FV_NR 6                 /* resonators: F1 nasal F2 F3 singer air */
 #define FV_BLK 16               /* frames per control block */
 enum { FV_A, FV_I, FV_U, FV_E, FV_O };
 typedef struct { int32_t g, a1, a2; } FvRes;
@@ -14,13 +15,17 @@ typedef struct {
     uint16_t porta;             /* ms, 0..510 */
     uint16_t attack, release;   /* ms, 0..510; release = time to -40 dB */
     uint8_t breath, bright;     /* 0..127 */
+    uint8_t human;              /* 0..127 master amount of pitch drift/jitter, shimmer, vibrato wander, leap overshoot (0 = machine-exact) */
+    uint8_t scoop;              /* cents below the target at a (non-legato) note onset, 0..100 */
+    uint16_t scoop_ms;          /* time for the onset scoop to settle, ms (<=510) */
+    int8_t transpose;           /* semitones added to incoming notes */
     /* state */
-    uint32_t ph, inc, lfo, noise;
+    uint32_t ph, inc, lfo, noise, rng;
     int32_t pcur, ptgt;         /* pitch, 4096 units/octave above MIDI 0 */
-    int32_t lp, env, gcur, gstep;
-    int32_t y1[4], y2[4], cur[4][3];
-    FvRes r[4];
-    uint16_t vt;
+    int32_t lp, env, gcur, gstep, sp, np, sc, ovt, ovo, ova, dr[3];
+    int32_t y1[FV_NR], y2[FV_NR], cur[FV_NR][3];
+    FvRes r[FV_NR];
+    uint16_t vt, ovd;
     uint8_t gated, vowel, velg, left;
 } FvVoice;
 void fv_init(FvVoice *v);

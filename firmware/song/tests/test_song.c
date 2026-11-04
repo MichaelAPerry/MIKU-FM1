@@ -340,7 +340,7 @@ static void test_v2(void){
     memcpy(v1,buf,SONG_ENC_V1-4);v1[4]=1;v1[6]=(uint8_t)SONG_ENC_V1;v1[7]=(uint8_t)(SONG_ENC_V1>>8);v1[8]=v1[9]=0;
     c=sg_crc32(v1,SONG_ENC_V1-4);for(i=0;i<4;i++)v1[SONG_ENC_V1-4+i]=(uint8_t)(c>>(8*i));
     CHECK(song_decode(&B,v1,SONG_ENC_V1)==SIO_OK);
-    CHECK(B.vx.rev==0&&B.vx.chr==VC_MIKU&&B.vx.lang==VL_JP&&B.vx.atk==2&&B.vx.human==63);
+    CHECK(B.vx.rev==0&&B.vx.chr==VC_MIKU&&B.vx.lang==VL_JP&&B.vx.atk==13&&B.vx.human==63);
     CHECK(!memcmp(B.pat,g.pat,sizeof g.pat)&&!memcmp(B.row,g.row,sizeof g.row)&&B.bpm==g.bpm);
     /* sizes and versions must agree; voice fields are range-checked */
     CHECK(song_decode(&B,v1,SONG_ENC_SIZE)!=SIO_OK&&song_decode(&B,buf,SONG_ENC_V1)!=SIO_OK);

@@ -17,7 +17,7 @@ void sg_init(Song *g){
     for(t=0;t<NTRK;t++)for(p=0;p<NPAT;p++)for(s=0;s<NSTEP;s++)for(k=0;k<4;k++)g->pat[t][p][s].v[k]=0;
 }
 void sg_voice_default(Voice *v){
-    static const uint8_t d[16]={2,12,40,63,50,20,0,0,0,0,0,VC_MIKU,VL_JP,0,0,0};   /* = fvoice's 0.5 settings: attack 8 ms, release 60, scoop 40, human 80, 5.5 Hz, 200 ms */
+    static const uint8_t d[16]={13,35,40,63,50,45,0,0,0,0,0,VC_MIKU,VL_JP,0,0,0};   /* = fvoice's 0.5 settings: attack 8 ms, release 61 (60), scoop 40, human 80, 5.5 Hz, 202 ms (200) */
     uint8_t *p=(uint8_t *)v;
     uint32_t i;
     for(i=0;i<16;i++)p[i]=d[i];

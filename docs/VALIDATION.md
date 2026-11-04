@@ -234,3 +234,13 @@ languages in `firmware/app/engine.c`, all settings in the song (`Voice`, MKS2 ve
   show and sound; emulator CPU on STAGE 6% (dry) -> 19% (all effects + ANIMAL). Not a device figure: measure on hardware.
 - Slots: a version-1 song in a slot loads (size fallback in `sload`); saving writes version 2.
 
+## STAGE visuals and knob curves (2026-11-04)
+
+- Syllable dial: the top of a dial (centre below the screen, radius 150 px) with five syllables on its rim, ticks and a pink
+  pointer; it eases to the new syllable in about 100 ms (30 ms frames). Knob turns show a 270-degree ring gauge, the name and a
+  picture for each of the 16 knobs plus character, language and tempo. All checked in fm1-emu screenshots.
+- Knob curves: chorus/delay/reverb wet and drive gain follow v*v (0..100); attack and release v*v/20 ms (0..500), vibrato
+  delay v*v/10 ms. Defaults moved to keep the old sound: attack 13 (8 ms), release 35 (61 ms), vibrato delay 45 (202 ms).
+  Engine test at 60: drive +3.1, tremolo -2.1, chorus/delay/reverb +0.1..0.2 dB re dry; `ctest` 12/12.
+- Device build: image 179,9xx B, 0 warnings; emu_smoke unchanged (RMS 1504).
+

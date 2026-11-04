@@ -1,5 +1,6 @@
 /* SPDX-License-Identifier: GPL-3.0-only */
 /* Voice effects (see vfx.h). Levels: the voice is Q15 (+-32767); every stage keeps its output inside that.
+ * Knob curves: the wet levels and the drive gain follow the square of the knob (0..100), the rest is linear.
  * drive    gain up to 9x into a cubic soft clip (y = 1.5u - 0.5u^3), then 20/(gain*16+4) back down (about level loudness)
  * tremolo  5 Hz parabolic-sine amplitude LFO
  * chorus   two taps around 13 ms, +-2.5 ms at 0.9 Hz in opposite phase (left / right), linear interpolation
@@ -36,7 +37,8 @@ static int32_t chtap(uint32_t w, int32_t d8) {   /* delay d8 (Q8 samples) behind
 }
 void vx_render(int32_t *st, uint32_t n, const VxSet *s, uint32_t bpm) {
     uint32_t f, k, now = (s->cho ? 1u : 0) | (s->dly ? 2u : 0) | (s->rev ? 4u : 0);
-    int32_t g16 = 16 + (s->drv * 13) / 10, comp = 81920 / (g16 + 4), td = s->trem * 327, wc = s->cho * 164, wd = s->dly * 200, wr = s->rev * 150;
+    int32_t q = s->drv * s->drv, g16 = 16 + (q * 13) / 1000, comp = 81920 / (g16 + 4), td = s->trem * 327;   /* knob curves: squared (fine low end) */
+    int32_t wc = s->cho * s->cho * 164 / 100, wd = s->dly * s->dly * 2, wr = s->rev * s->rev * 3 / 2;
     int32_t fb = 6000 + s->dly * 90;
     uint32_t dd = bpm >= 20u ? 33075u * 60u / bpm : DN;   /* dotted eighth: 0.75 beat */
     if (!s->drv && !s->trem && !now) return;

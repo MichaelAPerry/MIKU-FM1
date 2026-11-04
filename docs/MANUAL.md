@@ -68,8 +68,8 @@ random morae (sing-able, not words). GEN settings and locks are not saved.
 STAGE is the voice's home: the keys always sing here, and every control shapes her voice. The singer's mouth follows the
 voice; her face blinks and smiles on PLAY.
 
-- **SELECT** turns the syllable wheel under her face: the big pink syllable is the one the keys sing (and the one PATTERN
-  writes). While stopped you hear each syllable as you turn.
+- **SELECT** turns the syllable dial under her face: the pink syllable under the pointer is the one the keys sing (and the
+  one PATTERN writes). While stopped you hear each syllable as you turn.
 - **SCL** switches the language: JAPANESE sings the syllables as written; ANIMAL turns every held note into fast random
   babble with little pitch jumps, like the voices of animal games; SCAT sings da, ba, bi, do on eighth notes while a note is
   held; VOWELS drops the consonants.
@@ -77,7 +77,9 @@ voice; her face blinks and smiles on PLAY.
 - The four knobs work in banks. VOICE (the default): breath, brightness, glide, level. **FX**: chorus, delay (a dotted eighth
   at the song tempo, echoes left and right), reverb, drive. **ENV**: attack, release, scoop (sliding up into each note),
   human (small drifts that make her sound alive). **LFO**: vibrato depth, rate and delay, tremolo. Press the bank's button
-  again to go back to VOICE. The lit button shows the bank; turning a knob shows its name and value.
+  again to go back to VOICE. The lit button shows the bank. Turning a knob shows a ring gauge and a picture of what it does:
+  the attack and release shape, the scoop into the note, the vibrato wave, the delay's echoes, the reverb's tail, the drive's
+  clip curve. The effects and times follow a squared curve, so small settings are easy to dial in.
 
 All of this is saved with the song. Songs saved by older versions load with the original sound (no effects).
 

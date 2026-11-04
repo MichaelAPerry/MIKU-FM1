@@ -550,37 +550,134 @@ static void pg_mixer(uint32_t b){
         cv_rect(130+(int32_t)pn*98/127,y+28,3,14,C_WHITE);
     }
 }
-static void pg_stage(void){
-    /* the syllable wheel: the selected mora big in the middle, two each side curving up around her face; under it the
-       language, character and knob bank, BPM and CPU (a knob turn or a message shows there instead) */
-    static const int32_t wx[5]={36,80,120,160,204},wy[5]={2,10,6,10,2};
-    char s[30],up[6];
-    uint32_t i;
-    int32_t k;
-    cv_begin(240,56,RGB(12,20,40));
-    for(k=-2;k<=2;k++){
-        const char *m=mora_str((uint32_t)wr((int32_t)ed_mora+k,MORA_N));
-        if(!*m)m="(a)";
+/* ---- STAGE visuals, in the 240 x 56 strip under the face.
+   The syllable dial: the top of a big dial rises from the bottom edge; syllables sit round its rim with a tick each, the pink
+   pointer marks the one the keys sing, and the dial turns (animated) with SELECT. A knob turn shows, for 1.5 s, a ring gauge
+   (the value as a lit arc), the knob's name and a picture of what it does (envelope, pitch, LFO, echoes, clip curve ...). */
+enum { VS_NONE, VS_KNOB, VS_CHR, VS_LANG, VS_BPM };
+static uint32_t vis_kind,vis_id,dial_ms;
+static int32_t dial_q=-1;                                  /* the dial's shown position, syllables Q8 (eases toward ed_mora) */
+#define C_PNK RGB(247,123,180)
+#define C_TEL RGB(64,222,209)
+#define C_DIMR RGB(60,72,110)
+#define C_PNL RGB(16,30,58)
+static int32_t isin(int32_t a){return fv_sin[a&255];}     /* 256 steps a turn, Q15 */
+static int32_t icos(int32_t a){return fv_sin[(a+64)&255];}
+static uint32_t hsh(uint32_t i){i*=2654435761u;return i>>24;}
+static void dial(void){
+    int32_t a,m,k,cm=(dial_q+128)>>8;
+    for(a=44;a<=84;a++)cv_rect(120+((150*icos(a))>>15),170-((150*isin(a))>>15),2,2,C_DIMR);   /* the rim (its top, clear of the line below) */
+    for(k=-3;k<=3;k++){
+        int32_t mm=cm+k,ang=(64*256-(mm*256-dial_q)*8+128)>>8,x,y,w;
+        const char *ms;
+        char up[6];
+        uint32_t i;
+        if(ang<45||ang>83)continue;
+        m=wr(mm,MORA_N);ms=mora_str((uint32_t)m);if(!*ms)ms=".";
+        for(i=0;i<3u;i++){int32_t r=144+(int32_t)i*3;cv_rect(120+((r*icos(ang))>>15),170-((r*isin(ang))>>15),2,2,k?C_DIMR:C_PNK);}   /* tick */
+        x=120+((166*icos(ang))>>15);y=170-((166*isin(ang))>>15);
         if(!k){
-            for(i=0;i<5u&&m[i];i++)up[i]=(char)(m[i]>='a'&&m[i]<='z'?m[i]-32:m[i]);
-            up[i]=0;
-            cv_rect(120-text_w(&FONT_L,up)/2-6,wy[2]-2,text_w(&FONT_L,up)+12,30,RGB(247,123,180));
-            cv_text(120-text_w(&FONT_L,up)/2,wy[2],&FONT_L,up,RGB(12,20,40));
-        }else cv_text(wx[k+2]-text_w(&FONT_S,m)/2,wy[k+2],&FONT_S,m,k==-1||k==1?RGB(190,200,230):RGB(100,110,140));
+            for(i=0;i<5u&&ms[i];i++)up[i]=(char)(ms[i]>='a'&&ms[i]<='z'?ms[i]-32:ms[i]);
+            up[i]=0;w=text_w(&FONT_S,up);
+            cv_rect(x-w/2-5,y-10,w+10,19,C_PNK);cv_text(x-w/2,y-9,&FONT_S,up,RGB(12,20,40));
+        }else{w=text_w(&FONT_S,ms);cv_text(x-w/2,y-9,&FONT_S,ms,k==-1||k==1?RGB(190,200,230):k==-2||k==2?RGB(120,132,170):C_DIMR);}
     }
-    if(toast_s && (int32_t)(fm1_ms-toast_until)<0)txt(120,38,&FONT_S,toast_s,toast_err?RGB(255,110,110):RGB(249,207,94),1);
-    else{
-        s[0]=0;cat(s,lgname[sg.vx.lang<VL_N?sg.vx.lang:0]);cat(s," ");cat(s,chname[sg.vx.chr<VC_N?sg.vx.chr:VC_MIKU]);cat(s," ");cat(s,bkname[bank]);
-        cv_text(4,38,&FONT_S,s,RGB(64,222,209));
-        s[0]=0;catn(s,sg.bpm);cat(s," ");catn(s,cpu_pct);cat(s,"%");
-        if(oct){cat(s,oct>0?" +":" -");catn(s,(uint32_t)(oct>0?oct:-oct));}
-        cv_text(236-text_w(&FONT_S,s),38,&FONT_S,s,RGB(249,207,94));
+    for(k=0;k<5;k++)cv_rect(120-4+k,26+k,9-2*k,1,C_PNK);  /* the pointer, under the rim */
+}
+static void ring(int32_t cx,int32_t cy,int32_t r,int32_t v,int32_t mx){   /* 270-degree gauge, lit up to v of mx */
+    int32_t t;
+    for(t=0;t<=48;t++){
+        int32_t a=160-t*4;
+        cv_rect(cx+((r*icos(a))>>15)-1,cy-((r*isin(a))>>15)-1,3,3,t*mx<=v*48&&v?C_PNK:C_DIMR);
+    }
+}
+static void graph(uint32_t id,int32_t v){                  /* id: bank*4+knob, 16 VS_CHR, 17 VS_LANG, 18 VS_BPM; v 0..100 */
+    enum{GX=64,GY=20,GW=172,GH=34,MID=17};
+    int32_t i,p=-1,acc=32767,acc2=0;
+    cv_rect(GX,GY,GW,GH,C_PNL);
+    if(id==17){static const char *const ex[VL_N]={"ka ki ku ke ko","ba-mi-ko-ne-pu!","doo-ba da-bi","a  i  u  e  o"};cv_text(GX+8,GY+9,&FONT_S,ex[sg.vx.lang%VL_N],C_TEL);return;}
+    for(i=0;i<GW;i++){
+        int32_t y=-1,fill=0,y2=-1;
+        switch(id){
+        case 0: fill=1;y=(int32_t)hsh((uint32_t)i)*v*(GH-2)/25600;break;                          /* breath: noise */
+        case 1: if(i%12<8){int32_t n=i/12,h=32767,j,r=14745+v*164;for(j=0;j<n;j++)h=(h*r)>>15;y=(GH-2)*h>>15;fill=1;}break;   /* bright: harmonics */
+        case 2: if(i<30)y=5;else{acc-=acc/(1+v*v/80);y=GH-5-((GH-10)*acc>>15);}break;           /* glide: pitch into the note */
+        case 3: if(i*100<v*GW&&(i&3)!=3){y=GH-1;fill=1;}break;                                  /* level: a meter */
+        case 4: y=MID+((10*isin(i*3))>>15);y2=MID+((10*isin(i*3+v*64/100))>>15);break;          /* chorus: two voices drifting apart */
+        case 5: {int32_t n=i/26;if(i%26<3){int32_t h=GH-2,j,fb=6000+v*90;if(n){h=h*v/100;for(j=1;j<n;j++)h=h*fb>>15;}y=h;fill=1;}}break;   /* delay: the note, then its echoes */
+        case 6: if(i&1){if(i>1)acc-=acc/(4+v*v/50);y=(GH-2)*v/100*acc>>15;fill=1;}break;       /* reverb: a dense tail */
+        case 7: {int32_t u=(i-GW/2)*65536/GW,g=16+v*v*13/1000;u=u*g>>4;u=u>32767?32767:u<-32767?-32767:u;    /* drive: the clip curve */
+                 u=(3*u-((((u*u)>>15)*u)>>15))>>1;y=MID+((u*(MID-2))>>15);}break;
+        case 8: {int32_t at=2+v*v/70;y=i<at?(GH-3)*i/at:i<GW-24?GH-3:(GH-3)*(GW-i)/24;}break;   /* attack */
+        case 9: if(i<4)y=(GH-3)*i/4;else if(i<40)y=GH-3;else{acc-=acc/(1+v*v/70);y=(GH-3)*acc>>15;}break;   /* release */
+        case 10: if(i<10)y=MID-(v*(MID-3))/100;else{acc-=acc/9;y=MID-((v*(MID-3)/100)*acc>>15);}break;   /* scoop: from below */
+        case 11: y=MID+((v*(MID-3)/100)*((2*isin(i*2)+isin(i*5+40))/3)>>15);break;          /* human: a slow wander */
+        case 12: y=MID+((v*(MID-3)/100)*isin(i*6)>>15);break;                                 /* vibrato depth */
+        case 13: y=MID+(10*isin(i*(2+v/7))>>15);break;                                        /* vibrato rate */
+        case 14: {int32_t d=v*GW/130;if(i<d)y=MID;else{acc2+=acc2<32767-1100?1100:0;y=MID+(((10*acc2)>>15)*isin((i-d)*6)>>15);}}break;   /* vibrato delay: flat, then it fades in */
+        case 15: fill=1;y=(GH-2)-(GH-2)*v/100*((32768+isin(i*5))>>1)/32768;break;           /* tremolo */
+        case 16: {static const uint8_t f[VC_N]={84,92,100,108,118};int32_t j,best=0;   /* character: formant peaks move */
+                  static const int16_t pk[3]={34,74,124},ht[3]={30,24,16};
+                  for(j=0;j<3;j++){int32_t c=pk[j]*f[sg.vx.chr%VC_N]/100,dd=i-c,h=ht[j]-(dd<0?-dd:dd)*2/3;if(h>best)best=h;}
+                  y=best;fill=1;}break;
+        case 18: fill=1;y=(i%(600/(v?v:1)+1)<2)?GH-4:-1;break;                              /* tempo: beats */
+        }
+        if(y<0)continue;
+        if(y>GH-1)y=GH-1;
+        if(y<0)y=0;
+        if(fill)cv_rect(GX+i,GY+GH-1-y,1,y+1,id==0||id==6?C_TEL:C_PNK);
+        else{int32_t q=p<0?y:p,lo=y<q?y:q,hi=y<q?q:y;cv_rect(GX+i,GY+GH-1-hi,2,hi-lo+1,C_PNK);p=y;}
+        if(y2>=0)cv_rect(GX+i,GY+GH-1-y2,2,2,C_TEL);
+    }
+}
+static void pg_stage(void){
+    char s[30];
+    uint32_t vis=toast_s && (int32_t)(fm1_ms-toast_until)<0 && toast_s==popbuf && vis_kind;
+    cv_begin(240,56,RGB(12,20,40));
+    if(vis){
+        int32_t v,mx=100;
+        const char *nm;
+        if(vis_kind==VS_KNOB){uint8_t *pv=kptr(vis_id>>2,vis_id&3u);v=*pv;mx=pv==&sg.trk[0].level?127:100;nm=knm[vis_id>>2][vis_id&3u];}
+        else if(vis_kind==VS_CHR){v=sg.vx.chr*25;nm=chname[sg.vx.chr%VC_N];}
+        else if(vis_kind==VS_LANG){v=(int32_t)sg.vx.lang*33;nm=lgname[sg.vx.lang%VL_N];}
+        else{v=sg.bpm;mx=240;nm="TEMPO";}
+        ring(30,30,22,v,mx);
+        s[0]=0;catn(s,(uint32_t)(vis_kind==VS_CHR?sg.vx.chr+1u:vis_kind==VS_LANG?sg.vx.lang+1u:(uint32_t)v));
+        cv_text(30-text_w(&FONT_S,s)/2,22,&FONT_S,s,C_WHITE);
+        cv_text(64,1,&FONT_S,nm,C_TEL);
+        graph(vis_kind==VS_KNOB?vis_id:vis_kind==VS_CHR?16u:vis_kind==VS_LANG?17u:18u,vis_kind==VS_KNOB?v*100/mx:v*100/240);
+    }else{
+        dial();
+        if(toast_s && (int32_t)(fm1_ms-toast_until)<0)txt(120,38,&FONT_S,toast_s,toast_err?RGB(255,110,110):RGB(249,207,94),1);
+        else{
+            s[0]=0;cat(s,lgname[sg.vx.lang%VL_N]);cat(s," ");cat(s,chname[sg.vx.chr%VC_N]);
+            txt(120,38,&FONT_S,s,C_TEL,1);
+            cv_text(4,38,&FONT_S,bkname[bank],RGB(150,160,190));
+            s[0]=0;catn(s,sg.bpm);cat(s," ");catn(s,cpu_pct);cat(s,"%");
+            cv_text(236-text_w(&FONT_S,s),38,&FONT_S,s,RGB(249,207,94));
+        }
     }
     cv_blit(0,FACE_Y);
 }
-static void pop(const char *name,uint32_t v){            /* "REVERB 42": what the knob just did */
-    popbuf[0]=0;cat(popbuf,name);cat(popbuf," ");catn(popbuf,v);
+static void pop(uint32_t kind,uint32_t id,const char *name,uint32_t v){   /* what a control just did: the picture on STAGE, text on DANCE */
+    popbuf[0]=0;cat(popbuf,name);
+    if(kind!=VS_LANG){cat(popbuf," ");if(kind==VS_CHR)cat(popbuf,chname[v%VC_N]);else catn(popbuf,v);}
     toast(popbuf,0);
+    vis_kind=kind;vis_id=id;
+}
+static void dial_step(void){                               /* ease the dial toward the selected syllable (main loop, STAGE) */
+    int32_t t=(int32_t)ed_mora*256,d;
+    if(dial_q<0){dial_q=t;return;}
+    d=t-dial_q;
+    while(d>MORA_N*128){d-=MORA_N*256;}
+    while(d<-MORA_N*128){d+=MORA_N*256;}
+    if(!d){dial_q=t;return;}
+    if(fm1_ms-dial_ms<30u)return;
+    dial_ms=fm1_ms;
+    dial_q+=d/3?d/3:d;
+    if(dial_q<0)dial_q+=MORA_N*256;
+    if(dial_q>=MORA_N*256)dial_q-=MORA_N*256;
+    mk(0x20u);
 }
 static void bank_leds(void){
     uint32_t i;
@@ -755,13 +852,13 @@ static void app_main(void){
         if(b&(1u<<BTN_HOME)){if(page==PG_GEN)take=0;page=page+1u<PG_N?page+1u:0;full=1;mk(0x3Fu);bank_leds();}
         for(tb=0;tb<4u;tb++)if(b&(1u<<(BTN_FX+tb))){
             if(page<=PG_DANCE){
-                if(tb==1u){sg.vx.lang=(uint8_t)((sg.vx.lang+1u)%VL_N);modified=1;toast(lgname[sg.vx.lang],0);}
+                if(tb==1u){sg.vx.lang=(uint8_t)((sg.vx.lang+1u)%VL_N);modified=1;pop(VS_LANG,0,lgname[sg.vx.lang],0);}
                 else{
                     static const uint8_t bk[4]={BK_FX,0,BK_ENV,BK_LFO};
                     bank=bank==bk[tb]?BK_VOICE:bk[tb];
                     popbuf[0]=0;cat(popbuf,bkname[bank]);cat(popbuf,":");
                     for(i=0;i<4u;i++){cat(popbuf," ");cat(popbuf,ksh[bank][i]);}
-                    toast(popbuf,0);
+                    toast(popbuf,0);vis_kind=VS_NONE;
                 }
                 bank_leds();mk(0x20u);
             }else{if(page==PG_GEN && tb==trk)gcf.lock^=(uint8_t)(1u<<tb);trk=tb;mk(0x3Fu);bank_leds();}
@@ -811,12 +908,12 @@ static void app_main(void){
                 ed_mora=(uint32_t)wr((int32_t)ed_mora+dS,MORA_N);mk(0x20u);
                 if(!playing && !prev_keys){en_post(&en,EN_ON,TR_VOCAL,67u+(uint32_t)(oct*12),ed_mora);pv_off=fm1_ms+300u;}   /* hear it */
             }
-            if(dA){tweak(&sg.vx.chr,dA,0,VC_N-1);popbuf[0]=0;cat(popbuf,"CHARACTER ");cat(popbuf,chname[sg.vx.chr]);toast(popbuf,0);}
-            if(dP){tweak(&sg.bpm,dP,40,240);if(playing)en_post(&en,EN_BPM,sg.bpm,0,0);pop("BPM",sg.bpm);}
+            if(dA){tweak(&sg.vx.chr,dA,0,VC_N-1);pop(VS_CHR,0,"CHARACTER",sg.vx.chr);}
+            if(dP){tweak(&sg.bpm,dP,40,240);if(playing)en_post(&en,EN_BPM,sg.bpm,0,0);pop(VS_BPM,0,"BPM",sg.bpm);}
             for(i=0;i<4;i++)if(dK[i]){
                 uint8_t *v=kptr(bank,i);
                 uint32_t mx=v==&sg.trk[0].level?127u:100u;
-                tweak(v,dK[i]*2,0,(int32_t)mx);pop(knm[bank][i],*v);
+                tweak(v,dK[i]*2,0,(int32_t)mx);pop(VS_KNOB,bank*4u+i,knm[bank][i],*v);
             }
         }else if(page==PG_SONG){
             if(dS&&sg.nrows){crow=(uint32_t)cl((int32_t)crow+dS,0,(int32_t)sg.nrows-1);mk(0x1Fu);}
@@ -896,7 +993,7 @@ static void app_main(void){
         if(toast_s && (int32_t)(now-toast_until)>=0){toast_s=0;mk(0x21u);}
         if(was_playing && !playing)bow_until=now+1500u;
         was_playing=playing;
-        if(page==PG_STAGE)face_update();
+        if(page==PG_STAGE){face_update();dial_step();}
         else if(page==PG_DANCE)dance_update();
         else if((int32_t)(now-next_blink)>=0)next_blink=now+3000u;
         if(now-cpu_ms>=500u){

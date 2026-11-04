@@ -126,9 +126,9 @@ void en_render(Engine *e, int32_t *out, uint32_t n) {
             mx_gain((uint8_t)lv, (uint8_t)pn, &e->vl, &e->vr);
             e->fv.vib_depth = v->vib; e->fv.porta = (uint16_t)(v->porta * 5u);
             e->fv.breath = (uint8_t)(v->breath * 127u / 100u); e->fv.bright = (uint8_t)(v->bright * 127u / 100u);
-            e->fv.attack = (uint16_t)(g->vx.atk * 4u); e->fv.release = (uint16_t)(g->vx.rel * 5u); e->fv.scoop = g->vx.scoop;
+            e->fv.attack = (uint16_t)(g->vx.atk * g->vx.atk / 20u); e->fv.release = (uint16_t)(g->vx.rel * g->vx.rel / 20u); e->fv.scoop = g->vx.scoop;   /* times: squared knobs, 0..500 ms */
             e->fv.human = (uint8_t)(g->vx.human * 127u / 100u); e->fv.vib_rate = (uint16_t)(30u + g->vx.vrate / 2u);
-            e->fv.vib_delay = (uint16_t)(g->vx.vdel * 10u); e->fv.chr = g->vx.chr;
+            e->fv.vib_delay = (uint16_t)(g->vx.vdel * g->vx.vdel / 10u); e->fv.chr = g->vx.chr;
             continue;
         }
         if (p != e->pre[k]) {

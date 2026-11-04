@@ -4,9 +4,9 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Miku-FM · a singer in your FM-1</title>
-<meta name="description" content="Miku-FM: a singing songwriter firmware for the M-VAVE FM-1. A tiny pixel singer sings your songs in Japanese, with chords, bass and drums. Play it in your browser, install it over USB.">
+<meta name="description" content="Miku-FM: a free singing songwriter firmware for the M-VAVE FM-1. A tiny pixel singer sings your songs in Japanese over FM chords, bass and drums: shape her voice, add a harmony, let her write a whole song, watch her dance. Play it in your browser, install it over USB.">
 <meta property="og:title" content="Miku-FM · a singer in your FM-1">
-<meta property="og:description" content="A singing songwriter firmware for the M-VAVE FM-1. Play it in your browser, install it over USB.">
+<meta property="og:description" content="A free singing songwriter firmware for the M-VAVE FM-1: she sings your songs in Japanese, writes her own, and dances. Play it in your browser, install it over USB.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://michaelaperry.github.io/MIKU-FM1/">
 <meta property="og:image" content="https://michaelaperry.github.io/MIKU-FM1/media/trailer.jpg">
@@ -62,7 +62,7 @@
   <p>This is the firmware package itself, emulated by <a href="https://github.com/joakimeriksson/fm1-emu">fm1-emu</a>. Click it, then:</p>
   <ol>
     <li><b>PLAY</b>: she sings the demo 「おとのはこ」. <b>HOME</b> steps through STAGE, DANCE, SONG, PATTERN, MIXER and GEN.</li>
-    <li><b>FX · SCL · ENV · LFO</b> pick the track (vocal, chords, bass, drums); the keys play it. On PATTERN a key writes the step.</li>
+    <li>On SONG, PATTERN, MIXER and GEN, <b>FX · SCL · ENV · LFO</b> pick the track (vocal, chords, bass, drums); the keys play it. On PATTERN a key writes the step.</li>
     <li>On STAGE the knobs shape her voice: <b>FX</b>, <b>ENV</b>, <b>LFO</b> switch the four knobs (effects, envelope, vibrato), and holding one of them, or <b>SEL</b>, opens a deeper layer (source, effect details, articulation, harmony). <b>SELECT</b> turns the syllable dial.</li>
     <li>On GEN: knob 1 the style, 2 the key, 3 major or minor, 4 the seed; <b>REC</b> writes a new song, <b>PLAY</b> plays it.</li>
   </ol>
@@ -83,6 +83,7 @@
   <p class="note">Rendered on a computer by the same C engine that runs in the FM-1's audio interrupt.</p>
   <div class="grid3">
     <div class="card song"><b>「おとのはこ」 · the demo</b><span class="note">148 BPM, C major. Lyrics in Japanese, hand-written.</span><audio controls preload="none" src="media/listen/otonohako.mp3"></audio></div>
+    <div class="card song"><b>「おとのはこ」 · dressed up</b><span class="note">The same song with her voice shaped on STAGE: a DEEP harmony an octave down, chorus, a dotted-eighth delay, reverb.</span><audio controls preload="none" src="media/listen/otonohako-dressed.mp3"></audio></div>
     <div class="card song"><b>GEN · POP</b><span class="note">C major, seed 1. Made by the GEN page in one press.</span><audio controls preload="none" src="media/listen/gen-pop.mp3"></audio></div>
     <div class="card song"><b>GEN · BALLAD</b><span class="note">A minor, seed 7.</span><audio controls preload="none" src="media/listen/gen-ballad.mp3"></audio></div>
     <div class="card song"><b>GEN · DANCE</b><span class="note">A minor, seed 42. Four on the floor.</span><audio controls preload="none" src="media/listen/gen-dance.mp3"></audio></div>
@@ -124,9 +125,11 @@
 <section id="thanks">
   <p class="label">WITH GRATITUDE / OUR ROOTS</p>
   <h2>Built on generous work.</h2>
-  <p>Miku-FM runs on <a href="https://github.com/zvenson/dinghy">Dinghy</a>, the FM-1 firmware platform (GPL-3.0-only), from the
-    Felucca family by Leo Kuroshita (<a href="https://hugelton.com">Hügelton Instruments</a>), whose web installer this site uses.
-    The emulator is <a href="https://github.com/joakimeriksson/fm1-emu">fm1-emu</a> by Joakim Eriksson (MIT).</p>
+  <p>Miku-FM runs on <a href="https://github.com/zvenson/dinghy">Dinghy</a> by zvenson, the FM-1 firmware platform (GPL-3.0-only),
+    whose base comes from <a href="https://github.com/hugelton/Felucca">Felucca</a> by Leo Kuroshita
+    (<a href="https://hugelton.com">Hügelton Instruments</a>) with the changes of <a href="https://github.com/isod89/sloop-fm1">SLOOP</a>
+    (isod89). This site's installer is Felucca's web installer; releases are built and attested by the Firmware Hub's shared
+    builder. The emulator is <a href="https://github.com/joakimeriksson/fm1-emu">fm1-emu</a> by Joakim Eriksson (MIT).</p>
 </section>
 
 <footer>

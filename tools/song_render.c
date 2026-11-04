@@ -4,7 +4,8 @@
  * Options (host tool only; the song's own solo flag and PLAY row are what the device uses too):
  *   --solo vocal|chords|bass|drums   solo that track    --rows A B   play from row A and cut exactly at the end of row B (0-based), 10 ms fade
  *   --gen STYLE KEY SCALE SEED       render a generated song instead (firmware/song/gen.h: style 0-3 POP BALLAD DANCE CHIP, key 0-11, scale 0 major 1 minor)
- *   --vx name=v,...                  the voice's sound (Voice in song.h): atk rel scoop human vrate vdel trem cho dly rev drv chr lang */
+ *   --vx name=v,...                  the voice's sound (Voice in song.h): atk rel scoop human vrate vdel trem cho dly rev drv chr lang,
+ *                                    tens fry whsp fmt rsize dtime dfb crate clen clev vspd obeat hint hmix hdet hchr */
 #include "firmware/app/engine.h"
 #include "firmware/song/gen.h"
 #include <stdio.h>
@@ -42,7 +43,8 @@ int main(int argc, char **argv) {
     }
     if (gen) gen_song(&g, &gc);
     while (vxs && *vxs) {                          /* --vx name=v,... */
-        static const char *const nm[13] = { "atk", "rel", "scoop", "human", "vrate", "vdel", "trem", "cho", "dly", "rev", "drv", "chr", "lang" };
+        static const char *const nm[32] = { "atk", "rel", "scoop", "human", "vrate", "vdel", "trem", "cho", "dly", "rev", "drv", "chr", "lang",
+            "", "", "", "tens", "fry", "whsp", "fmt", "rsize", "dtime", "dfb", "crate", "clen", "clev", "vspd", "obeat", "hint", "hmix", "hdet", "hchr" };   /* Voice field order */
         char k[8]; int n = 0, v, j;
         while (*vxs && *vxs != '=' && n < 7) k[n++] = *vxs++;
         k[n] = 0;
@@ -50,8 +52,8 @@ int main(int argc, char **argv) {
         v = atoi(vxs);
         while (*vxs && *vxs != ',') vxs++;
         if (*vxs == ',') vxs++;
-        for (j = 0; j < 13 && strcmp(k, nm[j]); j++) {}
-        if (j == 13) { fprintf(stderr, "song_render: --vx: unknown %s\n", k); return 1; }
+        for (j = 0; j < 32 && (!*nm[j] || strcmp(k, nm[j])); j++) {}
+        if (j == 32) { fprintf(stderr, "song_render: --vx: unknown %s\n", k); return 1; }
         ((uint8_t *)&g.vx)[j] = (uint8_t)v;
     }
     g.loop = 0;

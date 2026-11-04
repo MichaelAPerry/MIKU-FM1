@@ -26,9 +26,9 @@ static int32_t decay(int32_t x, int32_t k) {   /* x *= 1-k/32768, never sticks, 
     return x > 0 ? x - d : x < 0 ? x + d : 0;
 }
 static void load(FvVoice *v, int snap, int wz) {
-    int sh = v->cshp == 15 ? v->vowel : v->cshp;
+    int sh = v->cshp == 15 ? v->vowel : v->cshp, c = v->chr < FV_NCHR ? v->chr : FV_CHR0;   /* c: voice character (formant size) */
     for (int i = 0; i < FV_NR; i++) for (int j = 0; j < 3; j++) {
-        int32_t t0 = fv_vow[0][sh][i][j], t1 = fv_vow[1][sh][i][j];
+        int32_t t0 = fv_vow[c][0][sh][i][j], t1 = fv_vow[c][1][sh][i][j];
         int32_t t = (t0 + (((t1 - t0) * wz) >> 4)) * 16;
         int32_t d = t - v->cur[i][j], k = ((d >> 4) * (int32_t)v->km) >> 8;
         v->cur[i][j] = snap ? t : v->cur[i][j] + (k ? k : d > 0 ? 1 : d < 0 ? -1 : 0);   /* arrives exactly */
@@ -59,7 +59,7 @@ void fv_init(FvVoice *v) {
     for (uint8_t *b = (uint8_t *)v, *e = b + sizeof *v; b < e; b++) *b = 0;
     v->vib_rate = 55; v->vib_delay = 150; v->porta = 60; v->attack = 8; v->release = 60;
     v->breath = 6; v->bright = 100; v->noise = 0x12345678u; v->rng = 0x9E3779B9u; v->velg = 100;
-    v->human = 80; v->scoop = 40; v->scoop_ms = 75;
+    v->human = 80; v->scoop = 40; v->scoop_ms = 75; v->chr = FV_CHR0;
     v->vg = v->vgt = 65536; v->cl = v->clt = 32768; v->km = FV_KM;
     load(v, 1, 0);
 }

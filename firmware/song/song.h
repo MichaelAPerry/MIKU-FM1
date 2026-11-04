@@ -23,11 +23,22 @@ enum { SEC_NONE, SEC_INTRO, SEC_VERSE, SEC_CHORUS, SEC_BRIDGE, SEC_OUTRO, SEC_N 
 #define ROW_OFF 0xFFu                         /* pattern index: track silent in this row */
 typedef struct { uint8_t level, mute, solo, preset, vib, porta, breath, bright; } Trk;  /* level 0..127, preset 0..7, voice 0..100 */
 typedef struct { uint8_t pat[NTRK]; uint8_t sect; } Row;
+/* The voice's sound (STAGE knobs), 0..100 each unless noted. Defaults (sg_init) give 0.5's sound exactly. */
+enum { VC_DEEP, VC_LOW, VC_MIKU, VC_YOUNG, VC_TINY, VC_N };          /* character: formant size */
+enum { VL_JP, VL_ANIMAL, VL_SCAT, VL_VOWEL, VL_N };                  /* language: morae as written, animal babble, scat, vowels only */
+typedef struct {
+    uint8_t atk, rel, scoop, human;           /* attack (x4 ms), release (x5 ms), onset scoop (cents), human feel */
+    uint8_t vrate, vdel, trem;                /* vibrato rate (3..8 Hz), vibrato delay (x10 ms), tremolo depth */
+    uint8_t cho, dly, rev, drv;               /* effects: chorus, delay (dotted eighth), reverb, drive */
+    uint8_t chr, lang;                        /* VC_*, VL_* */
+    uint8_t rsv[3];                           /* 0 */
+} Voice;
 typedef struct {
     char name[8];                             /* A-Z 0-9 space */
     uint8_t bpm, swing, master, loop, nrows;  /* 40..240, 0..75 (% of a sixteenth that odd sixteenths are delayed), 0..127, 0/1, 0..NROW */
     int8_t transpose;                         /* -24..24 semitones on VOCAL/CHORDS/BASS */
     Trk trk[NTRK];
+    Voice vx;                                 /* the voice's sound (MKS2 version 2; version 1 files get the defaults) */
     Row row[NROW];
     Step pat[NTRK][NPAT][NSTEP];
 } Song;
@@ -56,10 +67,12 @@ int un_push_pat(Undo *u, const Song *g, int trk, int pat);
 int un_push_rows(Undo *u, const Song *g);
 int un_pop(Undo *u, Song *g);                                 /* restore the newest snapshot; 0 if none */
 /* MKS2 binary format (song_io.c) */
-#define SONG_ENC_SIZE (10 + 8 + 6 + NTRK * 8 + NROW * 5 + NTRK * NPAT * NSTEP * 4 + 4)
+#define SONG_ENC_V1 (10 + 8 + 6 + NTRK * 8 + NROW * 5 + NTRK * NPAT * NSTEP * 4 + 4)   /* 4476: version 1, still read */
+#define SONG_ENC_SIZE (SONG_ENC_V1 + 16)                                                  /* 4492: version 2, written */
 enum { SIO_OK = 0, SIO_SIZE = -1, SIO_MAGIC = -2, SIO_VERSION = -3, SIO_LEN = -4, SIO_CRC = -5, SIO_FIELD = -6 };
 uint32_t sg_crc32(const uint8_t *p, uint32_t n);
 uint32_t song_encode(const Song *g, uint8_t *buf, uint32_t cap);   /* bytes written, 0 if cap too small */
-int song_decode(Song *g, const uint8_t *buf, uint32_t len);        /* SIO_OK or an error; g untouched on error */
+int song_decode(Song *g, const uint8_t *buf, uint32_t len);        /* SIO_OK or an error; g untouched on error. len: SONG_ENC_SIZE (v2) or SONG_ENC_V1 */
+void sg_voice_default(Voice *v);
 void song_demo(Song *g);
 #endif

@@ -3,7 +3,8 @@
  * Default: the built-in demo 「おとのはこ」, once through (no loop), plus a 3 s tail. The WAV is 44.1 kHz 16-bit stereo.
  * Options (host tool only; the song's own solo flag and PLAY row are what the device uses too):
  *   --solo vocal|chords|bass|drums   solo that track    --rows A B   play from row A and cut exactly at the end of row B (0-based), 10 ms fade
- *   --gen STYLE KEY SCALE SEED       render a generated song instead (firmware/song/gen.h: style 0-3 POP BALLAD DANCE CHIP, key 0-11, scale 0 major 1 minor) */
+ *   --gen STYLE KEY SCALE SEED       render a generated song instead (firmware/song/gen.h: style 0-3 POP BALLAD DANCE CHIP, key 0-11, scale 0 major 1 minor)
+ *   --vx name=v,...                  the voice's sound (Voice in song.h): atk rel scoop human vrate vdel trem cho dly rev drv chr lang */
 #include "firmware/app/engine.h"
 #include "firmware/song/gen.h"
 #include <stdio.h>
@@ -15,6 +16,7 @@ int main(int argc, char **argv) {
     const char *path = "otonohako.wav", *file = 0;
     int solo = -1, r0 = 0, r1 = 255, np = 0, gen = 0;
     GenCfg gc = { 0, 0, 0, 0, 0 };
+    const char *vxs = 0;
     for (int i = 1; i < argc; i++) {
         if (!strcmp(argv[i], "--solo") && i + 1 < argc) {
             const char *t = argv[++i];
@@ -22,7 +24,8 @@ int main(int argc, char **argv) {
             if (solo < 0) { fprintf(stderr, "song_render: --solo vocal|chords|bass|drums\n"); return 1; }
         } else if (!strcmp(argv[i], "--gen") && i + 4 < argc) {
             gc.style = (uint8_t)atoi(argv[i + 1]); gc.key = (uint8_t)atoi(argv[i + 2]); gc.scale = (uint8_t)atoi(argv[i + 3]); gc.seed = (uint16_t)atoi(argv[i + 4]); gen = 1; i += 4;
-        } else if (!strcmp(argv[i], "--rows") && i + 2 < argc) { r0 = atoi(argv[i + 1]); r1 = atoi(argv[i + 2]); i += 2; }
+        } else if (!strcmp(argv[i], "--vx") && i + 1 < argc) vxs = argv[++i];
+        else if (!strcmp(argv[i], "--rows") && i + 2 < argc) { r0 = atoi(argv[i + 1]); r1 = atoi(argv[i + 2]); i += 2; }
         else if (np == 0) { path = argv[i]; np++; }
         else if (np == 1) { file = argv[i]; np++; }
     }
@@ -33,10 +36,24 @@ int main(int argc, char **argv) {
     if (file) {
         static uint8_t b[SONG_ENC_SIZE];
         FILE *s = fopen(file, "rb");
-        if (!s || fread(b, 1, sizeof b, s) != sizeof b || song_decode(&g, b, sizeof b) != SIO_OK) { fprintf(stderr, "song_render: cannot load %s\n", file); return 1; }
+        size_t nb = s ? fread(b, 1, sizeof b, s) : 0;
+        if (!s || song_decode(&g, b, (uint32_t)nb) != SIO_OK) { fprintf(stderr, "song_render: cannot load %s\n", file); return 1; }
         fclose(s);
     }
     if (gen) gen_song(&g, &gc);
+    while (vxs && *vxs) {                          /* --vx name=v,... */
+        static const char *const nm[13] = { "atk", "rel", "scoop", "human", "vrate", "vdel", "trem", "cho", "dly", "rev", "drv", "chr", "lang" };
+        char k[8]; int n = 0, v, j;
+        while (*vxs && *vxs != '=' && n < 7) k[n++] = *vxs++;
+        k[n] = 0;
+        if (*vxs++ != '=') break;
+        v = atoi(vxs);
+        while (*vxs && *vxs != ',') vxs++;
+        if (*vxs == ',') vxs++;
+        for (j = 0; j < 13 && strcmp(k, nm[j]); j++) {}
+        if (j == 13) { fprintf(stderr, "song_render: --vx: unknown %s\n", k); return 1; }
+        ((uint8_t *)&g.vx)[j] = (uint8_t)v;
+    }
     g.loop = 0;
     if (solo >= 0) g.trk[solo].solo = 1;
     en_init(&en, &g);

@@ -10,7 +10,8 @@ Status words: **emulator** = checked in fm1-emu on the real package; **hardware*
 | Vocal sings moras (70-entry kana table) with their consonants: plosives, fricatives, affricates, nasals, y/w glides, r flap, voiced and unvoiced; moraic n is a hum (consonants are synthesised, no samples; not listened to on hardware) | emulator |
 | FM chords (8 presets, 4 voices, block/arp/strum modes), FM bass (4 presets, accent, slide), drum kit (6 sounds, 2 kits) | emulator |
 | Mixer: level, pan, preset, mute, solo per track; swing, tempo, master | emulator |
-| STAGE page: singer face, syllable, tempo, CPU%, row and section, track activity dots | emulator |
+| STAGE page, the voice's home: singer face, syllable wheel (SELECT), languages (JAPANESE, ANIMAL babble, SCAT, VOWELS), character DEEP..TINY, knob banks VOICE / FX / ENV / LFO, saved with the song | emulator |
+| Voice effects: chorus, tempo-synced delay, reverb, drive, tremolo (integer, in the audio interrupt) | emulator |
 | DANCE page: the singer full-body (8 pixel-art frames at 3x) dancing on the beat, singing, arms up in the chorus, bowing at the end | emulator |
 | SONG, PATTERN (piano roll, drum grid), MIXER pages; one control map ([CONTROLS](CONTROLS.md)) | emulator |
 | Live keys play the current track's instrument; keys write steps on PATTERN | emulator |

@@ -12,8 +12,15 @@ void sg_init(Song *g){
         k2->level=lv[t];k2->mute=0;k2->solo=0;k2->preset=0;
         k2->vib=35;k2->porta=10;k2->breath=8;k2->bright=79;
     }
+    sg_voice_default(&g->vx);
     for(i=0;i<NROW;i++){for(t=0;t<NTRK;t++)g->row[i].pat[t]=ROW_OFF;g->row[i].sect=SEC_NONE;}
     for(t=0;t<NTRK;t++)for(p=0;p<NPAT;p++)for(s=0;s<NSTEP;s++)for(k=0;k<4;k++)g->pat[t][p][s].v[k]=0;
+}
+void sg_voice_default(Voice *v){
+    static const uint8_t d[16]={2,12,40,63,50,20,0,0,0,0,0,VC_MIKU,VL_JP,0,0,0};   /* = fvoice's 0.5 settings: attack 8 ms, release 60, scoop 40, human 80, 5.5 Hz, 200 ms */
+    uint8_t *p=(uint8_t *)v;
+    uint32_t i;
+    for(i=0;i<16;i++)p[i]=d[i];
 }
 int sg_step_ok(int trk, const Step *s){
     const uint8_t *v=s->v;

@@ -1,14 +1,14 @@
 # Controls
 
-Miku-FM 0.4 is a four-track songwriter. **HOME** cycles the pages: STAGE, DANCE, SONG, PATTERN, MIXER, GEN (the page name is on
+Miku-FM is a four-track songwriter with a singer. **HOME** cycles the pages: STAGE, DANCE, SONG, PATTERN, MIXER, GEN (the page name is on
 the screen). One control map holds everywhere; the tables below list what each control does on each page.
 
 Everywhere:
 
 | Control | What it does |
 |---|---|
-| **FX / SCL / ENV / LFO** | Pick the current track: VOCAL, CHORDS, BASS, DRUMS (its button LED lights) |
-| **Key** (27 keys, F3-G5) | Play the current track's instrument: VOCAL sings, CHORDS plays a note, BASS plays a note, DRUMS: keys 1-6 hit kick, snare, clap, closed hat, open hat, perc. A held second vocal key glides (legato) |
+| **FX / SCL / ENV / LFO** | Pick the current track: VOCAL, CHORDS, BASS, DRUMS (its button LED lights). On STAGE and DANCE they shape the voice instead (below) |
+| **Key** (27 keys, F3-G5) | Play the current track's instrument (on STAGE and DANCE always the voice, singing the selected syllable): VOCAL sings, CHORDS plays a note, BASS plays a note, DRUMS: keys 1-6 hit kick, snare, clap, closed hat, open hat, perc. A held second vocal key glides (legato) |
 | **OCT− / OCT+** | Octave for the keys, −2 to +2 (shown on STAGE; not saved) |
 | **PLAY** | Play / stop. STAGE, SONG, MIXER: the song from the cursor row. PATTERN: loop the cursor row |
 | **SEQ** | Stop |
@@ -21,21 +21,27 @@ Keys sound the current track on every page. On PATTERN they also write the curso
 
 ## STAGE
 
-The singer, the vocal syllable (the one sounding, or the one at the cursor), BPM and octave, CPU, the row and section,
-and four dots that light while VOCAL, CHORDS, BASS, DRUMS sound.
+The voice's home. The singer's face; under it the **syllable wheel** (the selected syllable big in pink, two neighbours
+each side curving up around her face), then language, character and knob bank (left), BPM, CPU and octave (right). Turning
+a knob shows its name and value there for a moment. Everything here is saved with the song.
 
 | Control | What it does |
 |---|---|
-| SELECT | Cursor row |
-| ALGORITHM | Preset of the current track (CHORDS 8, BASS 4, DRUMS 2) |
+| SELECT | The syllable the keys sing (a, i, u, ... n, ga ... po); stopped, you hear each one as you turn. PATTERN writes the same one |
+| SCL (SEL) | Language: JAPANESE (the syllables as written), ANIMAL (fast random babble with little pitch jumps, like an animal-game voice), SCAT (da ba bi do ... on eighth notes while a note is held), VOWELS (no consonants) |
+| FX | The knobs become CHORUS, DELAY (dotted eighth at the song tempo), REVERB, DRIVE. Press again: back to VOICE |
+| ENV | The knobs become ATTACK, RELEASE, SCOOP (slide up into a note), HUMAN (drift, jitter, shimmer). Press again: VOICE |
+| LFO | The knobs become VIBRATO (depth), VIB RATE (3-8 Hz), VIB DELAY, TREMOLO. Press again: VOICE |
+| KNOB 1 / 2 / 3 / 4 | VOICE bank (the default): BREATH, BRIGHT, GLIDE (portamento), LEVEL (the vocal track). The bank's button LED is lit (none for VOICE) |
+| ALGORITHM | Character (formant size): DEEP, LOW, MIKU, YOUNG, TINY |
 | PRESETS | Tempo, 40-240 BPM |
-| KNOB 1 / 2 / 3 / 4 | Voice: vibrato, portamento, breath, brightness (0-100, saved in the song) |
+| Key | Sings the selected syllable |
 
 ## DANCE
 
 The singer full-body (3x), dancing to the song: one move per beat while playing, singing while the vocal sounds, arms up in
 CHORUS rows, a bow when the song stops, a slow sway when stopped. Below her: row and section, the syllable, BPM.
-The controls are those of STAGE.
+The controls are those of STAGE (syllable, language, knob banks, character).
 
 ## SONG
 

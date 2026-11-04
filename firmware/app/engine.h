@@ -12,6 +12,7 @@
 #include "firmware/song/mora.h"
 #include "firmware/audio/fvoice/fvoice.h"
 #include "firmware/audio/fmband/fmband.h"
+#include "firmware/audio/vfx/vfx.h"
 enum { EN_PLAY = 1, EN_STOP, EN_BPM, EN_ON, EN_OFF, EN_VOW, EN_PANIC };   /* PLAY a=row b=loop-one-row; BPM a; ON a=trk b=note c=mora (VOCAL) / unused; OFF a=trk b=note; VOW a=mora */
 #define EN_QN 32u
 typedef struct {
@@ -19,7 +20,8 @@ typedef struct {
     const Song *g;
     SqEvent ev[SQ_EVMAX];
     int32_t vl, vr;
-    uint8_t pre[NTRK], vh, up;
+    uint8_t pre[NTRK], vh, up, vnote, vvel, vmora;
+    uint32_t bt, rng;                         /* ANIMAL / SCAT language: frames to the next babbled syllable; its random state */
     volatile uint8_t pan[NTRK];               /* 0..127, 64 centre; main loop writes (device setting, not in the song) */
     volatile uint32_t q[EN_QN], qh, qt;       /* command ring: main writes q[qh] then qh; ISR reads q[qt] then qt */
     volatile uint32_t lock, ack;              /* main: lock=1 and wait ack==1: the ISR no longer runs the sequencer or reads commands */

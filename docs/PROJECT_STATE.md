@@ -21,7 +21,10 @@ Legend: **done** (emulator/host-verified), **partial**, **missing**. Nothing is 
 ### Vocal (track 1)
 - done: excitation with adjustable harmonics (brightness), 6 formant resonators, five vowels, consonants for 70 morae
   (Step 3; crackle fix), portamento, vibrato, onset scoop, breathiness, lip-sync output, ん hum.
-- partial: vibrato rate/delay and attack/release exist in `fvoice` but are not user-editable on the device; phoneme
+- done (voice home, 2026-11-04): attack/release, scoop, human, vibrato depth/rate/delay, tremolo editable on STAGE (knob
+  banks), effects (chorus, delay, reverb, drive), character (formant size, 5 steps), languages (JAPANESE, ANIMAL babble,
+  SCAT, VOWELS), syllable wheel; all saved in the song (MKS2 v2).
+- partial: phoneme
   transitions (glides, nasals) are basic; syllable timing: the consonant starts on the beat, so the vowel lands 30–60 ms
   late (fix: start VOCAL notes `fv_cons_ms()` early in the sequencer).
 - missing: pitch bends (beyond scoop/portamento), per-note vibrato/expression, pronunciation/articulation controls
@@ -30,7 +33,7 @@ Legend: **done** (emulator/host-verified), **partial**, **missing**. Nothing is 
 ### Chords / Bass / Drums (tracks 2–4)
 - done: 4-voice FM chords with 8 presets, block/arp/strum modes, velocity; bass with 4 presets, slide/portamento,
   accent; 6-piece kit (kick, snare, clap, closed/open hat, perc), 2 kits, accent, swing; shared clock.
-- missing: editing envelopes/timbre on the device (presets only), effects (no reverb/delay/chorus), more drum kits.
+- missing: editing envelopes/timbre of chords/bass/drums on the device (presets only), effects on the band (the voice has them), more drum kits.
 
 ### Sequencer
 - done: step entry, note length, play/stop, patterns (16 per track), duplicate, chaining via 64 arrangement rows with

@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-only
 # Step 2c: the song engine (sequencer events -> voice + band), shared by the device app and the host render tool.
-add_library(miku_engine STATIC engine.c)
+add_library(miku_engine STATIC engine.c ${CMAKE_SOURCE_DIR}/firmware/audio/vfx/vfx.c)
 target_link_libraries(miku_engine PUBLIC miku_song fmband miku_core)
 target_include_directories(miku_engine PUBLIC ${CMAKE_SOURCE_DIR})
 if(NOT MSVC)

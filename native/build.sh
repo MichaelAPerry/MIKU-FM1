@@ -18,9 +18,10 @@ git fetch --depth 1 origin "$DINGHY_COMMIT"
 git checkout -q --detach "$DINGHY_COMMIT"
 cp "$ROOT/native/dinghy.c" firmware/src/dinghy.c
 # the modules keep their repo paths (their .c files #include "firmware/..."; -Ifirmware/src finds them); dinghy.c includes the .c files
-mkdir -p firmware/src/firmware/audio/fvoice firmware/src/firmware/audio/fmband firmware/src/firmware/ui firmware/src/firmware/song firmware/src/firmware/app
+mkdir -p firmware/src/firmware/audio/fvoice firmware/src/firmware/audio/vfx firmware/src/firmware/audio/fmband firmware/src/firmware/ui firmware/src/firmware/song firmware/src/firmware/app
 for f in fvoice.c fvoice.h fvoice_tables.h; do cp "$ROOT/firmware/audio/fvoice/$f" firmware/src/firmware/audio/fvoice/; done
 cp "$ROOT"/firmware/audio/fmband/fmband*.[ch] firmware/src/firmware/audio/fmband/
+cp "$ROOT"/firmware/audio/vfx/vfx.[ch] firmware/src/firmware/audio/vfx/
 cp "$ROOT"/firmware/song/*.[ch] firmware/src/firmware/song/
 cp "$ROOT"/firmware/app/engine.[ch] firmware/src/firmware/app/
 cp "$ROOT/firmware/ui/singer_sprites.h" firmware/src/firmware/ui/

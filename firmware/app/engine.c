@@ -1,11 +1,17 @@
 /* SPDX-License-Identifier: GPL-3.0-only */
 #include "firmware/app/engine.h"
 static const uint8_t npre[NTRK] = { 1, CH_NPRESET, BS_NPRESET, DR_NPRESET };
+/* languages: ANIMAL babbles random morae (ka..wo, ga..po) every 70-90 ms with small pitch jumps, like animal-game voices;
+   SCAT sings da ba bi do pa ra ri de be on eighth notes; both keep the held note's envelope (legato articulation) */
+static const uint8_t scat[9] = { 57, 60, 61, 59, 65, 39, 40, 58, 63 };   /* mora indices of da ba bi do pa ra ri de be */
+static const int8_t ajit[8] = { 0, 0, 2, 3, 5, -2, 7, 4 };
+static uint32_t rnd(Engine *e) { uint32_t x = e->rng; x ^= x << 13; x ^= x >> 17; x ^= x << 5; e->rng = x; return x; }
 uint32_t en_pre(uint32_t t, uint32_t p) { return p < npre[t] ? p : 0; }
 void en_init(Engine *e, const Song *g) {
     uint32_t t;
     e->g = g;
-    sq_init(&e->sq); fv_init(&e->fv); ch_init(&e->ch); bs_init(&e->bs); dr_init(&e->dr);
+    sq_init(&e->sq); fv_init(&e->fv); ch_init(&e->ch); bs_init(&e->bs); dr_init(&e->dr); vx_init();
+    e->bt = 0; e->rng = 0x6D2B79F5u; e->vnote = 60; e->vvel = 110; e->vmora = 0;
     e->fv.vib_rate = 55; e->fv.vib_delay = 200;
     for (t = 0; t < NTRK; t++) e->pre[t] = 0;
     e->vh = 0; e->vl = e->vr = 0; e->up = 1;
@@ -29,9 +35,11 @@ void en_unlock(Engine *e, uint32_t (*wait)(void)) {
 typedef char en_cons_chk[((int)MC_NONE == (int)FC_NONE && (int)MC_K == (int)FC_K && (int)MC_NN == (int)FC_NN && (int)MC_P == (int)FC_P && (int)MC_Y == (int)FC_Y) ? 1 : -1];
 static void sing(Engine *e, uint32_t note, uint32_t mora, uint32_t vel) {   /* consonant + vowel; moraic n is a hum (vowel ignored) */
     uint32_t v = mora_vowel(mora);
+    uint32_t lang = e->g->vx.lang;
     if (v < 5u) e->vh = (uint8_t)v;
-    fv_note_on_mora(&e->fv, (uint8_t)note, (uint8_t)mora_cons(mora), v < 5u ? (uint8_t)v : e->vh, (uint8_t)vel);
-    e->mora = mora;
+    fv_note_on_mora(&e->fv, (uint8_t)note, lang == VL_VOWEL ? FC_NONE : (uint8_t)mora_cons(mora), v < 5u ? (uint8_t)v : e->vh, (uint8_t)vel);
+    e->mora = mora; e->vnote = (uint8_t)note; e->vvel = (uint8_t)vel;
+    e->bt = lang == VL_ANIMAL ? 3087u + rnd(e) % 882u : lang == VL_SCAT ? 1323000u / (e->g->bpm ? e->g->bpm : 120u) : 0;
 }
 static void command(Engine *e, uint32_t w) {
     uint32_t a = w >> 16 & 255u, b = w >> 8 & 255u, c = w & 255u;
@@ -73,8 +81,28 @@ static void event(Engine *e, const SqEvent *v) {
 static void seg(Engine *e, int32_t *out, uint32_t at, uint32_t n) {
     int32_t *o = out + 2u * at;
     uint32_t i;
+    const Voice *x = &e->g->vx;
+    VxSet fx;
     if (!n) return;
-    fv_render(&e->fv, o, n);                       /* the voice first, into silence: it is scaled by its own level/pan and +3.5 dB */
+    for (i = 0; i < n;) {                          /* the voice first, into silence: it is scaled by its own level/pan and +3.5 dB */
+        uint32_t m = n - i;
+        if (e->bt && e->fv.gated) {
+            if (m > e->bt) m = e->bt;
+            e->bt -= m;
+        }
+        fv_render(&e->fv, o + 2u * i, m);
+        i += m;
+        if (!e->bt && e->fv.gated && (x->lang == VL_ANIMAL || x->lang == VL_SCAT)) {   /* the next babbled syllable */
+            uint32_t r = rnd(e), mo = x->lang == VL_ANIMAL ? (r % 3u ? 6u + r % 40u : 47u + r % 23u) : scat[r % 9u];
+            int32_t nt = (int32_t)e->vnote + (x->lang == VL_ANIMAL ? ajit[(r >> 8) & 7u] : 0);
+            uint32_t v = mora_vowel(mo);
+            fv_note_on_mora(&e->fv, (uint8_t)(nt > 127 ? 127 : nt), (uint8_t)mora_cons(mo), v < 5u ? (uint8_t)v : e->vh, e->vvel);
+            e->mora = mo;
+            e->bt = x->lang == VL_ANIMAL ? 3087u + (r >> 16) % 882u : 1323000u / (e->g->bpm ? e->g->bpm : 120u);
+        }
+    }
+    fx.drv = x->drv; fx.trem = x->trem; fx.cho = x->cho; fx.dly = x->dly; fx.rev = x->rev;
+    vx_render(o, n, &fx, e->g->bpm);
     for (i = 0; i < n; i++) {
         o[2u * i] = ((o[2u * i] * e->vl) >> 15) * 3;
         o[2u * i + 1u] = ((o[2u * i + 1u] * e->vr) >> 15) * 3;
@@ -98,6 +126,9 @@ void en_render(Engine *e, int32_t *out, uint32_t n) {
             mx_gain((uint8_t)lv, (uint8_t)pn, &e->vl, &e->vr);
             e->fv.vib_depth = v->vib; e->fv.porta = (uint16_t)(v->porta * 5u);
             e->fv.breath = (uint8_t)(v->breath * 127u / 100u); e->fv.bright = (uint8_t)(v->bright * 127u / 100u);
+            e->fv.attack = (uint16_t)(g->vx.atk * 4u); e->fv.release = (uint16_t)(g->vx.rel * 5u); e->fv.scoop = g->vx.scoop;
+            e->fv.human = (uint8_t)(g->vx.human * 127u / 100u); e->fv.vib_rate = (uint16_t)(30u + g->vx.vrate / 2u);
+            e->fv.vib_delay = (uint16_t)(g->vx.vdel * 10u); e->fv.chr = g->vx.chr;
             continue;
         }
         if (p != e->pre[k]) {

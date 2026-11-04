@@ -25,6 +25,7 @@ ZB = {"A": -3.0, "I": 1.0, "U": 6.0, "E": 0.0, "O": 1.0}   # soprano-zone loudne
 TILT = 0.8
 MASTER = 9.0                # source->output scale; peak ~0.5 FS at velocity 127
 F0HI = 940.0                # high-pitch zone: F1 is pulled up toward f0 (soprano behaviour)
+CHR = (0.84, 0.92, 1.0, 1.08, 1.18)   # voice character (formant size): DEEP LOW MIKU YOUNG TINY; formants and bandwidths scale
 for _kv in os.environ.get("FV_CFG", "").split(";"):
     if "=" in _kv:
         _k, _v = _kv.split("=")
@@ -150,13 +151,15 @@ def main():
     # vowel resonators: {g,a1,a2} Q14 x 6 per vowel and zone; y=(g*x+a1*y1+a2*y2)>>14;
     # g carries the sign (+ - + - + -) and the peak-normalised amplitude, so each peak is its dB value.
     # zone 0 = normal; zone 1 = soprano (F1 pulled toward f0, F2 kept above it), blended per block by pitch
-    s = "static const int16_t fv_vow[2][%d][6][3]={\n" % len(SHN)
-    for zone in (0, 1):
+    s = "#define FV_NCHR %d\n#define FV_CHR0 %d\nstatic const int16_t fv_vow[FV_NCHR][2][%d][6][3]={\n" % (len(CHR), CHR.index(1.0), len(SHN))
+    for ck in CHR:
+     s += "{\n"
+     for zone in (0, 1):
         s += "{\n"
         for n in SHN:
             if n in VOW: fs, db, _ = VOW[n]; bws = BW
             else: fs, db, bws = SHAPES[n]
-            fs = list(fs)
+            fs = [f * ck for f in fs]; bws = [b * ck for b in bws]
             if zone:
                 fs[0] = max(fs[0], fs[0] + 0.55 * (F0HI - fs[0]))
                 fs[1] = max(fs[1], fs[0] * 1.25)
@@ -170,6 +173,7 @@ def main():
                 s += "{%d,%d,%d}," % (q14(g), q14(a1), q14(a2))
             s += "},\n"
         s += "},\n"
+     s += "},\n"
     out.append(s + "};\n")
     def pgdb(n):
         if n <= PG[0][0]: return PG[0][1]

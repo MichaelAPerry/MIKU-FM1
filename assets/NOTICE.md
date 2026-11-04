@@ -8,10 +8,13 @@ Replace it with your own art to make a different singer: `tools/sprite_pack.py` 
 - Made by Michael Perry with ChatGPT image generation (2026-11-03) from the prompts in `docs/ART_PROMPTS.md`:
   `reference.webp` (character sheet), `faces.webp` (face sprite sheet), `stage.webp` (full-body sheet),
   `banner.webp` (site banner), `icon.webp` (icon).
-- The singer is inspired by Hatsune Miku. This is an **unofficial, non-commercial fan work**: Miku-FM is free and
-  will never be sold, and it is not affiliated with or endorsed by Crypton Future Media, Inc. Hatsune Miku is
-  © Crypton Future Media, Inc. (piapro.net). Use of the character follows Crypton's guidelines for non-commercial
-  fan works (Piapro Character License); do not use this art commercially.
+- The singer is **fan art of Hatsune Miku**, Crypton Future Media, INC.'s character, under the Piapro Character License
+  (PCL). Credit: この作品はピアプロ・キャラクター・ライセンスに基づいてクリプトン・フューチャー・メディア株式会社の
+  キャラクター「初音ミク」を描いたものです。 / This work depicts Crypton Future Media, INC.'s character "Hatsune Miku" under
+  the Piapro Character License (PCL), https://piapro.jp/license/pcl/summary. © Crypton Future Media, INC. www.piapro.net
+- Free and non-commercial only (no sales, no payment or donations for it, no ads), not official, not to be sublicensed:
+  the art is **not** under the code's GPL / MIT licences. The full terms and the list of files that hold the art (also
+  `firmware/ui/singer_sprites.h` and `site/media/`) are in [LICENSING.md](../LICENSING.md).
 
 ## The demo song (`assets/songs/`)
 

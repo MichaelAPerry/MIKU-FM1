@@ -33,7 +33,7 @@ The 0.5 firmware (`native/dinghy.c`) is built from newer modules: `firmware/song
 
 The current instruments use simplified synthesis and no effects, and there is no claim of measured audio or CPU quality on FM-1 hardware. See `docs/RESEARCH.md`, `docs/SONG_FORMAT.md`.
 
-Host-engine code is MIT licensed; the firmware package is GPL-3.0-only (see Licence). MIKU-FM is an unofficial working title and has no relationship to Crypton, Yamaha or VOCALOID. No voicebanks or proprietary assets are included.
+Host-engine code is MIT licensed; the firmware package is GPL-3.0-only (see Licence). Miku-FM is an unofficial fan project and has no relationship to Crypton, Yamaha or VOCALOID (see LICENSING.md). No voicebanks or proprietary assets are included.
 
 ## Other firmwares' data
 
@@ -41,4 +41,11 @@ Miku-FM does not read other firmwares' projects or samples. It stores its songs 
 
 ## Licence
 
-The firmware package (`native/`, built on [Dinghy](https://github.com/zvenson/dinghy)) is GPL-3.0-only; see `LICENSE`. Files marked `SPDX-License-Identifier: MIT` (the host engine) remain MIT; see `LICENSES/MIT.txt`.
+The code is GPL-3.0-only (`LICENSE`; the firmware is built on [Dinghy](https://github.com/zvenson/dinghy)); files marked
+`SPDX-License-Identifier: MIT` are MIT (`LICENSES/MIT.txt`). The singer's art is **fan art of Hatsune Miku under Crypton's
+Piapro Character License**: free and non-commercial only, not under the GPL. Details, the credit and the list of art
+files: [LICENSING.md](LICENSING.md).
+
+この作品はピアプロ・キャラクター・ライセンスに基づいてクリプトン・フューチャー・メディア株式会社のキャラクター「初音ミク」を描いたものです。
+© Crypton Future Media, INC. www.piapro.net — Miku-FM is an unofficial fan project, not associated with Crypton Future
+Media, Yamaha or M-VAVE. 「初音ミク」 is a registered trademark of Crypton Future Media, INC.; VOCALOID of Yamaha Corporation.

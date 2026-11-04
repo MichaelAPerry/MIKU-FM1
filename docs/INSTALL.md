@@ -26,8 +26,9 @@ Open https://thefirmwarehub.com, press **Connect FM-1**, find Miku-FM and press 
 
 ## From a release, with Dinghy's installer
 
-Download `miku-fm-X.Y.fwsc` from the [releases](https://github.com/MichaelAPerry/MIKU-FM1/releases) and check its
-SHA-256 against `SHA256SUMS`. Then, with Python 3 and `pip install mido python-rtmidi`:
+Download `miku-fm-X.Y.fwsc` from the [releases](https://github.com/MichaelAPerry/MIKU-FM1/releases) and compare its
+SHA-256 (`sha256sum miku-fm-X.Y.fwsc`) with the line for it in `SHA256SUMS` (that file names the builder's path, so
+`sha256sum -c` does not find the file; compare the hash itself). Then, with Python 3 and `pip install mido python-rtmidi`:
 
 ```sh
 git clone https://github.com/zvenson/dinghy && cd dinghy

@@ -1,6 +1,13 @@
-# Handoff (2026-11-03, after Step 4 generator / firmware 0.5 + crackle fix)
+# Handoff (2026-11-04, release 0.6)
 
 ## Where things stand
+
+- **Release v0.6** (2026-11-04): published on GitHub, built and attested by zvenson/fm1-build (`miku-fm-0.6.fwsc`,
+  identity `FM-1_39000600`, update loader in). Tested by the owner on a real FM-1: installed from stock V15, from another
+  firmware, and back to another firmware; saves work; CPU well under budget. The site carries the latest release's
+  attested package (pages.yml: a push to main uses it; a dev build only while no release exists).
+- Listing: `fmhub.json` and `docs/card.png` current; mail to zven@thefirmwarehub.com and an fm1-editor.com issue drafted
+  for the owner. Licensing: code GPL-3.0-only, the singer is Hatsune Miku fan art under the PCL (`LICENSING.md`).
 
 **Read [PROJECT_STATE.md](PROJECT_STATE.md) too:** every asset and its intended use (e.g. the packed but unused dancing
 sprites), and the original master prompt checked item by item (done / partial / missing).

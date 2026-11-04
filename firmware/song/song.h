@@ -27,9 +27,9 @@ typedef struct { uint8_t pat[NTRK]; uint8_t sect; } Row;
 enum { VC_DEEP, VC_LOW, VC_MIKU, VC_YOUNG, VC_TINY, VC_N };          /* character: formant size */
 enum { VL_JP, VL_ANIMAL, VL_SCAT, VL_VOWEL, VL_N };                  /* language: morae as written, animal babble, scat, vowels only */
 typedef struct {
-    uint8_t atk, rel, scoop, human;           /* attack (x4 ms), release (x5 ms), onset scoop (cents), human feel */
-    uint8_t vrate, vdel, trem;                /* vibrato rate (3..8 Hz), vibrato delay (x10 ms), tremolo depth */
-    uint8_t cho, dly, rev, drv;               /* effects: chorus, delay (dotted eighth), reverb, drive */
+    uint8_t atk, rel, scoop, human;           /* attack, release (v*v/20 ms: 0..500), onset scoop (cents), human feel */
+    uint8_t vrate, vdel, trem;                /* vibrato rate (3..8 Hz), vibrato delay (v*v/10 ms), tremolo depth */
+    uint8_t cho, dly, rev, drv;               /* effects: chorus, delay (dotted eighth), reverb, drive; wet levels and drive gain go with v*v */
     uint8_t chr, lang;                        /* VC_*, VL_* */
     uint8_t rsv[3];                           /* 0 */
 } Voice;

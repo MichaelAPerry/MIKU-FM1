@@ -21,9 +21,12 @@ Keys sound the current track on every page. On PATTERN they also write the curso
 
 ## STAGE
 
-The voice's home. The singer's face; under it the **syllable wheel** (the selected syllable big in pink, two neighbours
-each side curving up around her face), then language, character and knob bank (left), BPM, CPU and octave (right). Turning
-a knob shows its name and value there for a moment. Everything here is saved with the song.
+The voice's home. The singer's face; under it the **syllable dial**: the top of a big dial rising from the bottom edge, the
+syllables round its rim with a tick each, the selected one in pink under the pointer; it turns with SELECT. Under the dial:
+knob bank (left), language and character (middle), BPM and CPU (right). Turning a knob shows, for a moment, a ring gauge
+with its value, its name and a picture of what it does (the envelope, the pitch curve, the vibrato, the echoes, the clip
+curve, the harmonics ...). Everything here is saved with the song. The effect amounts, drive, attack, release and vibrato
+delay follow a squared curve: fine steps at the low end, big moves at the top.
 
 | Control | What it does |
 |---|---|

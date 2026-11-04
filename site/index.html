@@ -1,41 +1,129 @@
 <!doctype html>
+<!-- SPDX-License-Identifier: GPL-3.0-only -->
 <html lang="en">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Miku-FM</title>
-<style>
-:root{color-scheme:dark;font:16px/1.5 system-ui,sans-serif;background:#101522;color:#eaf7fb}
-body{margin:0}main{max-width:900px;margin:auto;padding:clamp(20px,6vw,60px)}
-h1{font-size:clamp(2.2rem,7vw,4rem);letter-spacing:-.055em;margin:0}
-h1 span{color:#59f1dc}p{max-width:68ch}.sub{color:#adbfcc}
-a.btn{display:inline-block;background:#58e7db;color:#10202e;padding:14px 20px;border-radius:12px;text-decoration:none;font-weight:750;margin:8px 9px 8px 0}
-a.alt{background:#232d45;color:#eff9ff}section{background:#1a2235;border:1px solid #33405a;padding:24px;border-radius:20px;margin-top:24px}
-code{background:#0b1220;padding:3px 6px;border-radius:5px}
-ol li{padding:7px 0}small{color:#abc1d0}.pill{font-size:.8em;color:#10202e;background:#f6d184;border-radius:20px;padding:4px 12px}
-</style></head>
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Miku-FM · a singer in your FM-1</title>
+<meta name="description" content="Miku-FM: a singing songwriter firmware for the M-VAVE FM-1. A tiny pixel singer sings your songs in Japanese, with chords, bass and drums. Play it in your browser, install it over USB.">
+<meta property="og:title" content="Miku-FM · a singer in your FM-1">
+<meta property="og:description" content="A singing songwriter firmware for the M-VAVE FM-1. Play it in your browser, install it over USB.">
+<meta property="og:image" content="media/icon-512.jpg">
+<link rel="icon" href="media/favicon-32.png"><link rel="apple-touch-icon" href="media/apple-touch-icon.png">
+<link rel="stylesheet" href="site.css">
+</head>
 <body><main>
-<p class="sub">M-VAVE FM-1 · Custom firmware · {{VERSION}}</p>
-<h1>Miku<span>-FM</span></h1>
-<p>A singing synthesizer for the FM-1, growing into a pocket songwriting workstation with a tiny animated singer. Today: four tracks (a sung vocal, FM chords, bass and drums), patterns, an arrangement, a mixer and 8 song slots, with the singer's face moving to the sound.</p>
-<p><span class="pill">Early version: not yet tested on a real FM-1</span></p>
-<section>
-<h2>Try it in your browser</h2>
-<p>The emulator below runs the real firmware package, unchanged.</p>
-<a class="btn" href="./fm1-emu/">Play Miku-FM in the emulator</a>
-<ol>
-<li>Press <strong>PLAY</strong>: the singer sings the demo, 「おとのはこ」, with chords, bass and drums. <strong>HOME</strong> steps through the pages: the stage, the song (rows of patterns), the pattern editor and the mixer.</li>
-<li>Pick a track with <strong>FX / SCL / ENV / LFO</strong> (vocal, chords, bass, drums); the keys play it. On the pattern page a key writes the step: <strong>SELECT</strong> moves the step, <strong>ALGORITHM</strong> chooses the mora or chord, <strong>REC</strong> clears.</li>
-<li>On the song page <strong>PRESETS</strong> picks the pattern of the row, <strong>EDIT</strong> adds a row; the mixer sets levels, pan, sounds, mute and solo.</li>
-<li><strong>GLO</strong> undoes, <strong>SEQ</strong> stops, <strong>SAVE</strong> (stopped) keeps the song; hold <strong>SAVE</strong> for the slots (load, new, demo).</li>
-</ol>
+<div class="top">
+  <div class="brand">Miku<span>-FM</span> {{VERSION}} · <span style="color:var(--dim);font-weight:500">a singer in your FM-1</span></div>
+  <nav><a href="#play">Play</a><a href="#trailer">Trailer</a><a href="#listen">Listen</a><a href="#install">Install</a></nav>
+</div>
+
+<header class="hero">
+  <div class="in">
+    <p class="label">SINGING SONGWRITER · M-VAVE FM-1 · VERSION {{VERSION}}</p>
+    <h1>Miku<span>-FM</span><i>.</i></h1>
+    <p class="tag">A tiny singer lives in your FM-1.</p>
+    <p class="tag dim">She sings your songs in Japanese, with FM chords, bass and drums. Write them step by step, or let her dream one up.</p>
+    <div class="btns">
+      <a class="btn" href="#play">Play in your browser ▶</a>
+      <a class="btn alt" href="#trailer">Watch the trailer ↓</a>
+      <a class="btn alt" href="#listen">Hear her songs ↓</a>
+      <a class="btn pink" href="#install">Install {{VERSION}} ↓</a>
+      <a class="btn alt" href="https://github.com/MichaelAPerry/MIKU-FM1/blob/main/docs/MANUAL.md">Read the manual ↗</a>
+    </div>
+  </div>
+  <div class="dancer" role="img" aria-label="The pixel singer dancing"></div>
+</header>
+<div class="marquee" aria-hidden="true"><span>うたって · sing it back · ららら · la la la · おとのはこ · a box of sound · うたって · sing it back · ららら · la la la · おとのはこ · a box of sound · </span></div>
+
+<section id="stage">
+  <p class="label"><b>01</b> / ON STAGE</p>
+  <h2>Six screens, one little star.</h2>
+  <p class="note">Native firmware renders: the real package running in the emulator, unchanged.</p>
+  <div class="grid">
+    <figure class="shot"><img src="media/screens/stage.png" alt="STAGE page: the singer's face" loading="lazy"><figcaption><b>STAGE</b> · her face sings every syllable, blinks, smiles on PLAY</figcaption></figure>
+    <figure class="shot"><img src="media/screens/dance.png" alt="DANCE page: the singer full body" loading="lazy"><figcaption><b>DANCE</b> · she sways on the beat, sings, throws her arms up in the chorus, bows at the end</figcaption></figure>
+    <figure class="shot"><img src="media/screens/song.png" alt="SONG page: the arrangement" loading="lazy"><figcaption><b>SONG</b> · rows of patterns: intro, verse, chorus, outro</figcaption></figure>
+    <figure class="shot"><img src="media/screens/pattern.png" alt="PATTERN page: piano roll" loading="lazy"><figcaption><b>PATTERN</b> · a piano roll per track; every vocal note carries its syllable</figcaption></figure>
+    <figure class="shot"><img src="media/screens/mixer.png" alt="MIXER page" loading="lazy"><figcaption><b>MIXER</b> · level, pan, sound, mute and solo per track</figcaption></figure>
+    <figure class="shot"><img src="media/screens/gen.png" alt="GEN page: the song generator" loading="lazy"><figcaption><b>GEN</b> · pick a style, a key and a seed: a whole song, ready to edit</figcaption></figure>
+  </div>
 </section>
-<section>
-<h2>Firmware</h2>
-<p>{{BUILD}}</p>
-<a class="btn alt" href="./firmware/{{PACKAGE}}" download>{{PACKAGE}}</a>
-<p><small>SHA-256 <code>{{SHA256}}</code></small></p>
-<p><small>Install it with the <a href="https://thefirmwarehub.com">FM-1 Firmware Hub</a> once listed, or see <a href="https://github.com/MichaelAPerry/MIKU-FM1/blob/main/docs/INSTALL.md">INSTALL</a>. Miku-FM does not read other firmwares' projects or samples; back up first.</small></p>
+
+<section id="play">
+  <p class="label"><b>02</b> / PLAY IT HERE</p>
+  <h2>Your FM-1, in the browser.</h2>
+  <p>This is the firmware package itself, emulated by <a href="https://github.com/joakimeriksson/fm1-emu">fm1-emu</a>. Click it, then:</p>
+  <ol>
+    <li><b>PLAY</b>: she sings the demo 「おとのはこ」. <b>HOME</b> steps through STAGE, DANCE, SONG, PATTERN, MIXER and GEN.</li>
+    <li><b>FX · SCL · ENV · LFO</b> pick the track (vocal, chords, bass, drums); the keys play it. On PATTERN a key writes the step.</li>
+    <li>On GEN: knob 1 the style, 2 the key, 3 major or minor, 4 the seed; <b>REC</b> writes a new song, <b>PLAY</b> plays it.</li>
+  </ol>
+  <iframe class="emu" src="fm1-emu/" title="Miku-FM in the fm1-emu emulator" loading="lazy" allow="autoplay"></iframe>
+  <p class="note"><a href="fm1-emu/">Open the emulator on its own page ↗</a></p>
 </section>
-<section><h2>Project and credits</h2>
-<p>Miku-FM is built on the <a href="https://github.com/zvenson/dinghy">Dinghy</a> firmware platform (GPL-3.0-only). The emulator is <a href="https://github.com/joakimeriksson/fm1-emu">fm1-emu</a> by Joakim Eriksson (MIT). Miku-FM is an unofficial community project, not associated with Crypton Future Media, Yamaha, VOCALOID or M-VAVE.</p>
-<p><a href="https://github.com/MichaelAPerry/MIKU-FM1">Source code</a></p></section>
+
+<section id="trailer">
+  <p class="label"><b>03</b> / THE TRAILER</p>
+  <h2>Meet her.</h2>
+  <video controls preload="none" poster="media/trailer.jpg" src="media/trailer.mp4"></video>
+  <p class="note">Every screen and every sound in it is the firmware running in the emulator; nothing is mocked up.</p>
+</section>
+
+<section id="listen">
+  <p class="label"><b>04</b> / LISTEN</p>
+  <h2>Songs she sings.</h2>
+  <p class="note">Rendered on a computer by the same C engine that runs in the FM-1's audio interrupt.</p>
+  <div class="grid3">
+    <div class="card song"><b>「おとのはこ」 · the demo</b><span class="note">148 BPM, C major. Lyrics in Japanese, hand-written.</span><audio controls preload="none" src="media/listen/otonohako.mp3"></audio></div>
+    <div class="card song"><b>GEN · POP</b><span class="note">C major, seed 1. Made by the GEN page in one press.</span><audio controls preload="none" src="media/listen/gen-pop.mp3"></audio></div>
+    <div class="card song"><b>GEN · BALLAD</b><span class="note">A minor, seed 7.</span><audio controls preload="none" src="media/listen/gen-ballad.mp3"></audio></div>
+    <div class="card song"><b>GEN · DANCE</b><span class="note">A minor, seed 42. Four on the floor.</span><audio controls preload="none" src="media/listen/gen-dance.mp3"></audio></div>
+    <div class="card song"><b>GEN · CHIP</b><span class="note">G major, seed 300. Square waves and fast arps.</span><audio controls preload="none" src="media/listen/gen-chip.mp3"></audio></div>
+  </div>
+</section>
+
+<section id="inside">
+  <p class="label"><b>05</b> / WHAT SHE CAN DO</p>
+  <h2>A whole little studio.</h2>
+  <div class="grid">
+    <div class="card feat"><span class="num">VOICE</span><h3>She really sings.</h3><p>A formant voice, synthesised live: five vowels, 70 Japanese morae with their consonants, vibrato, glides, breath. No samples.</p></div>
+    <div class="card feat"><span class="num">SONG</span><h3>Four tracks, one song.</h3><p>Vocal, FM chords (8 sounds), bass (4), drums (2 kits). 16 patterns per track, 64 rows with sections, swing, undo, 8 song slots.</p></div>
+    <div class="card feat"><span class="num">GEN</span><h3>Dream one up.</h3><p>POP, BALLAD, DANCE or CHIP in any key. Lock what you like, regenerate the rest, or ask for a new phrase. Keep it or drop it.</p></div>
+    <div class="card feat"><span class="num">STAGE</span><h3>She is on stage.</h3><p>A pixel face that mouths every vowel, and a full-body dancer that moves to your song.</p></div>
+  </div>
+</section>
+
+<section id="install">
+  <p class="label"><b>VERSION {{VERSION}}</b> / INSTALL WITH CARE</p>
+  <h2>Bring her home.</h2>
+  <div class="card">
+    <p>{{BUILD}}</p>
+    <div class="btns">
+      <a class="btn pink" href="install.html">Install in your browser ↗</a>
+      <a class="btn alt" href="firmware/{{PACKAGE}}" download>Download {{PACKAGE}} ↓</a>
+      <a class="btn alt" href="https://github.com/MichaelAPerry/MIKU-FM1/releases">GitHub releases ↗</a>
+    </div>
+    <p class="note">SHA-256 <code>{{SHA256}}</code></p>
+    <p class="note warnbox"><b>Miku-FM has not been tested on a physical FM-1 yet.</b> Install it only if you are ready to use the USB rescue:
+      hold OCT− while switching on. The installer needs Chrome or Edge (Web MIDI) and a USB data cable. It can also take you back to the official V15.</p>
+    <p class="note">Miku-FM does not read other firmwares' projects or samples, and saving replaces the settings other Felucca-family firmwares keep. Back up first.
+      <a href="https://github.com/MichaelAPerry/MIKU-FM1/blob/main/docs/INSTALL.md">Install and recovery guide ↗</a> ·
+      <a href="https://github.com/MichaelAPerry/MIKU-FM1/blob/main/docs/VALIDATION.md">What has been measured ↗</a></p>
+  </div>
+</section>
+
+<section id="thanks">
+  <p class="label">WITH GRATITUDE / OUR ROOTS</p>
+  <h2>Built on generous work.</h2>
+  <p>Miku-FM runs on <a href="https://github.com/zvenson/dinghy">Dinghy</a>, the FM-1 firmware platform (GPL-3.0-only), from the
+    Felucca family by Leo Kuroshita (<a href="https://hugelton.com">Hügelton Instruments</a>), whose web installer this site uses.
+    The emulator is <a href="https://github.com/joakimeriksson/fm1-emu">fm1-emu</a> by Joakim Eriksson (MIT).</p>
+</section>
+
+<footer>
+  Miku-FM · an unofficial, non-commercial fan firmware for the M-VAVE FM-1, not associated with Crypton Future Media, Yamaha,
+  VOCALOID or M-VAVE. The singer's art is original fan art. GPL-3.0-only; host tools MIT.
+  <a href="https://github.com/MichaelAPerry/MIKU-FM1">Source code</a>.<br>
+  Limits: 8 song slots, 16 patterns per track, 64 rows, 4/4. The browser emulator is not a measure of the FM-1's CPU.
+</footer>
 </main></body></html>

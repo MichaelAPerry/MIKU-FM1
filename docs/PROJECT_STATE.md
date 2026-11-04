@@ -10,8 +10,8 @@ what it is for, and the owner's original master prompt checked item by item.
 | `singer/faces.webp` (12 faces) | `firmware/ui/singer_sprites.h` (SF_*, 90x90, 4bpp, drawn 2x) | yes: NEUTRAL, BLINK, A I U E O, N (lips shut: m b p, ん), HAPPY (PLAY start) | **unused: SF_SURPRISED, SF_TILT_L, SF_TILT_R.** Ideas: SURPRISED on a big leap/accent or an undo, TILTs as idle head motion between phrases or on alternate beats while stopped |
 | `singer/stage.webp` (8 full-body frames) | same header (ST_IDLE0..3, ST_SING0..1, ST_ARMS, ST_BOW; 61x71, 4bpp, own palette, 17 KB) | yes (DANCE page, 3x: sway per beat, SING while the vocal sounds, ARMS on CHORUS rows, BOW at stop) | A small **dancing singer** (the original prompt asks for idle motion and beat-synchronised motion): ST_IDLE0..3 one frame per beat while playing (sway), ST_SING0..1 while the vocal sounds, ST_ARMS on CHORUS rows, ST_BOW when the song ends or on stop. Where: not decided with the owner. Options: (a) an alternate STAGE view (full-body dancer at 2x–3x instead of the face; toggle with a button on STAGE), (b) a small 1x dancer in a corner of SONG/GEN, (c) the face stays and the dancer replaces the step strip during playback. **Ask the owner which; recommend (a).** Draw with dirty rects like the face; feet share a baseline already |
 | `singer/reference.webp` | – | reference only | keeping new art consistent |
-| `singer/banner.webp` (2000x750) | – | **no** | site hero image on `site/index.html` (resize/compress to ≤200 KB, keep the dark theme) |
-| `singer/icon.webp` (1254x1254) | – | **no** | site favicon / social preview image; NOT the Hub card (the Hub wants a real 240x240 screen PNG: `docs/card.png`) |
+| `singer/banner.webp` (2000x750) | `site/media/banner.jpg` (1600 wide) | yes: site hero | site hero image on `site/index.html` (resize/compress to ≤200 KB, keep the dark theme) |
+| `singer/icon.webp` (1254x1254) | `site/media/{icon-512.jpg,apple-touch-icon.png,favicon-32.png}` | yes: favicon, social image | site favicon / social preview image; NOT the Hub card (the Hub wants a real 240x240 screen PNG: `docs/card.png`) |
 | `songs/otonohako.md` | `firmware/song/demo.c` | yes: the default demo song | – |
 
 ## The original master prompt, item by item
@@ -74,3 +74,14 @@ Legend: **done** (emulator/host-verified), **partial**, **missing**. Nothing is 
 4. Vowel-on-the-beat consonant look-ahead; voice loudness vs pitch; editable vibrato rate/delay and envelopes.
 5. Browser companion editor (MKS2 + MIDI import/export, piano roll, lyrics, WASM preview of the same engine).
 6. More generator styles from the prompt (Infinite Idol), real-time recording, effects, ARCHITECTURE/HARDWARE docs.
+
+## Site (2026-11-04)
+
+Modelled on the Mutable Dreams site, in Miku-FM's own look (navy grid, teal and pink, the pixel dancer):
+`site/index.html` (hero with the banner and an animated dancer, 01 the six screens as native renders, 02 the emulator
+embedded, 03 the trailer, 04 five songs to listen to, 05 features, install, credits) and `site/install.html` (Web MIDI
+Install, return to official V15, USB rescue, installer log; English / 日本語). `tools/site_front.sh` fills both pages
+and copies `site/{site.css,js,media}`. Media are made on a host and committed: `tools/site_trailer.py` (trailer +
+screens from an fm1-emu capture), MP3s with `song_render` + ffmpeg. Not yet on the site: an illustrated guide (PDF),
+update notes per version, a device test report (needs the hardware test), a source zip per release.
+

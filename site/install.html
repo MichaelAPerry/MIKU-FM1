@@ -1,0 +1,192 @@
+<!doctype html>
+<!-- SPDX-License-Identifier: GPL-3.0-only
+     Miku-FM installer page. The install flow, its messages and the return to official V15 follow Felucca's
+     web/index_pkg.html by Leo Kuroshita (@kurogedelic), Hügelton Instruments (GPL-3.0-only); the protocol is in js/. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Install Miku-FM</title>
+<link rel="icon" href="media/favicon-32.png">
+<link rel="stylesheet" href="site.css">
+</head>
+<body class="inst">
+<main>
+  <p class="crumb"><a href="./">← Miku-FM</a> <button class="lang" id="lang"></button></p>
+  <div class="inst-head">
+    <div class="dancer small" aria-hidden="true"></div>
+    <div>
+      <p class="label">INSTALL · M-VAVE FM-1 · {{VERSION}}</p>
+      <h1 data-t="title"></h1>
+    </div>
+  </div>
+  <section class="card">
+    <p data-t="intro"></p>
+    <p data-t="warn"></p>
+    <p class="note" data-t="direct"></p>
+    <p class="note warnbox" data-t="beta"></p>
+    <p class="note" data-t="data"></p>
+    <p><button id="go" class="btn" disabled data-t="install"></button></p>
+    <progress id="bar" max="100" value="0"></progress>
+    <p id="status" role="status"></p>
+    <p class="note">{{BUILD}} <span data-t="sha"></span> <code>{{SHA256}}</code></p>
+  </section>
+  <section class="card">
+    <h2 data-t="stockTitle"></h2>
+    <p class="note" data-t="back"></p>
+    <p class="note"><a href="https://www.m-vave.com/download" target="_blank" rel="noopener">M-VAVE downloads</a></p>
+    <p><label><span data-t="stockFile"></span><br><input id="stock-file" type="file" accept=".fwsc"></label></p>
+    <p><button id="stock-go" class="btn alt" disabled data-t="stockGo"></button></p>
+  </section>
+  <section class="card">
+    <h2 data-t="rescueTitle"></h2>
+    <p class="note" data-t="rescue"></p>
+    <p class="note"><a href="https://github.com/MichaelAPerry/MIKU-FM1/blob/main/docs/INSTALL.md" data-t="guide"></a> ·
+      <a href="https://github.com/MichaelAPerry/MIKU-FM1/issues" data-t="report"></a></p>
+    <details><summary data-t="logTitle"></summary><pre id="log"></pre>
+      <button id="copy" class="btn alt" data-t="copy"></button></details>
+  </section>
+  <footer>
+    Installer: Felucca's web installer (fm1ota.js, fm1pkg.js) by Leo Kuroshita (@kurogedelic),
+    <a href="https://hugelton.com">Hügelton Instruments</a>, GPL-3.0-only. Miku-FM is built on
+    <a href="https://github.com/zvenson/dinghy">Dinghy</a> (GPL-3.0-only). <span data-t="license"></span>
+    <a href="https://github.com/MichaelAPerry/MIKU-FM1">github.com/MichaelAPerry/MIKU-FM1</a>.
+    M-VAVE and FM-1 are trademarks of their owners. Miku-FM is an unofficial fan project, not associated with Crypton Future Media,
+    Yamaha or M-VAVE.
+  </footer>
+</main>
+<script type="module">
+import { Updater } from "./js/fm1ota.js";
+import { productOf, logicalImage, validateStockPackage, STOCK_V15_SIZE } from "./js/fm1pkg.js";
+const $ = (id) => document.getElementById(id);
+const TEXT = {
+  en: {
+    title: "One small singer, one USB cable.", other: "日本語",
+    intro: "Connect the FM-1 by USB, then press Install. It works in Chrome or Edge; the browser asks once to allow MIDI: allow it.",
+    warn: "Do not unplug the USB cable while writing. Connect only the FM-1 you mean to update.",
+    direct: "Connect the USB cable directly to the computer (a data cable, no hub). Close other apps that use MIDI.",
+    beta: "Miku-FM has not been tested on a physical FM-1 yet. Install it only if you are ready to use the USB rescue below. You install it at your own risk; it comes with no warranty.",
+    data: "Miku-FM does not read other firmwares' projects or samples, and saving in Miku-FM replaces the settings other Felucca-family firmwares keep. Back up first.",
+    install: "Install Miku-FM", sha: "SHA-256", stockTitle: "Return to official V15",
+    back: "Get the official FM-1 V15 from M-VAVE and select the unmodified FM-1.fwsc. The browser checks it here; nothing is uploaded. Your Miku-FM songs are not carried over.",
+    stockFile: "Official FM-1.fwsc", stockGo: "Return to official V15", stockValid: "Official V15 verified.",
+    stockConfirm: "Return to the official V15? Miku-FM and its songs will be replaced.", stockError: "Cannot use this file: ",
+    rescueTitle: "If it does not start",
+    rescue: "Hold OCT− while switching on: the USB rescue (no sound, only the updater). Press Install here again, or return to V15. After two crashes at boot the FM-1 goes there by itself. If an install was cut off, press Install again: the update resumes.",
+    guide: "Install and recovery guide", report: "Report a problem", logTitle: "Installer log", copy: "Copy log",
+    nomidi: "This browser cannot do it. Open the page in Chrome or Edge.", loadfail: "Could not load the firmware: ",
+    start: "Starting", verify: "Checking", loader: "Switching to update mode", write: "Writing",
+    reboot: "Restarting", done: "Done. Miku-FM is installed.", stopped: "Stopped. Replug the USB cable and press Install again.",
+    error: "Error: ",
+    denied: "MIDI (SysEx) access was not allowed. Allow MIDI in the site settings (address bar) and press Install again.",
+    notfound: "FM-1 not found. Check the USB cable (a data cable), close other apps that use MIDI, and press Install again.",
+    model: "The connected device is not an FM-1.",
+    lost: "The USB connection was lost. Replug it and press Install again.",
+    noloader: "The FM-1 in update mode was not found. Replug the USB cable and press Install again (it stays in update mode until it is finished).",
+    noreturn: "The FM-1 did not come back. Power-cycle it.",
+    mismatch: "Written, but the FM-1 reports another version: ",
+    badpkg: "The file to install is damaged. Reload the page.",
+    leave: "Writing. Do not close the page.", ready: "Ready: Miku-FM ",
+    license: "GPL-3.0, no warranty. Source:",
+  },
+  ja: {
+    title: "小さな歌姫を、USB ケーブル一本で。", other: "English",
+    intro: "FM-1 を USB で接続して「インストール」を押してください。Chrome か Edge で使えます。MIDI の許可を求められたら許可してください。",
+    warn: "書き込み中は USB を抜かないでください。更新する FM-1 だけを接続してください。",
+    direct: "USB ケーブル（データ通信用）はパソコンに直接つないでください。MIDI を使う他のアプリは閉じてください。",
+    beta: "Miku-FM はまだ実機でテストされていません。下の USB レスキューを使える場合だけインストールしてください。自己責任・無保証です。",
+    data: "Miku-FM は他のファームウェアの曲やサンプルを読みません。Miku-FM で保存すると、他の Felucca 系ファームウェアの設定が置き換わります。先にバックアップしてください。",
+    install: "Miku-FM をインストール", sha: "SHA-256", stockTitle: "公式 V15 に戻す",
+    back: "M-VAVE から公式 FM-1 V15 を取得し、未変更の FM-1.fwsc を選んでください。ファイルはこのブラウザ内で確認し、送信しません。Miku-FM の曲は引き継がれません。",
+    stockFile: "公式 FM-1.fwsc", stockGo: "公式 V15 に戻す", stockValid: "公式 V15 を確認しました。",
+    stockConfirm: "公式 V15 に戻しますか？ Miku-FM と曲は置き換わります。", stockError: "このファイルは使えません: ",
+    rescueTitle: "起動しない場合",
+    rescue: "OCT− を押しながら電源を入れると USB レスキュー（音なし、アップデーターのみ）になります。ここでもう一度インストールするか、V15 に戻してください。起動に2回失敗すると自動でそこに入ります。インストールが中断した場合は、もう一度押すと再開します。",
+    guide: "インストールと復旧のガイド", report: "問題を報告", logTitle: "インストーラーのログ", copy: "ログをコピー",
+    nomidi: "このブラウザでは使えません。Chrome か Edge で開いてください。", loadfail: "ファームウェアを読み込めませんでした: ",
+    start: "開始します", verify: "確認中", loader: "書き込みモードに切り替え中", write: "書き込み中",
+    reboot: "再起動中", done: "完了しました。Miku-FM をインストールしました。", stopped: "途中で止まりました。USB を挿し直してもう一度押してください。",
+    error: "エラー: ",
+    denied: "MIDI（SysEx）の使用が許可されませんでした。アドレスバーのサイト設定で MIDI を許可して、もう一度押してください。",
+    notfound: "FM-1 が見つかりません。USB ケーブル（データ通信用か）を確かめ、MIDI を使う他のアプリを閉じてから、もう一度押してください。",
+    model: "接続されている機器は FM-1 ではありません。",
+    lost: "USB の接続が切れました。挿し直してもう一度押してください。",
+    noloader: "書き込みモードの FM-1 が見つかりません。USB を挿し直してもう一度押してください（終わるまで書き込みモードのままです）。",
+    noreturn: "FM-1 が戻ってきません。電源を入れ直してください。",
+    mismatch: "書き込みは終わりましたが、FM-1 が別のバージョンを報告しています: ",
+    badpkg: "インストールするファイルが壊れています。ページを再読み込みしてください。",
+    leave: "書き込み中です。ページを閉じないでください。", ready: "準備完了: Miku-FM ",
+    license: "GPL-3.0、無保証。ソース:",
+  },
+};
+let lang = (navigator.language || "en").toLowerCase().startsWith("ja") ? "ja" : "en";
+const t = (k) => TEXT[lang][k];
+let lastKey = null, lastArg = "";
+function applyLang() {
+  document.documentElement.lang = lang;
+  document.querySelectorAll("[data-t]").forEach((e) => { e.textContent = t(e.dataset.t); });
+  $("lang").textContent = t("other");
+  if (lastKey) $("status").textContent = t(lastKey) + lastArg;
+}
+$("lang").addEventListener("click", () => { lang = lang === "ja" ? "en" : "ja"; applyLang(); });
+applyLang();
+const sayK = (k, arg = "") => { lastKey = k; lastArg = arg; $("status").textContent = t(k) + arg; };
+const log = (s) => { $("log").textContent += s + "\n"; };
+$("copy").addEventListener("click", () => navigator.clipboard && navigator.clipboard.writeText($("log").textContent));
+const meta = /*META*/;
+let image = null, stock = null, writing = false;
+const lock = (on) => { writing = on; $("go").disabled = on || !image; $("stock-go").disabled = on || !stock; $("stock-file").disabled = on; };
+window.addEventListener("beforeunload", (e) => { if (writing) { e.preventDefault(); e.returnValue = t("leave"); } });
+(async () => {
+  if (!navigator.requestMIDIAccess) { sayK("nomidi"); return; }
+  try {
+    const r = await fetch(meta.pkg);
+    if (!r.ok) throw new Error(`${meta.pkg}: HTTP ${r.status}`);
+    const pkg = new Uint8Array(await r.arrayBuffer());
+    if (productOf(pkg) !== meta.product) { sayK("badpkg"); return; }
+    image = logicalImage(pkg);
+    sayK("ready", `${meta.version} (${meta.product})`);
+    $("go").disabled = false;
+  } catch (e) { sayK("loadfail", e.message); }
+})();
+function steps(total) {
+  return (k, a) => {
+    log(`${k} ${a ?? ""}`);
+    if (["start", "loader", "reboot"].includes(k)) sayK(k);
+    if (k === "verify") { sayK("verify"); if (total) $("bar").value = Math.min(30, a / 3); }
+    if (k === "write") { sayK("write"); if (total) $("bar").value = Math.min(99, 30 + 69 * a / total); }
+    if (k === "done") { $("bar").value = 100; sayK("done"); }
+  };
+}
+async function run(img, product) {
+  let midi;
+  try { midi = await navigator.requestMIDIAccess({ sysex: true }); } catch (e) { sayK("denied"); return; }
+  try {
+    const up = new Updater(midi, log);
+    const step = steps(Math.ceil(img.length / 512));
+    const ota = await up.find((id) => /^ota-/i.test(id.model));
+    if (ota) { ota.link.close(); sayK((await up.resume(img, step, product)) ? "done" : "stopped"); }
+    else await up.install(img, product, step);
+  } catch (e) {
+    if (e && e.code && TEXT[lang][e.code]) sayK(e.code, e.detail || "");
+    else sayK("error", e && e.message);
+    log(String(e && e.stack || e));
+  }
+}
+$("go").addEventListener("click", async () => { if (writing || !image) return; lock(true); await run(image, meta.product); lock(false); });
+$("stock-file").addEventListener("change", async () => {
+  const f = $("stock-file").files[0]; stock = null; lock(false);
+  if (!f) return;
+  try {
+    if (f.size !== STOCK_V15_SIZE) throw new Error("FM-1 V15 / FM-1.fwsc");
+    stock = await validateStockPackage(new Uint8Array(await f.arrayBuffer()));
+    sayK("stockValid"); lock(false);
+  } catch (e) { sayK("stockError", e.message); }
+});
+$("stock-go").addEventListener("click", async () => {
+  if (!stock || writing || !confirm(t("stockConfirm"))) return;
+  lock(true); await run(stock.image, stock.product); lock(false);
+});
+</script>
+</body>
+</html>

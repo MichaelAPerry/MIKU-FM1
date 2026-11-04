@@ -10,6 +10,16 @@ USB rescue (below).
 - Use Chrome or Edge for the web installers (Web MIDI).
 - Leave any "bootloader" option of an installer **off**.
 
+## In the browser (the site's Install button)
+
+Open https://michaelaperry.github.io/MIKU-FM1/install.html in Chrome or Edge, connect the FM-1 by USB (a data cable,
+directly), press **Install Miku-FM** and allow MIDI when asked. The page checks the package's identity before it starts,
+shows the progress, and checks the identity the FM-1 reports after the restart. If it stops, replug and press Install
+again: an interrupted write resumes. The same page returns the FM-1 to the official V15 (select the unmodified
+`FM-1.fwsc` from M-VAVE; the browser checks its SHA-256). The installer code is Felucca's web installer (`site/js/`,
+GPL-3.0-only), the browser side of the protocol Dinghy's `fm1_install.py` speaks. Until a release is tagged, the page
+carries the development build of main.
+
 ## With the FM-1 Firmware Hub (once listed)
 
 Open https://thefirmwarehub.com, press **Connect FM-1**, find Miku-FM and press **Install**.

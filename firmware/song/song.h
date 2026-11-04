@@ -32,6 +32,11 @@ typedef struct {
     uint8_t cho, dly, rev, drv;               /* effects: chorus, delay (dotted eighth), reverb, drive; wet levels and drive gain go with v*v */
     uint8_t chr, lang;                        /* VC_*, VL_* */
     uint8_t rsv[3];                           /* 0 */
+    /* version 3 (the hold-a-button layers); 0..100 each, 50 = neutral where it says so */
+    uint8_t tens, fry, whsp, fmt;             /* SOURCE: tension (50 neutral), vocal fry, whisper, formant fine shift (50 neutral) */
+    uint8_t rsize, dtime, dfb, crate;         /* FX DEEP: reverb size, delay time (5 divisions), delay feedback, chorus rate */
+    uint8_t clen, clev, vspd, obeat;          /* ARTICULATION: consonant length, consonant level, vowel speed (50 = 100 %), on-beat */
+    uint8_t hint, hmix, hdet, hchr;           /* HARMONY: interval (7 steps, first = off), mix, detune, its character (0..4) */
 } Voice;
 typedef struct {
     char name[8];                             /* A-Z 0-9 space */
@@ -68,11 +73,12 @@ int un_push_rows(Undo *u, const Song *g);
 int un_pop(Undo *u, Song *g);                                 /* restore the newest snapshot; 0 if none */
 /* MKS2 binary format (song_io.c) */
 #define SONG_ENC_V1 (10 + 8 + 6 + NTRK * 8 + NROW * 5 + NTRK * NPAT * NSTEP * 4 + 4)   /* 4476: version 1, still read */
-#define SONG_ENC_SIZE (SONG_ENC_V1 + 16)                                                  /* 4492: version 2, written */
+#define SONG_ENC_V2 (SONG_ENC_V1 + 16)                                                    /* 4492: version 2, still read */
+#define SONG_ENC_SIZE (SONG_ENC_V1 + 32)                                                  /* 4508: version 3, written */
 enum { SIO_OK = 0, SIO_SIZE = -1, SIO_MAGIC = -2, SIO_VERSION = -3, SIO_LEN = -4, SIO_CRC = -5, SIO_FIELD = -6 };
 uint32_t sg_crc32(const uint8_t *p, uint32_t n);
 uint32_t song_encode(const Song *g, uint8_t *buf, uint32_t cap);   /* bytes written, 0 if cap too small */
-int song_decode(Song *g, const uint8_t *buf, uint32_t len);        /* SIO_OK or an error; g untouched on error. len: SONG_ENC_SIZE (v2) or SONG_ENC_V1 */
+int song_decode(Song *g, const uint8_t *buf, uint32_t len);        /* SIO_OK or an error; g untouched on error. len: SONG_ENC_SIZE (v3), SONG_ENC_V2 or SONG_ENC_V1 */
 void sg_voice_default(Voice *v);
 void song_demo(Song *g);
 #endif

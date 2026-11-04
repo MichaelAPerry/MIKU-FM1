@@ -12,6 +12,7 @@ Status words: **emulator** = checked in fm1-emu on the real package; **hardware*
 | Mixer: level, pan, preset, mute, solo per track; swing, tempo, master | emulator |
 | STAGE page, the voice's home: singer face, syllable wheel (SELECT), languages (JAPANESE, ANIMAL babble, SCAT, VOWELS), character DEEP..TINY, knob banks VOICE / FX / ENV / LFO, saved with the song | emulator |
 | Voice effects: chorus, tempo-synced delay, reverb, drive, tremolo (integer, in the audio interrupt) | emulator |
+| Hold-a-button layers on STAGE: SOURCE (tension, fry, whisper, formant), FX DEEP, ARTICULATION (incl. vowels on the beat), HARMONY (a second voice at an interval) | emulator |
 | DANCE page: the singer full-body (8 pixel-art frames at 3x) dancing on the beat, singing, arms up in the chorus, bowing at the end | emulator |
 | SONG, PATTERN (piano roll, drum grid), MIXER pages; one control map ([CONTROLS](CONTROLS.md)) | emulator |
 | Live keys play the current track's instrument; keys write steps on PATTERN | emulator |

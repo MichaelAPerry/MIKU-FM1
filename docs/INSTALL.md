@@ -1,7 +1,7 @@
 # Installing Miku-FM
 
-**Miku-FM has not been tested on a physical FM-1 yet.** Until it has, install it only if you are ready to use the
-USB rescue (below).
+**Miku-FM is an early development build.** It runs on a real FM-1 (installed with the browser installer; songs save
+and load), but few people have tried it yet: install it only if you are ready to use the USB rescue (below).
 
 ## Before you start
 

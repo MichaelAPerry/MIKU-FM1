@@ -1,10 +1,36 @@
 # Miku-FM
 
-An experimental **four-track, retro virtual-idol-inspired songwriting workstation** for the M-VAVE FM-1.
+**A singing songwriter firmware for the M-VAVE FM-1.** A tiny pixel singer sings your songs in Japanese, consonants and
+all, over FM chords, bass and drums. Shape her voice, write patterns or let her generate a whole song, and watch her dance.
 
-**Status: native FM-1 firmware (Dinghy), version 0.5: a four-track songwriter (sung Japanese vocal with consonants, FM chords, bass, drums; patterns, arrangement, mixer, 8 song slots) with an animated singer; emulator-tested; not yet tested on hardware.** The host engine below is a separate MIT-licensed prototype.
+<p>
+<img src="site/media/screens/stage.png" width="200" alt="STAGE: her face and the syllable dial">
+<img src="site/media/screens/voice.png" width="200" alt="STAGE: a knob's picture (reverb)">
+<img src="site/media/screens/dance.png" width="200" alt="DANCE: the singer dancing">
+<img src="site/media/screens/song.png" width="200" alt="SONG: the arrangement">
+<img src="site/media/screens/pattern.png" width="200" alt="PATTERN: the piano roll">
+<img src="site/media/screens/gen.png" width="200" alt="GEN: the song generator">
+</p>
 
-## Build and render an editable eight-bar song
+**Try it in your browser, watch the trailer, install it:** https://michaelaperry.github.io/MIKU-FM1/ (the emulator runs the
+real firmware package; the installer works in Chrome or Edge over USB).
+
+- **Her voice:** a formant voice synthesised live (no samples): 70 Japanese morae with their consonants, five characters
+  from DEEP to TINY, languages (Japanese, animal babble, scat, vowels), tension, fry, whisper, a harmony voice, vowels on
+  the beat; chorus, delay, reverb, drive, tremolo. Every knob shows a picture of what it does.
+- **The song:** four tracks (vocal, FM chords, bass, drums), 16 patterns per track, 64 rows with sections, mixer, swing,
+  undo, 8 song slots. GEN writes a whole song in POP, BALLAD, DANCE or CHIP, with track locks and new phrases.
+- **The singer:** her face mouths every vowel on STAGE; on DANCE she dances to the song.
+- **Status:** development builds (0.x). Runs on a real FM-1 (installed with the browser installer; songs save and load).
+  Controls: [docs/CONTROLS.md](docs/CONTROLS.md), manual: [docs/MANUAL.md](docs/MANUAL.md), what is measured:
+  [docs/VALIDATION.md](docs/VALIDATION.md).
+- **Other firmwares' data:** Miku-FM does not read other firmwares' projects or samples (see below). Back up first.
+- **Licence:** code GPL-3.0-only; the singer is Hatsune Miku fan art under Crypton's Piapro Character License (free and
+  non-commercial only): [LICENSING.md](LICENSING.md).
+
+## The older host prototype
+
+### Build and render an editable eight-bar song
 
 Requires a C11 compiler and CMake 3.16+.
 

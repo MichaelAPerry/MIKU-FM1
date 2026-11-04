@@ -1,5 +1,9 @@
 # Art prompts (for ChatGPT image generation)
 
+> How the art was made. The prompts below asked for an "original character"; the finished art is presented and licensed
+> as **fan art of Hatsune Miku under the Piapro Character License** (free and non-commercial only, not under the code's
+> GPL): see [LICENSING.md](../LICENSING.md).
+
 Use these to make Miku-FM's singer and site art. The FM-1 screen is 240 × 240 pixels, so the device art is small
 pixel art with few colours; the site art can be larger.
 

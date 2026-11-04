@@ -37,10 +37,11 @@
 
 <section id="stage">
   <p class="label"><b>01</b> / ON STAGE</p>
-  <h2>Six screens, one little star.</h2>
+  <h2>Her screens.</h2>
   <p class="note">Native firmware renders: the real package running in the emulator, unchanged.</p>
   <div class="grid">
-    <figure class="shot"><img src="media/screens/stage.png" alt="STAGE page: the singer's face" loading="lazy"><figcaption><b>STAGE</b> · her face sings every syllable, blinks, smiles on PLAY</figcaption></figure>
+    <figure class="shot"><img src="media/screens/stage.png" alt="STAGE page: the singer's face and the syllable dial" loading="lazy"><figcaption><b>STAGE</b> · her face sings every syllable; the dial picks the next one</figcaption></figure>
+    <figure class="shot"><img src="media/screens/voice.png" alt="STAGE: a knob turned, its picture" loading="lazy"><figcaption><b>STAGE · knobs</b> · every knob shows what it does: here the reverb's tail</figcaption></figure>
     <figure class="shot"><img src="media/screens/dance.png" alt="DANCE page: the singer full body" loading="lazy"><figcaption><b>DANCE</b> · she sways on the beat, sings, throws her arms up in the chorus, bows at the end</figcaption></figure>
     <figure class="shot"><img src="media/screens/song.png" alt="SONG page: the arrangement" loading="lazy"><figcaption><b>SONG</b> · rows of patterns: intro, verse, chorus, outro</figcaption></figure>
     <figure class="shot"><img src="media/screens/pattern.png" alt="PATTERN page: piano roll" loading="lazy"><figcaption><b>PATTERN</b> · a piano roll per track; every vocal note carries its syllable</figcaption></figure>
@@ -56,6 +57,7 @@
   <ol>
     <li><b>PLAY</b>: she sings the demo 「おとのはこ」. <b>HOME</b> steps through STAGE, DANCE, SONG, PATTERN, MIXER and GEN.</li>
     <li><b>FX · SCL · ENV · LFO</b> pick the track (vocal, chords, bass, drums); the keys play it. On PATTERN a key writes the step.</li>
+    <li>On STAGE the knobs shape her voice: <b>FX</b>, <b>ENV</b>, <b>LFO</b> switch the four knobs (effects, envelope, vibrato), and holding one of them, or <b>SEL</b>, opens a deeper layer (source, effect details, articulation, harmony). <b>SELECT</b> turns the syllable dial.</li>
     <li>On GEN: knob 1 the style, 2 the key, 3 major or minor, 4 the seed; <b>REC</b> writes a new song, <b>PLAY</b> plays it.</li>
   </ol>
   <iframe class="emu" src="fm1-emu/" title="Miku-FM in the fm1-emu emulator" loading="lazy" allow="autoplay"></iframe>
@@ -86,7 +88,7 @@
   <p class="label"><b>05</b> / WHAT SHE CAN DO</p>
   <h2>A whole little studio.</h2>
   <div class="grid">
-    <div class="card feat"><span class="num">VOICE</span><h3>She really sings.</h3><p>A formant voice, synthesised live: five vowels, 70 Japanese morae with their consonants, vibrato, glides, breath. No samples.</p></div>
+    <div class="card feat"><span class="num">VOICE</span><h3>She really sings.</h3><p>A formant voice, synthesised live: 70 Japanese morae with their consonants, five characters, whisper, fry, a harmony voice, chorus, delay, reverb, drive. No samples.</p></div>
     <div class="card feat"><span class="num">SONG</span><h3>Four tracks, one song.</h3><p>Vocal, FM chords (8 sounds), bass (4), drums (2 kits). 16 patterns per track, 64 rows with sections, swing, undo, 8 song slots.</p></div>
     <div class="card feat"><span class="num">GEN</span><h3>Dream one up.</h3><p>POP, BALLAD, DANCE or CHIP in any key. Lock what you like, regenerate the rest, or ask for a new phrase. Keep it or drop it.</p></div>
     <div class="card feat"><span class="num">STAGE</span><h3>She is on stage.</h3><p>A pixel face that mouths every vowel, and a full-body dancer that moves to your song.</p></div>
@@ -121,9 +123,13 @@
 </section>
 
 <footer>
-  Miku-FM · an unofficial, non-commercial fan firmware for the M-VAVE FM-1, not associated with Crypton Future Media, Yamaha,
-  VOCALOID or M-VAVE. The singer's art is original fan art. GPL-3.0-only; host tools MIT.
-  <a href="https://github.com/MichaelAPerry/MIKU-FM1">Source code</a>.<br>
+  Miku-FM · an unofficial, free, non-commercial fan firmware for the M-VAVE FM-1, not associated with or endorsed by Crypton
+  Future Media, Yamaha or M-VAVE. Code: GPL-3.0-only (host tools MIT), <a href="https://github.com/MichaelAPerry/MIKU-FM1">source</a>.<br>
+  The singer is fan art of Hatsune Miku under the <a href="https://piapro.jp/license/pcl/summary">Piapro Character License</a>
+  (not under the GPL; <a href="https://github.com/MichaelAPerry/MIKU-FM1/blob/main/LICENSING.md">licensing</a>):
+  この作品はピアプロ・キャラクター・ライセンスに基づいてクリプトン・フューチャー・メディア株式会社のキャラクター「初音ミク」を描いたものです。
+  © Crypton Future Media, INC. www.piapro.net · 「初音ミク」 is a registered trademark of Crypton Future Media, INC.;
+  VOCALOID of Yamaha Corporation. Miku-FM uses no Crypton or Yamaha voice data: its voice is its own synthesis.<br>
   Limits: 8 song slots, 16 patterns per track, 64 rows, 4/4. The browser emulator is not a measure of the FM-1's CPU.
 </footer>
 </main></body></html>

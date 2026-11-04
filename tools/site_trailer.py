@@ -15,15 +15,17 @@ import subprocess
 import sys
 from pathlib import Path
 
-KEYS = ("400:PLAY,6500:HOME,14000:HOME,15200:SELECT:+2,16500:HOME,19000:HOME,21000:HOME,22000:SEQ,22500:K1:+2,22900:K4:+3,"
-        "23400:REC,24000:PLAY,25000:HOME,30500:HOME")
+KEYS = ("400:PLAY,7000:SELECT:+3,7600:FX,8000:K3:+20,8800:K1:+15,9600:K2:+12,10400-11000:LFO,11300:K1:+4,"
+        "12600:HOME,18500:HOME,19300:SELECT:+2,20500:HOME,23000:HOME,24200:HOME,25000:SEQ,25400:K1:+2,25800:K4:+3,"
+        "26200:REC,26800:PLAY,27600:HOME,31500:HOME")
 T0, DT, T1 = 300, 83, 37000
 # (from ms, to ms, label, caption); None = a card instead of the screen
-SEG = [(300, 3300, None, "title"), (3300, 6500, "STAGE", "She sings.\nIn Japanese."), (6500, 14000, "DANCE", "She dances\nto your song."),
-       (14000, 16500, "SONG", "Arrange it."), (16500, 19000, "PATTERN", "Write it,\nnote by note."), (19000, 21000, "MIXER", "Mix it."),
-       (21000, 25000, "GEN", "Or let her\ndream one up."), (25000, 30500, "STAGE", "A new song.\nOne press."),
-       (30500, 34000, "DANCE", "Every song\nis a stage."), (34000, 37000, None, "end")]
-SHOTS = {"stage": 5000, "dance": 11000, "song": 15500, "pattern": 18000, "mixer": 20200, "gen": 24600}
+SEG = [(300, 3300, None, "title"), (3300, 7000, "STAGE", "She sings.\nIn Japanese."), (7000, 10400, "STAGE", "Shape her\nvoice."),
+       (10400, 12600, "HARMONY", "Give her\na harmony."), (12600, 18500, "DANCE", "She dances\nto your song."),
+       (18500, 20500, "SONG", "Arrange it."), (20500, 23000, "PATTERN", "Write it,\nnote by note."), (23000, 24200, "MIXER", "Mix it."),
+       (24200, 27600, "GEN", "Or let her\ndream one up."), (27600, 31500, "STAGE", "A new song.\nOne press."),
+       (31500, 34000, "DANCE", "Every song\nis a stage."), (34000, 37000, None, "end")]
+SHOTS = {"stage": 5000, "voice": 8600, "dance": 15000, "song": 19900, "pattern": 22000, "mixer": 23600, "gen": 26500}
 FONT = "/usr/share/fonts/opentype/inter/Inter-{}.otf"
 JP = "/usr/share/fonts/opentype/ipafont-gothic/ipag.ttf"
 W, H, NAVY, TEAL, PINK, DIM = 1280, 720, (10, 18, 48), (63, 224, 208), (255, 79, 168), (169, 184, 224)
@@ -69,7 +71,9 @@ def main():
                 d.text((90, 200), "Play her in your browser.", font=f("Bold", 48), fill=(238, 246, 255))
                 d.text((90, 270), "Install her over USB.", font=f("Bold", 48), fill=TEAL)
                 d.text((94, 370), "michaelaperry.github.io/MIKU-FM1", font=mid, fill=PINK)
-                d.text((94, 420), "Unofficial fan firmware for the M-VAVE FM-1", font=small, fill=DIM)
+                d.text((94, 420), "Unofficial, non-commercial fan firmware for the M-VAVE FM-1", font=small, fill=DIM)
+                d.text((94, 452), "Hatsune Miku: fan work under the Piapro Character License (PCL).", font=small, fill=DIM)
+                d.text((94, 478), "\u00a9 Crypton Future Media, INC. www.piapro.net", font=small, fill=DIM)
         else:
             img = lcd(t).resize((630, 630), Image.NEAREST)
             d.rounded_rectangle((W - 700 - 12, 33, W - 70 + 12, 33 + 630 + 24), 28, fill=(5, 9, 20), outline=(42, 58, 122), width=3)

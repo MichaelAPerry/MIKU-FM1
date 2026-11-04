@@ -25,7 +25,7 @@ At power-on the firmware loads the slot you last used. The first time (or if tha
 ## Playing the demo
 
 1. **PLAY** starts the song from the cursor row; **SEQ** or **PLAY** again stops it.
-2. **HOME** moves through STAGE (the singer), SONG, PATTERN, MIXER and GEN.
+2. **HOME** moves through STAGE (the singer's face), DANCE (the singer dancing), SONG, PATTERN, MIXER and GEN.
 3. On SONG, **SELECT** picks a row, **PLAY** starts there.
 
 ## Writing a song
@@ -69,6 +69,11 @@ The singer's mouth follows the voice; her face blinks and smiles on PLAY. Below:
 one at the cursor), BPM (and the key octave), the audio CPU load, the row and section, and four dots that light when
 the vocal, chords, bass and drums sound. The vocal knobs (vibrato, portamento, breath, brightness) are KNOB 1-4 here and
 are saved in the song.
+
+## DANCE
+
+The singer full-body, dancing: she sways on the beat, sings while the vocal sounds, throws her arms up in the chorus and
+bows when the song stops. The knobs do what they do on STAGE.
 
 ## Saving and other firmwares
 

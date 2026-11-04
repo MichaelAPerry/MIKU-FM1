@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-3.0-only
  * MIKU-FM1 native: a singing songwriter for the FM-1 on Dinghy. Four tracks (VOCAL, CHORDS, BASS, DRUMS), patterns of 16 steps,
- * an arrangement of rows, 8 song slots. Pages: STAGE (the singer), SONG, PATTERN, MIXER, GEN (the song generator). Unofficial fan project, not a voicebank.
+ * an arrangement of rows, 8 song slots. Pages: STAGE (the singer's face), DANCE (the singer, full body), SONG, PATTERN, MIXER, GEN (the song generator). Unofficial fan project, not a voicebank.
  *
  * Threads. The ISR (app_audio -> en_render) owns the sequencer and the instruments and READS the song; the main loop edits it.
  * - Single-step edits (st_put) are safe while playing: a step is 4 bytes, byte 0 is "is there anything" (note / mask). They are
@@ -79,7 +79,7 @@
 #define BUDGET_TICKS (5805u*FM1_TICKS_PER_US)       /* 256 frames at 44.1 kHz */
 #define BG RGB(7,17,34)
 #define FACE_Y 184u
-enum { PG_STAGE, PG_SONG, PG_PATTERN, PG_MIXER, PG_GEN, PG_N };
+enum { PG_STAGE, PG_DANCE, PG_SONG, PG_PATTERN, PG_MIXER, PG_GEN, PG_N };
 static Engine en;
 static Song sg;
 static Undo un;
@@ -99,7 +99,8 @@ static uint32_t page,trk,crow,cstep,top,modified,playing,ppos,prev_keys,dirty,fu
 static const char *toast_s;
 static uint32_t ed_len[3]={2,8,2},ed_vel=12,ed_mora,ed_q,ed_mode,ed_bf;
 static uint8_t kn[27],hw[2u*SINGER_FACE_H];
-static uint16_t pw[16],c_bg,c_disc;
+static uint16_t pw[16],dpw[16],c_bg,c_disc;
+static uint32_t dance_cur=99,dance_ms,bow_until,was_playing;
 static const uint16_t tcol[NTRK]={RGB(247,123,180),RGB(35,182,176),RGB(249,207,94),RGB(120,150,250)};
 static const char *const tname[NTRK]={"VOCAL","CHORDS","BASS","DRUMS"};
 static const char *const sname[SEC_N]={"","INTRO","VERSE","CHORUS","BRIDGE","OUTRO"};
@@ -320,7 +321,7 @@ static void face_update(void){
 }
 static void stage_init(void){
     uint32_t i,v,h;
-    for(i=0;i<16;i++)pw[i]=swap16(SINGER_FACE_PAL[i]);
+    for(i=0;i<16;i++){pw[i]=swap16(SINGER_FACE_PAL[i]);dpw[i]=swap16(SINGER_STAGE_PAL[i]);}
     c_bg=swap16(RGB(12,20,40));c_disc=swap16(RGB(40,66,120));
     for(i=0;i<2u*SINGER_FACE_H;i++){        /* half-width of a disc (r=90) behind the head, per output row */
         int32_t dy=(int32_t)i-90;
@@ -328,6 +329,41 @@ static void stage_init(void){
         while((h+1u)*(h+1u)<=v)h++;
         hw[i]=(uint8_t)h;
     }
+}
+/* ---- DANCE: the full-body singer at 3x (183 x 213) above a one-line strip. One frame per beat while playing: the two
+   arms up on every other beat of a CHORUS row, the two singing frames while the vocal sounds, else the four-frame sway; a bow when the
+   song stops; a slow sway when stopped. A frame is redrawn only when it changes. */
+#define DX 28u
+static void dance_draw(uint32_t f){
+    const uint8_t *d=SINGER_STAGE[f];
+    uint32_t w=SINGER_STAGE_W,h=SINGER_STAGE_H,cr=CV_MAX/(9u*w),r0,r,c,k;
+    cv_oy=0;
+    for(r0=0;r0<h;r0+=cr){
+        uint32_t nr=h-r0<cr?h-r0:cr;
+        lcd_sync();
+        for(r=0;r<nr;r++){
+            uint16_t *o=cv_px+r*9u*w;
+            for(c=0;c<w;c++){
+                uint32_t b=d[((r0+r)*w+c)>>1],i=(c&1u)?b&15u:b>>4;
+                uint16_t p=i?dpw[i]:c_bg;
+                o[3u*c]=o[3u*c+1u]=o[3u*c+2u]=p;
+            }
+            for(k=0;k<3u*w;k++)o[3u*w+k]=o[6u*w+k]=o[k];
+        }
+        lcd_blit(DX,3u*r0,3u*w,3u*nr,cv_px);
+    }
+}
+static void dance_update(void){
+    uint32_t now=fm1_ms,f;
+    if(playing){
+        uint32_t beat=(ppos&255u)>>2,r=ppos>>8&255u,ch=r<sg.nrows && sg.row[r].sect==SEC_CHORUS;
+        if(ch && (beat&1u))f=ST_ARMS;
+        else if((en.act&1u) && en.level>=40u)f=ST_SING0+(beat&1u);
+        else f=ST_IDLE0+(beat&3u);
+    }else if((int32_t)(now-bow_until)<0)f=ST_BOW;
+    else if((en.act&1u) && en.level>=40u)f=ST_SING0+(now/250u&1u);          /* live keys */
+    else f=ST_IDLE0+(now/700u&3u);
+    if(f!=dance_cur && (dance_cur==99u || now-dance_ms>=60u)){dance_ms=now;dance_cur=f;dance_draw(f);}
 }
 /* ---- pages. The screen below the face is drawn in bands of 48 lines (bit n of `dirty` = band n; bit 5 = the STAGE strip) */
 static uint32_t shown_row(void){return playing?(ppos>>8&255u):crow;}
@@ -566,14 +602,35 @@ static void pg_gen(uint32_t b){
         if(s[0])txt(4,216,&FONT_S,s,RGB(255,110,110),0);
     }
 }
+static void pg_dance(void){
+    char s[14]="BPM ",r1[16],up[6];
+    const char *ms="";
+    uint32_t i,r=shown_row(),x=playing?(ppos&255u):cstep,vp=r<sg.nrows?sg.row[r].pat[0]:ROW_OFF;
+    if(en.act&1u)ms=mora_str(en.mora);
+    else if(!playing && vp<NPAT && sg.pat[0][vp][x].v[0])ms=mora_str(sg.pat[0][vp][x].v[2]);
+    for(i=0;i<5u&&ms[i];i++)up[i]=(char)(ms[i]-32);
+    up[i]=0;
+    num(s+4,sg.bpm);
+    r1[0]=0;cat(r1,"R");catn(r1,r+1u);cat(r1," ");cat(r1,r<sg.nrows?sname[sg.row[r].sect]:"");
+    cv_begin(240,26,RGB(12,20,40));
+    if(toast_s && (int32_t)(fm1_ms-toast_until)<0)txt(120,4,&FONT_S,toast_s,toast_err?RGB(255,110,110):RGB(249,207,94),1);
+    else{
+        cv_text(4,4,&FONT_S,r1,RGB(150,160,190));
+        cv_text(120-text_w(&FONT_S,up)/2,4,&FONT_S,up,C_WHITE);
+        cv_text(236-text_w(&FONT_S,s),4,&FONT_S,s,RGB(249,207,94));
+    }
+    cv_blit(0,214);
+}
 static void redraw(void){
     uint32_t b;
     if(full){
         full=0;
         if(!page){lcd_fill(0,0,240,240,RGB(12,20,40));face_draw(face_cur,0,0,SINGER_FACE_W,SINGER_FACE_H);dirty|=0x20u;}
+        else if(page==PG_DANCE){lcd_fill(0,0,240,240,RGB(12,20,40));dance_cur=99;dirty|=0x20u;}
         else dirty|=0x1Fu;
     }
     if(!page){if(dirty&0x20u){dirty&=~0x20u;pg_stage();}dirty&=~0x1Fu;return;}
+    if(page==PG_DANCE){if(dirty&0x20u){dirty&=~0x20u;pg_dance();}dirty&=~0x1Fu;return;}
     dirty&=~0x20u;
     for(b=0;b<5u;b++)if(dirty&(1u<<b)){
         dirty&=~(1u<<b);
@@ -693,7 +750,7 @@ static void app_main(void){
             if(p!=ROW_OFF && sg_copy(&sg,(int)trk,(int)p,(int)lo,(int)(hi-lo+1u),clip)){clip_n=hi-lo+1u;clip_t=trk;toast("COPIED",0);}
         }
         /* encoders, per page */
-        if(page==PG_STAGE){
+        if(page==PG_STAGE||page==PG_DANCE){
             if(dS&&sg.nrows){crow=(uint32_t)cl((int32_t)crow+dS,0,(int32_t)sg.nrows-1);mk(0x20u);}
             if(dA&&trk){tweak(&sg.trk[trk].preset,dA,0,(int32_t)npst[trk]-1);mk(0x20u);}
             if(dP){tweak(&sg.bpm,dP,40,240);if(playing)en_post(&en,EN_BPM,sg.bpm,0,0);mk(0x20u);}
@@ -767,14 +824,17 @@ static void app_main(void){
         if(pv_off && (int32_t)(now-pv_off)>=0){pv_off=0;if(!keys)en_post(&en,EN_OFF,0,0,0);}
         /* what the engine tells us */
         if(ppos!=oldpos||playing!=(oldpos>>16&1u)){
-            if(page==PG_STAGE)mk(0x20u);
+            if(page==PG_STAGE||page==PG_DANCE)mk(0x20u);
             else if(page==PG_SONG)mk(0x1Eu);
             else if(page==PG_PATTERN && (ppos>>8&255u)==crow)mk(0x0Eu);
             else if(page==PG_PATTERN)mk(1u);
         }
-        if(en.act!=last_act){last_act=en.act;if(page==PG_STAGE)mk(0x20u);}
+        if(en.act!=last_act){last_act=en.act;if(page==PG_STAGE||page==PG_DANCE)mk(0x20u);}
         if(toast_s && (int32_t)(now-toast_until)>=0){toast_s=0;mk(0x21u);}
+        if(was_playing && !playing)bow_until=now+1500u;
+        was_playing=playing;
         if(page==PG_STAGE)face_update();
+        else if(page==PG_DANCE)dance_update();
         else if((int32_t)(now-next_blink)>=0)next_blink=now+3000u;
         if(now-cpu_ms>=500u){
             uint32_t p=pub_peak*100u/BUDGET_TICKS;

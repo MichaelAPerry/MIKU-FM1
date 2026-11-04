@@ -11,6 +11,7 @@ Status words: **emulator** = checked in fm1-emu on the real package; **hardware*
 | FM chords (8 presets, 4 voices, block/arp/strum modes), FM bass (4 presets, accent, slide), drum kit (6 sounds, 2 kits) | emulator |
 | Mixer: level, pan, preset, mute, solo per track; swing, tempo, master | emulator |
 | STAGE page: singer face, syllable, tempo, CPU%, row and section, track activity dots | emulator |
+| DANCE page: the singer full-body (8 pixel-art frames at 3x) dancing on the beat, singing, arms up in the chorus, bowing at the end | emulator |
 | SONG, PATTERN (piano roll, drum grid), MIXER pages; one control map ([CONTROLS](CONTROLS.md)) | emulator |
 | Live keys play the current track's instrument; keys write steps on PATTERN | emulator |
 | Copy / paste steps, duplicate pattern, insert / duplicate / delete rows, undo | emulator |

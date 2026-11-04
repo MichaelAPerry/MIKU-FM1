@@ -1,6 +1,6 @@
 # Controls
 
-Miku-FM 0.4 is a four-track songwriter. **HOME** cycles the pages: STAGE, SONG, PATTERN, MIXER, GEN (the page name is on
+Miku-FM 0.4 is a four-track songwriter. **HOME** cycles the pages: STAGE, DANCE, SONG, PATTERN, MIXER, GEN (the page name is on
 the screen). One control map holds everywhere; the tables below list what each control does on each page.
 
 Everywhere:
@@ -30,6 +30,12 @@ and four dots that light while VOCAL, CHORDS, BASS, DRUMS sound.
 | ALGORITHM | Preset of the current track (CHORDS 8, BASS 4, DRUMS 2) |
 | PRESETS | Tempo, 40-240 BPM |
 | KNOB 1 / 2 / 3 / 4 | Voice: vibrato, portamento, breath, brightness (0-100, saved in the song) |
+
+## DANCE
+
+The singer full-body (3x), dancing to the song: one move per beat while playing, singing while the vocal sounds, arms up in
+CHORUS rows, a bow when the song stops, a slow sway when stopped. Below her: row and section, the syllable, BPM.
+The controls are those of STAGE.
 
 ## SONG
 

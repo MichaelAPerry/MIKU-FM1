@@ -1,0 +1,78 @@
+/* SPDX-License-Identifier: GPL-3.0-only */
+:root{--bg:#0a1230;--bg2:#111b44;--card:#121d4acc;--line:#2a3a7a;--fg:#eef6ff;--dim:#a9b8e0;--teal:#3fe0d0;--pink:#ff4fa8;
+  --gold:#f9cf5e;--r:18px;color-scheme:dark;
+  font:17px/1.6 "Inter","Segoe UI",system-ui,sans-serif}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;color:var(--fg);background:var(--bg);
+  background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);
+  background-size:44px 44px;background-attachment:fixed}
+body::before{content:"";position:fixed;inset:0;z-index:-1;background:radial-gradient(ellipse at 50% 0%,#0a123000 0%,#0a1230ee 60%)}
+a{color:var(--teal)}a:hover{color:var(--pink)}
+main{max-width:1080px;margin:auto;padding:0 clamp(16px,4vw,40px) 60px}
+h1,h2,h3{line-height:1.1;letter-spacing:-.03em;margin:0 0 .4em}
+h2{font-size:clamp(1.8rem,4.5vw,2.8rem)}h3{font-size:1.3rem}
+p{max-width:70ch}
+code{background:#060b20;padding:2px 6px;border-radius:6px;font-size:.85em;word-break:break-all}
+.label{font-size:.78rem;letter-spacing:.16em;text-transform:uppercase;color:var(--teal);margin:0 0 .6em;font-weight:700}
+.label b{color:var(--pink)}
+.note{color:var(--dim);font-size:.9rem}
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 0;font-size:.9rem;flex-wrap:wrap}
+.top nav a{margin-left:16px;color:var(--dim);text-decoration:none}.top nav a:hover{color:var(--teal)}
+.brand{font-weight:800;letter-spacing:-.02em}.brand span{color:var(--teal)}
+/* hero */
+.hero{position:relative;border-radius:28px;overflow:hidden;min-height:520px;display:flex;align-items:flex-end;
+  background:#0a1230 url(media/banner.jpg) right center/cover no-repeat;border:1px solid var(--line);margin-top:4px}
+.hero::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,#0a1230f2 0%,#0a1230cc 42%,#0a123000 75%)}
+.hero .in{position:relative;z-index:1;padding:clamp(22px,5vw,56px);max-width:640px}
+.hero h1{font-size:clamp(3rem,10vw,6.2rem);margin:.1em 0 .15em}.hero h1 span{color:var(--teal)}.hero h1 i{color:var(--pink);font-style:normal}
+.tag{font-size:1.15rem;margin:.2em 0}.tag.dim{color:var(--dim)}
+.marquee{overflow:hidden;white-space:nowrap;border-block:1px solid var(--line);margin:22px 0 0;color:var(--pink);font-weight:700;letter-spacing:.08em}
+.marquee span{display:inline-block;padding:8px 0;animation:mq 30s linear infinite}
+@keyframes mq{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.btns{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px}
+.btn{display:inline-block;border:0;cursor:pointer;font:inherit;font-weight:750;font-size:.95rem;text-decoration:none;
+  background:var(--teal);color:#071028;padding:12px 18px;border-radius:12px;box-shadow:0 0 18px #3fe0d055}
+.btn:hover{background:var(--pink);color:#fff;box-shadow:0 0 22px #ff4fa877}
+.btn.alt{background:#1b2758;color:var(--fg);box-shadow:none;border:1px solid var(--line)}.btn.alt:hover{border-color:var(--pink)}
+.btn.pink{background:var(--pink);color:#fff;box-shadow:0 0 18px #ff4fa866}
+.btn:disabled{opacity:.35;cursor:default}
+/* the pixel dancer: dancer.png is 8 frames of 61 x 71; frames 0-3 sway, 4-5 sing, 6 arms up */
+.dancer{width:183px;height:213px;background:url(media/dancer.png) 0 0/1464px 213px no-repeat;image-rendering:pixelated;
+  animation:dance 3.2s steps(1) infinite;filter:drop-shadow(0 0 14px #3fe0d055)}
+.dancer.small{width:122px;height:142px;background-size:976px 142px;animation-name:dance2}
+@keyframes dance{0%{background-position:0 0}12.5%{background-position:-183px 0}25%{background-position:-366px 0}37.5%{background-position:-549px 0}
+  50%{background-position:-732px 0}62.5%{background-position:-915px 0}75%{background-position:-1098px 0}87.5%{background-position:-549px 0}}
+@keyframes dance2{0%{background-position:0 0}12.5%{background-position:-122px 0}25%{background-position:-244px 0}37.5%{background-position:-366px 0}
+  50%{background-position:-488px 0}62.5%{background-position:-610px 0}75%{background-position:-732px 0}87.5%{background-position:-366px 0}}
+@media (prefers-reduced-motion:reduce){.dancer{animation:none}.marquee span{animation:none}}
+.hero .dancer{position:absolute;z-index:1;right:4%;bottom:6%}
+@media (max-width:760px){.hero{background-position:70% center}.hero .dancer{display:none}}
+/* sections */
+section{margin-top:72px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:clamp(18px,3vw,30px);backdrop-filter:blur(4px)}
+.grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr))}
+.grid3{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+.shot{margin:0}.shot img{width:100%;aspect-ratio:1;image-rendering:pixelated;border-radius:14px;border:3px solid #050914;
+  box-shadow:0 0 0 1px var(--line),0 10px 30px #0008;background:#050914}
+.shot figcaption{font-size:.9rem;color:var(--dim);margin-top:8px}.shot figcaption b{color:var(--fg)}
+.num{font-size:.8rem;letter-spacing:.14em;color:var(--pink);font-weight:800}
+.feat h3{margin-top:.3em}.feat p{color:var(--dim);margin:0}
+.emu{width:100%;height:min(80vh,760px);border:1px solid var(--line);border-radius:var(--r);background:#050914}
+video{width:100%;border-radius:var(--r);border:1px solid var(--line);background:#000}
+.song{display:flex;flex-direction:column;gap:8px}.song audio{width:100%}
+.song b{color:var(--teal)}
+.warnbox{border-left:3px solid var(--gold);padding-left:12px}
+ol li{padding:4px 0}
+footer{margin-top:80px;padding-top:24px;border-top:1px solid var(--line);color:var(--dim);font-size:.85rem}
+/* installer page */
+.inst main{max-width:760px}
+.crumb{display:flex;justify-content:space-between;padding:16px 0}
+.lang{background:none;border:0;color:var(--dim);text-decoration:underline;cursor:pointer;font:inherit}
+.inst-head{display:flex;align-items:flex-end;gap:18px;margin:10px 0 24px}
+.inst-head h1{font-size:clamp(1.8rem,5vw,2.8rem)}
+.inst section{margin-top:18px}
+progress{width:100%;height:8px;accent-color:var(--teal);margin-top:12px}
+#status{min-height:1.6em;font-weight:650}
+pre{white-space:pre-wrap;color:var(--dim);font-size:.8rem;max-height:240px;overflow:auto}
+.inst h2{font-size:1.5rem}

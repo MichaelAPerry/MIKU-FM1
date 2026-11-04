@@ -1,8 +1,8 @@
 #!/bin/sh
 # SPDX-License-Identifier: MIT
-# Install the front page (site/index.html) into SITE, filling in the version, the build kind and the commit, and the
-# SHA-256 of the package. release: the attested package of a published release. dev: built by the Pages workflow
-# from a commit of main (not attested).
+# Install the front page (site/index.html), the installer page (site/install.html) and their assets (site.css, js/, media/)
+# into SITE, filling in the version, the build kind and the commit, the SHA-256 and the identity of the package.
+# release: the attested package of a published release. dev: built by the Pages workflow from a commit of main (not attested).
 #   tools/site_front.sh SITE_DIR VERSION [release|dev] [COMMIT]
 set -eu
 SITE="${1:?usage: tools/site_front.sh SITE_DIR VERSION [release|dev] [COMMIT]}"; V="${2:?version}"
@@ -22,12 +22,26 @@ if kind == "release":
              f'<a href="{repo}/attestations">attestations</a>.')
 else:
     build = (f'Development build of <a href="{repo}/commit/{html.escape(commit)}">{html.escape(commit[:7])}</a> '
-             f'on main: <strong>not attested</strong>, for the emulator. Install a release, not this.')
-page = (root / "site" / "index.html").read_text()
-for k, val in {"{{VERSION}}": html.escape(v), "{{PACKAGE}}": html.escape(pkg), "{{SHA256}}": sha, "{{BUILD}}": build}.items():
-    assert k in page, k
-    page = page.replace(k, val)
-(site / "index.html").write_text(page)
+             f'on main: <strong>not attested</strong>. No release has been made yet: the first one follows the first hardware test. '
+             f'Until then this development build is what the page installs.')
+import json, shutil
+raw = (site / "firmware" / pkg).read_bytes()
+product = "".join(chr((raw[i * 0x30 + 0x2F] - i - 1) & 0xFF) for i in range(20) if raw[i * 0x30 + 0x2F] != 0x7D)
+assert product.startswith("FM-1_39"), product
+for d in ("js", "media"):                                   # the pages' assets
+    if (site / d).exists(): shutil.rmtree(site / d)
+    shutil.copytree(root / "site" / d, site / d)
+shutil.copy(root / "site" / "site.css", site / "site.css")
+fill = {"{{VERSION}}": html.escape(v), "{{PACKAGE}}": html.escape(pkg), "{{SHA256}}": sha, "{{BUILD}}": build,
+        "/*META*/": json.dumps({"version": v, "product": product, "pkg": "firmware/" + pkg})}
+for name, keys in (("index.html", ("{{VERSION}}", "{{PACKAGE}}", "{{SHA256}}", "{{BUILD}}")),
+                   ("install.html", ("{{VERSION}}", "{{SHA256}}", "{{BUILD}}", "/*META*/"))):
+    page = (root / "site" / name).read_text()
+    for k in keys:
+        assert k in page, (name, k)
+        page = page.replace(k, fill[k])
+    assert "{{" not in page and "/*META*/" not in page, name
+    (site / name).write_text(page)
 (site / ".nojekyll").touch()
 PY
 echo "site_front: $SITE/index.html ($KIND $V)"

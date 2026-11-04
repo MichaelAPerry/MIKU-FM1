@@ -22,6 +22,13 @@ typedef struct {
     uint16_t scoop_ms;          /* time for the onset scoop to settle, ms (<=510) */
     int8_t transpose;           /* semitones added to incoming notes */
     uint8_t chr;                /* voice character 0..4: formant size DEEP LOW MIKU (default, 2) YOUNG TINY; changes glide like a vowel */
+    uint8_t chf;                /* 0..99: fine formant shift, that many % of the way from chr to chr+1 */
+    uint8_t tension;            /* 0..100, 50 neutral: below softer (the soft pulse, darker), above pressed (brighter edge) */
+    uint8_t fry;                /* 0..100: every other glottal pulse weaker (subharmonic growl, vocal fry) */
+    uint8_t whisper;            /* 0..100: the voiced source fades into breath noise through the same formants */
+    uint8_t cscale, vscale;     /* 25..175 % (100): consonant phase lengths, vowel/formant morph speed */
+    uint16_t clevel;            /* 0..200 % (100): consonant noise and aspiration level */
+    int16_t tune;               /* pitch offset, 4096 units per octave (detune) */
     /* state */
     uint32_t ph, inc, lfo, noise, rng;
     int32_t pcur, ptgt;         /* pitch, 4096 units/octave above MIDI 0 */
@@ -33,7 +40,7 @@ typedef struct {
     /* consonant state (fv_note_on_mora): smoothed voicing / level / noise / aspiration, noise band, phase machine */
     int32_t vg, vgs, vgt, nl, nls, nlt, ap, aps, apt, cl, clt, ny1, ny2, nbc[3];
     uint16_t km, nkd;
-    uint8_t cons, cph, cleft, cshp, lip, nzon, tail, nab;
+    uint8_t cons, cph, cleft, cshp, lip, nzon, tail, nab, fcyc;
 } FvVoice;
 void fv_init(FvVoice *v);
 void fv_note_on(FvVoice *v, uint8_t midi_note, uint8_t vowel, uint8_t velocity); /* gated: legato */

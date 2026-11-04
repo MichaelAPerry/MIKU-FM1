@@ -81,7 +81,18 @@ voice; her face blinks and smiles on PLAY.
   the attack and release shape, the scoop into the note, the vibrato wave, the delay's echoes, the reverb's tail, the drive's
   clip curve. The effects and times follow a squared curve, so small settings are easy to dial in.
 
+**Hold** a button (0.4 s) for a deeper layer; its button blinks, and holding it again goes back to VOICE:
+
+- **Hold SEL, SOURCE**: tension (below 50 softer and breathier, above pressed and brighter), fry (a growl an octave down),
+  whisper (the voice turns to breath), formant (a fine shift between the characters).
+- **Hold FX, FX DEEP**: reverb size, delay time (1/16, eighth triplet, 1/8, dotted 1/8, 1/4 of the tempo), feedback, chorus rate.
+- **Hold ENV, ARTICULATION**: consonant length, consonant level, vowel speed, and ON BEAT: at 100 the band waits a moment
+  (up to 66 ms) and every sung note starts early by its own consonant, so the vowels land on the beat.
+- **Hold LFO, HARMONY**: a second voice sings every note at an interval (off, an octave down, a third, a fourth, a fifth, an
+  octave up), with its own mix, detune and character, e.g. a DEEP voice an octave under her.
+
 All of this is saved with the song. Songs saved by older versions load with the original sound (no effects).
+The STAGE CPU figure shows what it costs: harmony and the effects together roughly double the audio load.
 
 ## DANCE
 

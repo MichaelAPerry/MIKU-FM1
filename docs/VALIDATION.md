@@ -244,3 +244,31 @@ languages in `firmware/app/engine.c`, all settings in the song (`Voice`, MKS2 ve
   Engine test at 60: drive +3.1, tremolo -2.1, chorus/delay/reverb +0.1..0.2 dB re dry; `ctest` 12/12.
 - Device build: image 179,9xx B, 0 warnings; emu_smoke unchanged (RMS 1504).
 
+## Hold-a-button layers: SOURCE, FX DEEP, ARTICULATION, HARMONY (2026-11-04)
+
+A long press (0.4 s, it acts while still held) on SEL / FX / ENV / LFO latches a second knob layer (its button blinks);
+settings in the song (MKS2 version 3, 32-byte voice block; versions 2 and 1 still read). At neutral (the defaults) every
+new control is exact: the demo, the vocal solo, ANIMAL, SCAT/TINY and a generated song render bit-identical to main.
+
+### Host (`ctest` 12/12, 0 warnings; `tests/test_engine.c` "layers")
+- Tension 0/50/100: harmonic centroid 648 / 1175 / 1258 Hz. Fry 80: power at f0/2 0 -> 0.047 of f0. Whisper 100: f0 power
+  -27 dB, level +0.5 dB. Formant 0/50/100: 402 / 420 / 449 Hz (G2, five vowels).
+- Delay 1/16 and 1/4 at 120 BPM: first echo 125-150 and 510 ms after the note (10 ms windows). Reverb size 0/100: tail 1 s
+  after the note 0 / 63 rms. Delay line 1.49 s (a quarter fits down to 44 BPM); the right echo comes 15 ms after the left.
+- Consonant length 0/100: "k" lasts 27 / 192 blocks. Consonant level 0: the k burst 1421 -> 25 rms.
+- On-beat 0/100: the vowel of "ka" 45.9 / 5.8 ms after the kick (the band waits 66 ms, the note starts 40 ms early).
+- Harmony +7: power at the fifth x750,000. Everything at 100 (all effects, harmony +12 at full mix, on-beat, fry, tension,
+  all levels 127) over 20 s of the demo: peak 32,663, no sample at the cap; after stop no voice gated, the queue empty.
+- Bug found and fixed on the way: the engine applied commands (a live note) before reading the song's voice settings, so
+  the first live note started with the previous block's settings. Settings are now read first.
+- Cost (host, relative to the default demo): effects all at 100 x1.6, harmony x1.45, on-beat x1.05, source + ANIMAL x1.1,
+  everything at once x2.4. Device estimate from the owner's 19 % (0.5, voice only): about 30 % with typical effects, about
+  45 % with absolutely everything at maximum. The reverb runs at half rate and the LFOs update every 8/16 frames to get there.
+
+### Device
+- Build: image 183,788 B, RAM .data+.bss 35,492 B, .pool 254,784 of 344,064 B (effects 147 KB, band delay 64 KB, mix buffers).
+- fm1-emu: long presses open SOURCE, FX DEEP, ARTICULATION, HARMONY (each with its four-knob list); every new knob shows its
+  picture; stepped knobs step (DLY TIME 1/8., 1/8; INTERVAL OFF, -12, +3, +4, +5; HARM VOICE MIKU -> LOW); short presses keep
+  their job (SEL: next language; LFO: the LFO bank). Playing with harmony, on-beat and the source layer: emulator CPU 7-8 %,
+  output peak 8,911, no clip, stereo. emu_smoke unchanged.
+

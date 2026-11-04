@@ -36,6 +36,11 @@ delay follow a squared curve: fine steps at the low end, big moves at the top.
 | ENV | The knobs become ATTACK, RELEASE, SCOOP (slide up into a note), HUMAN (drift, jitter, shimmer). Press again: VOICE |
 | LFO | The knobs become VIBRATO (depth), VIB RATE (3-8 Hz), VIB DELAY, TREMOLO. Press again: VOICE |
 | KNOB 1 / 2 / 3 / 4 | VOICE bank (the default): BREATH, BRIGHT, GLIDE (portamento), LEVEL (the vocal track). The bank's button LED is lit (none for VOICE) |
+| **Hold** SEL (0.4 s) | SOURCE layer (the button blinks): TENSION (soft/breathy below 50, pressed above), FRY (growl an octave down), WHISPER (voice into breath), FORMANT (fine shift between characters, 50 = none) |
+| **Hold** FX | FX DEEP: REV SIZE, DLY TIME (1/16, 1/8T, 1/8, 1/8., 1/4; one step per click), FEEDBACK, CHO RATE (0.1-4 Hz) |
+| **Hold** ENV | ARTICULATION: CONS LEN (25-175 %), CONS LEVEL (0-200 %), VOWEL SPEED (25-175 %), ON BEAT (the vowel on the beat: the band waits up to 66 ms x consonant length, each note starts early by its consonant) |
+| **Hold** LFO | HARMONY: INTERVAL (OFF, -12, +3, +4, +5, +7, +12; one step per click), HARM MIX, DETUNE (0-30 cents), HARM VOICE (its character) |
+| Hold again / short press | Hold the same button again: back to VOICE. A short press goes to that button's normal bank (or, SEL, the next language) |
 | ALGORITHM | Character (formant size): DEEP, LOW, MIKU, YOUNG, TINY |
 | PRESETS | Tempo, 40-240 BPM |
 | Key | Sings the selected syllable |

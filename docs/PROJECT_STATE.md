@@ -24,6 +24,8 @@ Legend: **done** (emulator/host-verified), **partial**, **missing**. Nothing is 
 - done (voice home, 2026-11-04): attack/release, scoop, human, vibrato depth/rate/delay, tremolo editable on STAGE (knob
   banks), effects (chorus, delay, reverb, drive), character (formant size, 5 steps), languages (JAPANESE, ANIMAL babble,
   SCAT, VOWELS), syllable wheel; all saved in the song (MKS2 v2).
+- done (2026-11-04): hold-a-button layers: SOURCE (tension, fry, whisper, fine formant), FX DEEP, ARTICULATION (consonant
+  length/level, vowel speed, vowels on the beat), HARMONY (a second voice at an interval).
 - partial: phoneme
   transitions (glides, nasals) are basic; syllable timing: the consonant starts on the beat, so the vowel lands 30–60 ms
   late (fix: start VOCAL notes `fv_cons_ms()` early in the sequencer).

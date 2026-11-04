@@ -30,6 +30,126 @@ static double f0(const int32_t *x, uint32_t n) {   /* autocorrelation pitch, 150
     return 44100.0 / best;
 }
 static int32_t peak(const int32_t *x, uint32_t n) { int32_t p = 0; for (uint32_t i = 0; i < n; i++) if (abs(x[i]) > p) p = abs(x[i]); return p; }
+/* ---- the hold-a-button layers: SOURCE, FX DEEP, ARTICULATION, HARMONY ---- */
+static double pw(const int32_t *x, uint32_t a, uint32_t n, double f) {   /* Hann-windowed power at f, left channel */
+    double re = 0, im = 0;
+    for (uint32_t i = 0; i < n; i++) { double w = .5 - .5 * cos(2 * M_PI * i / n); re += w * x[2 * (a + i)] * cos(2 * M_PI * f * i / 44100); im += w * x[2 * (a + i)] * sin(2 * M_PI * f * i / 44100); }
+    return re * re + im * im;
+}
+static double cen(const int32_t *x, uint32_t a, double f0, int nh) {    /* harmonic spectral centroid */
+    double s = 0, m = 0;
+    for (int h = 1; h <= nh; h++) { double p = pw(x, a, 8192, f0 * h); s += p; m += p * f0 * h; }
+    return m / s;
+}
+static void live(uint32_t note, uint32_t mora, uint32_t frames) {       /* fresh engine, one held live note, render */
+    int32_t o[512];
+    en_init(&en, &g); memset((void *)en.pan, 64, NTRK);
+    en_post(&en, EN_ON, TR_VOCAL, note, mora);
+    memset(o, 0, sizeof o); en_render(&en, o, 256);
+    render(frames);
+}
+static double rmsx(const int32_t *x, uint32_t a, uint32_t n) { double s = 0; for (uint32_t i = a; i < a + n; i++) s += (double)x[2 * i] * x[2 * i]; return sqrt(s / n); }
+static void t_layers(void) {
+    Voice d; double c0, c1, c2, r0, r1;
+    sg_voice_default(&d);
+    song_demo(&g); g.vx = d;
+    for (int i = 0; i < NTRK; i++) g.trk[i].solo = 0;
+    printf("layers:\n");
+    /* SOURCE: tension darker below 50, brighter above */
+    g.vx.tens = 0; live(55, 1, 12000); c0 = cen(buf, 3000, 195.998, 40); free(buf);
+    g.vx.tens = 50; live(55, 1, 12000); c1 = cen(buf, 3000, 195.998, 40); free(buf);
+    g.vx.tens = 100; live(55, 1, 12000); c2 = cen(buf, 3000, 195.998, 40); free(buf);
+    printf("  tension 0/50/100: centroid %.0f %.0f %.0f Hz\n", c0, c1, c2);
+    CHECK(c0 < c1 - 30 && c2 > c1 + 30, "tension does not darken / brighten");
+    g.vx.tens = 50;
+    /* fry: energy at f0/2 */
+    live(55, 1, 12000); r0 = pw(buf, 3000, 8192, 98) / pw(buf, 3000, 8192, 196); free(buf);
+    g.vx.fry = 80; live(55, 1, 12000); r1 = pw(buf, 3000, 8192, 98) / pw(buf, 3000, 8192, 196); free(buf); g.vx.fry = 0;
+    printf("  fry 80: power at f0/2 re f0 %.4f -> %.4f\n", r0, r1);
+    CHECK(r1 > 20 * r0 && r1 > 0.005, "fry adds no subharmonic");
+    /* whisper: no pitch left, level kept */
+    live(55, 1, 12000); r0 = rmsx(buf, 3000, 8192);
+    { double a = pw(buf, 3000, 8192, 196); free(buf);
+      g.vx.whsp = 100; live(55, 1, 12000); r1 = rmsx(buf, 3000, 8192);
+      double b = pw(buf, 3000, 8192, 196), tot = 0; for (int h = 1; h < 60; h++) tot += pw(buf, 3000, 8192, 196.0 * h + 98); free(buf); g.vx.whsp = 0;
+      printf("  whisper 100: f0 power %.3g -> %.3g, level %+.1f dB\n", a, b, 20 * log10(r1 / r0));
+      CHECK(b < a / 100 && tot > 0, "whisper still pitched"); CHECK(20 * log10(r1 / r0) > -12 && 20 * log10(r1 / r0) < 3, "whisper level"); }
+    /* formant fine shift: brightness rises with it (G2, averaged over the vowels) */
+    { double c[3]; static const uint8_t fm[3] = { 0, 50, 100 };
+      for (int k = 0; k < 3; k++) { c[k] = 0; g.vx.fmt = fm[k]; for (int w = 1; w <= 5; w++) { live(43, (uint32_t)w, 20000); c[k] += cen(buf, 10000, 97.9989, 79) / 5; free(buf); } }
+      g.vx.fmt = 50;
+      printf("  formant 0/50/100: %.0f %.0f %.0f Hz\n", c[0], c[1], c[2]);
+      CHECK(c[0] < c[1] && c[1] < c[2], "formant shift not monotonic"); }
+    /* FX DEEP: delay time 1/16 vs 1/4 at 120 BPM (125 vs 500 ms); reverb size makes a longer tail */
+    { uint32_t at[2]; static const uint8_t dt[2] = { 0, 100 };
+      g.bpm = 120; g.vx.dly = 100; g.vx.dfb = 0;
+      for (int k = 0; k < 2; k++) {
+          int32_t o[512]; double best = 0; at[k] = 0;
+          g.vx.dtime = dt[k];
+          en_init(&en, &g); memset((void *)en.pan, 64, NTRK);
+          en_post(&en, EN_ON, TR_VOCAL, 60, 1); memset(o, 0, sizeof o); en_render(&en, o, 256);
+          render(1764); free(buf); en_post(&en, EN_OFF, TR_VOCAL, 0, 0); render(44100);
+          for (uint32_t i = 2400; i + 441 < 44100; i += 441) { double r = rmsx(buf, i, 441); if (r > best) { best = r; at[k] = i + 256 + 1764; } }   /* from 100 ms: past the dry note */
+          free(buf);
+      }
+      printf("  delay 1/16 and 1/4 at 120 BPM: first echo at %.0f and %.0f ms after the note\n", at[0] / 44.1, at[1] / 44.1);
+      CHECK(at[0] / 44.1 > 110 && at[0] / 44.1 < 180 && at[1] / 44.1 > 480 && at[1] / 44.1 < 560, "delay divisions");
+      g.vx.dly = 0; g.vx.dfb = d.dfb; g.vx.dtime = d.dtime; g.bpm = 148; }
+    { double t[2]; static const uint8_t rs[2] = { 0, 100 };
+      g.vx.rev = 100;
+      for (int k = 0; k < 2; k++) { int32_t o[512];
+          g.vx.rsize = rs[k]; en_init(&en, &g); en_post(&en, EN_ON, TR_VOCAL, 60, 1); memset(o, 0, sizeof o); en_render(&en, o, 256);
+          render(8820); free(buf); en_post(&en, EN_OFF, TR_VOCAL, 0, 0); render(88200); t[k] = rmsx(buf, 44100, 8820); free(buf); }
+      printf("  reverb size 0/100: tail 1 s after the note %.1f / %.1f rms\n", t[0], t[1]);
+      CHECK(t[1] > 10 * t[0] + 1, "reverb size does not lengthen the tail");
+      g.vx.rev = 0; g.vx.rsize = d.rsize; }
+    /* ARTICULATION: consonant length scales the consonant; level 0 silences the k burst */
+    { uint32_t n[2]; static const uint8_t cl[2] = { 0, 100 };
+      for (int k = 0; k < 2; k++) { int32_t o[32]; g.vx.clen = cl[k]; en_init(&en, &g); en_post(&en, EN_ON, TR_VOCAL, 60, 6);
+          n[k] = 0; memset(o, 0, sizeof o); en_render(&en, o, 16); while (fv_cons(&en.fv) && n[k] < 1000) { memset(o, 0, sizeof o); en_render(&en, o, 16); n[k]++; } }
+      g.vx.clen = 50;
+      printf("  consonant length 0/100: k lasts %u / %u blocks\n", (unsigned)n[0], (unsigned)n[1]);
+      CHECK(n[1] > 5 * n[0] && n[0] > 0, "consonant length"); }
+    { double b[2]; static const uint8_t cv[2] = { 50, 0 };
+      for (int k = 0; k < 2; k++) { g.vx.clev = cv[k]; live(60, 6, 4000); b[k] = rmsx(buf, 300, 900); free(buf); }   /* 7..27 ms: the k burst */
+      g.vx.clev = 50;
+      printf("  consonant level 50/0: k burst %.0f / %.0f rms\n", b[0], b[1]);
+      CHECK(b[1] < b[0] / 10, "consonant level 0 keeps the burst"); }
+    /* on-beat: the vowel of "ka" lands on the kick */
+    { double gap[2]; static const uint8_t ob[2] = { 0, 100 };
+      for (int k = 0; k < 2; k++) {
+          int32_t kick = -1, vow = -1; double ref;
+          Song h; sg_init(&h); h.bpm = 120; h.vx = d; h.vx.obeat = ob[k]; h.loop = 0;
+          { Step v = {{ 64, 8, 6, 12 }}, dr = {{ D_KICK, 0, 0, 0 }}; sg_set_step(&h, TR_VOCAL, 0, 0, &v); sg_set_step(&h, TR_DRUMS, 0, 0, &dr); }
+          sg_row_insert(&h, 0); sg_row_set(&h, 0, TR_VOCAL, 0); sg_row_set(&h, 0, TR_DRUMS, 0);
+          h.trk[TR_DRUMS].mute = 1; en_init(&en, &h); en_post(&en, EN_PLAY, 0, 0, 0); render(22050);   /* vocal alone */
+          ref = rmsx(buf, 13000, 2000);
+          for (uint32_t i = 0; i + 88 < 22050; i += 22) if (rmsx(buf, i, 88) > ref * 0.75) { vow = (int32_t)i; break; }   /* the vowel: above the k burst (about -7 dB) */
+          free(buf);
+          h.trk[TR_DRUMS].mute = 0; h.trk[TR_VOCAL].mute = 1; en_init(&en, &h); en_post(&en, EN_PLAY, 0, 0, 0); render(22050);   /* the kick alone */
+          for (uint32_t i = 0; i < 22050; i++) if (abs(buf[2 * i]) > 300) { kick = (int32_t)i; break; }
+          free(buf);
+          gap[k] = (vow - kick) / 44.1;
+      }
+      printf("  on-beat 0/100: vowel of ka after the kick %.1f / %.1f ms\n", gap[0], gap[1]);
+      CHECK(gap[0] > 20 && fabs(gap[1]) < 8, "on-beat does not put the vowel on the beat"); }
+    /* HARMONY: a fifth up is there; all at once stays under the cap; nothing sticks with on-beat */
+    { double a, b;
+      live(60, 1, 12000); a = pw(buf, 3000, 8192, 261.63 * 1.4983); free(buf);
+      g.vx.hint = 80; g.vx.hmix = 100; live(60, 1, 12000); b = pw(buf, 3000, 8192, 261.63 * 1.4983); free(buf);   /* 80 -> +7 */
+      printf("  harmony +7: power at the fifth x%.0f\n", b / a);
+      CHECK(b > 30 * a, "no harmony at the fifth"); }
+    { int32_t p;
+      g.vx.hint = 100; g.vx.hmix = 100; g.vx.cho = g.vx.dly = g.vx.rev = g.vx.drv = g.vx.trem = 100; g.vx.obeat = 100; g.vx.fry = 100; g.vx.tens = 100;
+      for (int i = 0; i < NTRK; i++) g.trk[i].level = 127;
+      en_init(&en, &g); memset((void *)en.pan, 64, NTRK); en_post(&en, EN_PLAY, 0, 0, 0); render(44100 * 20);
+      p = peak(buf, 2 * 44100 * 20); free(buf);
+      en_post(&en, EN_STOP, 0, 0, 0); render(44100 * 2); free(buf);
+      printf("  everything at 100 over 20 s of the demo: peak %d; after stop: voice gated %d/%d, queue %u\n", p, en.fv.gated, en.fv2.gated, (unsigned)en.vqn);
+      CHECK(p <= 32767, "peak %d", p);
+      CHECK(!en.fv.gated && !en.fv2.gated && en.vqn == 0, "a note is stuck after stop");
+      song_demo(&g); }
+}
 int main(void) {
     int32_t pk; uint32_t i, steps = 0;
     song_demo(&g);
@@ -137,6 +257,7 @@ int main(void) {
         g.vx.lang = VL_JP;
         free(ref);
     }
+    t_layers();
     printf(fails ? "engine: %d FAILED\n" : "engine: all ok\n", fails);
     return fails != 0;
 }

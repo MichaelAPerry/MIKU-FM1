@@ -17,10 +17,11 @@ void sg_init(Song *g){
     for(t=0;t<NTRK;t++)for(p=0;p<NPAT;p++)for(s=0;s<NSTEP;s++)for(k=0;k<4;k++)g->pat[t][p][s].v[k]=0;
 }
 void sg_voice_default(Voice *v){
-    static const uint8_t d[16]={13,35,40,63,50,45,0,0,0,0,0,VC_MIKU,VL_JP,0,0,0};   /* = fvoice's 0.5 settings: attack 8 ms, release 61 (60), scoop 40, human 80, 5.5 Hz, 202 ms (200) */
+    static const uint8_t d[32]={13,35,40,63,50,45,0,0,0,0,0,VC_MIKU,VL_JP,0,0,0,   /* = fvoice's 0.5 settings: attack 8 ms, release 61 (60), scoop 40, human 80, 5.5 Hz, 202 ms (200) */
+        50,0,0,50, 42,70,50,20, 50,50,50,0, 0,70,8,VC_MIKU};                       /* neutral source; reverb 0.80, dotted eighth, chorus 0.9 Hz; 100 % articulation; harmony off */
     uint8_t *p=(uint8_t *)v;
     uint32_t i;
-    for(i=0;i<16;i++)p[i]=d[i];
+    for(i=0;i<32;i++)p[i]=d[i];
 }
 int sg_step_ok(int trk, const Step *s){
     const uint8_t *v=s->v;

@@ -29,6 +29,10 @@ static void load(FvVoice *v, int snap, int wz) {
     int sh = v->cshp == 15 ? v->vowel : v->cshp, c = v->chr < FV_NCHR ? v->chr : FV_CHR0;   /* c: voice character (formant size) */
     for (int i = 0; i < FV_NR; i++) for (int j = 0; j < 3; j++) {
         int32_t t0 = fv_vow[c][0][sh][i][j], t1 = fv_vow[c][1][sh][i][j];
+        if (v->chf && c + 1 < FV_NCHR) {          /* fine formant shift: toward the next character (a convex mix: stable) */
+            t0 += ((fv_vow[c + 1][0][sh][i][j] - t0) * v->chf) / 100;
+            t1 += ((fv_vow[c + 1][1][sh][i][j] - t1) * v->chf) / 100;
+        }
         int32_t t = (t0 + (((t1 - t0) * wz) >> 4)) * 16;
         int32_t d = t - v->cur[i][j], k = ((d >> 4) * (int32_t)v->km) >> 8;
         v->cur[i][j] = snap ? t : v->cur[i][j] + (k ? k : d > 0 ? 1 : d < 0 ? -1 : 0);   /* arrives exactly */
@@ -47,12 +51,17 @@ static void enter(FvVoice *v) {                 /* load phase v->cph of class v-
     const uint8_t *p = CPH(0, 0);
     const uint16_t *q = CPN(0, 0);
     int32_t vs = 8192 + v->velg * 193;
-    if (v->cph < FV_NPH && CPH(v->cons, v->cph)[0]) { p = CPH(v->cons, v->cph); q = CPN(v->cons, v->cph); v->cleft = p[0]; }
+    if (v->cph < FV_NPH && CPH(v->cons, v->cph)[0]) {
+        p = CPH(v->cons, v->cph); q = CPN(v->cons, v->cph); v->cleft = p[0];
+        if (p[0] != 255 && v->cscale != 100) { int32_t n = (p[0] * v->cscale + 50) / 100; v->cleft = (uint8_t)(n < 1 ? 1 : n > 254 ? 254 : n); }
+    }
     else v->cons = 0;
     v->cshp = p[1] & 15; v->lip = p[1] >> 6 & 1; v->tail = p[1] >> 7; v->km = fv_kmt[p[1] >> 4 & 3];
+    if (v->vscale != 100) { int32_t k = v->km * v->vscale / 100; v->km = (uint16_t)(k < 1 ? 1 : k > 2048 ? 2048 : k); }
     v->vgt = p[2] << 9; v->clt = p[3] << 8;
     if (v->cshp == FV_NAS0 || v->cshp == FV_NAS1) { v->clt = (v->clt * fv_nbo[clampi((v->ptgt * 3) >> 10, 0, 127)]) >> 12; if (v->clt > 40000) v->clt = 40000; }
     v->nlt = (int32_t)(q[0] * vs) >> 14; v->apt = q[1] << 1; v->nkd = q[2]; v->nab = q[2] != 0;
+    if (v->clevel != 100) { v->nlt = v->nlt * v->clevel / 100; v->apt = v->apt * v->clevel / 100; }
     if (p[4]) for (int i = 0; i < 3; i++) v->nbc[i] = fv_nbt[((p[4] - 1) * 5 + v->vowel) * 3 + i];
 }
 void fv_init(FvVoice *v) {
@@ -60,6 +69,7 @@ void fv_init(FvVoice *v) {
     v->vib_rate = 55; v->vib_delay = 150; v->porta = 60; v->attack = 8; v->release = 60;
     v->breath = 6; v->bright = 100; v->noise = 0x12345678u; v->rng = 0x9E3779B9u; v->velg = 100;
     v->human = 80; v->scoop = 40; v->scoop_ms = 75; v->chr = FV_CHR0;
+    v->tension = 50; v->cscale = v->vscale = 100; v->clevel = 100;
     v->vg = v->vgt = 65536; v->cl = v->clt = 32768; v->km = FV_KM;
     load(v, 1, 0);
 }
@@ -123,7 +133,7 @@ static void block(FvVoice *v) {
     if (v->ovd && !--v->ovd) { v->ovt = v->ova; v->ova = 0; }
     if (v->ovt) v->ovt = decay(v->ovt, fv_kpor[20]);
     v->ovo += (v->ovt - v->ovo) >> 2;
-    int32_t p = clampi(v->pcur + vib + jit + v->sc + v->ovo, 0, PMAX);
+    int32_t p = clampi(v->pcur + vib + jit + v->sc + v->ovo + v->tune, 0, PMAX);
     int32_t i = (p >> 4) & 255;
     v->inc = (uint32_t)(fv_inc[i] + (((int32_t)(fv_inc[i + 1] - fv_inc[i]) * (p & 15)) >> 4)) << (p >> 12);
     int32_t wz = clampi((v->pcur - P_C5) >> 8, 0, 16);
@@ -159,20 +169,28 @@ void fv_render(FvVoice *v, int32_t *out, uint32_t n) {
         int32_t mx = clampi((v->pcur - P_C5) >> 7, 0, 32);   /* sharp -> soft pulse crossfade */
         int32_t kb = 8000 + v->bright * 190, bg = v->breath, pe = v->bright >> 2;
         kb -= (kb * sw) >> 7; pe -= (pe * sw) >> 6;
+        if (v->tension < 50) { int32_t t = 50 - v->tension; mx = clampi(mx + t * 32 / 50, 0, 32); kb -= kb * t / 100; }   /* softer, darker */
+        else if (v->tension > 50) { int32_t t = v->tension - 50; pe += t * 2; kb = clampi(kb + t * 200, 0, 32767); }   /* pressed: more edge */
+        int32_t fa = 32768 - v->fry * 229, wv = 32768 - v->whisper * 327, wg = v->whisper * 58;   /* fry: odd pulses x0.3 at 100; whisper */
+        uint8_t fc = v->fcyc;
         uint32_t ph = v->ph, inc = v->inc, ns = v->noise;
         int32_t lp = v->lp, g = v->gcur, sp = v->sp, np = v->np, vg = v->vg, vgs = v->vgs, ap = v->ap, aps = v->aps;
         int32_t nl = v->nl, nls = v->nls, ny1 = v->ny1, ny2 = v->ny2, nz0 = v->nbc[0], nz1 = v->nbc[1], nz2 = v->nbc[2], nzon = v->nzon;
         for (uint32_t f = 0; f < m; f++, out += 2) {
             ph += inc;
+            if (ph < inc) fc ^= 1;                       /* a new glottal period */
             uint32_t gi = ph >> 24; int32_t fr = (int32_t)((ph >> 16) & 255);
             int32_t a = fv_glot[gi], s = a + (((fv_glot[gi + 1] - a) * fr) >> 8);
             int32_t b2 = fv_glot2[gi], s2 = b2 + (((fv_glot2[gi + 1] - b2) * fr) >> 8);
             s = (s + (((s2 - s) * mx) >> 5)) >> 2;
+            if (fc && fa != 32768) s = (s * fa) >> 15;
             lp += ((s + (((s - sp) * pe) >> 6) - lp) * kb) >> 15; sp = s;
             ns ^= ns << 13; ns ^= ns >> 17; ns ^= ns << 5;
             int32_t nz = ((int16_t)(ns >> 16) * (a < 0 ? -a : a)) >> 15;   /* noise gated by the glottal phase, */
             int32_t wn = (int16_t)(ns >> 16);
-            int32_t x = ((lp * (vg >> 4)) >> 12) + (((nz - np) * bg) >> 9) + ((wn * (ap >> 4)) >> 12), sum = 0; np = nz;   /* first-difference high-passed; voicing; aspiration */
+            int32_t vo = (lp * (vg >> 4)) >> 12;
+            if (wg) vo = ((vo * wv) >> 15) + ((wn * wg) >> 15);   /* whisper: voicing out, breath in */
+            int32_t x = vo + (((nz - np) * bg) >> 9) + ((wn * (ap >> 4)) >> 12), sum = 0; np = nz;   /* first-difference high-passed; voicing; aspiration */
             vg += vgs; ap += aps;
             for (int q = 0; q < FV_NR; q++) {
                 int32_t y = (v->r[q].g * x + v->r[q].a1 * v->y1[q] + v->r[q].a2 * v->y2[q]) >> 14;
@@ -188,6 +206,7 @@ void fv_render(FvVoice *v, int32_t *out, uint32_t n) {
             }
             out[0] += o; out[1] += o;
         }
+        v->fcyc = fc;
         v->ph = ph; v->noise = ns; v->lp = lp; v->gcur = g; v->sp = sp; v->np = np; v->vg = vg; v->ap = ap; v->ny1 = ny1; v->ny2 = ny2;
         if (nzon) v->nl = nl;
     }

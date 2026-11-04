@@ -15,13 +15,19 @@
 #include "firmware/audio/vfx/vfx.h"
 enum { EN_PLAY = 1, EN_STOP, EN_BPM, EN_ON, EN_OFF, EN_VOW, EN_PANIC };   /* PLAY a=row b=loop-one-row; BPM a; ON a=trk b=note c=mora (VOCAL) / unused; OFF a=trk b=note; VOW a=mora */
 #define EN_QN 32u
+typedef struct { uint32_t due; uint8_t on, note, mora, vel; uint16_t id; } EnVq;   /* a delayed vocal note event (on-beat) */
+#define EN_VQN 16u
 typedef struct {
-    Seq sq; FvVoice fv; ChSynth ch; BsSynth bs; DrKit dr;
+    Seq sq; FvVoice fv, fv2; ChSynth ch; BsSynth bs; DrKit dr;   /* fv2: the harmony voice */
     const Song *g;
     SqEvent ev[SQ_EVMAX];
     int32_t vl, vr;
     uint8_t pre[NTRK], vh, up, vnote, vvel, vmora;
     uint32_t bt, rng;                         /* ANIMAL / SCAT language: frames to the next babbled syllable; its random state */
+    uint32_t clk, bw;                         /* frames rendered; band delay write position */
+    EnVq vq[EN_VQN];                          /* on-beat: vocal note events waiting for their moment */
+    uint16_t vid, vcur;                       /* note ids: the newest, the one sounding (a delayed note-off ends only its own note) */
+    uint8_t vqn, bdon;
     volatile uint8_t pan[NTRK];               /* 0..127, 64 centre; main loop writes (device setting, not in the song) */
     volatile uint32_t q[EN_QN], qh, qt;       /* command ring: main writes q[qh] then qh; ISR reads q[qt] then qt */
     volatile uint32_t lock, ack;              /* main: lock=1 and wait ack==1: the ISR no longer runs the sequencer or reads commands */

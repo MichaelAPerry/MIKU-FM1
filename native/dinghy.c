@@ -93,20 +93,46 @@ static Song gbak;                                   /* GEN: the song before the 
 static GenCfg gcf={GS_POP,0,GK_MAJOR,0,1};
 /* STAGE / DANCE: the voice's home. FX / ENV / LFO pick what the four knobs do (press again: back to VOICE), SEL the language,
    SELECT the syllable, ALGORITHM the character. Every value lives in the song (sg.trk[0], sg.vx), so it is saved with it. */
-enum { BK_VOICE, BK_FX, BK_ENV, BK_LFO };
-static uint32_t bank;
+enum { BK_VOICE, BK_FX, BK_ENV, BK_LFO, BK_SRC, BK_FXD, BK_ART, BK_HAR, BK_N };   /* the last four: hold SEL / FX / ENV / LFO */
+static uint32_t bank,lp_t[4],lp_on[4];                    /* lp_*: when FX/SEL/ENV/LFO went down; 1 pressed, 2 long press done */
 static char popbuf[28];
-static const char *const bkname[4]={"VOICE","FX","ENV","LFO"};
-static const char *const knm[4][4]={{"BREATH","BRIGHT","GLIDE","LEVEL"},{"CHORUS","DELAY","REVERB","DRIVE"},
-    {"ATTACK","RELEASE","SCOOP","HUMAN"},{"VIBRATO","VIB RATE","VIB DELAY","TREMOLO"}};
-static const char *const ksh[4][4]={{"BRE","BRI","GLI","LEV"},{"CHO","DLY","REV","DRV"},{"ATK","REL","SCP","HUM"},{"DEP","RAT","DLY","TRM"}};
+static const char *const bkname[BK_N]={"VOICE","FX","ENV","LFO","SOURCE","FX DEEP","ARTIC","HARMONY"};
+static const char *const knm[BK_N][4]={{"BREATH","BRIGHT","GLIDE","LEVEL"},{"CHORUS","DELAY","REVERB","DRIVE"},
+    {"ATTACK","RELEASE","SCOOP","HUMAN"},{"VIBRATO","VIB RATE","VIB DELAY","TREMOLO"},{"TENSION","FRY","WHISPER","FORMANT"},
+    {"REV SIZE","DLY TIME","FEEDBACK","CHO RATE"},{"CONS LEN","CONS LEVEL","VOWEL SPEED","ON BEAT"},{"INTERVAL","HARM MIX","DETUNE","HARM VOICE"}};
+static const char *const ksh[BK_N][4]={{"BRE","BRI","GLI","LEV"},{"CHO","DLY","REV","DRV"},{"ATK","REL","SCP","HUM"},{"DEP","RAT","DLY","TRM"},
+    {"TEN","FRY","WHS","FMT"},{"SIZ","TIM","FBK","RAT"},{"LEN","LVL","VOW","BT"},{"INT","MIX","DET","VOX"}};
 static const char *const chname[VC_N]={"DEEP","LOW","MIKU","YOUNG","TINY"};
 static const char *const lgname[VL_N]={"JAPANESE","ANIMAL","SCAT","VOWELS"};
 static uint8_t *kptr(uint32_t b,uint32_t k){
     Voice *v=&sg.vx;
-    uint8_t *t[4][4]={{&sg.trk[0].breath,&sg.trk[0].bright,&sg.trk[0].porta,&sg.trk[0].level},{&v->cho,&v->dly,&v->rev,&v->drv},
-        {&v->atk,&v->rel,&v->scoop,&v->human},{&sg.trk[0].vib,&v->vrate,&v->vdel,&v->trem}};
-    return t[b][k];
+    uint8_t *t[BK_N][4]={{&sg.trk[0].breath,&sg.trk[0].bright,&sg.trk[0].porta,&sg.trk[0].level},{&v->cho,&v->dly,&v->rev,&v->drv},
+        {&v->atk,&v->rel,&v->scoop,&v->human},{&sg.trk[0].vib,&v->vrate,&v->vdel,&v->trem},{&v->tens,&v->fry,&v->whsp,&v->fmt},
+        {&v->rsize,&v->dtime,&v->dfb,&v->crate},{&v->clen,&v->clev,&v->vspd,&v->obeat},{&v->hint,&v->hmix,&v->hdet,&v->hchr}};
+    return t[b%BK_N][k&3u];
+}
+/* knobs that move in steps: delay time (5 divisions), harmony interval (7, the first = off); harmony voice is a character 0..4 */
+static const char *const dtname[5]={"1/16","1/8T","1/8","1/8.","1/4"};
+static const char *const hiname[7]={"OFF","-12","+3","+4","+5","+7","+12"};
+static uint32_t ksteps(uint32_t b,uint32_t k){return b==BK_FXD&&k==1u?5u:b==BK_HAR&&k==0u?7u:0u;}
+static uint32_t kmax(uint32_t b,uint32_t k){return b==BK_VOICE&&k==3u?127u:b==BK_HAR&&k==3u?VC_N-1u:100u;}
+static uint32_t modified;
+static void tweak(uint8_t *v,int32_t d,int32_t lo,int32_t hi);
+static int32_t cl(int32_t v,int32_t lo,int32_t hi);
+static void cat(char *d,const char *s);
+static void catn(char *d,uint32_t n);
+static void kturn(uint32_t b,uint32_t k,int32_t d){
+    uint8_t *v=kptr(b,k);
+    uint32_t n=ksteps(b,k);
+    if(n){int32_t i=cl((int32_t)(*v*n/101u)+(d>0?1:-1),0,(int32_t)n-1);*v=(uint8_t)(((uint32_t)i*101u+n-1u)/n);modified=1;}   /* the step's first value */
+    else tweak(v,kmax(b,k)>4u?d*2:d,0,(int32_t)kmax(b,k));
+}
+static void ktext(uint32_t b,uint32_t k,char *o){          /* the value as shown */
+    uint32_t v=*kptr(b,k),n=ksteps(b,k);
+    o[0]=0;
+    if(n)cat(o,n==5u?dtname[v*5u/101u]:hiname[v*7u/101u]);
+    else if(b==BK_HAR&&k==3u)cat(o,chname[v%VC_N]);
+    else catn(o,v);
 }
 static uint32_t take,take_mod,gvar;
 static uint8_t enc[SONG_ENC_SIZE];                 /* slot I/O buffer */
@@ -116,7 +142,7 @@ static volatile uint32_t pub_peak;
 static Step clip[NSTEP];
 static uint32_t clip_n,clip_t,anchor,arp_c;
 static int32_t oct;
-static uint32_t page,trk,crow,cstep,top,modified,playing,ppos,prev_keys,dirty,full,cpu_ms,cpu_pct,last_act,
+static uint32_t page,trk,crow,cstep,top,playing,ppos,prev_keys,dirty,full,cpu_ms,cpu_pct,last_act,
     pend,pend_t,menu,menu_slot,sv_t,sv_c,sv_on,toast_until,toast_err,pv_off,u_kind,u_trk,u_pat,u_ms,lk_t0,
     face_cur,face_ms,blink_until,next_blink,happy_until;
 static const char *toast_s;
@@ -251,8 +277,9 @@ static void after_load(void){
     en_post(&en,EN_PANIC,0,0,0);
     mk(0x3Fu);full=1;
 }
-static uint32_t sload(uint32_t s){                         /* a song in slot s into enc: its size (v2 or v1), 0 = none */
+static uint32_t sload(uint32_t s){                         /* a song in slot s into enc: its size (v3, v2 or v1), 0 = none */
     if(!slot_load(s,enc,SONG_ENC_SIZE))return SONG_ENC_SIZE;
+    if(!slot_load(s,enc,SONG_ENC_V2))return SONG_ENC_V2;
     if(!slot_load(s,enc,SONG_ENC_V1))return SONG_ENC_V1;
     return 0;
 }
@@ -591,11 +618,17 @@ static void ring(int32_t cx,int32_t cy,int32_t r,int32_t v,int32_t mx){   /* 270
         cv_rect(cx+((r*icos(a))>>15)-1,cy-((r*isin(a))>>15)-1,3,3,t*mx<=v*48&&v?C_PNK:C_DIMR);
     }
 }
-static void graph(uint32_t id,int32_t v){                  /* id: bank*4+knob, 16 VS_CHR, 17 VS_LANG, 18 VS_BPM; v 0..100 */
+static int32_t fpeaks(int32_t i,int32_t pct){             /* three formant peaks, positions scaled by pct % */
+    static const int16_t pk[3]={34,74,124},ht[3]={30,24,16};
+    int32_t j,best=0;
+    for(j=0;j<3;j++){int32_t c=pk[j]*pct/100,dd=i-c,h=ht[j]-(dd<0?-dd:dd)*2/3;if(h>best)best=h;}
+    return best;
+}
+static void graph(uint32_t id,int32_t v){                  /* id: bank*4+knob (0..31), 40 character, 41 language, 42 tempo; v 0..100 */
     enum{GX=64,GY=20,GW=172,GH=34,MID=17};
     int32_t i,p=-1,acc=32767,acc2=0;
     cv_rect(GX,GY,GW,GH,C_PNL);
-    if(id==17){static const char *const ex[VL_N]={"ka ki ku ke ko","ba-mi-ko-ne-pu!","doo-ba da-bi","a  i  u  e  o"};cv_text(GX+8,GY+9,&FONT_S,ex[sg.vx.lang%VL_N],C_TEL);return;}
+    if(id==41){static const char *const ex[VL_N]={"ka ki ku ke ko","ba-mi-ko-ne-pu!","doo-ba da-bi","a  i  u  e  o"};cv_text(GX+8,GY+9,&FONT_S,ex[sg.vx.lang%VL_N],C_TEL);return;}
     for(i=0;i<GW;i++){
         int32_t y=-1,fill=0,y2=-1;
         switch(id){
@@ -616,11 +649,31 @@ static void graph(uint32_t id,int32_t v){                  /* id: bank*4+knob, 1
         case 13: y=MID+(10*isin(i*(2+v/7))>>15);break;                                        /* vibrato rate */
         case 14: {int32_t d=v*GW/130;if(i<d)y=MID;else{acc2+=acc2<32767-1100?1100:0;y=MID+(((10*acc2)>>15)*isin((i-d)*6)>>15);}}break;   /* vibrato delay: flat, then it fades in */
         case 15: fill=1;y=(GH-2)-(GH-2)*v/100*((32768+isin(i*5))>>1)/32768;break;           /* tremolo */
-        case 16: {static const uint8_t f[VC_N]={84,92,100,108,118};int32_t j,best=0;   /* character: formant peaks move */
-                  static const int16_t pk[3]={34,74,124},ht[3]={30,24,16};
-                  for(j=0;j<3;j++){int32_t c=pk[j]*f[sg.vx.chr%VC_N]/100,dd=i-c,h=ht[j]-(dd<0?-dd:dd)*2/3;if(h>best)best=h;}
-                  y=best;fill=1;}break;
-        case 18: fill=1;y=(i%(600/(v?v:1)+1)<2)?GH-4:-1;break;                              /* tempo: beats */
+        case 40: {static const uint8_t f[VC_N]={84,92,100,108,118};y=fpeaks(i,f[sg.vx.chr%VC_N]);fill=1;}break;   /* character: formant peaks move */
+        case 42: fill=1;y=(i%(600/(v?v:1)+1)<2)?GH-4:-1;break;                              /* tempo: beats */
+        /* SOURCE */
+        case 16: {int32_t x=i%86,cl2=36-v*30/100;                                             /* tension: one glottal pulse, its close sharper */
+                  y=x<50?(GH-3)*(32768-icos(x*128/50))/65536:x<50+cl2?(GH-3)*(32768+icos((x-50)*128/cl2))/65536:0;}break;
+        case 17: if(i%20<4){fill=1;y=(i/20)&1?(GH-2)*(100-v*7/10)/100:GH-2;}break;          /* fry: every other pulse weaker */
+        case 18: y=MID+(((100-v)*12/100)*isin(i*6)>>15)+((int32_t)(hsh((uint32_t)i)%25u)-12)*v/100;break;   /* whisper: the wave into noise */
+        case 19: y=fpeaks(i,100+(v-50)*36/100);fill=1;break;                                  /* formant fine shift */
+        /* FX DEEP */
+        case 20: if(i&1){if(i>1)acc-=acc/(2+v*v/40);y=(GH-4)*acc>>15;fill=1;}break;           /* reverb size: the tail */
+        case 21: {static const uint8_t sp[5]={11,15,22,33,44};int32_t q=sp[v*5/101];if(i%q<3){fill=1;y=i<q?GH-2:(GH-2)/2;}}break;   /* delay time */
+        case 22: {int32_t n=i/24;if(i%24<3){int32_t h=GH-2,j,fb=6000+v*180;for(j=0;j<n;j++)h=h*fb>>15;y=h;fill=1;}}break;   /* feedback */
+        case 23: y=MID+(10*isin(i*(1+v/10))>>15);y2=MID+(10*isin(i*(1+v/10)+40)>>15);break;  /* chorus rate */
+        /* ARTICULATION */
+        case 24: {int32_t w=40*(25+v*3/2)/100;if(i<w){fill=1;y=(int32_t)hsh((uint32_t)i)%(GH/2);}else y=MID+(12*isin((i-w)*8)>>15);}break;   /* consonant length */
+        case 25: if(i<40){fill=1;y=(int32_t)hsh((uint32_t)i)*(v*2)/100*(GH-2)/512;}else y=MID+(10*isin(i*8)>>15);break;   /* consonant level */
+        case 26: if(i<20)y=4;else{acc-=acc/(1+(100-v)*(100-v)/200);y=GH-4-((GH-8)*acc>>15);}break;   /* vowel speed: how fast the vowel arrives */
+        case 27: {int32_t vx2=86+(100-v)*40/100;                                              /* on-beat: the vowel moves onto the beat */
+                  if(i==86||i==87){fill=1;y=GH-1;}else if(i<vx2&&i>=vx2-40){fill=1;y=(int32_t)hsh((uint32_t)i)%(GH/2);}else if(i>=vx2)y=MID+(12*isin((i-vx2)*8)>>15);}break;
+        /* HARMONY */
+        case 28: {static const int8_t st[7]={0,-12,3,4,5,7,12};int32_t sm=st[v*7/101];y=MID-4;   /* interval: the note and its harmony */
+                  if(sm){y2=MID-4+sm*3/2;y2=y2<0?0:y2>GH-2?GH-2:y2;}}break;
+        case 29: fill=1;y=i<86?GH-2:(GH-2)*v/100;break;                                      /* harmony mix: main, harmony */
+        case 30: y=MID+((6*isin(i*6)+6*isin(i*6+(i*v)/40))>>15);break;                        /* detune: the beat between two voices */
+        case 31: {static const uint8_t f[VC_N]={84,92,100,108,118};y=fpeaks(i,f[sg.vx.hchr%VC_N]);fill=1;}break;   /* harmony voice */
         }
         if(y<0)continue;
         if(y>GH-1)y=GH-1;
@@ -637,15 +690,16 @@ static void pg_stage(void){
     if(vis){
         int32_t v,mx=100;
         const char *nm;
-        if(vis_kind==VS_KNOB){uint8_t *pv=kptr(vis_id>>2,vis_id&3u);v=*pv;mx=pv==&sg.trk[0].level?127:100;nm=knm[vis_id>>2][vis_id&3u];}
-        else if(vis_kind==VS_CHR){v=sg.vx.chr*25;nm=chname[sg.vx.chr%VC_N];}
-        else if(vis_kind==VS_LANG){v=(int32_t)sg.vx.lang*33;nm=lgname[sg.vx.lang%VL_N];}
-        else{v=sg.bpm;mx=240;nm="TEMPO";}
+        uint32_t kb2=vis_id>>2,kk=vis_id&3u;
+        if(vis_kind==VS_KNOB){v=*kptr(kb2,kk);mx=(int32_t)kmax(kb2,kk);nm=knm[kb2%BK_N][kk];ktext(kb2,kk,s);}
+        else if(vis_kind==VS_CHR){v=sg.vx.chr;mx=VC_N-1;nm="CHARACTER";s[0]=0;catn(s,sg.vx.chr+1u);}
+        else if(vis_kind==VS_LANG){v=(int32_t)sg.vx.lang;mx=VL_N-1;nm=lgname[sg.vx.lang%VL_N];s[0]=0;catn(s,sg.vx.lang+1u);}
+        else{v=sg.bpm;mx=240;nm="TEMPO";s[0]=0;catn(s,sg.bpm);}
         ring(30,30,22,v,mx);
-        s[0]=0;catn(s,(uint32_t)(vis_kind==VS_CHR?sg.vx.chr+1u:vis_kind==VS_LANG?sg.vx.lang+1u:(uint32_t)v));
         cv_text(30-text_w(&FONT_S,s)/2,22,&FONT_S,s,C_WHITE);
-        cv_text(64,1,&FONT_S,nm,C_TEL);
-        graph(vis_kind==VS_KNOB?vis_id:vis_kind==VS_CHR?16u:vis_kind==VS_LANG?17u:18u,vis_kind==VS_KNOB?v*100/mx:v*100/240);
+        cv_text(64,1,&FONT_S,vis_kind==VS_CHR?chname[sg.vx.chr%VC_N]:nm,C_TEL);
+        if(vis_kind==VS_KNOB && kb2>=BK_SRC)cv_text(236-text_w(&FONT_S,bkname[kb2])-0,1,&FONT_S,bkname[kb2],RGB(150,160,190));
+        graph(vis_kind==VS_KNOB?vis_id:vis_kind==VS_CHR?40u:vis_kind==VS_LANG?41u:42u,vis_kind==VS_KNOB?v*100/mx:vis_kind==VS_BPM?v*100/240:v);
     }else{
         dial();
         if(toast_s && (int32_t)(fm1_ms-toast_until)<0)txt(120,38,&FONT_S,toast_s,toast_err?RGB(255,110,110):RGB(249,207,94),1);
@@ -661,7 +715,8 @@ static void pg_stage(void){
 }
 static void pop(uint32_t kind,uint32_t id,const char *name,uint32_t v){   /* what a control just did: the picture on STAGE, text on DANCE */
     popbuf[0]=0;cat(popbuf,name);
-    if(kind!=VS_LANG){cat(popbuf," ");if(kind==VS_CHR)cat(popbuf,chname[v%VC_N]);else catn(popbuf,v);}
+    if(kind==VS_KNOB){char t[12];ktext(id>>2,id&3u,t);cat(popbuf," ");cat(popbuf,t);}
+    else if(kind!=VS_LANG){cat(popbuf," ");if(kind==VS_CHR)cat(popbuf,chname[v%VC_N]);else catn(popbuf,v);}
     toast(popbuf,0);
     vis_kind=kind;vis_id=id;
 }
@@ -679,9 +734,14 @@ static void dial_step(void){                               /* ease the dial towa
     if(dial_q>=MORA_N*256)dial_q-=MORA_N*256;
     mk(0x20u);
 }
-static void bank_leds(void){
-    uint32_t i;
-    for(i=0;i<4u;i++)fm1_led_key(BTN_FX+i,page<=PG_DANCE?(bank==BK_FX&&i==0)||(bank==BK_ENV&&i==2)||(bank==BK_LFO&&i==3):i==trk);
+static uint32_t led_st;
+static void bank_leds(void){                              /* FX / ENV / LFO lit for their bank; a held-in layer blinks its button */
+    static const uint8_t bt[BK_N]={9,0,2,3,1,0,2,3};
+    uint32_t i,on=bank>=BK_SRC?(fm1_ms/250u)&1u:1u,st=0;
+    for(i=0;i<4u;i++)st|=(page<=PG_DANCE?bank!=BK_VOICE&&i==bt[bank]&&on:i==trk)<<i;
+    if(st==led_st)return;
+    led_st=st;
+    for(i=0;i<4u;i++)fm1_led_key(BTN_FX+i,(st>>i)&1u);
 }
 /* ---- GEN: a take is one generate (REC) or one new phrase (ARP); EDIT keeps it, GLO drops it (back to the song before it) */
 static void gen_go(uint32_t phrase){
@@ -850,19 +910,25 @@ static void app_main(void){
             continue;
         }
         if(b&(1u<<BTN_HOME)){if(page==PG_GEN)take=0;page=page+1u<PG_N?page+1u:0;full=1;mk(0x3Fu);bank_leds();}
-        for(tb=0;tb<4u;tb++)if(b&(1u<<(BTN_FX+tb))){
+        for(tb=0;tb<4u;tb++){
+            uint32_t bit=1u<<(BTN_FX+tb),held=(fm1_in.buttons&bit)!=0;
             if(page<=PG_DANCE){
-                if(tb==1u){sg.vx.lang=(uint8_t)((sg.vx.lang+1u)%VL_N);modified=1;pop(VS_LANG,0,lgname[sg.vx.lang],0);}
-                else{
-                    static const uint8_t bk[4]={BK_FX,0,BK_ENV,BK_LFO};
-                    bank=bank==bk[tb]?BK_VOICE:bk[tb];
+                static const uint8_t bk[4]={BK_FX,0,BK_ENV,BK_LFO},deep[4]={BK_FXD,BK_SRC,BK_ART,BK_HAR};
+                int32_t act=-1;                            /* 0 short press, 1 long press */
+                if(b&bit){lp_t[tb]=now;lp_on[tb]=1;}
+                if(lp_on[tb]==1u && held && now-lp_t[tb]>=400u){lp_on[tb]=2;act=1;}
+                if((released&bit) && lp_on[tb]){if(lp_on[tb]==1u)act=0;lp_on[tb]=0;}
+                if(act==0 && tb==1u){sg.vx.lang=(uint8_t)((sg.vx.lang+1u)%VL_N);modified=1;pop(VS_LANG,0,lgname[sg.vx.lang],0);mk(0x20u);}
+                else if(act>=0){
+                    uint32_t nb=act?deep[tb]:bk[tb];
+                    bank=bank==nb?BK_VOICE:nb;
                     popbuf[0]=0;cat(popbuf,bkname[bank]);cat(popbuf,":");
                     for(i=0;i<4u;i++){cat(popbuf," ");cat(popbuf,ksh[bank][i]);}
-                    toast(popbuf,0);vis_kind=VS_NONE;
+                    toast(popbuf,0);vis_kind=VS_NONE;mk(0x20u);
                 }
-                bank_leds();mk(0x20u);
-            }else{if(page==PG_GEN && tb==trk)gcf.lock^=(uint8_t)(1u<<tb);trk=tb;mk(0x3Fu);bank_leds();}
+            }else if(b&bit){lp_on[tb]=0;if(page==PG_GEN && tb==trk)gcf.lock^=(uint8_t)(1u<<tb);trk=tb;mk(0x3Fu);}
         }
+        bank_leds();
         if(b&(1u<<BTN_OCT_UP) && oct<2){oct++;mk(0x21u);}
         if(b&(1u<<BTN_OCT_DOWN) && oct>-2){oct--;mk(0x21u);}
         if(b&(1u<<BTN_PLAY))do_play();
@@ -910,11 +976,7 @@ static void app_main(void){
             }
             if(dA){tweak(&sg.vx.chr,dA,0,VC_N-1);pop(VS_CHR,0,"CHARACTER",sg.vx.chr);}
             if(dP){tweak(&sg.bpm,dP,40,240);if(playing)en_post(&en,EN_BPM,sg.bpm,0,0);pop(VS_BPM,0,"BPM",sg.bpm);}
-            for(i=0;i<4;i++)if(dK[i]){
-                uint8_t *v=kptr(bank,i);
-                uint32_t mx=v==&sg.trk[0].level?127u:100u;
-                tweak(v,dK[i]*2,0,(int32_t)mx);pop(VS_KNOB,bank*4u+i,knm[bank][i],*v);
-            }
+            for(i=0;i<4;i++)if(dK[i]){kturn(bank,i,dK[i]);pop(VS_KNOB,bank*4u+i,knm[bank][i],*kptr(bank,i));}
         }else if(page==PG_SONG){
             if(dS&&sg.nrows){crow=(uint32_t)cl((int32_t)crow+dS,0,(int32_t)sg.nrows-1);mk(0x1Fu);}
             if(sg.nrows && crow<sg.nrows){

@@ -65,15 +65,26 @@ random morae (sing-able, not words). GEN settings and locks are not saved.
 
 ## STAGE
 
-The singer's mouth follows the voice; her face blinks and smiles on PLAY. Below: the syllable that is sounding (or the
-one at the cursor), BPM (and the key octave), the audio CPU load, the row and section, and four dots that light when
-the vocal, chords, bass and drums sound. The vocal knobs (vibrato, portamento, breath, brightness) are KNOB 1-4 here and
-are saved in the song.
+STAGE is the voice's home: the keys always sing here, and every control shapes her voice. The singer's mouth follows the
+voice; her face blinks and smiles on PLAY.
+
+- **SELECT** turns the syllable wheel under her face: the big pink syllable is the one the keys sing (and the one PATTERN
+  writes). While stopped you hear each syllable as you turn.
+- **SCL** switches the language: JAPANESE sings the syllables as written; ANIMAL turns every held note into fast random
+  babble with little pitch jumps, like the voices of animal games; SCAT sings da, ba, bi, do on eighth notes while a note is
+  held; VOWELS drops the consonants.
+- **ALGORITHM** sets her character, the size of the voice: DEEP, LOW, MIKU (the default), YOUNG, TINY.
+- The four knobs work in banks. VOICE (the default): breath, brightness, glide, level. **FX**: chorus, delay (a dotted eighth
+  at the song tempo, echoes left and right), reverb, drive. **ENV**: attack, release, scoop (sliding up into each note),
+  human (small drifts that make her sound alive). **LFO**: vibrato depth, rate and delay, tremolo. Press the bank's button
+  again to go back to VOICE. The lit button shows the bank; turning a knob shows its name and value.
+
+All of this is saved with the song. Songs saved by older versions load with the original sound (no effects).
 
 ## DANCE
 
 The singer full-body, dancing: she sways on the beat, sings while the vocal sounds, throws her arms up in the chorus and
-bows when the song stops. The knobs do what they do on STAGE.
+bows when the song stops. The knobs, SELECT, SCL and ALGORITHM do what they do on STAGE.
 
 ## Saving and other firmwares
 

@@ -75,6 +75,12 @@
 #include "firmware/song/song_io.c"
 #include "firmware/song/mora.c"
 #include "firmware/song/gen.c"
+#define VX_POOL __attribute__((section(".pool")))
+#define sat vx_sat
+#define clr vx_clr
+#include "firmware/audio/vfx/vfx.c"
+#undef sat
+#undef clr
 #include "firmware/app/engine.c"
 #define BUDGET_TICKS (5805u*FM1_TICKS_PER_US)       /* 256 frames at 44.1 kHz */
 #define BG RGB(7,17,34)
@@ -85,6 +91,23 @@ static Song sg;
 static Undo un;
 static Song gbak;                                   /* GEN: the song before the last take (GLO drops the take) */
 static GenCfg gcf={GS_POP,0,GK_MAJOR,0,1};
+/* STAGE / DANCE: the voice's home. FX / ENV / LFO pick what the four knobs do (press again: back to VOICE), SEL the language,
+   SELECT the syllable, ALGORITHM the character. Every value lives in the song (sg.trk[0], sg.vx), so it is saved with it. */
+enum { BK_VOICE, BK_FX, BK_ENV, BK_LFO };
+static uint32_t bank;
+static char popbuf[28];
+static const char *const bkname[4]={"VOICE","FX","ENV","LFO"};
+static const char *const knm[4][4]={{"BREATH","BRIGHT","GLIDE","LEVEL"},{"CHORUS","DELAY","REVERB","DRIVE"},
+    {"ATTACK","RELEASE","SCOOP","HUMAN"},{"VIBRATO","VIB RATE","VIB DELAY","TREMOLO"}};
+static const char *const ksh[4][4]={{"BRE","BRI","GLI","LEV"},{"CHO","DLY","REV","DRV"},{"ATK","REL","SCP","HUM"},{"DEP","RAT","DLY","TRM"}};
+static const char *const chname[VC_N]={"DEEP","LOW","MIKU","YOUNG","TINY"};
+static const char *const lgname[VL_N]={"JAPANESE","ANIMAL","SCAT","VOWELS"};
+static uint8_t *kptr(uint32_t b,uint32_t k){
+    Voice *v=&sg.vx;
+    uint8_t *t[4][4]={{&sg.trk[0].breath,&sg.trk[0].bright,&sg.trk[0].porta,&sg.trk[0].level},{&v->cho,&v->dly,&v->rev,&v->drv},
+        {&v->atk,&v->rel,&v->scoop,&v->human},{&sg.trk[0].vib,&v->vrate,&v->vdel,&v->trem}};
+    return t[b][k];
+}
 static uint32_t take,take_mod,gvar;
 static uint8_t enc[SONG_ENC_SIZE];                 /* slot I/O buffer */
 static struct { uint32_t magic; uint8_t ver, slot, pan[NTRK], pad[2]; } pf;   /* settings: 0.3 saved 37 bytes, so its data never loads here */
@@ -228,11 +251,16 @@ static void after_load(void){
     en_post(&en,EN_PANIC,0,0,0);
     mk(0x3Fu);full=1;
 }
+static uint32_t sload(uint32_t s){                         /* a song in slot s into enc: its size (v2 or v1), 0 = none */
+    if(!slot_load(s,enc,SONG_ENC_SIZE))return SONG_ENC_SIZE;
+    if(!slot_load(s,enc,SONG_ENC_V1))return SONG_ENC_V1;
+    return 0;
+}
 static void stop_wait(void){if(playing){en_post(&en,EN_STOP,0,0,0);wait_ms(15);}}
 static uint32_t slot_name(uint32_t s,char *nm){            /* 1 = a valid song is in the slot */
     uint32_t i;
     nm[0]=0;
-    if(slot_load(s,enc,SONG_ENC_SIZE)||enc[0]!='M'||enc[1]!='K'||enc[2]!='S'||enc[3]!='2')return 0;
+    if(!sload(s)||enc[0]!='M'||enc[1]!='K'||enc[2]!='S'||enc[3]!='2')return 0;
     for(i=0;i<8u;i++)nm[i]=(char)enc[10+i];
     nm[8]=0;
     return 1;
@@ -249,9 +277,10 @@ static void do_save(uint32_t s){
 }
 static void do_load(uint32_t s){
     stop_wait();
-    if(slot_load(s,enc,SONG_ENC_SIZE)){toast("EMPTY SLOT",1);return;}
+    uint32_t n=sload(s);
+    if(!n){toast("EMPTY SLOT",1);return;}
     lk();
-    {int r=song_decode(&sg,enc,SONG_ENC_SIZE);ulk();
+    {int r=song_decode(&sg,enc,n);ulk();
      if(r!=SIO_OK){toast("LOAD FAILED",1);return;}}
     pf.slot=(uint8_t)s;after_load();toast("LOADED",0);
 }
@@ -522,25 +551,40 @@ static void pg_mixer(uint32_t b){
     }
 }
 static void pg_stage(void){
-    char s[14]="BPM ",c[12]="CPU ",up[6];
-    const char *ms="";
-    uint32_t i,r=shown_row(),x=playing?(ppos&255u):cstep,vp=r<sg.nrows?sg.row[r].pat[0]:ROW_OFF;
-    if(en.act&1u)ms=mora_str(en.mora);                     /* what is sung now, else the vocal step under the cursor */
-    else if(!playing && vp<NPAT && sg.pat[0][vp][x].v[0])ms=mora_str(sg.pat[0][vp][x].v[2]);
-    for(i=0;i<5u&&ms[i];i++)up[i]=(char)(ms[i]-32);
-    up[i]=0;
-    num(s+4,sg.bpm);num(c+4,cpu_pct);cat(c,"%");
-    if(oct){cat(s,oct>0?" OCT+":" OCT-");catn(s,(uint32_t)(oct>0?oct:-oct));}
+    /* the syllable wheel: the selected mora big in the middle, two each side curving up around her face; under it the
+       language, character and knob bank, BPM and CPU (a knob turn or a message shows there instead) */
+    static const int32_t wx[5]={36,80,120,160,204},wy[5]={2,10,6,10,2};
+    char s[30],up[6];
+    uint32_t i;
+    int32_t k;
     cv_begin(240,56,RGB(12,20,40));
-    if(toast_s && (int32_t)(fm1_ms-toast_until)<0)txt(120,0,&FONT_L,toast_s,toast_err?RGB(255,110,110):RGB(249,207,94),1);
-    else cv_text(120-text_w(&FONT_L,up)/2,0,&FONT_L,up,C_WHITE);
-    cv_text(4,14,&FONT_S,s,RGB(249,207,94));
-    cv_text(236-text_w(&FONT_S,c),14,&FONT_S,c,RGB(150,160,190));
-    s[0]=0;cat(s,"R");catn(s,r+1u);cat(s," ");cat(s,r<sg.nrows?sname[sg.row[r].sect]:"");
-    cv_text(4,38,&FONT_S,s,RGB(150,160,190));
-    cv_text(4,2,&FONT_S,"STAGE",RGB(64,222,209));
-    for(i=0;i<NTRK;i++)cv_rect(236-(int32_t)(NTRK-i)*16,40,12,12,(en.act>>i)&1u?tcol[i]:RGB(49,54,78));
+    for(k=-2;k<=2;k++){
+        const char *m=mora_str((uint32_t)wr((int32_t)ed_mora+k,MORA_N));
+        if(!*m)m="(a)";
+        if(!k){
+            for(i=0;i<5u&&m[i];i++)up[i]=(char)(m[i]>='a'&&m[i]<='z'?m[i]-32:m[i]);
+            up[i]=0;
+            cv_rect(120-text_w(&FONT_L,up)/2-6,wy[2]-2,text_w(&FONT_L,up)+12,30,RGB(247,123,180));
+            cv_text(120-text_w(&FONT_L,up)/2,wy[2],&FONT_L,up,RGB(12,20,40));
+        }else cv_text(wx[k+2]-text_w(&FONT_S,m)/2,wy[k+2],&FONT_S,m,k==-1||k==1?RGB(190,200,230):RGB(100,110,140));
+    }
+    if(toast_s && (int32_t)(fm1_ms-toast_until)<0)txt(120,38,&FONT_S,toast_s,toast_err?RGB(255,110,110):RGB(249,207,94),1);
+    else{
+        s[0]=0;cat(s,lgname[sg.vx.lang<VL_N?sg.vx.lang:0]);cat(s," ");cat(s,chname[sg.vx.chr<VC_N?sg.vx.chr:VC_MIKU]);cat(s," ");cat(s,bkname[bank]);
+        cv_text(4,38,&FONT_S,s,RGB(64,222,209));
+        s[0]=0;catn(s,sg.bpm);cat(s," ");catn(s,cpu_pct);cat(s,"%");
+        if(oct){cat(s,oct>0?" +":" -");catn(s,(uint32_t)(oct>0?oct:-oct));}
+        cv_text(236-text_w(&FONT_S,s),38,&FONT_S,s,RGB(249,207,94));
+    }
     cv_blit(0,FACE_Y);
+}
+static void pop(const char *name,uint32_t v){            /* "REVERB 42": what the knob just did */
+    popbuf[0]=0;cat(popbuf,name);cat(popbuf," ");catn(popbuf,v);
+    toast(popbuf,0);
+}
+static void bank_leds(void){
+    uint32_t i;
+    for(i=0;i<4u;i++)fm1_led_key(BTN_FX+i,page<=PG_DANCE?(bank==BK_FX&&i==0)||(bank==BK_ENV&&i==2)||(bank==BK_LFO&&i==3):i==trk);
 }
 /* ---- GEN: a take is one generate (REC) or one new phrase (ARP); EDIT keeps it, GLO drops it (back to the song before it) */
 static void gen_go(uint32_t phrase){
@@ -670,15 +714,15 @@ static void app_main(void){
     {uint32_t k;if(settings_load(&pf,sizeof pf)!=0 || pf.magic!=PF_MAGIC || pf.ver!=1 || pf.slot>=NSLOT)pf_defaults();
      for(k=0;k<NTRK;k++)if(pf.pan[k]>127)pf.pan[k]=64;}
     song_demo(&sg);
-    if(slot_load(pf.slot,enc,SONG_ENC_SIZE)==0)song_decode(&sg,enc,SONG_ENC_SIZE);   /* untouched (= the demo) when it fails */
+    {uint32_t n=sload(pf.slot);if(n)song_decode(&sg,enc,n);}   /* untouched (= the demo) when it fails */
     un_init(&un);
     while(!en.up)platform_poll();
     pf_apply();
     stage_init();
     next_blink=fm1_ms+3000u;full=1;
-    fm1_led_key(BTN_FX,1);
+    bank_leds();
     for(;;){
-        uint32_t released,b,keys,down,now,tb,sh,oldpos=ppos;
+        uint32_t released,b,keys,down,now,tb,sh,kt,oldpos=ppos;
         int32_t dS,dA,dP,dK[4];
         platform_poll();
         now=fm1_ms;
@@ -708,8 +752,20 @@ static void app_main(void){
             prev_keys=keys;
             continue;
         }
-        if(b&(1u<<BTN_HOME)){if(page==PG_GEN)take=0;page=page+1u<PG_N?page+1u:0;full=1;mk(0x3Fu);}
-        for(tb=0;tb<4u;tb++)if(b&(1u<<(BTN_FX+tb))){if(page==PG_GEN && tb==trk)gcf.lock^=(uint8_t)(1u<<tb);trk=tb;mk(0x3Fu);for(i=0;i<4u;i++)fm1_led_key(BTN_FX+i,i==trk);}
+        if(b&(1u<<BTN_HOME)){if(page==PG_GEN)take=0;page=page+1u<PG_N?page+1u:0;full=1;mk(0x3Fu);bank_leds();}
+        for(tb=0;tb<4u;tb++)if(b&(1u<<(BTN_FX+tb))){
+            if(page<=PG_DANCE){
+                if(tb==1u){sg.vx.lang=(uint8_t)((sg.vx.lang+1u)%VL_N);modified=1;toast(lgname[sg.vx.lang],0);}
+                else{
+                    static const uint8_t bk[4]={BK_FX,0,BK_ENV,BK_LFO};
+                    bank=bank==bk[tb]?BK_VOICE:bk[tb];
+                    popbuf[0]=0;cat(popbuf,bkname[bank]);cat(popbuf,":");
+                    for(i=0;i<4u;i++){cat(popbuf," ");cat(popbuf,ksh[bank][i]);}
+                    toast(popbuf,0);
+                }
+                bank_leds();mk(0x20u);
+            }else{if(page==PG_GEN && tb==trk)gcf.lock^=(uint8_t)(1u<<tb);trk=tb;mk(0x3Fu);bank_leds();}
+        }
         if(b&(1u<<BTN_OCT_UP) && oct<2){oct++;mk(0x21u);}
         if(b&(1u<<BTN_OCT_DOWN) && oct>-2){oct--;mk(0x21u);}
         if(b&(1u<<BTN_PLAY))do_play();
@@ -751,11 +807,17 @@ static void app_main(void){
         }
         /* encoders, per page */
         if(page==PG_STAGE||page==PG_DANCE){
-            if(dS&&sg.nrows){crow=(uint32_t)cl((int32_t)crow+dS,0,(int32_t)sg.nrows-1);mk(0x20u);}
-            if(dA&&trk){tweak(&sg.trk[trk].preset,dA,0,(int32_t)npst[trk]-1);mk(0x20u);}
-            if(dP){tweak(&sg.bpm,dP,40,240);if(playing)en_post(&en,EN_BPM,sg.bpm,0,0);mk(0x20u);}
-            {uint8_t *v[4]={&sg.trk[0].vib,&sg.trk[0].porta,&sg.trk[0].breath,&sg.trk[0].bright};
-             for(i=0;i<4;i++)if(dK[i])tweak(v[i],dK[i]*2,0,100);}
+            if(dS){
+                ed_mora=(uint32_t)wr((int32_t)ed_mora+dS,MORA_N);mk(0x20u);
+                if(!playing && !prev_keys){en_post(&en,EN_ON,TR_VOCAL,67u+(uint32_t)(oct*12),ed_mora);pv_off=fm1_ms+300u;}   /* hear it */
+            }
+            if(dA){tweak(&sg.vx.chr,dA,0,VC_N-1);popbuf[0]=0;cat(popbuf,"CHARACTER ");cat(popbuf,chname[sg.vx.chr]);toast(popbuf,0);}
+            if(dP){tweak(&sg.bpm,dP,40,240);if(playing)en_post(&en,EN_BPM,sg.bpm,0,0);pop("BPM",sg.bpm);}
+            for(i=0;i<4;i++)if(dK[i]){
+                uint8_t *v=kptr(bank,i);
+                uint32_t mx=v==&sg.trk[0].level?127u:100u;
+                tweak(v,dK[i]*2,0,(int32_t)mx);pop(knm[bank][i],*v);
+            }
         }else if(page==PG_SONG){
             if(dS&&sg.nrows){crow=(uint32_t)cl((int32_t)crow+dS,0,(int32_t)sg.nrows-1);mk(0x1Fu);}
             if(sg.nrows && crow<sg.nrows){
@@ -804,21 +866,22 @@ static void app_main(void){
             if(dK[3]){tweak(&sg.master,dK[3]*2,0,127);mk(1u);}
         }
         /* keys: always sound the current track's instrument; on PATTERN they also write the cursor step */
+        kt=page<=PG_DANCE?TR_VOCAL:trk;                    /* the voice's home: keys sing */
         if(down){
             uint32_t k;
             for(k=0;k<27u;k++)if(down&(1u<<k)){
-                int32_t n=cl((int32_t)kbase[trk]+(int32_t)k+oct*12,1,127);
+                int32_t n=cl((int32_t)kbase[kt]+(int32_t)k+oct*12,1,127);
                 kn[k]=(uint8_t)n;
-                if(trk==TR_DRUMS){if(k<6u)en_post(&en,EN_ON,trk,k,0);else if(k<12u)en_post(&en,EN_ON,trk,k-6u,0);}
-                else en_post(&en,EN_ON,trk,(uint32_t)n,ed_mora);
+                if(kt==TR_DRUMS){if(k<6u)en_post(&en,EN_ON,kt,k,0);else if(k<12u)en_post(&en,EN_ON,kt,k-6u,0);}
+                else en_post(&en,EN_ON,kt,(uint32_t)n,ed_mora);
                 if(page==PG_PATTERN)kwrite(k,(uint32_t)n);
             }
             pv_off=0;
         }
         if(prev_keys&~keys){
             uint32_t k;
-            if(trk==TR_CHORDS){for(k=0;k<27u;k++)if((prev_keys&~keys)&(1u<<k))en_post(&en,EN_OFF,trk,kn[k],0);}
-            else if(!keys && trk!=TR_DRUMS)en_post(&en,EN_OFF,trk,0,0);
+            if(kt==TR_CHORDS){for(k=0;k<27u;k++)if((prev_keys&~keys)&(1u<<k))en_post(&en,EN_OFF,kt,kn[k],0);}
+            else if(!keys && kt!=TR_DRUMS)en_post(&en,EN_OFF,kt,0,0);
         }
         prev_keys=keys;
         if(pv_off && (int32_t)(now-pv_off)>=0){pv_off=0;if(!keys)en_post(&en,EN_OFF,0,0,0);}

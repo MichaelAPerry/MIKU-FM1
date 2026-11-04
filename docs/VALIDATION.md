@@ -213,3 +213,24 @@ one pattern with another variation. Locked tracks are never touched; with a lock
   (RMS 1504, 22 colours).
 - Not checked: the sound of generated songs on hardware; how long REC takes on the device (on the host it is well under 1 ms).
 
+## The voice's home: STAGE knob banks, effects, character, languages (2026-11-04)
+
+Design: `firmware/audio/vfx/` (drive -> tremolo -> chorus -> delay -> reverb on the voice, integer, buffers in Dinghy's
+`.pool`), voice character as five formant tables (`fv_vow[5]`, factors 0.84 .. 1.18; MIKU = the old table bit for bit),
+languages in `firmware/app/engine.c`, all settings in the song (`Voice`, MKS2 version 2; version 1 still read).
+
+### Host (`ctest` 12/12, 0 warnings)
+- Default voice: the demo render is bit-identical to before (`cmp`); every effect at 0 again gives exactly the dry voice.
+- Each effect at 60 (vocal solo, two bars): level drive +1.7, tremolo -2.1, chorus +0.4, delay +0.4, reverb +0.3 dB re dry;
+  chorus / delay / reverb are stereo (left-right difference 1600-1900 rms), drive and tremolo mono; no sample at full scale.
+- Tails: reverb, delay and chorus at 100, stop, 6 s later the output is exactly 0 (feedback multiplies round toward zero).
+- Character DEEP..TINY: spectral centroid of G2 averaged over the five vowels 393, 402, 422, 452, 460 Hz (rises).
+- Languages on a held 2 s note: JAPANESE 1 syllable, ANIMAL 24, SCAT 9 (eighths at 120 BPM), VOWELS 1 and no consonant.
+- MKS2 v2 round-trips; a v1 file loads with the default voice; wrong size/version pairs and out-of-range voice fields are refused.
+
+### Device
+- Build: image 171,652 -> 177,564 B; RAM .data+.bss 34,608 -> 34,752 B; .pool 30,720 -> 114,308 B of 344,064 (effect buffers).
+- fm1-emu: SELECT moves the syllable wheel; FX bank, reverb 36, drive 10, character TINY, ANIMAL, LFO bank, tremolo 60 all
+  show and sound; emulator CPU on STAGE 6% (dry) -> 19% (all effects + ANIMAL). Not a device figure: measure on hardware.
+- Slots: a version-1 song in a slot loads (size fallback in `sload`); saving writes version 2.
+

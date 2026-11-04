@@ -21,6 +21,7 @@ typedef struct {
     uint8_t scoop;              /* cents below the target at a (non-legato) note onset, 0..100 */
     uint16_t scoop_ms;          /* time for the onset scoop to settle, ms (<=510) */
     int8_t transpose;           /* semitones added to incoming notes */
+    uint8_t chr;                /* voice character 0..4: formant size DEEP LOW MIKU (default, 2) YOUNG TINY; changes glide like a vowel */
     /* state */
     uint32_t ph, inc, lfo, noise, rng;
     int32_t pcur, ptgt;         /* pitch, 4096 units/octave above MIDI 0 */

@@ -1,8 +1,8 @@
 # Song model and the MKS2 file format
 
 Miku-FM songs are pattern based, like a tracker. The model lives in `firmware/song/song.h`; the file format is
-`firmware/song/song_io.c`. Everything has a fixed capacity (no heap): `sizeof(Song)` is 4462 bytes, an encoded song
-4476 bytes (one Dinghy slot holds 16384), the undo ring 2594 bytes.
+`firmware/song/song_io.c`. Everything has a fixed capacity (no heap): `sizeof(Song)` is 4478 bytes, an encoded song
+4492 bytes (version 2; one Dinghy slot holds 16384), the undo ring 2594 bytes.
 
 ## Model
 
@@ -34,7 +34,16 @@ Miku-FM songs are pattern based, like a tracker. The model lives in `firmware/so
 
 ## MKS2
 
-Little-endian, explicit field packing (no struct dumps). Version 1 has a fixed layout, always 4476 bytes:
+Little-endian, explicit field packing (no struct dumps). Version 2 (written since the voice home) is version 1 plus a
+16-byte voice block before the CRC, always 4492 bytes; version 1 (4476 bytes, no voice block) is still read and gets the
+default voice, which is version 1's sound. The table is version 1; version 2 inserts at 4472:
+
+| Offset | Size | Field |
+| --- | --- | --- |
+| 4472 | 16 | voice: attack, release, scoop, human, vibrato rate, vibrato delay, tremolo, chorus, delay, reverb, drive (0..100 each), character (0..4: DEEP LOW MIKU YOUNG TINY), language (0..3: JAPANESE ANIMAL SCAT VOWELS), 3 bytes 0 |
+| 4488 | 4 | CRC32 |
+
+Version 1:
 
 | Offset | Size | Field |
 | --- | --- | --- |

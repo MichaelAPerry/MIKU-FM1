@@ -328,7 +328,33 @@ static void test_edit(void){
     CHECK(!un_pop(&u,&g));
     printf("sizeof Song %zu  Seq %zu  Undo %zu\n",sizeof(Song),sizeof(Seq),sizeof(Undo));
 }
+/* MKS2 version 2 carries the voice block; version 1 files (0.5 and before) still load, with the default voice */
+static void test_v2(void){
+    Song g,B;uint32_t c;int i;
+    static uint8_t v1[SONG_ENC_V1];
+    song_demo(&g);
+    g.vx.rev=40;g.vx.cho=12;g.vx.chr=VC_TINY;g.vx.lang=VL_ANIMAL;g.vx.trem=7;
+    CHECK(song_encode(&g,buf,sizeof buf)==SONG_ENC_SIZE&&buf[4]==2);
+    CHECK(song_decode(&B,buf,SONG_ENC_SIZE)==SIO_OK&&!memcmp(&g,&B,sizeof g));
+    /* the same song as version 1: header, then everything up to the voice block, new CRC */
+    memcpy(v1,buf,SONG_ENC_V1-4);v1[4]=1;v1[6]=(uint8_t)SONG_ENC_V1;v1[7]=(uint8_t)(SONG_ENC_V1>>8);v1[8]=v1[9]=0;
+    c=sg_crc32(v1,SONG_ENC_V1-4);for(i=0;i<4;i++)v1[SONG_ENC_V1-4+i]=(uint8_t)(c>>(8*i));
+    CHECK(song_decode(&B,v1,SONG_ENC_V1)==SIO_OK);
+    CHECK(B.vx.rev==0&&B.vx.chr==VC_MIKU&&B.vx.lang==VL_JP&&B.vx.atk==2&&B.vx.human==63);
+    CHECK(!memcmp(B.pat,g.pat,sizeof g.pat)&&!memcmp(B.row,g.row,sizeof g.row)&&B.bpm==g.bpm);
+    /* sizes and versions must agree; voice fields are range-checked */
+    CHECK(song_decode(&B,v1,SONG_ENC_SIZE)!=SIO_OK&&song_decode(&B,buf,SONG_ENC_V1)!=SIO_OK);
+    buf[4]=1;CHECK(song_decode(&B,buf,SONG_ENC_SIZE)==SIO_VERSION);buf[4]=2;
+    {static const int at[3]={0,11,12};static const uint8_t bad[3]={101,VC_N,VL_N};int k;
+     for(k=0;k<3;k++){
+        uint8_t keep=buf[SONG_ENC_V1-4+at[k]];
+        buf[SONG_ENC_V1-4+at[k]]=bad[k];c=sg_crc32(buf,SONG_ENC_SIZE-4);for(i=0;i<4;i++)buf[SONG_ENC_SIZE-4+i]=(uint8_t)(c>>(8*i));
+        B=g;B.bpm=99;CHECK(song_decode(&B,buf,SONG_ENC_SIZE)==SIO_FIELD&&B.bpm==99);
+        buf[SONG_ENC_V1-4+at[k]]=keep;
+     }}
+}
 int main(void){
+    test_v2();
     test_io();test_seq();test_chords();test_demo();test_edit();
     if(fails)printf("%d FAILURES\n",fails);else printf("song2: all tests passed\n");
     return fails!=0;

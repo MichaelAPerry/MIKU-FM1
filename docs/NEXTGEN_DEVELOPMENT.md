@@ -73,3 +73,7 @@ Physical device ISR deadlines, output-stage artifacts, buffer underruns, USB thr
 1. Refine approved musical/visual examples; implement caller-owned GEN scratch before device UI integration.
 2. Implement bounded live lyric phrase-player adapter and versioned persistence proposal after editing-interface review.
 3. Prototype Dinghy integer UAC1 input + feedback + ring buffers, expose frames BEFORE pedal DSP, then test native/emulator transport and combined descriptors. Performance-event companion is the recommended first computer renderer; UVC requires its own measured resource prototype.
+
+## Wardrobe follow-up (2026-11-08)
+
+Owner requested at least ten outfits and emphasized matching singer-face sheets as well as dancing sprites. Visually inspected all three source sheets and generated ten paired body/portrait concepts under `assets/singer/wardrobe/`, preserving all original art. No designs approved or runtime skins claimed. See [wardrobe review](NEXTGEN_WARDROBE.md) for concepts, required paired animation states and flash/storage constraints.

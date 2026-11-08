@@ -1,0 +1,82 @@
+{
+  "version": 1,
+  "status": "concept-review-only",
+  "source_references": [
+    "assets/singer/reference.webp",
+    "assets/singer/stage.webp",
+    "assets/singer/faces.webp"
+  ],
+  "concept_sheet": "concepts-v1.png",
+  "outfits": [
+    {
+      "concept": 1,
+      "name": "Encore",
+      "approved": false,
+      "portrait_atlas": null,
+      "dance_atlas": null
+    },
+    {
+      "concept": 2,
+      "name": "Off Duty",
+      "approved": false,
+      "portrait_atlas": null,
+      "dance_atlas": null
+    },
+    {
+      "concept": 3,
+      "name": "Retro Wave",
+      "approved": false,
+      "portrait_atlas": null,
+      "dance_atlas": null
+    },
+    {
+      "concept": 4,
+      "name": "Prism",
+      "approved": false,
+      "portrait_atlas": null,
+      "dance_atlas": null
+    },
+    {
+      "concept": 5,
+      "name": "Neon Punk",
+      "approved": false,
+      "portrait_atlas": null,
+      "dance_atlas": null
+    },
+    {
+      "concept": 6,
+      "name": "City Beat",
+      "approved": false,
+      "portrait_atlas": null,
+      "dance_atlas": null
+    },
+    {
+      "concept": 7,
+      "name": "Starlight",
+      "approved": false,
+      "portrait_atlas": null,
+      "dance_atlas": null
+    },
+    {
+      "concept": 8,
+      "name": "Rain Signal",
+      "approved": false,
+      "portrait_atlas": null,
+      "dance_atlas": null
+    },
+    {
+      "concept": 9,
+      "name": "Snow Glow",
+      "approved": false,
+      "portrait_atlas": null,
+      "dance_atlas": null
+    },
+    {
+      "concept": 10,
+      "name": "Festival",
+      "approved": false,
+      "portrait_atlas": null,
+      "dance_atlas": null
+    }
+  ]
+}

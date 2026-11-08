@@ -20,7 +20,7 @@ These are audition candidates, not an approved sound palette or a finished works
   the pad has a slower spectral envelope. Existing single-carrier presets bypass the second carrier.
 
 No new track, song version, modulation interface or automatic genre-specific sound choice is introduced by this module.
-Integration may expose the new bass/drum indices (all within the existing 0..7 file bounds). The chord API profiles are
+Native MIXER now exposes the new bass/drum indices through its existing preset encoder (all within the existing 0..7 file bounds). The chord API profiles are
 host-audition infrastructure until a reviewed selection/persistence interface is added.
 
 ## Reproduce and compare

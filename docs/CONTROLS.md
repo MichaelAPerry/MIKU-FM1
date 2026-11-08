@@ -102,7 +102,7 @@ Four tracks: name, preset, level bar, pan marker, M (mute) and S (solo). The cur
 | Control | What it does |
 |---|---|
 | SELECT | Current track |
-| ALGORITHM | Preset of the track: CHORDS bells, E.piano, chip arp, pad, organ, pluck, marimba, clav; BASS FM, sub, chip square, acid; DRUMS 808, chip |
+| ALGORITHM | Preset of the track: CHORDS bells, E.piano, chip arp, pad, organ, pluck, marimba, clav; BASS FM, sub, chip square, acid, sub drop, hard acid; DRUMS 808, chip, punch, digital |
 | KNOB 1 | Level |
 | KNOB 2 | Pan (a device setting, kept with SAVE; the song file has no pan) |
 | KNOB 3 | Swing, 0-75 % |

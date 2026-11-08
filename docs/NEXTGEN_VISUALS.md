@@ -52,4 +52,6 @@ Host `cc -Os` module object: 1073 bytes code/constants +24 bytes registry data, 
 - Any genre-to-theme mapping and choreography beyond the original eight-frame vocabulary.
 - Companion resolution, renderer, mouth layer and animation designs.
 
-Next engineering task: integrate default state selection with the native DANCE renderer, measure redraw cost, then expose review-only theme previews through a deliberate control once its behavior is approved.
+Native DANCE now uses this shared state module, updated once per main-loop pass. The original outfit/background remain the device defaults. Background/frame candidates are preview-only pending review. The odd-width sprite decoder was also fixed to use linear pixel parity; a separate test checks every packed atlas pixel.
+
+Next engineering task: measure full-theme redraw cost, then expose review-only theme previews through a deliberate control once its behavior is approved.

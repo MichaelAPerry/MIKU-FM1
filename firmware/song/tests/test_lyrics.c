@@ -6,7 +6,7 @@
 #include <string.h>
 #define CHECK(x) do{if(!(x)){printf("lyrics FAIL line %d\n",__LINE__);return 1;}}while(0)
 int main(void){
-    LyUnit u[32],before[32];uint32_t n=99,e=99;
+    LyUnit u[32]={{0}},before[32];uint32_t n=99,e=99;
     CHECK(ly_compile("mi-ku:2 _:4 |:2 a:3! / i",1,u,32,&n,&e)==LY_OK);
     CHECK(n==7&&u[0].mora==mora_find("mi")&&!(u[0].flags&LY_WORD_END));
     CHECK(u[1].ticks==2&&(u[1].flags&LY_WORD_END));

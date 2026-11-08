@@ -14,7 +14,7 @@ int main(int argc,char **argv){
     rc=ly_compile(argc==3?argv[2]:"mi-ku:2 _:4 |:2 a:3! / i",1,unit,128,&n,&e);
     if(rc){fprintf(stderr,"ly_compile %d at byte %u\n",rc,e);return 1;}
     for(i=0;i<n;i++){
-        if(unit[i].ticks>100u||frames>44100u*120u){fprintf(stderr,"audition limited to 100 ticks/unit and two minutes\n");return 1;}
+        if(unit[i].ticks>100u||frames>44100u*120u-(uint32_t)unit[i].ticks*5292u){fprintf(stderr,"audition limited to 100 ticks/unit and two minutes\n");return 1;}
         frames+=(uint32_t)unit[i].ticks*5292u;
     }
     f=fopen(argv[1],"wb");if(!f){perror(argv[1]);return 1;}

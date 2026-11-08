@@ -1,12 +1,12 @@
 {
-  "version": 1,
+  "version": 2,
   "status": "concept-review-only",
   "source_references": [
     "assets/singer/reference.webp",
     "assets/singer/stage.webp",
     "assets/singer/faces.webp"
   ],
-  "concept_sheet": "concepts-v1.png",
+  "concept_sheet": "concepts-v2.png",
   "outfits": [
     {
       "concept": 1,
@@ -52,14 +52,14 @@
     },
     {
       "concept": 7,
-      "name": "Starlight",
+      "name": "Zettai",
       "approved": false,
       "portrait_atlas": null,
       "dance_atlas": null
     },
     {
       "concept": 8,
-      "name": "Rain Signal",
+      "name": "Summer Beat",
       "approved": false,
       "portrait_atlas": null,
       "dance_atlas": null
@@ -78,5 +78,6 @@
       "portrait_atlas": null,
       "dance_atlas": null
     }
-  ]
+  ],
+  "revision_note": "Owner requested replacing concepts07 and08 with a zettai skirt/thigh-high outfit and bikini respectively. Final paired atlases remain unapproved."
 }

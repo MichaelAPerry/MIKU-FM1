@@ -2,7 +2,7 @@
 
 The owner requested at least ten outfits, maintaining the existing singer identity. All three references were visually inspected before generation: `reference.webp`, `stage.webp` and `faces.webp`. The portrait sheet is a required part of every outfit, not an optional follow-up. The original assets remain intact.
 
-[Concept sheet](../assets/singer/wardrobe/concepts-v1.png) contains ten proposed outfits, each with a full-body view and coordinated portrait inset:
+[Current concept sheet, revision2](../assets/singer/wardrobe/concepts-v2.png) contains ten proposed outfits, each with a full-body view and coordinated portrait inset:
 
 1. Encore — tailored stagewear (close to the original; can be made more distinct).
 2. Off Duty — casual hoodie.
@@ -10,8 +10,8 @@ The owner requested at least ten outfits, maintaining the existing singer identi
 4. Prism — geometric futuristic dress.
 5. Neon Punk — jacket, skirt and chunky boots.
 6. City Beat — varsity streetwear.
-7. Starlight — star-patterned stage dress and capelet.
-8. Rain Signal — yellow raincoat and pink boots.
+7. Zettai — stage jacket, pleated skirt and thigh-high socks with a small visible gap (replaces Starlight at owner request).
+8. Summer Beat — sporty cyan/navy bikini with pink trim, matching portrait straps/neckline (replaces Rain Signal at owner request).
 9. Snow Glow — winter jacket and scarf.
 10. Festival — festival yukata.
 
@@ -32,3 +32,5 @@ The current original portrait+dance pixel data uses65928 bytes. Ten additional c
 Generated with ChatGPT image generation using all three existing repository images as references. New art remains Hatsune Miku fan art under the same Piapro Character License as the original assets; not GPL/MIT. © Crypton Future Media, INC. www.piapro.net. Free, non-commercial, unofficial. See [LICENSING.md](../LICENSING.md) and [assets notice](../assets/NOTICE.md).
 
 Next: owner selects/revises concepts, then prepare matched production atlases and measure a shared-pixel pack before registering native outfits. None of these ten designs has been finalized or added to the runtime registry.
+
+Revision2 replaces only concepts07/08 in response to owner direction; revision1 is retained as review history. These remain costume concepts, not production animation sheets.

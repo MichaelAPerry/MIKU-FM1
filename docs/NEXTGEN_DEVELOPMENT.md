@@ -77,3 +77,5 @@ Physical device ISR deadlines, output-stage artifacts, buffer underruns, USB thr
 ## Wardrobe follow-up (2026-11-08)
 
 Owner requested at least ten outfits and emphasized matching singer-face sheets as well as dancing sprites. Visually inspected all three source sheets and generated ten paired body/portrait concepts under `assets/singer/wardrobe/`, preserving all original art. No designs approved or runtime skins claimed. See [wardrobe review](NEXTGEN_WARDROBE.md) for concepts, required paired animation states and flash/storage constraints.
+
+Wardrobe revision2: owner requested replacing07 Starlight with Zettai and08 Rain Signal with a bikini (Summer Beat). Generated paired full-body/portrait concepts using the existing contact sheet, face sheet and dance sheet as references; saved revision2 while preserving revision1. No final atlas or runtime skin integration claimed.

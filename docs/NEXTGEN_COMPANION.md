@@ -63,7 +63,7 @@ Audio-reactive tint is a procedural review effect pending owner approval. It doe
 The codec test covers maximum clocks/sequence/fields, 7-bit payload, decode roundtrip, every single-byte one-bit corruption,
 truncated messages, invalid mora, insufficient output capacity and transactional failures. Assertions explicitly remain
 enabled in Release builds. Direct `cc -O2 -Wall -Wextra -Wpedantic` tests passed without warnings.
-Host freestanding `-Os` object: 716 bytes text/constants, zero data and BSS. Native link/ISR/USB throughput measurements
+Host freestanding `-Os` object: 909 bytes text/constants, zero data and BSS. JieLi pi32v2 `-Os -ffunction-sections -fno-builtin -Wall` compile: 588 bytes text/constants, zero data/BSS and no unresolved symbols (`nm --undefined-only` empty). Decode uses explicit volatile scalar stores because this older compiler lowered an ordinary struct assignment into a libc `memcpy` call despite `-fno-builtin`. The codec test still passes after that portability fix. Native link/ISR/USB throughput measurements
 are pending because the module is not yet wired into the native sender. The host exporter uses normal file I/O outside
 firmware; it must never be compiled into the audio ISR.
 

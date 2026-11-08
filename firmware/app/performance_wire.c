@@ -30,5 +30,12 @@ uint32_t pw_decode(PwState *out,const uint8_t *m,uint32_t n){
     s.outfit=m[20];s.background=m[21];s.frame=m[22];s.palette=m[23];
     s.audio_level=m[24];s.transient=m[25];
     if(!pw_valid(&s))return 0;
-    *out=s;return PW_SIZE;
+    /* Volatile scalar stores prevent old freestanding compilers from lowering
+       a struct copy to unavailable libc memcpy; padding is never copied. */
+    {volatile PwState *v=out;
+     v->sample=s.sample;v->sequence=s.sequence;v->mouth=s.mouth;v->vocal_level=s.vocal_level;
+     v->mora=s.mora;v->section=s.section;v->row=s.row;v->step=s.step;v->playing=s.playing;v->sprite=s.sprite;
+     v->outfit=s.outfit;v->background=s.background;v->frame=s.frame;v->palette=s.palette;
+     v->audio_level=s.audio_level;v->transient=s.transient;}
+    return PW_SIZE;
 }

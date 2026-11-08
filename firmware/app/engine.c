@@ -1,10 +1,15 @@
 /* SPDX-License-Identifier: GPL-3.0-only */
 #include "firmware/app/engine.h"
 static const uint8_t npre[NTRK] = { 1, CH_NPRESET, BS_NPRESET, DR_NPRESET };
-/* languages: ANIMAL babbles random morae (ka..wo, ga..po) every 70-90 ms with small pitch jumps, like animal-game voices;
+/* languages: ANIMAL babbles random morae (ka..wo, ga..po) at an adjustable 140-220 ms default cadence with small pitch jumps, like animal-game voices;
    SCAT sings da ba bi do pa ra ri de be on eighth notes; both keep the held note's envelope (legato articulation) */
 static const uint8_t scat[9] = { 57, 60, 61, 59, 65, 39, 40, 58, 63 };   /* mora indices of da ba bi do pa ra ri de be */
 static const int8_t ajit[8] = { 0, 0, 2, 3, 5, -2, 7, 4 };
+/* Session speech rate: higher is faster; 0/50/100 -> 180-260/140-220/100-180 ms.
+   Sample counters keep timing independent of render block sizes, tempo and other languages. */
+static uint32_t animal_wait(const Engine *e, uint32_t r) {
+    return (180u - e->arate * 4u / 5u) * 441u / 10u + r % 3529u;
+}
 static uint32_t rnd(Engine *e) { uint32_t x = e->rng; x ^= x << 13; x ^= x >> 17; x ^= x << 5; e->rng = x; return x; }
 /* Harmony: a second voice (fv2) sings every vocal note at an interval, with its own character and a small detune, mixed in
    before the effects. On-beat: the band is delayed by D (up to the longest consonant, 66 ms x consonant length) and every
@@ -33,7 +38,7 @@ void en_init(Engine *e, const Song *g) {
     sq_init(&e->sq); fv_init(&e->fv); fv_init(&e->fv2); ch_init(&e->ch); bs_init(&e->bs); dr_init(&e->dr); vx_init();
     e->fv2.rng = 0x2545F491u;                       /* the harmony voice drifts on its own */
     e->clk = e->bw = 0; e->vqn = 0; e->bdon = 0; e->vid = e->vcur = 0;
-    e->bt = 0; e->rng = 0x6D2B79F5u; e->vnote = 60; e->vvel = 110; e->vmora = 0;
+    e->arate = 50; e->bt = 0; e->rng = 0x6D2B79F5u; e->vnote = 60; e->vvel = 110; e->vmora = 0;
     e->fv.vib_rate = 55; e->fv.vib_delay = 200;
     for (t = 0; t < NTRK; t++) e->pre[t] = 0;
     e->vh = 0; e->vl = e->vr = 0; e->up = 1;
@@ -62,7 +67,7 @@ static void sing(Engine *e, uint32_t note, uint32_t mora, uint32_t vel) {   /* c
     fv_note_on_mora(&e->fv, (uint8_t)note, (uint8_t)cons, v < 5u ? (uint8_t)v : e->vh, (uint8_t)vel);
     hnote(e, (int32_t)note, cons, v < 5u ? v : e->vh, vel);
     e->mora = mora; e->vnote = (uint8_t)note; e->vvel = (uint8_t)vel;
-    e->bt = lang == VL_ANIMAL ? 3087u + rnd(e) % 882u : lang == VL_SCAT ? 1323000u / (e->g->bpm ? e->g->bpm : 120u) : 0;
+    e->bt = lang == VL_ANIMAL ? animal_wait(e, rnd(e)) : lang == VL_SCAT ? 1323000u / (e->g->bpm ? e->g->bpm : 120u) : 0;
 }
 static void command(Engine *e, uint32_t w) {
     uint32_t a = w >> 16 & 255u, b = w >> 8 & 255u, c = w & 255u;
@@ -70,6 +75,7 @@ static void command(Engine *e, uint32_t w) {
     case EN_PLAY: sq_play(&e->sq, e->g, a, (int)b); break;
     case EN_STOP: sq_stop(&e->sq); break;
     case EN_BPM: sq_set_bpm(&e->sq, a); break;
+    case EN_RATE: e->arate = (uint8_t)(a > 100u ? 100u : a); break;   /* next interval only; never retrigger a held note */
     case EN_ON:
         if (a == TR_VOCAL) { sing(e, b, c, 110); e->vcur = ++e->vid; }
         else if (a == TR_CHORDS) ch_note_on(&e->ch, (uint8_t)b, 100);
@@ -167,7 +173,7 @@ static void seg(Engine *e, int32_t *out, uint32_t at, uint32_t n) {
             fv_note_on_mora(&e->fv, (uint8_t)(nt > 127 ? 127 : nt), (uint8_t)mora_cons(mo), v < 5u ? (uint8_t)v : e->vh, e->vvel);
             hnote(e, nt > 127 ? 127 : nt, mora_cons(mo), v < 5u ? v : e->vh, e->vvel);
             e->mora = mo;
-            e->bt = x->lang == VL_ANIMAL ? 3087u + (r >> 16) % 882u : 1323000u / (e->g->bpm ? e->g->bpm : 120u);
+            e->bt = x->lang == VL_ANIMAL ? animal_wait(e, r >> 16) : 1323000u / (e->g->bpm ? e->g->bpm : 120u);
         }
     }
     fx.drv = x->drv; fx.trem = x->trem; fx.cho = x->cho; fx.dly = x->dly; fx.rev = x->rev;

@@ -15,6 +15,8 @@
 #include "platform.c"
 #include "firmware/audio/fvoice/fvoice.c"
 #include "firmware/ui/singer_sprites.h"
+#include "firmware/ui/sprite_codec.c"
+#include "firmware/ui/singer_compact.h"
 #include "firmware/ui/performance.c"
 #include "firmware/app/engine.h"
 /* the modules' private statics share names with each other (and with platform.c): give each file its own */
@@ -329,7 +331,7 @@ static void guarded(uint32_t act,uint32_t arg){            /* actions that drop 
 #define FX 30u
 #define FY 2u
 static void face_draw(uint32_t f,uint32_t sx,uint32_t sy,uint32_t w,uint32_t h){
-    const uint8_t *d=SINGER_FACES[f];
+    uint8_t row[SINGER_FACE_W];
     uint32_t cr=CV_MAX/(4u*w),r0,r,c,k;
     cv_oy=0;
     for(r0=sy;r0<sy+h;r0+=cr){
@@ -338,8 +340,9 @@ static void face_draw(uint32_t f,uint32_t sx,uint32_t sy,uint32_t w,uint32_t h){
         for(r=0;r<nr;r++){
             uint16_t *o=cv_px+r*2u*2u*w;
             int32_t hh=hw[2u*(r0+r)];
+            if(!spr_decode_row(&SC_FACE_ATLAS,f,r0+r,row,sizeof row))return;
             for(c=0;c<w;c++){
-                uint32_t x=sx+c,b=d[((r0+r)*SINGER_FACE_W+x)>>1],i=(x&1u)?b&15u:b>>4;
+                uint32_t x=sx+c,i=row[x];
                 int32_t dx=(int32_t)(2u*x)-89;
                 uint16_t p=i?pw[i]:((dx<0?-dx:dx)<=hh?c_disc:c_bg);
                 o[2u*c]=o[2u*c+1u]=p;
@@ -351,7 +354,7 @@ static void face_draw(uint32_t f,uint32_t sx,uint32_t sy,uint32_t w,uint32_t h){
 }
 static void face_set(uint32_t f){
     uint32_t a=face_cur,x0,y0,x1,y1;
-    const uint8_t *p=SINGER_FACE_DIRTY[a],*q=SINGER_FACE_DIRTY[f];
+    const uint8_t *p=SC_FACE_DIRTY+4u*a,*q=SC_FACE_DIRTY+4u*f;
     if(f==a)return;
     face_cur=f;
     if(page)return;
@@ -379,7 +382,7 @@ static void face_update(void){
 }
 static void stage_init(void){
     uint32_t i,v,h;
-    for(i=0;i<16;i++){pw[i]=swap16(SINGER_FACE_PAL[i]);dpw[i]=swap16(SINGER_STAGE_PAL[i]);}
+    for(i=0;i<16;i++){pw[i]=swap16(SC_FACE_PAL[i]);dpw[i]=swap16(SC_STAGE_PAL[i]);}
     c_bg=swap16(RGB(12,20,40));c_disc=swap16(RGB(40,66,120));
     for(i=0;i<2u*SINGER_FACE_H;i++){        /* half-width of a disc (r=90) behind the head, per output row */
         int32_t dy=(int32_t)i-90;
@@ -393,7 +396,7 @@ static void stage_init(void){
    song stops; a slow sway when stopped. A frame is redrawn only when it changes. */
 #define DX 28u
 static void dance_draw(uint32_t f){
-    const uint8_t *d=SINGER_STAGE[f];
+    uint8_t row[SINGER_STAGE_W];
     uint32_t w=SINGER_STAGE_W,h=SINGER_STAGE_H,cr=CV_MAX/(9u*w),r0,r,c,k;
     cv_oy=0;
     for(r0=0;r0<h;r0+=cr){
@@ -401,8 +404,9 @@ static void dance_draw(uint32_t f){
         lcd_sync();
         for(r=0;r<nr;r++){
             uint16_t *o=cv_px+r*9u*w;
+            if(!spr_decode_row(&SC_STAGE_ATLAS,f,r0+r,row,sizeof row))return;
             for(c=0;c<w;c++){
-                uint32_t px=(r0+r)*w+c,b=d[px>>1],i=(px&1u)?b&15u:b>>4;
+                uint32_t i=row[c];
                 uint16_t p=i?dpw[i]:c_bg;
                 o[3u*c]=o[3u*c+1u]=o[3u*c+2u]=p;
             }

@@ -26,6 +26,8 @@ cp "$ROOT"/firmware/song/*.[ch] firmware/src/firmware/song/
 cp "$ROOT"/firmware/app/engine.[ch] firmware/src/firmware/app/
 cp "$ROOT/firmware/ui/singer_sprites.h" firmware/src/firmware/ui/
 cp "$ROOT"/firmware/ui/performance.[ch] firmware/src/firmware/ui/
+cp "$ROOT"/firmware/ui/sprite_codec.[ch] firmware/src/firmware/ui/
+cp "$ROOT/firmware/ui/singer_compact.h" firmware/src/firmware/ui/
 python3 - <<'PY'
 from pathlib import Path
 p=Path('tools/build.py')
@@ -52,3 +54,6 @@ mkdir -p "$ROOT/build/native"
 V="${REL:+-${REL%%-*}}"
 cp "build/dinghy${REL:+-$REL}.fwsc" "$ROOT/build/native/miku-fm$V.fwsc"
 cp build/dinghy.bin "$ROOT/build/native/miku-fm$V-app.bin"
+"$JIELI_TOOLCHAIN/common/bin/objdump" -t build/dinghy.elf > "$ROOT/build/native/miku-fm$V-symbols.txt"
+python3 "$ROOT/tools/check_resources.py" --image "$ROOT/build/native/miku-fm$V-app.bin" \
+    --symbols "$ROOT/build/native/miku-fm$V-symbols.txt" --output "$ROOT/build/native/miku-fm$V-resources.json"

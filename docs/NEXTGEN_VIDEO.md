@@ -103,8 +103,10 @@ environment's ptrace, so leak detection is disabled (the core does not allocate)
 The host `muvc_packet_stream` tool uses this exact core, negotiates it, writes length-prefixed USB payload records, and
 reconstructs JPEG bytes. A 160x120 gradient JPEG (host fixture, 1,609 bytes) produced four payloads, final EOF, and an
 identical reconstructed JPEG decoded by Pillow as 160x120. Evidence: `build/evidence/video/{uvc-test.jpg,test.uvcp,
-reassembled.jpg}`. This confirms framing and reconstruction; it is not a rendering performance measurement. Repeat on
-the real integer renderer's output to validate the complete proposed producer pipeline.
+reassembled.jpg}`. The actual integer renderer's original MIKU image `stage-bg0-frame4.jpg` also passed: 3,794 JPEG
+bytes, eight packets, identical reconstruction, decoded as 160x120 by Pillow. Evidence is `stage-bg0-frame4.uvcp` and
+`stage-bg0-frame4-reassembled.jpg` in the same directory. This validates producer-to-class framing and JPEG decoding;
+it is not a hardware rendering or USB-throughput measurement. See `NEXTGEN_VIDEO_RENDER.md` for the producer costs.
 
 ```sh
 # Parent CMake adds add_subdirectory(firmware/usb/video).

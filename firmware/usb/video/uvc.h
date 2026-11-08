@@ -11,7 +11,9 @@
 #define MUVC_FRAME_CAP 8192u
 #define MUVC_PACKET_CAP 512u
 #define MUVC_PROBE_LEN 26u
+#ifndef MUVC_VC_IF
 #define MUVC_VC_IF 0u
+#endif
 #ifndef MUVC_VS_IF
 #define MUVC_VS_IF 1u
 #endif

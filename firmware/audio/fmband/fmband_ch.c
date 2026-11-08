@@ -7,19 +7,25 @@
    Steal order: free, else oldest in release, else oldest. */
 static const ChPreset pre[CH_NPRESET] = {
     /* ratio ibase lvl  wave atk dec sus rel idec isus ivel ikt */
-    { 896, 640, 6000, 0, 0, 56, 0, 36, 44, 20, 140, 3 },     /* 0 FM bells: 1:3.5, sparkle falls away fast */
-    { 256, 560, 6500, 0, 1, 50, 0, 34, 36, 40, 200, 2 },     /* 1 EP: 1:1, soft tine from the index decay */
-    { 256, 300, 5200, 1, 0, 30, 90, 28, 30, 90, 100, 0 },    /* 2 chip arp: soft-square carrier, short */
-    { 512, 180, 5000, 0, 40, 45, 200, 44, 40, 150, 60, 2 },  /* 3 pad: slow attack, gentle */
-    { 512, 250, 5200, 0, 3, 20, 255, 18, 20, 255, 0, 0 },    /* 4 organ: 2:1, constant index */
-    { 256, 900, 6500, 0, 0, 38, 0, 26, 24, 15, 200, 3 },     /* 5 pluck: bright burst, quick damp */
-    { 1024, 400, 6500, 0, 0, 40, 0, 28, 28, 0, 100, 4 },     /* 6 marimba: 4:1 */
-    { 768, 560, 6000, 0, 0, 30, 80, 26, 26, 60, 180, 3 },    /* 7 clav: 3:1 */
+    { 896, 640, 6000, 0, 0, 56, 0, 36, 44, 20, 140, 3 , 0 },     /* 0 FM bells: 1:3.5, sparkle falls away fast */
+    { 256, 560, 6500, 0, 1, 50, 0, 34, 36, 40, 200, 2 , 0 },     /* 1 EP: 1:1, soft tine from the index decay */
+    { 256, 300, 5200, 1, 0, 30, 90, 28, 30, 90, 100, 0 , 0 },    /* 2 chip arp: soft-square carrier, short */
+    { 512, 180, 5000, 0, 40, 45, 200, 44, 40, 150, 60, 2 , 0 },  /* 3 pad: slow attack, gentle */
+    { 512, 250, 5200, 0, 3, 20, 255, 18, 20, 255, 0, 0 , 0 },    /* 4 organ: 2:1, constant index */
+    { 256, 900, 6500, 0, 0, 38, 0, 26, 24, 15, 200, 3 , 0 },     /* 5 pluck: bright burst, quick damp */
+    { 1024, 400, 6500, 0, 0, 40, 0, 28, 28, 0, 100, 4 , 0 },     /* 6 marimba: 4:1 */
+    { 768, 560, 6000, 0, 0, 30, 80, 26, 26, 60, 180, 3 , 0 },    /* 7 clav: 3:1 */
+};
+static const ChPreset modern[2] = {
+    /* Detuned carriers share a modulator; no additional voice allocation. */
+    { 768, 1600, 5200, 0, 0, 42, 0, 28, 20, 0, 160, 4, 6 },  /* digital pluck: bright transient, short index fall */
+    { 512, 560, 4600, 1, 24, 48, 195, 42, 52, 80, 100, 3, 12 }, /* glass pad: soft attack, moving spectrum */
 };
 static void cpy(void *d, const void *s, uint32_t n) { uint8_t *a = d; const uint8_t *b = s; while (n--) *a++ = *b++; }
 static void zero(void *p, uint32_t n) { for (uint8_t *b = (uint8_t *)p, *e = b + n; b < e; b++) *b = 0; }
 void ch_init(ChSynth *s) { zero(s, sizeof *s); ch_set_preset(s, 0); ch_set_mix(s, 100, 64); }
 void ch_set_preset(ChSynth *s, uint8_t n) { s->preset = n >= CH_NPRESET ? 0 : n; cpy(&s->p, &pre[s->preset], sizeof s->p); }
+void ch_set_modern(ChSynth *s, uint8_t n) { n = n > 1 ? 0 : n; cpy(&s->p, &modern[n], sizeof s->p); s->preset = (uint8_t)(128u + n); }
 void ch_set_mix(ChSynth *s, uint8_t level, uint8_t pan) { mx_gain(level, pan, &s->gl, &s->gr); }
 void ch_note_on(ChSynth *s, uint8_t note, uint8_t vel) {
     if (note > 127) note = 127;
@@ -34,6 +40,7 @@ void ch_note_on(ChSynth *s, uint8_t note, uint8_t vel) {
     const ChPreset *p = &s->p;
     v->note = note; v->age = ++s->age;
     v->ic = fmb_inc[note]; v->im = (v->ic >> 8) * p->ratio;
+    v->iu = v->ic + (((v->ic >> 12) * (p->detune > 24u ? 24u : p->detune) * 151u) >> 6);
     v->vg = fb_vg(p->lvl > 8192 ? 8192 : p->lvl, vel);
     uint32_t ib = ((uint32_t)p->ibase * 5214u) >> 10;          /* Q8 rad -> index units (65536/ (2^16 * ...) = 5.09/Q8) */
     ib = (ib * (uint32_t)(256 - p->ivel + ((p->ivel * (vel > 127 ? 127 : vel)) >> 7))) >> 8;
@@ -72,14 +79,16 @@ void ch_render(ChSynth *s, int32_t *out, uint32_t n) {
         for (int i = 0; i < CH_VOICES; i++) {
             ChVoice *v = &s->v[i];
             if (!v->env.st) continue;
-            uint32_t pc = v->pc, pm = v->pm;
+            uint32_t pc = v->pc, pm = v->pm, pu = v->pu;
             int32_t a = v->a, ik = v->ik;
             for (uint32_t f = 0; f < m; f++) {
                 pc += v->ic; pm += v->im; a += v->da; ik += v->dik;
                 uint32_t off = (uint32_t)(fmb_sin[pm >> 22] * ik) << 4;
-                mb[f] += (w[(pc + off) >> 22] * a) >> 15;
+                int32_t carrier = w[(pc + off) >> 22];
+                if (s->p.detune) { pu += v->iu; carrier = (carrier + w[(pu + off) >> 22]) >> 1; }
+                mb[f] += (carrier * a) >> 15;
             }
-            v->pc = pc; v->pm = pm; v->a = a; v->ik = ik;
+            v->pc = pc; v->pm = pm; v->pu = pu; v->a = a; v->ik = ik;
         }
         for (uint32_t f = 0; f < m; f++, out += 2) {
             int32_t x = fb_clamp(mb[f], -32767, 32767);

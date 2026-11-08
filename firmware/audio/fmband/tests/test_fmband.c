@@ -256,9 +256,11 @@ static void t_determ(void) {
 }
 static void t_cost(void) {
     static Band w; static int32_t o[2 * 256];
+    for (int mode=0;mode<3;mode++) {
     band_init(&w, 5);
+    if (mode) { ch_set_modern(&w.c,(uint8_t)(mode-1)); bs_set_preset(&w.b,(uint8_t)(mode+3)); dr_set_preset(&w.d,(uint8_t)(mode+1)); }
     for (int i = 0; i < 4; i++) ch_note_on(&w.c, (uint8_t)(48 + 4 * i), 127);
-    bs_set_preset(&w.b, 3); bs_note_on(&w.b, 36, 127, 1, 0);
+    if (!mode) bs_set_preset(&w.b, 3); bs_note_on(&w.b, 36, 127, 1, 0);
     struct timespec t0, t1; double best = 1e9; long sink = 0;
     for (int rep = 0; rep < 200; rep++) {
         for (int i = 0; i < 6; i++) dr_trig(&w.d, (uint8_t)i, 127);
@@ -270,10 +272,80 @@ static void t_cost(void) {
         if (us < best) best = us; sink += o[100];
         if (rep % 8 == 7) { for (int i = 0; i < 4; i++) ch_note_on(&w.c, (uint8_t)(48 + 4 * i), 127); bs_note_on(&w.b, 36, 127, 1, 0); }
     }
-    printf("host: all instruments sounding, best of 200: %.1f us / 256-frame block (sink %ld)\n", best, sink);
+    printf("host: band mode %d, all instruments sounding, best of 200: %.1f us / 256-frame block (sink %ld)\n", mode, best, sink);
+    }
+}
+/* Frozen against origin/main using little-endian int32 FNV-1a: all original presets stay exact. */
+static void t_baseline(void) {
+    static const uint32_t expected[3][8] = {
+        {2623350273u,272721381u,2635900673u,586310193u,1385016497u,106538605u,1178010009u,3191860485u},
+        {2079423785u,4200575773u,1119758805u,2318241549u},
+        {1826567869u,2977136449u}
+    };
+    for (int kind = 0; kind < 3; kind++) for (uint32_t p = 0; p < (kind == 0 ? 8u : kind == 1 ? 4u : 2u); p++) {
+        ChSynth c; BsSynth b; DrKit d; uint32_t h = 2166136261u; int32_t o[512];
+        ch_init(&c); bs_init(&b); dr_init(&d); ch_set_preset(&c, (uint8_t)p); bs_set_preset(&b, (uint8_t)p); dr_set_preset(&d, (uint8_t)p);
+        if (!kind) { ch_note_on(&c,48,110); ch_note_on(&c,55,100); ch_note_on(&c,64,90); }
+        else if (kind == 1) bs_note_on(&b,36,110,1,0);
+        else for (int i = 0; i < 6; i++) dr_trig(&d,(uint8_t)i,100);
+        for (int blk = 0; blk < 48; blk++) {
+            if (blk == 16) { ch_all_off(&c); bs_note_off(&b); }
+            memset(o,0,sizeof o);
+            if (!kind) ch_render(&c,o,256); else if (kind == 1) bs_render(&b,o,256); else dr_render(&d,o,256);
+            for (int i = 0; i < 512; i++) { uint32_t v = (uint32_t)o[i]; for (int by = 0; by < 4; by++) { h ^= v & 255u; h *= 16777619u; v >>= 8; } }
+        }
+        CHECK(h == expected[kind][p], "original bank %d preset %u changed: %u", kind, p, h);
+    }
+}
+static double harmonic(const double *x, int start, int n, double freq) {
+    double re=0,im=0;
+    for(int i=0;i<n;i++) { double w=.5-.5*cos(2*3.141592653589793*i/n); re+=x[start+i]*w*cos(2*3.141592653589793*freq*i/FS); im+=x[start+i]*w*sin(2*3.141592653589793*freq*i/FS); }
+    return re*re+im*im;
+}
+static void t_modern(void) {
+    double *x = buf(FS * 2);
+    BsSynth b;
+    bs_init(&b); bs_set_preset(&b,4); bs_note_on(&b,36,110,0,0);
+    bs_render(&b,(int32_t[32]){0},16);
+    CHECK(b.ic > fmb_inc[36] * 1.39 && b.ic < fmb_inc[36] * 1.43, "sub drop did not begin six semitones above note");
+    rend(K_BS,&b,NULL,ms(100));
+    CHECK(b.ic == fmb_inc[36] && b.pcur == 36 << 8, "sub drop did not settle at base pitch");
+    bs_note_on(&b,43,110,0,1);
+    CHECK(b.penv == 0 && b.env.st != 1, "slide retriggered pitch drop");
+    for (int p = 4; p < BS_NPRESET; p++) for (int note = 24; note <= 96; note += 12) {
+        bs_init(&b); bs_set_preset(&b,(uint8_t)p); bs_set_mix(&b,127,64);
+        bs_note_on(&b,(uint8_t)note,127,1,0); rend(K_BS,&b,x,FS/2);
+        CHECK(peak(x,0,FS/2) < 32767 && peak(x,0,FS/2) > 500, "modern bass %d note %d clipping/silent", p,note);
+        bs_note_off(&b); rend(K_BS,&b,x,FS);
+        CHECK(!bs_active(&b) && peak(x,FS-256,FS) == 0, "modern bass release %d",p);
+    }
+    { double ratio[2];
+      for(int drive=0;drive<2;drive++) {
+          bs_init(&b);bs_set_preset(&b,4);b.p.drive=drive?100:0;b.p.drop=0;b.p.sus=255;
+          bs_note_on(&b,36,100,0,0);rend(K_BS,&b,x,FS);
+          ratio[drive]=harmonic(x,FS/2,FS/4,hz(36)*3)/harmonic(x,FS/2,FS/4,hz(36));
+      }
+      printf("sub saturation third/fundamental power %.6f -> %.6f\n",ratio[0],ratio[1]);
+      CHECK(ratio[1]>.005 && ratio[1]>ratio[0]*100,"saturation adds no measurable harmonics");
+    }
+    for (int p = 0; p < 2; p++) {
+        ChSynth c, d; int32_t a[512], z[512];
+        ch_init(&c); ch_set_modern(&c,(uint8_t)p); d=c;
+        for (int i=0;i<4;i++) { ch_note_on(&c,(uint8_t)(48+4*i),127); ch_note_on(&d,(uint8_t)(48+4*i),127); }
+        CHECK(ch_active(&c)==4, "modern chord changed polyphony");
+        for (int blk=0;blk<100;blk++) {
+            memset(a,0,sizeof a);memset(z,0,sizeof z);ch_render(&c,a,256);
+            for(int f=0;f<256;f++)ch_render(&d,z+2*f,1);
+            CHECK(!memcmp(a,z,sizeof a), "modern chord render chunking %d",p);
+        }
+        rend(K_CH,&c,x,FS/2); ch_all_off(&c); rend(K_CH,&c,x,FS);
+        CHECK(!ch_active(&c) && peak(x,FS-256,FS)==0, "modern chord release %d",p);
+        CHECK(c.p.detune>0, "modern chord missing unison");
+    }
+    free(x);
 }
 int main(void) {
-    t_pitch(); t_poly(); t_bass(); t_drums(); t_stress(); t_determ(); t_cost();
+    t_pitch(); t_poly(); t_bass(); t_drums(); t_stress(); t_determ(); t_cost(); t_baseline(); t_modern();
     printf(fails ? "fmband: %d FAILURES\n" : "fmband: all ok\n", fails);
     return fails != 0;
 }

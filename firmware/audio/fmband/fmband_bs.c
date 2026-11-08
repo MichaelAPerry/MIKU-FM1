@@ -6,10 +6,12 @@
    Accent: louder, 1.5x index / higher cutoff, more resonance, shorter decays. Per sample: FM 2 mul, acid 4 mul. */
 static const BsPreset pre[BS_NPRESET] = {
     /* ratio ibase lvl cut cmod res | wave atk dec sus rel idec isus porta cdec */
-    { 256, 800, 20000, 0, 0, 0, 0, 0, 34, 150, 26, 30, 40, 28, 0 },        /* 0 FM bass: punchy 1:1 */
-    { 256, 80, 24000, 0, 0, 0, 0, 2, 40, 220, 28, 30, 50, 30, 0 },         /* 1 sub: near-sine */
-    { 256, 0, 15000, 0, 0, 0, 1, 0, 26, 160, 22, 0, 0, 24, 0 },            /* 2 chip square */
-    { 256, 0, 19000, 4000, 16000, 5500, 2, 0, 30, 200, 22, 0, 0, 30, 32 }, /* 3 acid: saw + resonant SVF */
+    { 256, 800, 20000, 0, 0, 0, 0, 0, 34, 150, 26, 30, 40, 28, 0, 0, 0, 0 },        /* 0 FM bass: punchy 1:1 */
+    { 256, 80, 24000, 0, 0, 0, 0, 2, 40, 220, 28, 30, 50, 30, 0, 0, 0, 0 },         /* 1 sub: near-sine */
+    { 256, 0, 15000, 0, 0, 0, 1, 0, 26, 160, 22, 0, 0, 24, 0, 0, 0, 0 },            /* 2 chip square */
+    { 256, 0, 19000, 4000, 16000, 5500, 2, 0, 30, 200, 22, 0, 0, 30, 32, 0, 0, 0 }, /* 3 acid: saw + resonant SVF */
+    { 256, 0, 23500, 0, 0, 0, 0, 0, 46, 170, 26, 0, 0, 32, 0, 24, 24, 30 }, /* 4 sub drop: 6-semitone onset, solid sine sustain */
+    { 256, 0, 17500, 2200, 17000, 4700, 2, 0, 26, 135, 20, 0, 0, 26, 24, 0, 0, 100 }, /* 5 hard acid: short cutoff punch + saturation */
 };
 static void cpy(void *d, const void *s, uint32_t n) { uint8_t *a = d; const uint8_t *b = s; while (n--) *a++ = *b++; }
 static void zero(void *p, uint32_t n) { for (uint8_t *b = (uint8_t *)p, *e = b + n; b < e; b++) *b = 0; }
@@ -24,7 +26,7 @@ void bs_note_on(BsSynth *s, uint8_t note, uint8_t vel, uint8_t accent, uint8_t s
     if (vel > 127) vel = 127;
     int legato = slide && s->env.st && s->env.st != 4;
     s->ptgt = (int32_t)note << 8;
-    if (!legato) { s->pcur = s->ptgt; s->env.st = 1; s->ienv = FB_FULL; s->cenv = FB_FULL; }
+    if (!legato) { s->pcur = s->ptgt; s->env.st = 1; s->ienv = FB_FULL; s->cenv = FB_FULL; s->penv = FB_FULL; }
     s->acc = accent != 0;
     int32_t vg = fb_vg(p->lvl > 26000 ? 26000 : p->lvl, vel);
     if (s->acc) vg += vg >> 2;
@@ -41,7 +43,13 @@ static void block(BsSynth *s) {
         if (!st) st = 1;
         s->pcur = st >= ad ? s->ptgt : s->pcur + (d < 0 ? -(int32_t)st : (int32_t)st);
     }
-    int32_t n = s->pcur >> 8, fr = s->pcur & 255;
+    int32_t pitch = s->pcur;
+    if (p->drop) {
+        pitch += (int32_t)(((s->penv >> 12) * p->drop) >> 6);
+        s->penv = fb_ap(s->penv, 0, fmb_kdec[p->pdec & 63]);
+        if (pitch > (127 << 8)) pitch = 127 << 8;
+    }
+    int32_t n = pitch >> 8, fr = pitch & 255;
     uint32_t ic = fmb_inc[n] + (((fmb_inc[n + 1] - fmb_inc[n]) >> 8) * (uint32_t)fr);
     s->ic = ic;
     uint8_t ac = s->acc;
@@ -81,6 +89,12 @@ void bs_render(BsSynth *s, int32_t *out, uint32_t n) {
                 } else {
                     pm += im; ik += s->dik;
                     o = w[(pc + ((uint32_t)(fmb_sin[pm >> 22] * ik) << 4)) >> 22];
+                }
+                if (s->p.drive) {                           /* compact symmetric soft knee; bypass is bit-exact */
+                    int32_t mag = o < 0 ? -o : o;
+                    mag = (mag * (128 + (s->p.drive > 127u ? 127u : s->p.drive))) >> 7;
+                    if (mag > 16384) mag = 16384 + ((mag - 16384) >> 2);
+                    o = o < 0 ? -mag : mag;
                 }
                 mb[i] = (o * a) >> 15;
             }

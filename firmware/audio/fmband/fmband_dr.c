@@ -21,6 +21,18 @@ static const DrPreset pre[DR_NPRESET] = {
       .h_lv = 30000, .h_khp = 18830, .p_lv = 18000, .p_ratio = 256, .p_idx = 0,
       .k_rsw = 30, .k_ra = 34, .k_cl = 0, .k_rc = 3, .k_wv = 1, .s_rt = 26, .s_rn = 33, .s_wv = 2, .hold = 3,
       .c_rb = 10, .c_rt = 31, .c_sp = 20, .h_rc = 22, .h_ro = 35, .h_noise = 1, .p_rsw = 22, .p_ra = 30, .p_ri = 20, .p_wv = 2 },
+    { /* Punch: faster sweep, solid low body, crisp clap and noise hats. */
+      .k_f = HZ10(470), .k_sw = HZ10(1900), .s_f = HZ10(2050), .p_f = HZ10(3100), .p_sw = HZ10(1700),
+      .k_lv = 26500, .s_lv = 22000, .s_tl = 145, .s_nl = 245, .s_khp = 6200, .s_klp = 22000, .c_lv = 22000, .c_klp = 23000, .c_khp = 5200,
+      .h_lv = 29500, .h_khp = 18000, .p_lv = 20000, .p_ratio = 576, .p_idx = 700,
+      .k_rsw = 30, .k_ra = 41, .k_cl = 35, .k_rc = 3, .k_wv = 0, .s_rt = 27, .s_rn = 35, .s_wv = 0, .hold = 1,
+      .c_rb = 9, .c_rt = 35, .c_sp = 18, .h_rc = 22, .h_ro = 38, .h_noise = 1, .p_rsw = 22, .p_ra = 33, .p_ri = 24, .p_wv = 0 },
+    { /* Digital: triangle kick, shorter square snare, metallic FM percussion. */
+      .k_f = HZ10(520), .k_sw = HZ10(2400), .s_f = HZ10(2450), .p_f = HZ10(5400), .p_sw = HZ10(2600),
+      .k_lv = 24000, .s_lv = 21000, .s_tl = 120, .s_nl = 220, .s_khp = 6800, .s_klp = 24000, .c_lv = 21000, .c_klp = 21000, .c_khp = 6500,
+      .h_lv = 28500, .h_khp = 19000, .p_lv = 18000, .p_ratio = 912, .p_idx = 1250,
+      .k_rsw = 28, .k_ra = 37, .k_cl = 20, .k_rc = 3, .k_wv = 1, .s_rt = 23, .s_rn = 31, .s_wv = 2, .hold = 2,
+      .c_rb = 8, .c_rt = 32, .c_sp = 14, .h_rc = 20, .h_ro = 35, .h_noise = 0, .p_rsw = 20, .p_ra = 31, .p_ri = 25, .p_wv = 0 },
 };
 static void cpy(void *d, const void *s, uint32_t n) { uint8_t *a = d; const uint8_t *b = s; while (n--) *a++ = *b++; }
 static void zero(void *p, uint32_t n) { for (uint8_t *b = (uint8_t *)p, *e = b + n; b < e; b++) *b = 0; }

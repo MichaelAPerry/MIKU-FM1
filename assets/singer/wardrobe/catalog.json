@@ -1,12 +1,12 @@
 {
-  "version": 2,
+  "version": 3,
   "status": "concept-review-only",
   "source_references": [
     "assets/singer/reference.webp",
     "assets/singer/stage.webp",
     "assets/singer/faces.webp"
   ],
-  "concept_sheet": "concepts-v2.png",
+  "concept_sheet": "concepts-v3.png",
   "outfits": [
     {
       "concept": 1,
@@ -52,7 +52,7 @@
     },
     {
       "concept": 7,
-      "name": "Zettai",
+      "name": "Signal Suit",
       "approved": false,
       "portrait_atlas": null,
       "dance_atlas": null
@@ -77,7 +77,14 @@
       "approved": false,
       "portrait_atlas": null,
       "dance_atlas": null
+    },
+    {
+      "concept": 11,
+      "name": "Moon Circuit",
+      "approved": false,
+      "portrait_atlas": null,
+      "dance_atlas": null
     }
   ],
-  "revision_note": "Owner requested replacing concepts07 and08 with a zettai skirt/thigh-high outfit and bikini respectively. Final paired atlases remain unapproved."
+  "revision_note": "Owner corrected07 to a sci-fi technical bodysuit, retained08 bikini, requested witch; counts may adjust to preserve USB video headroom."
 }

@@ -1,0 +1,6 @@
+{
+  "description": "Development headroom after linked allocations; future USB/audio/video work must remain within this margin until budgets are remeasured.",
+  "image": {"limit": 581564, "minimum_free": 65536},
+  "static_ram": {"limit": 98304, "minimum_free": 16384},
+  "pool": {"limit": 344064, "minimum_free": 32768}
+}

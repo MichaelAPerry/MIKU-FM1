@@ -2,7 +2,7 @@
 
 The owner requested at least ten outfits, maintaining the existing singer identity. All three references were visually inspected before generation: `reference.webp`, `stage.webp` and `faces.webp`. The portrait sheet is a required part of every outfit, not an optional follow-up. The original assets remain intact.
 
-[Current concept sheet, revision2](../assets/singer/wardrobe/concepts-v2.png) contains ten proposed outfits, each with a full-body view and coordinated portrait inset:
+[Current concept sheet, revision3](../assets/singer/wardrobe/concepts-v3.png) contains eleven proposed outfits, each with a full-body view and coordinated portrait inset:
 
 1. Encore — tailored stagewear (close to the original; can be made more distinct).
 2. Off Duty — casual hoodie.
@@ -10,12 +10,13 @@ The owner requested at least ten outfits, maintaining the existing singer identi
 4. Prism — geometric futuristic dress.
 5. Neon Punk — jacket, skirt and chunky boots.
 6. City Beat — varsity streetwear.
-7. Zettai — stage jacket, pleated skirt and thigh-high socks with a small visible gap (replaces Starlight at owner request).
+7. Signal Suit — cyan/navy sci-fi technical bodysuit, high collar and full-length sleeves/trousers (owner corrected the earlier terminology).
 8. Summer Beat — sporty cyan/navy bikini with pink trim, matching portrait straps/neckline (replaces Rain Signal at owner request).
 9. Snow Glow — winter jacket and scarf.
 10. Festival — festival yukata.
+11. Moon Circuit — witch dress, pointed hat and loosely braided twin-tails.
 
-These are concepts for owner review, not approved native skins or final sprite atlases. `catalog.json` records all ten as unapproved and has no placeholder production atlas paths. The generation preserves the same hair/headset silhouette and pairs body/portrait clothing. Several small details still need cleanup: e.g. City Beat legs differ from the opaque-leggings brief, and Encore is close to the default. Owner preferences take precedence over the proposed names and clothing directions.
+These are concepts for owner review, not approved native skins or final sprite atlases. `catalog.json` records all eleven as unapproved and has no placeholder production atlas paths. The generation preserves the same hair/headset silhouette and pairs body/portrait clothing. Several small details still need cleanup: e.g. City Beat legs differ from the opaque-leggings brief, and Encore is close to the default. Owner preferences take precedence over the proposed names and clothing directions.
 
 ## Matching portrait and dance delivery
 
@@ -34,3 +35,5 @@ Generated with ChatGPT image generation using all three existing repository imag
 Next: owner selects/revises concepts, then prepare matched production atlases and measure a shared-pixel pack before registering native outfits. None of these ten designs has been finalized or added to the runtime registry.
 
 Revision2 replaces only concepts07/08 in response to owner direction; revision1 is retained as review history. These remain costume concepts, not production animation sheets.
+
+Revision3 implements the corrected bodysuit direction and adds the witch concept. The owner authorized compact packing work and adjusting the count as necessary to retain USB video headroom. Final production art still requires review.

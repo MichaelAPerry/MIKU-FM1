@@ -79,3 +79,11 @@ Physical device ISR deadlines, output-stage artifacts, buffer underruns, USB thr
 Owner requested at least ten outfits and emphasized matching singer-face sheets as well as dancing sprites. Visually inspected all three source sheets and generated ten paired body/portrait concepts under `assets/singer/wardrobe/`, preserving all original art. No designs approved or runtime skins claimed. See [wardrobe review](NEXTGEN_WARDROBE.md) for concepts, required paired animation states and flash/storage constraints.
 
 Wardrobe revision2: owner requested replacing07 Starlight with Zettai and08 Rain Signal with a bikini (Summer Beat). Generated paired full-body/portrait concepts using the existing contact sheet, face sheet and dance sheet as references; saved revision2 while preserving revision1. No final atlas or runtime skin integration claimed.
+
+## Compact wardrobe / native USB-video milestone
+
+Owner clarified07 as a sci-fi bodysuit, retained08 bikini, requested witch; revision3 presents eleven paired body/portrait concepts with corrected07 Signal Suit and11 Moon Circuit. Original art remains intact, production atlases not finalized. Owner authorized adjusting outfit count and preserving USB-video headroom.
+
+Implemented lossless shared-row/delta sprite storage for both LCD views. Actual default image152696B saves32512B; static/pool unchanged. Optional native MIDI+UVC development profile now includes real integer incremental JPEG and class/endpoint code on Dinghy, preserving the original update-loader source via a checked build patch. Actual video profile159080B image/33732B static/265216B pool. It deliberately excludes UAC/CDC; no combined audio/video descriptor promise.
+
+Headroom is now enforced in each native build: minimum64KiB image,16KiB static RAM,32KiB pool free. Video profile still has422484/64572/78848 bytes respectively. See [headroom report](NEXTGEN_MEMORY.md). Host Release25/25 plus real patched-driver fake-SIE tests pass; both actual native packages pass emulator smoke. Integer JPEG scenes3475–5027B,26/26 independently decoded fixtures; raw/compact renderer output is byte-identical. Native emulated encode benchmark is recorded in final validation when complete. No hardware flashed.

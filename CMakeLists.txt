@@ -98,3 +98,4 @@ if(NOT MSVC)
   add_test(NAME native_video_main COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tests/test_native_video_main.py
     ${CMAKE_SOURCE_DIR} ${CMAKE_C_COMPILER})
 endif()
+add_test(NAME video_bench_report COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tests/test_video_bench_report.py)

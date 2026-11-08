@@ -1,3 +1,11 @@
+# Compact visuals and USB-video follow-up (2026-11-08)
+
+Latest branch work: default native now uses lossless compact portrait+dance artwork, saving32512B linked image space. Optional `native/build.sh --video` builds MIDI+UVC160x120 MJPEG with incremental integer JPEG, one8KiB frame and no extra framebuffer/core1 job; update loader retains original USB code. Video profile excludes UAC/CDC and has not been enumerated on a physical USB host. Default and optional packages pass native/emulator smoke;25 host tests plus patched-driver fake-SIE tests pass.
+
+Read [NEXTGEN_MEMORY.md](NEXTGEN_MEMORY.md) for exact linked budgets/reserves and [NEXTGEN_VIDEO_NATIVE.md](NEXTGEN_VIDEO_NATIVE.md) for adapter validation/limits. `--video-bench` is an emulator-only3-frame encoder benchmark, not a camera-stream build. Wardrobe revision3 corrects07 to Signal Suit and adds11 Moon Circuit witch; concepts only, matched production atlases still pending. Keep all work on the feature branch/draft PR; no release, merge, deployment or flash.
+
+---
+
 # Next-generation feature branch handoff (2026-11-08)
 
 Work is on `feature/miku-nextgen-performance`, based on main `88b0ef3`; keep it separate until owner integration approval.

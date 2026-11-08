@@ -63,3 +63,7 @@ is present. It is separate from transport validation.
 Next concrete task: capture real descriptor/control traces and MJPEG frames on an authorized FM-1 connected to a host,
 measure frame throughput under simultaneous native synthesis and MIDI traffic, and verify recovery/update behavior.
 No broader USB combination or platform migration should be inferred from this isolated profile.
+
+## Actual native integration result (2026-11-08)
+
+Root integration now builds `native/build.sh --video` as a development-only MIDI+UVC package. Actual image159080B/static33732B/pool265216B; loader package9067B is preserved. Resource margins and tradeoffs are in [NEXTGEN_MEMORY.md](NEXTGEN_MEMORY.md). The package passes fm1-emu smoke with audio and display; no real USB host enumeration has been tested. Main-loop encoding is incremental, one MCU/pass, with one immutable JPEG buffer. An independent `--video-bench` profile measures encoding without pretending a USB host is present; three target JPEGs completed, recovered image matches the host reference exactly. Do not use the benchmark profile as camera-stream evidence.

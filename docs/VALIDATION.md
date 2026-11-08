@@ -293,3 +293,17 @@ Source baseline `88b0ef3`; branch `feature/miku-nextgen-performance`. Details: [
 Evidence under ignored `build/evidence/` and `build/nextgen/`: WAVs, editable generated songs, PNGs, CSVs, source/package hashes, build logs and resource JSON. `tools/nextgen_review.py` assembles `build/evidence/review.html`. Individual NEXTGEN documents contain regeneration commands.
 
 Not measured: physical-device audio/ISR load, real USB endpoint throughput/underruns/latency, simultaneous audio/MIDI/UVC descriptors, UVC frame rate, final perception/genre authenticity or approved visual design. No device flashed; no release, live website deployment or main merge.
+
+
+## Compact wardrobe and native UVC follow-up (2026-11-08)
+
+- Host Release26/26 after adding compact codec/generator, real native LCD draw comparison, bounded UVC class, incremental JPEG, real native video-producer tests and benchmark-listing decoding. Separate `python3 tests/test_native_video.py` compiles actual patched pinned Dinghy USB code against a fake SIE: descriptors/EP0 Probe/Commit/EP4 payload/DMA ownership/alt/reset/suspend/MIDI rescue all pass. Neither fake-SIE nor emulator proves real host enumeration.
+- All original131848 portrait/dance pixels, palettes, dirty rectangles and scaled LCD output remain exact. Compact generated data32884B versus65928B. Native default image152696B/static35540B/pool254784B:32512B image saved, zero extra static/pool.
+- Optional native `--video`: image159080B/static33732B/pool265216B; original loader9067B retained. This profile disables UAC/CDC, keeps MIDI and adds UVC160x120 nominal15fps. Default USB behavior is unchanged. No combined playback/capture/MIDI/UVC claim.
+- Minimum free reserves now checked in native builds: image65536B/static16384B/pool32768B. Video profile retains422484B/64572B/78848B. These are development floors, not measured future feature allocations or runtime stack guarantees.
+- Compact default and video package emulator smoke both124928 frames/RMS1504/23screen colors. Compact DANCE:58624 frames,35LCDframes, emulator ISR7.5%; image visually inspected. Video idle-source build still synthesizes normally without a host.
+- Integer JPEG26/26 fixtures independently decode; original/compact renderers yield identical bytes. Actual scene sizes3475–5027B. Real JPEG3794B packetizes into8 UVC packets and reassembles byte-identically. Encoder/context2240B plus single8192B output consumes10432B pool; no video framebuffer/core1 allocation.
+- Target `--video-bench` ran actual native audio+video code:3 JPEGs,0failures, recovered3794B image byte-identical to host reference. Emulator max MCU1.403ms/maxframewall32.206ms,totalISR13.1%;80640 audioframes,peak9653,zero fullscale. This is offline encoding, not delivered USB video FPS or physical-device timing. Benchmark parsing and reproduction tools committed.
+- Tables/sprites regenerated/check unchanged; sanitizer checks for codec/JPEG/class pass (LeakSanitizer unavailable under ptrace; those modules allocate no heap). No hardware flash, release, deployment or main merge.
+
+Review assets: revised eleven-outfit board includes corrected07 Signal Suit,08 Summer Beat,11 Moon Circuit witch; both face and dance requirements retained. These are concepts, not eleven completed native outfits. See [headroom report](NEXTGEN_MEMORY.md) and [wardrobe](NEXTGEN_WARDROBE.md).

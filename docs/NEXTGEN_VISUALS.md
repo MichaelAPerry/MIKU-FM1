@@ -55,3 +55,5 @@ Host `cc -Os` module object: 1073 bytes code/constants +24 bytes registry data, 
 Native DANCE now uses this shared state module, updated once per main-loop pass. The original outfit/background remain the device defaults. Background/frame candidates are preview-only pending review. The odd-width sprite decoder was also fixed to use linear pixel parity; a separate test checks every packed atlas pixel.
 
 Next engineering task: measure full-theme redraw cost, then expose review-only theme previews through a deliberate control once its behavior is approved.
+
+Follow-up: native portrait/dance drawing now uses the lossless compressed atlases in `singer_compact.h` and `sprite_codec.c`, preserving exact pixels with a32512B linked image reduction. The optional native video profile shares this atlas. See [memory report](NEXTGEN_MEMORY.md) and [wardrobe revision3](NEXTGEN_WARDROBE.md).

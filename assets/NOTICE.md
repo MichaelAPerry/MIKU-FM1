@@ -24,3 +24,5 @@ Replace it with your own art to make a different singer: `tools/sprite_pack.py` 
 ## Wardrobe concepts (2026-11-08)
 
 `assets/singer/wardrobe/concepts-v1.png`, `concepts-v2.png` and `concepts-v3.png` were made with ChatGPT image generation using the existing reference, face and dance sheets. It contains unapproved costume concepts, including matching portrait insets, for owner review. It is Hatsune Miku fan art under the same PCL terms and credit above, not GPL/MIT. The adjacent catalog is review metadata, not a production sprite atlas.
+
+The lossless compact representation `firmware/ui/singer_compact.h` contains the same character pixels as `singer_sprites.h` and retains their PCL terms; compression does not relicense the artwork.

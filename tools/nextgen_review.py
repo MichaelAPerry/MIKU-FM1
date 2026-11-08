@@ -38,6 +38,8 @@ for name in ['hyperpop','future-bass','jersey-club','digicore','idol-pop']:
     for seed in [1,42]: audio(f'{name}, seed {seed}',f'build/nextgen/{name}-{seed}.wav')
 parts.append('<h2>Pedal DSP: recorded-input processing</h2>')
 audio('Input','build/evidence/pedal-input.wav');audio('Processed','build/evidence/pedal-processed.wav')
+parts.append('<h2>Wardrobe revision 3</h2><p>Eleven paired outfit/portrait concepts; count adjustable to preserve USB-video reserves.</p><a href="../../assets/singer/wardrobe/concepts-v3.png">Open wardrobe board</a>')
+parts.append('<h2>Actual target JPEG</h2><img width="320" src="video-bench/actual-native.png" alt="Native MIKU JPEG encoder output">')
 parts.append('<h2>Visual review concepts</h2>')
 for name in ['stage-original','stage-grid','stage-horizon','companion']:
     if (out.parent/(name+'.png')).exists(): parts.append(f'<p>{name}</p><img width="240" src="{name}.png" alt="{name}">')

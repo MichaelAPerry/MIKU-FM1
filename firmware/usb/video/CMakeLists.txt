@@ -1,0 +1,13 @@
+# SPDX-License-Identifier: GPL-3.0-only
+add_library(miku_uvc STATIC uvc.c)
+target_include_directories(miku_uvc PUBLIC ${CMAKE_SOURCE_DIR})
+add_executable(miku_uvc_tests test_uvc.c)
+target_link_libraries(miku_uvc_tests PRIVATE miku_uvc)
+add_executable(muvc_packet_stream packet_stream.c)
+target_link_libraries(muvc_packet_stream PRIVATE miku_uvc)
+if(NOT MSVC)
+  target_compile_options(miku_uvc PRIVATE -Wall -Wextra -Wpedantic)
+  target_compile_options(miku_uvc_tests PRIVATE -Wall -Wextra -Wpedantic)
+  target_compile_options(muvc_packet_stream PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+add_test(NAME uvc COMMAND miku_uvc_tests)

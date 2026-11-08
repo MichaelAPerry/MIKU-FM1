@@ -400,7 +400,7 @@ static void dance_draw(uint32_t f){
         for(r=0;r<nr;r++){
             uint16_t *o=cv_px+r*9u*w;
             for(c=0;c<w;c++){
-                uint32_t b=d[((r0+r)*w+c)>>1],i=(c&1u)?b&15u:b>>4;
+                uint32_t px=(r0+r)*w+c,b=d[px>>1],i=(px&1u)?b&15u:b>>4;
                 uint16_t p=i?dpw[i]:c_bg;
                 o[3u*c]=o[3u*c+1u]=o[3u*c+2u]=p;
             }

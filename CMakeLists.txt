@@ -46,3 +46,7 @@ if(NOT MSVC)
   add_test(NAME live_select COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tests/test_live_select.py
     ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR} ${CMAKE_C_COMPILER})
 endif()
+if(NOT MSVC)
+  add_test(NAME sprite_decode COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tests/test_sprite_decode.py
+    ${CMAKE_SOURCE_DIR} ${CMAKE_C_COMPILER})
+endif()

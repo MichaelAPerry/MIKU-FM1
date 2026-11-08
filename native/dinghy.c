@@ -94,7 +94,7 @@ static GenCfg gcf={GS_POP,0,GK_MAJOR,0,1};
 /* STAGE / DANCE: the voice's home. FX / ENV / LFO pick what the four knobs do (press again: back to VOICE), SEL the language,
    SELECT the syllable, ALGORITHM the character. Every value lives in the song (sg.trk[0], sg.vx), so it is saved with it. */
 enum { BK_VOICE, BK_FX, BK_ENV, BK_LFO, BK_SRC, BK_FXD, BK_ART, BK_HAR, BK_N };   /* the last four: hold SEL / FX / ENV / LFO */
-static uint32_t bank,lp_t[4],lp_on[4];                    /* lp_*: when FX/SEL/ENV/LFO went down; 1 pressed, 2 long press done */
+static uint32_t bank,animal_rate=50,lp_t[4],lp_on[4];                    /* lp_*: when FX/SEL/ENV/LFO went down; 1 pressed, 2 long press done */
 static char popbuf[28];
 static const char *const bkname[BK_N]={"VOICE","FX","ENV","LFO","SOURCE","FX DEEP","ARTIC","HARMONY"};
 static const char *const knm[BK_N][4]={{"BREATH","BRIGHT","GLIDE","LEVEL"},{"CHORUS","DELAY","REVERB","DRIVE"},
@@ -972,10 +972,15 @@ static void app_main(void){
         if(page==PG_STAGE||page==PG_DANCE){
             if(dS){
                 ed_mora=(uint32_t)wr((int32_t)ed_mora+dS,MORA_N);mk(0x20u);
-                if(!playing && !prev_keys){en_post(&en,EN_ON,TR_VOCAL,67u+(uint32_t)(oct*12),ed_mora);pv_off=fm1_ms+300u;}   /* hear it */
+                /* Selection only: keys own live note-on/off; PATTERN ctl() owns its editor audition. */
             }
             if(dA){tweak(&sg.vx.chr,dA,0,VC_N-1);pop(VS_CHR,0,"CHARACTER",sg.vx.chr);}
-            if(dP){tweak(&sg.bpm,dP,40,240);if(playing)en_post(&en,EN_BPM,sg.bpm,0,0);pop(VS_BPM,0,"BPM",sg.bpm);}
+            if(dP && sg.vx.lang==VL_ANIMAL && (fm1_in.buttons&(1u<<BTN_SEL))){
+                uint32_t rate=(uint32_t)cl((int32_t)animal_rate+dP*2,0,100);
+                if(en_post(&en,EN_RATE,rate,0,0))animal_rate=rate;
+                lp_on[1]=2; /* the modifier gesture consumes the language tap */
+                pop(VS_NONE,0,"ANIMAL RATE",animal_rate);
+            }else if(dP){tweak(&sg.bpm,dP,40,240);if(playing)en_post(&en,EN_BPM,sg.bpm,0,0);pop(VS_BPM,0,"BPM",sg.bpm);}
             for(i=0;i<4;i++)if(dK[i]){kturn(bank,i,dK[i]);pop(VS_KNOB,bank*4u+i,knm[bank][i],*kptr(bank,i));}
         }else if(page==PG_SONG){
             if(dS&&sg.nrows){crow=(uint32_t)cl((int32_t)crow+dS,0,(int32_t)sg.nrows-1);mk(0x1Fu);}

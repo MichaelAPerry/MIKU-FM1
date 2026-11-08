@@ -30,8 +30,8 @@ delay follow a squared curve: fine steps at the low end, big moves at the top.
 
 | Control | What it does |
 |---|---|
-| SELECT | The syllable the keys sing (a, i, u, ... n, ga ... po); stopped, you hear each one as you turn. PATTERN writes the same one |
-| SCL (SEL) | Language: JAPANESE (the syllables as written), ANIMAL (fast random babble with little pitch jumps, like an animal-game voice), SCAT (da ba bi do ... on eighth notes while a note is held), VOWELS (no consonants) |
+| SELECT | The syllable the keys sing (a, i, u, ... n, ga ... po); selection is silent, including while holding a key. PATTERN writes the same one |
+| SCL (SEL) | Language: JAPANESE (the syllables as written), ANIMAL (random babble at a default 140–220 ms per syllable with little pitch jumps, like an animal-game voice), SCAT (da ba bi do ... on eighth notes while a note is held), VOWELS (no consonants) |
 | FX | The knobs become CHORUS, DELAY (dotted eighth at the song tempo), REVERB, DRIVE. Press again: back to VOICE |
 | ENV | The knobs become ATTACK, RELEASE, SCOOP (slide up into a note), HUMAN (drift, jitter, shimmer). Press again: VOICE |
 | LFO | The knobs become VIBRATO (depth), VIB RATE (3-8 Hz), VIB DELAY, TREMOLO. Press again: VOICE |
@@ -42,7 +42,7 @@ delay follow a squared curve: fine steps at the low end, big moves at the top.
 | **Hold** LFO | HARMONY: INTERVAL (OFF, -12, +3, +4, +5, +7, +12; one step per click), HARM MIX, DETUNE (0-30 cents), HARM VOICE (its character) |
 | Hold again / short press | Hold the same button again: back to VOICE. A short press goes to that button's normal bank (or, SEL, the next language) |
 | ALGORITHM | Character (formant size): DEEP, LOW, MIKU, YOUNG, TINY |
-| PRESETS | Tempo, 40-240 BPM |
+| PRESETS | Tempo, 40-240 BPM. In ANIMAL, hold SCL (SEL) + turn PRESETS: speech rate 0–100 (50 default; session only) |
 | Key | Sings the selected syllable |
 
 ## DANCE

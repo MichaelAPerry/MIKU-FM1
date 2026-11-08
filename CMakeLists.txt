@@ -40,3 +40,9 @@ foreach(d firmware/song firmware/audio/fmband firmware/app)
     add_subdirectory(${d})
   endif()
 endforeach()
+# Execute the native SELECT branch with the host engine; no substitute UI implementation.
+find_package(Python3 COMPONENTS Interpreter REQUIRED)
+if(NOT MSVC)
+  add_test(NAME live_select COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tests/test_live_select.py
+    ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR} ${CMAKE_C_COMPILER})
+endif()

@@ -12,12 +12,26 @@
  *   ISR then stops running the sequencer (instruments keep sounding their tails) and acknowledges; the main loop waits for it.
  * - Commands to the ISR (play, stop, bpm, live notes) go through en_post(): a ring of one-word commands, one producer. */
 #define APP_NAME "MIKU-FM"
+#ifndef MIKU_UVC
+#define MIKU_UVC 0
+#endif
+#ifndef MIKU_VIDEO_BENCH
+#define MIKU_VIDEO_BENCH 0
+#endif
+#if MIKU_VIDEO_BENCH && !MIKU_UVC
+#error "video benchmark requires the isolated video build"
+#endif
 #include "platform.c"
 #include "firmware/audio/fvoice/fvoice.c"
 #include "firmware/ui/singer_sprites.h"
 #include "firmware/ui/sprite_codec.c"
 #include "firmware/ui/singer_compact.h"
 #include "firmware/ui/performance.c"
+#if MIKU_UVC
+#define MIKU_COMPACT_SPRITES 1
+#include "firmware/usb/jpeg/mjpeg.c"
+#include "firmware/usb/jpeg/performance_frame.c"
+#endif
 #include "firmware/app/engine.h"
 /* the modules' private statics share names with each other (and with platform.c): give each file its own */
 #define cpy ch_cpy
@@ -154,6 +168,42 @@ static uint8_t kn[27],hw[2u*SINGER_FACE_H];
 static uint16_t pw[16],dpw[16],c_bg,c_disc;
 static uint32_t dance_cur=99,dance_ms;
 static PerfState performance;
+#if MIKU_UVC
+/* One compressed frame plus incremental MCU scratch: no video framebuffer or core1 ownership.
+   TIMER5 owns USB state; the main loop owns encoder/scene until immutable publication. */
+static MjEncoder video_encoder __attribute__((section(".pool")));
+static uint8_t video_jpeg[MJ_FRAME_CAP] __attribute__((section(".pool"),aligned(32)));
+static PerfState video_scene;
+static uint32_t video_encoding,video_started;
+static volatile uint32_t video_step_ticks,video_frame_ticks,video_encoded,video_failed,video_last_bytes;
+static void video_update(const PerfState *scene){
+    uint32_t at,dt;int result;
+#if MIKU_VIDEO_BENCH
+    if(video_encoded>=3u || !scene->playing || scene->mouth>=5u)return; /* three frames under live vocal+band load */
+#else
+    if(!video_usb_active()){video_encoding=0;return;}
+    if(video_usb_busy())return;
+#endif
+    if(!video_encoding){
+        volatile uint8_t *to=(volatile uint8_t *)&video_scene;
+        const uint8_t *from=(const uint8_t *)scene;uint32_t i;
+        for(i=0;i<sizeof video_scene;i++)to[i]=from[i];
+        if(!mj_begin(&video_encoder,MUVC_WIDTH,MUVC_HEIGHT,65,video_jpeg,sizeof video_jpeg,mj_perf_pixel,&video_scene)){video_failed++;return;}
+        video_encoding=1;video_started=fm1_ticks();
+    }
+    at=fm1_ticks();result=mj_step(&video_encoder,1); /* <=one16x16 tile per poll pass */
+    dt=fm1_ticks()-at;if(dt>video_step_ticks)video_step_ticks=dt;
+    if(result==0)return;
+    video_encoding=0;dt=fm1_ticks()-video_started;if(dt>video_frame_ticks)video_frame_ticks=dt;
+    if(result<0){video_failed++;return;}
+    video_last_bytes=mj_size(&video_encoder);
+#if MIKU_VIDEO_BENCH
+    video_encoded++;
+#else
+    if(video_usb_publish(video_jpeg,mj_size(&video_encoder)))video_encoded++;
+#endif
+}
+#endif
 static const uint16_t tcol[NTRK]={RGB(247,123,180),RGB(35,182,176),RGB(249,207,94),RGB(120,150,250)};
 static const char *const tname[NTRK]={"VOCAL","CHORDS","BASS","DRUMS"};
 static const char *const sname[SEC_N]={"","INTRO","VERSE","CHORUS","BRIDGE","OUTRO"};
@@ -1062,6 +1112,9 @@ static void app_main(void){
                 row<sg.nrows?sg.row[row].sect:0,(uint8_t)en.mouth,
                 (uint8_t)((en.act&1u)?en.level:0),0,0};
             perf_update(&performance,&pi);
+#if MIKU_UVC
+            video_update(&performance);
+#endif
         }
         if(page==PG_STAGE){face_update();dial_step();}
         else if(page==PG_DANCE)dance_update();

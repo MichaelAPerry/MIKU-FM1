@@ -1,14 +1,23 @@
 #!/bin/bash
 # SPDX-License-Identifier: MIT
-# Build the Miku-FM FM-1 firmware (GPL-3.0-only, on Dinghy).  native/build.sh [--release X.Y[.Z]]
+# Build the Miku-FM FM-1 firmware (GPL-3.0-only, on Dinghy).  native/build.sh [--release X.Y[.Z]] [--video|--video-bench]
 #   JIELI_TOOLCHAIN, AC79_SDK: read by Dinghy's build.sh   DINGHY_COMMIT: Dinghy revision to build on
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 DINGHY_COMMIT="${DINGHY_COMMIT:-f77bf03283bbb2c05294b01cdad68a30b410f93d}"
 REL=""
-[ "${1:-}" = --release ] && REL="${2:?--release X.Y[.Z]}"
+VIDEO=0
+BENCH=0
+while [ $# -gt 0 ]; do
+    case "$1" in
+        --release) REL="${2:?--release X.Y[.Z]}"; shift 2 ;;
+        --video) VIDEO=1; shift ;;
+        --video-bench) VIDEO=1; BENCH=1; shift ;;
+        *) echo "usage: build.sh [--release X.Y[.Z]] [--video|--video-bench]"; exit 1 ;;
+    esac
+done
 [[ -z "$REL" || "$REL" =~ ^([0-9]{1,2})\.([0-9]{1,2})(\.[0-9]{1,2})?(-[A-Za-z0-9]+)?$ ]] || { echo "build.sh: --release $REL: use X.Y or X.Y.Z (0-99 each)"; exit 1; }
-[ $# -eq 0 ] || [ -n "$REL" ] || { echo "usage: build.sh [--release X.Y[.Z]]"; exit 1; }
+[ "$VIDEO" -eq 0 ] || [ -z "$REL" ] || { echo "video is a development-only profile; omit --release"; exit 1; }
 mkdir -p "$ROOT/build"
 [ -d "$ROOT/build/dinghy/.git" ] || git clone --depth 1 https://github.com/zvenson/dinghy.git "$ROOT/build/dinghy"
 cd "$ROOT/build/dinghy"
@@ -28,6 +37,13 @@ cp "$ROOT/firmware/ui/singer_sprites.h" firmware/src/firmware/ui/
 cp "$ROOT"/firmware/ui/performance.[ch] firmware/src/firmware/ui/
 cp "$ROOT"/firmware/ui/sprite_codec.[ch] firmware/src/firmware/ui/
 cp "$ROOT/firmware/ui/singer_compact.h" firmware/src/firmware/ui/
+if [ "$VIDEO" -eq 1 ]; then
+    mkdir -p firmware/src/firmware/usb/video firmware/src/firmware/usb/jpeg
+    cp "$ROOT"/firmware/usb/video/uvc.[ch] firmware/src/firmware/usb/video/
+    cp "$ROOT"/firmware/usb/jpeg/*.[ch] firmware/src/firmware/usb/jpeg/
+    cp "$ROOT/native/video_usb.inc" firmware/src/
+    python3 "$ROOT/tools/patch_dinghy_video.py" "$ROOT/build/dinghy"
+fi
 python3 - <<'PY'
 from pathlib import Path
 p=Path('tools/build.py')
@@ -48,10 +64,15 @@ sub('        PRODUCT = BOARD_PREFIX[BOARD] + m[2]\n        VERSION = m[1] + "." 
     '        VERSION = m[1] + "." + m[2] + ("." + m[3] if m[3] else "")\n')
 p.write_text(s)
 PY
+if [ "$VIDEO" -eq 1 ]; then
+    export DINGHY_DEFS="${DINGHY_DEFS:-} -DMIKU_UVC=1 -DMIKU_VIDEO_BENCH=$BENCH -DFELUCCA_UAC=0 -DFELUCCA_CDC=0"
+fi
 export DINGHY_DEFS="${DINGHY_DEFS:-} -DSTORE_MAGIC=0x554B494Du"   # "MIKU": never parse Dinghy's saved data
 ./build.sh ${REL:+--release "$REL"}
 mkdir -p "$ROOT/build/native"
 V="${REL:+-${REL%%-*}}"
+[ "$VIDEO" -eq 0 ] || V="-video"
+[ "$BENCH" -eq 0 ] || V="-video-bench"
 cp "build/dinghy${REL:+-$REL}.fwsc" "$ROOT/build/native/miku-fm$V.fwsc"
 cp build/dinghy.bin "$ROOT/build/native/miku-fm$V-app.bin"
 "$JIELI_TOOLCHAIN/common/bin/objdump" -t build/dinghy.elf > "$ROOT/build/native/miku-fm$V-symbols.txt"

@@ -25,6 +25,7 @@ cp "$ROOT"/firmware/audio/vfx/vfx.[ch] firmware/src/firmware/audio/vfx/
 cp "$ROOT"/firmware/song/*.[ch] firmware/src/firmware/song/
 cp "$ROOT"/firmware/app/engine.[ch] firmware/src/firmware/app/
 cp "$ROOT/firmware/ui/singer_sprites.h" firmware/src/firmware/ui/
+cp "$ROOT"/firmware/ui/performance.[ch] firmware/src/firmware/ui/
 python3 - <<'PY'
 from pathlib import Path
 p=Path('tools/build.py')

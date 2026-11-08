@@ -15,6 +15,7 @@
 #include "platform.c"
 #include "firmware/audio/fvoice/fvoice.c"
 #include "firmware/ui/singer_sprites.h"
+#include "firmware/ui/performance.c"
 #include "firmware/app/engine.h"
 /* the modules' private statics share names with each other (and with platform.c): give each file its own */
 #define cpy ch_cpy
@@ -149,16 +150,17 @@ static const char *toast_s;
 static uint32_t ed_len[3]={2,8,2},ed_vel=12,ed_mora,ed_q,ed_mode,ed_bf;
 static uint8_t kn[27],hw[2u*SINGER_FACE_H];
 static uint16_t pw[16],dpw[16],c_bg,c_disc;
-static uint32_t dance_cur=99,dance_ms,bow_until,was_playing;
+static uint32_t dance_cur=99,dance_ms;
+static PerfState performance;
 static const uint16_t tcol[NTRK]={RGB(247,123,180),RGB(35,182,176),RGB(249,207,94),RGB(120,150,250)};
 static const char *const tname[NTRK]={"VOCAL","CHORDS","BASS","DRUMS"};
 static const char *const sname[SEC_N]={"","INTRO","VERSE","CHORUS","BRIDGE","OUTRO"};
 static const char *const cqn[10]={"MAJ","MIN","7","MAJ7","MIN7","SUS4","SUS2","DIM","AUG","ADD9"};
 static const char *const cmn[8]={"BLOCK","ARP UP","ARP DN","ARP UD","STRUM","UP 32","DN 32","UD 32"};
 static const char *const dnn[6]={"KICK","SNARE","CLAP","CHAT","OHAT","PERC"};
-static const char *const pnm[NTRK][8]={{"VOICE"},{"BELLS","E.PIANO","CHIP ARP","PAD","ORGAN","PLUCK","MARIMBA","CLAV"},{"FM BASS","SUB","CHIP SQ","ACID"},{"808","CHIP"}};
+static const char *const pnm[NTRK][8]={{"VOICE"},{"BELLS","E.PIANO","CHIP ARP","PAD","ORGAN","PLUCK","MARIMBA","CLAV"},{"FM BASS","SUB","CHIP SQ","ACID","SUB DROP","HARD ACID"},{"808","CHIP","PUNCH","DIGITAL"}};
 static const uint8_t kbase[NTRK]={53,41,29,0};     /* key 0 (F3) plays this note (before OCT) */
-static const uint8_t npst[NTRK]={1,8,4,2};
+static const uint8_t npst[NTRK]={1,CH_NPRESET,BS_NPRESET,DR_NPRESET};
 static void app_audio(int32_t *out,uint32_t n){
     static uint32_t pk;
     uint32_t t0=fm1_ticks(),c;
@@ -410,15 +412,7 @@ static void dance_draw(uint32_t f){
     }
 }
 static void dance_update(void){
-    uint32_t now=fm1_ms,f;
-    if(playing){
-        uint32_t beat=(ppos&255u)>>2,r=ppos>>8&255u,ch=r<sg.nrows && sg.row[r].sect==SEC_CHORUS;
-        if(ch && (beat&1u))f=ST_ARMS;
-        else if((en.act&1u) && en.level>=40u)f=ST_SING0+(beat&1u);
-        else f=ST_IDLE0+(beat&3u);
-    }else if((int32_t)(now-bow_until)<0)f=ST_BOW;
-    else if((en.act&1u) && en.level>=40u)f=ST_SING0+(now/250u&1u);          /* live keys */
-    else f=ST_IDLE0+(now/700u&3u);
+    uint32_t now=fm1_ms,f=performance.sprite;
     if(f!=dance_cur && (dance_cur==99u || now-dance_ms>=60u)){dance_ms=now;dance_cur=f;dance_draw(f);}
 }
 /* ---- pages. The screen below the face is drawn in bands of 48 lines (bit n of `dirty` = band n; bit 5 = the STAGE strip) */
@@ -875,7 +869,7 @@ static void app_main(void){
     un_init(&un);
     while(!en.up)platform_poll();
     pf_apply();
-    stage_init();
+    stage_init();perf_init(&performance);
     next_blink=fm1_ms+3000u;full=1;
     bank_leds();
     for(;;){
@@ -1058,8 +1052,13 @@ static void app_main(void){
         }
         if(en.act!=last_act){last_act=en.act;if(page==PG_STAGE||page==PG_DANCE)mk(0x20u);}
         if(toast_s && (int32_t)(now-toast_until)>=0){toast_s=0;mk(0x21u);}
-        if(was_playing && !playing)bow_until=now+1500u;
-        was_playing=playing;
+        {   /* Animation state advances from the musical clock, independently of LCD redraw. */
+            uint32_t row=ppos>>8&255u;
+            PerfInput pi={now,((row*16u+(ppos&255u))*64u),(uint8_t)playing,
+                row<sg.nrows?sg.row[row].sect:0,(uint8_t)en.mouth,
+                (uint8_t)((en.act&1u)?en.level:0),0,0};
+            perf_update(&performance,&pi);
+        }
         if(page==PG_STAGE){face_update();dial_step();}
         else if(page==PG_DANCE)dance_update();
         else if((int32_t)(now-next_blink)>=0)next_blink=now+3000u;

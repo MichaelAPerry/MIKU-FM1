@@ -70,8 +70,8 @@ voice; her face blinks and smiles on PLAY.
 
 - **SELECT** turns the syllable dial under her face: the pink syllable under the pointer is the one the keys sing (and the
   one PATTERN writes). Selection is silent, including while holding a key; the next key uses the new syllable.
-- **SCL** switches the language: JAPANESE sings the syllables as written; ANIMAL turns every held note into fast random
-  babble with little pitch jumps, like the voices of animal games; SCAT sings da, ba, bi, do on eighth notes while a note is
+- **SCL** switches the language: JAPANESE sings the syllables as written; ANIMAL turns every held note into random
+  babble at a default 140–220 ms per syllable with little pitch jumps, like the voices of animal games; SCAT sings da, ba, bi, do on eighth notes while a note is
   held; VOWELS drops the consonants.
 - In ANIMAL, **hold SCL (SEL) and turn PRESETS** to set speech rate (0 slow, 100 fast; 50 default). It changes the next syllable interval without retriggering. This session control is not saved; tempo stays unchanged. Default timing is provisional pending listening review.
 - **ALGORITHM** sets her character, the size of the voice: DEEP, LOW, MIKU (the default), YOUNG, TINY.

@@ -1,3 +1,9 @@
+# Feature branch state update (2026-11-08)
+
+The historical state below describes the original firmware. For the current development branch, see [NEXTGEN_DEVELOPMENT.md](NEXTGEN_DEVELOPMENT.md) and [HANDOFF.md](HANDOFF.md). Mandatory live fixes, native bass/drum additions and default visual-state integration are implemented and tested. Voice/lyrics/GEN/visual/pedal/companion experiments are explicitly separated from native-ready features. Final genres, new costumes, live USB and UVC remain unfinished/pending review; no full next-generation completion claim.
+
+---
+
 # Project state: what exists, what is unused, what is missing (2026-11-03, after Step 4)
 
 Companion to [HANDOFF.md](HANDOFF.md) (state, recipe, workflow). This file is the product picture: every asset and

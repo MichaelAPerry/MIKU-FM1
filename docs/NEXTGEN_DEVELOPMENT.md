@@ -62,9 +62,9 @@ Host Release suite: 19 tests, including all new modules, before final documentat
 
 Actual final native build: image 185208/581564 bytes (+1420); static RAM 35540/98304 (+48); pool 254784/344064 unchanged. Dinghy register checks and .ram_text gate pass. This includes default visual state, silent SELECT, ANIMAL control, voice evaluation branch and added native bass/drum presets. It does not link host-only GEN/lyrics/pedal/wire prototypes.
 
-Phase1 real-package emulator: smoke124928 frames/RMS1504, idle SELECT exact digital silence versus baseline peak7887/RMS1917.1, held-note with SELECT bit-identical across89600 stereo frames to no-turn reference, natural release silent. Rate gesture screenshot shows66/BPM148 unchanged. Emulator ISR8.3% baseline/8.6% phase1; not a physical-device timing result. Final package smoke and display results are in VALIDATION.md.
+Phase1 real-package emulator: smoke124928 frames/RMS1504, idle SELECT exact digital silence versus baseline peak7887/RMS1917.1, held-note with SELECT bit-identical across89600 stereo frames to no-turn reference, natural release silent. Rate gesture screenshot shows66/BPM148 unchanged. Emulator ISR8.3% baseline/8.6% phase1; not a physical-device timing result. Final package smoke:124928frames/RMS1504/peak7393/no full-scale samples, emulator ISR8.6%; DANCE ISR10.3%, corrected sprites inspected; MIXER HARD ACID confirmed. Full evidence is in VALIDATION.md.
 
-Compile-only pi32v2 prototype code sizes: lyrics638 bytes; GEN3254 bytes text+constants; pedal870 bytes; wire size after freestanding-copy correction in final validation. No prototype static/pool allocations, except caller-owned state/workspace described in individual docs. Compile-only sizes do not establish linked native budgets or real-time safety.
+Compile-only pi32v2 prototype code sizes: lyrics638 bytes; GEN3254 bytes text+constants; pedal870 bytes; wire588 bytes after freestanding-copy correction. No prototype static/pool allocations, except caller-owned state/workspace described in individual docs. Compile-only sizes do not establish linked native budgets or real-time safety.
 
 Physical device ISR deadlines, output-stage artifacts, buffer underruns, USB throughput/latency and UVC frame rate remain unmeasured. No physical device was modified.
 

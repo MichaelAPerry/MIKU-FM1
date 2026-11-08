@@ -1,3 +1,16 @@
+# Next-generation feature branch handoff (2026-11-08)
+
+Work is on `feature/miku-nextgen-performance`, based on main `88b0ef3`; keep it separate until owner integration approval.
+Read [NEXTGEN_DEVELOPMENT.md](NEXTGEN_DEVELOPMENT.md) for per-phase implementation, measurements, limitations and owner decisions.
+
+Native-ready: silent STAGE/DANCE SELECT; slower adjustable ANIMAL; added bass/drum presets; shared default dance state and fixed odd-width sprite decoding. Voice compensation is opt-in API-only. Host prototypes: editable lyric compiler, five GEN candidates, procedural visual concepts, stereo pedal DSP, MIDI-safe performance codec and recorded-state companion. Live USB audio/performance transmission and UVC are not implemented.
+
+Validation: host Release 19/19; tables/sprites unchanged; native image185208B/static35540B/pool254784B; final fm1-emu smoke and targeted SELECT/held-note/rate/mixer/dance checks pass. Emulator ISR8.6% smoke/10.3% DANCE, not device measurements. Source hashes and generated audio/screens under `build/evidence/`; `python3 tools/nextgen_review.py` creates a local review index. No release, main merge, live-site change or hardware flash occurred.
+
+Next: owner listening/design review; move experimental GEN scratch from5032B stack to explicit workspace before native integration; implement bounded live lyric player; prototype Dinghy UAC1 input/feedback/rings before pedal DSP with the performance-events companion as recommended first renderer. See individual NEXTGEN documents for exact interfaces and unfinished work. Physical measurements require explicit owner authorization.
+
+---
+
 # Handoff (2026-11-04, release 0.6)
 
 ## Where things stand

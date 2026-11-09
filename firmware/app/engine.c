@@ -36,9 +36,10 @@ void en_init(Engine *e, const Song *g) {
     uint32_t t;
     e->g = g;
     sq_init(&e->sq); fv_init(&e->fv); fv_init(&e->fv2); ch_init(&e->ch); bs_init(&e->bs); dr_init(&e->dr); vx_init();
-    dx_init(&e->dx[0],4);dx_init(&e->dx[1],1);e->dx_crc[0]=e->dx_crc[1]=0;e->dx_loaded[0]=e->dx_loaded[1]=0;
+    dx_init(&e->dx[0],4);dx_init(&e->dx[1],1);e->dx_crc[0]=sg_crc32(g->dx7[0],128);e->dx_crc[1]=sg_crc32(g->dx7[1],128);e->dx_loaded[0]=e->dx_loaded[1]=0;
     e->fv2.rng = 0x2545F491u;                       /* the harmony voice drifts on its own */
     e->clk = e->bw = 0; e->vqn = 0; e->bdon = 0; e->vid = e->vcur = 0;
+    for(t=0;t<3u;t++){e->pedal[t]=0;for(uint32_t j=0;j<16u;j++)e->deferred[t][j]=0;}
     e->arate = 50; e->bt = 0; e->rng = 0x6D2B79F5u; e->vnote = 60; e->vvel = 110; e->vmora = 0;
     e->fv.vib_rate = 55; e->fv.vib_delay = 200;
     for (t = 0; t < NTRK; t++) e->pre[t] = 0;
@@ -56,7 +57,14 @@ uint32_t en_lock(Engine *e, uint32_t (*wait)(void)) {
     while (!e->ack && wait()) {}
     return e->ack;
 }
+void en_refresh_patches(Engine *e) {
+    for(uint32_t k=0;k<2u;k++){
+        uint32_t crc=sg_crc32(e->g->dx7[k],128);
+        if(crc!=e->dx_crc[k]){e->dx_crc[k]=crc;e->dx_loaded[k]=0;}
+    }
+}
 void en_unlock(Engine *e, uint32_t (*wait)(void)) {
+    en_refresh_patches(e);
     e->lock = 0;
     while (e->ack && wait()) {}
 }
@@ -71,6 +79,11 @@ static void sing(Engine *e, uint32_t note, uint32_t mora, uint32_t vel, uint32_t
     e->mora = mora; e->vnote = (uint8_t)note; e->vvel = (uint8_t)vel;
     e->bt = lang == VL_ANIMAL ? animal_wait(e, rnd(e)) : lang == VL_SCAT ? 1323000u / (e->g->bpm ? e->g->bpm : 120u) : 0;
 }
+static void live_off(Engine *e,uint32_t track,uint32_t note){
+    if(track==TR_VOCAL)voff(e);
+    else if(track==TR_CHORDS){ch_note_off(&e->ch,(uint8_t)note);dx_note_off(&e->dx[0],(uint8_t)note);}
+    else if(track==TR_BASS){bs_note_off(&e->bs);dx_all_off(&e->dx[1]);}
+}
 static void command(Engine *e, uint32_t w) {
     uint32_t a = w >> 16 & 255u, b = w >> 8 & 255u, c = w & 255u;
     switch (w >> 24) {
@@ -79,25 +92,32 @@ static void command(Engine *e, uint32_t w) {
     case EN_BPM: sq_set_bpm(&e->sq, a); break;
     case EN_RATE: e->arate = (uint8_t)(a > 100u ? 100u : a); break;   /* next interval only; never retrigger a held note */
     case EN_ON:
+        if(a<3u&&b<128u){uint32_t note=a==TR_CHORDS?b:0u;e->deferred[a][note>>3]&=(uint8_t)~(1u<<(note&7u));}
         if (a == TR_VOCAL) { sing(e, b, c, 110, 0); e->vcur = ++e->vid; }
         else if (a == TR_CHORDS) {if(e->pre[a]>=SG_DX7_FIRST)dx_note_on(&e->dx[0],(uint8_t)b,100);else ch_note_on(&e->ch, (uint8_t)b, 100);}
         else if (a == TR_BASS) {if(e->pre[a]>=SG_DX7_FIRST)dx_note_on(&e->dx[1],(uint8_t)b,100);else bs_note_on(&e->bs, (uint8_t)b, 100, 0, 0);}
         else if (b < DR_N) dr_trig(&e->dr, (uint8_t)b, 110);
         break;
     case EN_OFF:
-        if (a == TR_VOCAL) voff(e);
-        else if (a == TR_CHORDS) {ch_note_off(&e->ch, (uint8_t)b);dx_note_off(&e->dx[0],(uint8_t)b);}
-        else if (a == TR_BASS) {bs_note_off(&e->bs);dx_all_off(&e->dx[1]);}
+        if(a<3u&&b<128u&&e->pedal[a]){uint32_t note=a==TR_CHORDS?b:0u;e->deferred[a][note>>3]|=(uint8_t)(1u<<(note&7u));break;}
+        live_off(e,a,b);
         break;
     case EN_VOW: if (mora_vowel(a) < 5u) { e->vh = (uint8_t)mora_vowel(a); fv_set_vowel(&e->fv, e->vh); } break;
     case EN_BEND:
         if (a == TR_CHORDS || a == TR_BASS) dx_set_bend(&e->dx[a - 1u], (int32_t)((b & 127u) | (c & 127u) << 7) - 8192);
         break;
     case EN_SUSTAIN:
+        if(a<3u){
+            e->pedal[a]=(uint8_t)(b!=0);
+            if(!b)for(uint32_t note=0;note<128u;note++)if(e->deferred[a][note>>3]&(1u<<(note&7u))){
+                e->deferred[a][note>>3]&=(uint8_t)~(1u<<(note&7u));
+                live_off(e,a,note);
+            }
+        }
         if (a == TR_CHORDS || a == TR_BASS) dx_set_sustain(&e->dx[a - 1u], (uint8_t)(b != 0));
         break;
     case EN_HUSH:
-    case EN_PANIC: voff(e); e->vqn = 0; ch_all_off(&e->ch); bs_note_off(&e->bs);dx_set_sustain(&e->dx[0],0);dx_set_sustain(&e->dx[1],0);dx_all_off(&e->dx[0]);dx_all_off(&e->dx[1]);
+    case EN_PANIC: for(uint32_t t=0;t<3u;t++){e->pedal[t]=0;for(uint32_t j=0;j<16u;j++)e->deferred[t][j]=0;}voff(e); e->vqn = 0; ch_all_off(&e->ch); bs_note_off(&e->bs);dx_set_sustain(&e->dx[0],0);dx_set_sustain(&e->dx[1],0);dx_all_off(&e->dx[0]);dx_all_off(&e->dx[1]);
         if ((w >> 24) == EN_HUSH) {dx_hush(&e->dx[0]);dx_hush(&e->dx[1]);}
         break;
     }
@@ -248,7 +268,7 @@ void en_render(Engine *e, int32_t *out, uint32_t n) {
         }
         if((k==TR_CHORDS||k==TR_BASS)&&!l){
             dx_set_mix(&e->dx[k-1u],(uint8_t)lv,(uint8_t)pn);
-            if(p>=SG_DX7_FIRST){uint32_t crc=sg_crc32(g->dx7[k-1u],128);if((!e->dx_loaded[k-1u]||crc!=e->dx_crc[k-1u])&&dx_patch(&e->dx[k-1u],g->dx7[k-1u])){e->dx_crc[k-1u]=crc;e->dx_loaded[k-1u]=1;}}
+            if(p>=SG_DX7_FIRST&&!e->dx_loaded[k-1u]&&dx_patch(&e->dx[k-1u],g->dx7[k-1u]))e->dx_loaded[k-1u]=1;
         }
         if (k == TR_CHORDS) ch_set_mix(&e->ch, (uint8_t)lv, (uint8_t)pn);
         else if (k == TR_BASS) bs_set_mix(&e->bs, (uint8_t)lv, (uint8_t)pn);

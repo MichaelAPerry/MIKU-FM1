@@ -1,3 +1,49 @@
+## 0.8 draft: smooth and seen (2026-11-09)
+
+Branch `feature/0.8-smooth-and-seen` starts at `v0.7` (`c0675f4`). This is
+work for review, not a release or hardware-qualified firmware. The owner requires
+Claude review and main integration before any experimental firmware is placed
+on their FM-1. No device was accessed, flashed, or asked to run this branch.
+
+- Host Release: **52/52 CTest checks pass** (v0.7 has 50, unlike newer main).
+  New checks exercise patch invalidation, live sustain, and 729 BANK/LIBRARY
+  text-layout states. Existing v4/v5 song roundtrips, both flash-ID assertions,
+  native LCD pixel checks, audio, generated assets, and UVC checks remain enabled.
+- A deterministic full-band DX7 host benchmark renders 10,335 blocks (about
+  60 seconds). Baseline mean/worst callback: 21.904/845.342 microseconds;
+  candidate: 19.320/684.995 microseconds. Both have zero host deadline misses
+  and identical PCM hash `082935c5`. Desktop maxima include scheduler noise;
+  these are not device ISR timing or proof of zero hardware overruns.
+- Actual native DANCE draw functions on the host: 800 full draws average
+  179.713 microseconds before and 171.059 after row-decode reuse. CPU-only,
+  without LCD DMA or audio preemption; no emulator frame-jitter claim.
+- Wardrobe generator: 339,850/340,000 additional bytes, all 12 outfits.
+  Upright poses use the median idle silhouette height; the bow retains its
+  intentional smaller silhouette. Lossless row reference search widened from
+  +/-2 to +/-5 rows; decoder depth and runtime format are unchanged. Original
+  outfit pixels are unchanged. Companion exports were regenerated and checked.
+- `python3 tests/test_native_video.py build/dinghy`: actual patched pinned
+  Dinghy USB code passes fake-SIE descriptors/EP0/Probe/Commit/alt/payload/
+  ownership/reset/MIDI rescue. This is not OS webcam enumeration.
+- Default and `--video` native build commands were attempted. Both stop because
+  the JieLi toolchain is absent. Downloading it is denied by outbound policy
+  (`pkgman.jieliapp.com`, HTTP CONNECT 403). AC79 SDK is also not installed.
+  Consequently linked image/static/pool budgets, changed-package emulator smoke,
+  and before/after **emulator** screenshots remain **unrun**. No substitute SDK,
+  checksum bypass, budget relaxation, or fabricated firmware was used.
+- UVC remains a separate MIDI+UVC profile with USB audio/CDC disabled. Sustained
+  fps/JPEG sizes/frame times under playback and macOS/Windows/Linux enumeration
+  are **unverified**, so sharing with USB audio has not been approved.
+- CLUB STAB / DIGI GROWL / DIGI PLUCK trims are unchanged: owner listening review
+  is pending. No subjective listening claim is made. The additional reported
+  hardware issue (pose-size jumps) is addressed in the generated wardrobe assets;
+  visual review and later hardware confirmation remain required.
+
+See [evidence and reproduction](evidence/smooth-and-seen/README.md). Draft network
+additions were saved for the compiler, SDK and GitHub API hosts; saving the draft
+has not applied them to this running instance. Draft PR creation needs GitHub
+API access in addition to the working HTTPS Git proxy.
+
 # Validation
 
 > Current DX7 milestone: [real six-operator renderer, dedicated BANK/operator editor, embedded patch saving, native video/audio evidence and current measurements](DX7_BANK_HANDOFF.md). This supersedes earlier DX7-plan-only status.

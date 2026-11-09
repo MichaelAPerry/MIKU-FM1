@@ -52,8 +52,14 @@ int main(void) {
     n_ev = 0; push(0xE0, 0x00, 0x60); midi_service(TR_BASS);               /* 14-bit 0x3000 */
     assert(n_ev == 1 && ev[0][0] == EN_BEND && ev[0][1] == TR_BASS && ev[0][2] == 0 && ev[0][3] == 0x60);
     midi_service(TR_VOCAL); assert(n_ev == 2 && ev[1][1] == TR_BASS && ev[1][2] == 0 && ev[1][3] == 0x40);   /* centre again */
+    n_ev=0;push(0xB0,64,127);midi_service(TR_VOCAL);
+    assert(n_ev==1&&ev[0][0]==EN_SUSTAIN&&ev[0][1]==TR_VOCAL&&ev[0][2]==1);
+    push(0xB0,64,0);midi_service(TR_VOCAL);assert(n_ev==2&&ev[1][2]==0);
     /* the singing track and the clock: no effect on the ring beyond notes */
     n_ev = 0; push(0xF8, 0, 0); push(0xFA, 0, 0); push(0xC0, 5, 0); midi_service(TR_VOCAL); assert(n_ev == 0);
+    n_ev=0;push(0xB0,64,127);push(0x90,60,100);push(0x80,60,0);midi_service(TR_VOCAL);
+    assert(n_ev==3&&ev[0][0]==EN_SUSTAIN&&ev[1][0]==EN_ON&&ev[2][0]==EN_OFF);
+    push(0xB0,64,0);midi_service(TR_VOCAL);
     /* all notes off */
     push(0x90, 50, 100); push(0x90, 52, 100); midi_service(TR_CHORDS); n_ev = 0;
     push(0xB0, 123, 0); midi_service(TR_CHORDS); assert(n_ev == 2);

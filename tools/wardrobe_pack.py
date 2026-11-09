@@ -114,6 +114,31 @@ def normalize(frames, width, height, feet=False):
         rgbs.append(canvas)
         masks.append(opaque)
     if feet:
+        # Source sheets draw singing poses at a different scale from idle poses.
+        # Equalise upright silhouette height to the median idle height before
+        # the common atlas transform; frame 7 is a deliberate bow, not upright.
+        bounds = []
+        for mask in masks:
+            ys, xs = np.where(mask)
+            bounds.append((int(xs.min()), int(ys.min()), int(xs.max())+1, int(ys.max())+1))
+        target = int(np.median([y1-y0 for x0,y0,x1,y1 in bounds[:4]]))
+        sized = []
+        for k, (rgb, mask, (x0,y0,x1,y1)) in enumerate(zip(rgbs,masks,bounds)):
+            h = target if k < 7 else y1-y0
+            w = max(1, round((x1-x0)*h/(y1-y0)))
+            r = np.asarray(Image.fromarray(rgb[y0:y1,x0:x1]).resize((w,h),Image.Resampling.NEAREST))
+            m = np.asarray(Image.fromarray(mask[y0:y1,x0:x1]).resize((w,h),Image.Resampling.NEAREST))
+            sized.append((r,m))
+        max_w, max_h = max(r.shape[1] for r,m in sized), max(r.shape[0] for r,m in sized)
+        rgbs, masks = [], []
+        for r,m in sized:
+            rgb = np.full((max_h,max_w,3),(255,0,255),np.uint8)
+            mask = np.zeros((max_h,max_w),bool)
+            x,y=(max_w-r.shape[1])//2,max_h-r.shape[0]
+            rgb[y:y+r.shape[0],x:x+r.shape[1]]=r
+            mask[y:y+r.shape[0],x:x+r.shape[1]]=m
+            rgbs.append(rgb);masks.append(mask)
+    if feet:
         bottoms = [int(np.where(m.any(1))[0][-1]) for m in masks]
         baseline = max(bottoms)
         rgbs = [source.shift_img(rgb, 0, b - baseline, (255, 0, 255)) for rgb, b in zip(rgbs, bottoms)]
@@ -181,7 +206,7 @@ def compose_portraits(frames, palette, box=(25, 28, 42, 39)):
 
 def atlas_text(name, frames):
     h, w = frames[0].shape
-    data = compact.pack_atlas([a.reshape(-1).tolist() for a in frames], w, h, nearby=2)
+    data = compact.pack_atlas([a.reshape(-1).tolist() for a in frames], w, h, nearby=5)
     ids, offsets, payload, originals = data
     for i, row in enumerate(originals):
         if compact.decode_python(data, i) != list(row):

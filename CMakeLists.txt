@@ -146,3 +146,16 @@ if(NOT MSVC)
 endif()
 add_test(NAME patch_dinghy_sysex COMMAND ${Python3_EXECUTABLE} -I ${CMAKE_SOURCE_DIR}/tests/test_patch_dinghy_sysex.py ${CMAKE_SOURCE_DIR})
 add_test(NAME dx7_tables_generated COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tools/gen_dx7_tables.py --check)
+
+# Host timing is diagnostic; desktop scheduling is not a device deadline test.
+if(UNIX)
+ add_executable(playback_bench tools/playback_bench.c)
+ target_link_libraries(playback_bench PRIVATE miku_engine miku_song miku_dx7 m)
+endif()
+
+add_executable(playback_edit_tests tests/test_playback_edits.c)
+target_link_libraries(playback_edit_tests PRIVATE miku_engine miku_dx7 m)
+add_test(NAME playback_edits COMMAND playback_edit_tests)
+if(NOT MSVC)
+ add_test(NAME page_text COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tests/test_page_text.py ${CMAKE_SOURCE_DIR} ${CMAKE_C_COMPILER})
+endif()

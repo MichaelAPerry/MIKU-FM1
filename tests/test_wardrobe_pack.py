@@ -37,6 +37,21 @@ class WardrobeTests(unittest.TestCase):
         self.assertTrue(all(abs(a-b)<=2 for a,b in zip(yb,ys)),yb)
         self.assertTrue(all(abs(a-b)<=2 for a,b in zip(xb,[0,100,200,300,400])),xb)
 
+    def test_upright_scale_and_bow(self):
+        frames=[]
+        for k in range(8):
+            a=pack.np.zeros((80,60,4),pack.np.uint8)
+            h=40 if k<4 else 56 if k<7 else 24
+            a[80-h:80,20:40]=(20,180,180,255)
+            frames.append(a)
+        result,_,_=pack.normalize(frames,61,71,feet=True)
+        heights=[];bottoms=[]
+        for f in result:
+            y=pack.np.where((f!=0).any(1))[0];heights.append(len(y));bottoms.append(int(y[-1]))
+        self.assertEqual(len(set(heights[:7])),1)
+        self.assertLess(heights[7],heights[0])
+        self.assertEqual(len(set(bottoms)),1)
+
     def test_original_and_pending(self):
         text, report = pack.generate({'version': 1, 'outfits': [dict(id='future', name='FUTURE', status='pending')]}, ROOT)
         self.assertIn('#define WD_OUTFIT_N 1u', text)

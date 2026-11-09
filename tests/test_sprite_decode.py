@@ -6,7 +6,7 @@ import subprocess
 import sys
 import tempfile
 root, cc = pathlib.Path(sys.argv[1]), sys.argv[2]
-s = (root/'native/dinghy.c').read_text()
+s = (pathlib.Path(sys.argv[3]) if len(sys.argv)>3 else root/'native/dinghy.c').read_text()
 def function(name):
     start=s.index('static void '+name+'(')
     begin=s.index('{',start);depth=1;end=begin+1
@@ -15,6 +15,7 @@ def function(name):
     return s[start:end]
 source=r'''
 #include <stdint.h>
+#include <time.h>
 #include <assert.h>
 #include <string.h>
 #include <stdio.h>
@@ -61,6 +62,9 @@ int main(void){
             for(unsigned dy=0;dy<3;dy++)for(unsigned dx=0;dx<3;dx++)assert(screen[(3*y+dy)*240+DX+3*x+dx]==want);
         }
     }
+    clock_t start=clock();
+    for(unsigned repeat=0;repeat<100;repeat++)for(unsigned f=0;f<ST_COUNT;f++)dance_draw(f);
+    printf("host DANCE CPU draw mean_us=%.3f (800 full draws, no ISR or DMA timing)\n",(double)(clock()-start)*1e6/CLOCKS_PER_SEC/800.0);
     puts("native LCD face/dance: all frames, scales, odd-width rows and dirty rectangles pixel-exact");
 }
 '''.replace('FACE\n',function('face_draw')+'\n').replace('DANCE\n',function('dance_draw')+'\n')

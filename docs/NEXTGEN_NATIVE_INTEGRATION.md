@@ -1,5 +1,8 @@
 # Native performance, wardrobe and song-library milestone
 
+> Current device UI follow-up: [selectable per-song LOOK controls, electronic scenes, recordings and resource measurements](DEVICE_LOOK_HANDOFF.md). This supersedes earlier global-look settings and pre-follow-up audio/resource figures below.
+
+
 This is a working development milestone on `feature/miku-nextgen-performance`.
 It supersedes the earlier “host-only GEN/lyrics, original outfit only” status.
 PR21 remains a draft. Nothing in this document authorizes merging, deploying,

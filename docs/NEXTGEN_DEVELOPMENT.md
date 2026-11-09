@@ -1,5 +1,8 @@
 # Next-generation development log
 
+> Current device UI follow-up: [selectable per-song LOOK controls, electronic scenes, recordings and resource measurements](DEVICE_LOOK_HANDOFF.md). This supersedes earlier global-look settings and pre-follow-up audio/resource figures below.
+
+
 Branch: `feature/miku-nextgen-performance`, from `origin/main` `88b0ef3` (2026-11-08).
 No release, website deployment, main merge or physical-device flash is authorized or performed.
 The original art, four tracks and MKS2 saved-song layout remain the compatibility baseline.

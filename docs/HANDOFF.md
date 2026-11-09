@@ -1,5 +1,8 @@
 # Current MIKU-FM1 handoff
 
+> Current device UI follow-up: [selectable per-song LOOK controls, electronic scenes, recordings and resource measurements](DEVICE_LOOK_HANDOFF.md). This supersedes earlier global-look settings and pre-follow-up audio/resource figures below.
+
+
 Start with **[CLAUDE_HANDOFF.md](../CLAUDE_HANDOFF.md)**. The detailed current
 implementation is [NEXTGEN_NATIVE_INTEGRATION.md](NEXTGEN_NATIVE_INTEGRATION.md).
 

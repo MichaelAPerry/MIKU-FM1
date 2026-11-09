@@ -1,5 +1,8 @@
 # Validation
 
+> Current device UI follow-up: [selectable per-song LOOK controls, electronic scenes, recordings and resource measurements](DEVICE_LOOK_HANDOFF.md). This supersedes earlier global-look settings and pre-follow-up audio/resource figures below.
+
+
 ## Current native integration validation
 
 Host Release: **38/38** checks pass. Default, MIDI+UVC and offline video-benchmark

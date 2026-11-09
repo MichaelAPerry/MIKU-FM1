@@ -1,34 +1,38 @@
-[
-  {
-    "song": "FURUSATO",
-    "seconds": 45.00027210884354,
-    "peak": 28622,
-    "rms": 5100.34257752318,
-    "full_scale_samples": 0,
-    "sha256": "59c89dd40cacb5797e5e7a5aeb0738b5477d3e1865a161696f52e67414dfaef7"
-  },
-  {
-    "song": "KOJO",
-    "seconds": 52.08816326530612,
-    "peak": 27668,
-    "rms": 5531.385489744157,
-    "full_scale_samples": 0,
-    "sha256": "235d7cb001969cc7cc909bf1eca2ca7458faecd9c2173e19c64cabb379ef775d"
-  },
-  {
-    "song": "SAKURA",
+{
+  "SAKURA": {
+    "frames": 2056704,
+    "sample_rate": 44100,
     "seconds": 46.63727891156463,
-    "peak": 28220,
-    "rms": 5692.987425237832,
+    "peak": 31512,
+    "rms": 6009.433222273313,
     "full_scale_samples": 0,
-    "sha256": "afef71368aca3e2090b11c883ae6a51f67b0bfcedfe9aeff4a8d9bfaf8ca24e4"
+    "sha256_wav": "12d4f3b1d79a4b1e33b9b55e4a586e1bea0564147d14424fc8dfc84d61a50909"
   },
-  {
-    "song": "TORYANSE",
+  "TORYANSE": {
+    "frames": 2072576,
+    "sample_rate": 44100,
     "seconds": 46.99718820861678,
-    "peak": 27136,
-    "rms": 4892.8778678868675,
+    "peak": 30643,
+    "rms": 5299.686555615068,
     "full_scale_samples": 0,
-    "sha256": "cefef9e9b0e8afaa625032348f932f7b9211e7d4e58f52907a4b312a04b39e13"
+    "sha256_wav": "eacff13a232a9df270e05c491602927890a89a5f5b98cf10786fa35071a73bb8"
+  },
+  "FURUSATO": {
+    "frames": 1984512,
+    "sample_rate": 44100,
+    "seconds": 45.00027210884354,
+    "peak": 30338,
+    "rms": 5443.175152205593,
+    "full_scale_samples": 0,
+    "sha256_wav": "0350945f44e818880de1ea0ceac9b201e41b0cac88cbf8af4397a4c5bd644c9e"
+  },
+  "KOJO": {
+    "frames": 2297088,
+    "sample_rate": 44100,
+    "seconds": 52.08816326530612,
+    "peak": 31344,
+    "rms": 5863.506262453167,
+    "full_scale_samples": 0,
+    "sha256_wav": "005e9178978eaa183c8ce83dad00517f74c3e590e35007f0daa590692447025a"
   }
-]
+}

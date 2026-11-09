@@ -1,5 +1,8 @@
 # Wardrobe and USB-video headroom (2026-11-08)
 
+> Current device UI follow-up: [selectable per-song LOOK controls, electronic scenes, recordings and resource measurements](DEVICE_LOOK_HANDOFF.md). This supersedes earlier global-look settings and pre-follow-up audio/resource figures below.
+
+
 ## Current integrated build
 
 All twelve outfits, native lyrics/GEN, ten slots, four factory songs and effects

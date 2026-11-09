@@ -1,5 +1,8 @@
 # Manual
 
+> Current device UI follow-up: [selectable per-song LOOK controls, electronic scenes, recordings and resource measurements](DEVICE_LOOK_HANDOFF.md). This supersedes earlier global-look settings and pre-follow-up audio/resource figures below.
+
+
 The feature branch adds SONG LIBRARY, LYRICS and VISUALS pages and ten save
 slots. Their current bindings, factory songs and compatibility limits are in
 [NEXTGEN_NATIVE_INTEGRATION.md](NEXTGEN_NATIVE_INTEGRATION.md). The original

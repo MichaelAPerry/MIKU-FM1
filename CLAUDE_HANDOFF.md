@@ -1,5 +1,8 @@
 # MIKU-FM1 — current engineering handoff for Claude review
 
+> Current device UI follow-up: [selectable per-song LOOK controls, electronic scenes, recordings and resource measurements](docs/DEVICE_LOOK_HANDOFF.md). This supersedes earlier global-look settings and pre-follow-up audio/resource figures below.
+
+
 Repository: <https://github.com/MichaelAPerry/MIKU-FM1>
 Branch: **feature/miku-nextgen-performance**
 PR: **[21, draft](https://github.com/MichaelAPerry/MIKU-FM1/pull/21)**
@@ -71,12 +74,12 @@ These figures come from actual target builds, not host object sizes.
 
 | Profile | Image used / free | Static used / free | Pool used / free |
 |---|---:|---:|---:|
-| Default native |504416 / 77148|35728 / 62576|255624 / 88440|
-| Native MIDI+UVC |510900 / 70664|33924 / 64380|266080 / 77984|
-| Offline video benchmark |510820 / 70744|33924 / 64380|266080 / 77984|
+| Default native |506540 / 75024|35760 / 62544|255624 / 88440|
+| Native MIDI+UVC |513180 / 68384|33984 / 64320|266080 / 77984|
+| Offline video benchmark |513108 / 68456|33984 / 64320|266080 / 77984|
 
 All profiles pass the unchanged minimum-free floors: **65536 image, 16384
-static, 32768 pool bytes**. The video profile has 5128 image bytes above its
+static, 32768 pool bytes**. The video profile has 2848 image bytes above its
 64 KiB free floor. Further substantial features must be measured against this
 budget; do not quietly waive it or drop an outfit.
 
@@ -95,7 +98,7 @@ configuration claim.
 
 ## Timing and audio evidence
 
-The current offline native benchmark captures three frames during real vocal
+The prior milestone offline native benchmark captures three frames during real vocal
 and band playback, with Moon Circuit, grid/corners and the expanded fireworks
 phase active. It uses the target firmware instructions in fm1-emu:
 
@@ -109,10 +112,10 @@ phase active. It uses the target firmware instructions in fm1-emu:
 The audio timing counter is a decaying moving peak, not a proven global worst
 case. These are emulator measurements, not physical ISR deadlines, delivered
 USB frame rate or enumeration/throughput results. A separate host JPEG check
-covers 144 outfit/effect/pose combinations; maximum JPEG is **5128/8192 bytes**.
+now covers 720 scene combinations; maximum JPEG is **5967/8192 bytes**.
 
 The four factory-song WAVs render through the actual device engine. Peaks are
-27136–28622 with zero full-scale samples. Their full first-verse listening
+30338–31512 with zero full-scale samples. Their full first-verse listening
 copies and editable `.mks` files are committed under
 [review songs](docs/evidence/native-integration/songs/).
 Uncompressed WAV hashes/RMS/durations are in
@@ -120,7 +123,7 @@ Uncompressed WAV hashes/RMS/durations are in
 
 ## Validation completed
 
-- Release host build and **38/38 CTest checks**.
+- Release host build and **40/40 CTest checks**.
 - Original fvoice/fmband table generation and original sprite regeneration.
 - Original compact-header regeneration; full wardrobe packing/checks; independent
   eleven-pair source audit with original source hashes unchanged.

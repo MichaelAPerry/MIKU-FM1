@@ -1,28 +1,28 @@
 {
   "branch": "feature/miku-nextgen-performance",
-  "implementation_commit": "a3865aefb2e4e8088b5ed6682fee768ba22175bc",
+  "implementation_commit": "71035d9",
   "main_base": "88b0ef3e568cf615eb5dfaa42d170d8c0f75d431",
   "scope": "native integration milestone; PR21 remains draft; no physical hardware or live USB throughput claim",
   "host_ctest": {
-    "passed": 38,
+    "passed": 40,
     "failed": 0
   },
   "resources": {
     "default": {
       "image": {
-        "used": 504416,
+        "used": 506540,
         "limit": 581564,
-        "free": 77148,
+        "free": 75024,
         "minimum_free": 65536,
-        "margin_above_reserve": 11612,
+        "margin_above_reserve": 9488,
         "pass": true
       },
       "static_ram": {
-        "used": 35728,
+        "used": 35760,
         "limit": 98304,
-        "free": 62576,
+        "free": 62544,
         "minimum_free": 16384,
-        "margin_above_reserve": 46192,
+        "margin_above_reserve": 46160,
         "pass": true
       },
       "pool": {
@@ -36,19 +36,19 @@
     },
     "video": {
       "image": {
-        "used": 510900,
+        "used": 513180,
         "limit": 581564,
-        "free": 70664,
+        "free": 68384,
         "minimum_free": 65536,
-        "margin_above_reserve": 5128,
+        "margin_above_reserve": 2848,
         "pass": true
       },
       "static_ram": {
-        "used": 33924,
+        "used": 33984,
         "limit": 98304,
-        "free": 64380,
+        "free": 64320,
         "minimum_free": 16384,
-        "margin_above_reserve": 47996,
+        "margin_above_reserve": 47936,
         "pass": true
       },
       "pool": {
@@ -62,19 +62,19 @@
     },
     "video_bench": {
       "image": {
-        "used": 510820,
+        "used": 513108,
         "limit": 581564,
-        "free": 70744,
+        "free": 68456,
         "minimum_free": 65536,
-        "margin_above_reserve": 5208,
+        "margin_above_reserve": 2920,
         "pass": true
       },
       "static_ram": {
-        "used": 33924,
+        "used": 33984,
         "limit": 98304,
-        "free": 64380,
+        "free": 64320,
         "minimum_free": 16384,
-        "margin_above_reserve": 47996,
+        "margin_above_reserve": 47936,
         "pass": true
       },
       "pool": {
@@ -90,15 +90,15 @@
   "video_target_emulator": {
     "encoded_frames": 3,
     "encoder_failures": 0,
-    "jpeg_bytes": 4400,
-    "max_tile_us_emulator": 1419.125,
-    "max_frame_wall_us_emulator": 39592.708333333336,
+    "jpeg_bytes": 4779,
+    "max_tile_us_emulator": 1577.125,
+    "max_frame_wall_us_emulator": 86064.16666666667,
     "audio_frames": 137984,
-    "audio_peak": 8231,
+    "audio_peak": 10293,
     "full_scale_samples": 0,
-    "isr_percent_emulator": 7.2,
+    "isr_percent_emulator": 8.9,
     "scope": "three JPEG frames during real native vocal+band playback; not real USB throughput or hardware timing",
-    "audio_render_moving_peak_us_emulator": 759.125,
+    "audio_render_moving_peak_us_emulator": 308.0833333333333,
     "audio_callback_deadline_us": 5804.988662131519
   },
   "wardrobe_additional_bytes": 335463,
@@ -107,8 +107,8 @@
   "factory_songs": 4,
   "stage_effect_frames": 16,
   "stage_effect_atlas_bytes": 2441,
-  "jpeg_host_combinations": 144,
-  "jpeg_host_max_bytes": 5128,
+  "jpeg_host_combinations": 720,
+  "jpeg_host_max_bytes": 5967,
   "artifacts": {
     "docs/evidence/native-integration/README.md": {
       "bytes": 2621,
@@ -151,40 +151,40 @@
       "sha256": "eefc41d0572a621ed4d1d529df6f59f07f3b54389744d128a5b9d4474541891f"
     },
     "docs/evidence/native-integration/song-measurements.json": {
-      "bytes": 901,
-      "sha256": "c6708fb1600d2200404e1d7b92970576752a22c0a7ab994407ef5d6cc95ba7c1"
+      "bytes": 1065,
+      "sha256": "d6b574cf762efbfaa7de1d0a1e5eeb2c08d2ec1c3018f2fe3adab67748aa4081"
     },
     "docs/evidence/native-integration/songs/FURUSATO.mks": {
       "bytes": 4508,
-      "sha256": "f1c4c69383e27f748e51b7efe99c697febfe992516f01d237f963d070c7c9f0a"
+      "sha256": "36c10a51f8e5230edd474eed0080885fdecdbb96887ff6e0fdb202ae162bce19"
     },
     "docs/evidence/native-integration/songs/FURUSATO.mp3": {
-      "bytes": 593203,
-      "sha256": "d6bb228b579dd26757fbf0a71bf3f517e5b430202aead0456f5804e4d2cf0608"
+      "bytes": 721022,
+      "sha256": "8021581b971d19bef28d5b4ed53fdfa9f78bc06fd07aa105b61d6bace473d58e"
     },
     "docs/evidence/native-integration/songs/KOJO.mks": {
       "bytes": 4508,
-      "sha256": "ad80b598dab7dfa9a001da2cfbf560ea6b302e2726d5bd1d1b18cfb8ebd6ff7a"
+      "sha256": "8916175a79f0e50f0d13a20118b682f0c5d36e8ac21700b44a36ead63dc449ce"
     },
     "docs/evidence/native-integration/songs/KOJO.mp3": {
-      "bytes": 709516,
-      "sha256": "9e89c20a8dc6c5311f8043d16bb6b74dd79fd992eccfec9100e837b2b0d17e05"
+      "bytes": 834289,
+      "sha256": "9076f041a25f16ee8eca98cb9237629526bb32bb5a6ca8649378b319972176f3"
     },
     "docs/evidence/native-integration/songs/SAKURA.mks": {
       "bytes": 4508,
-      "sha256": "158ad81d43501c06b6d222e0492998a96a04530d1ef2f011e6394b26e3e8a27d"
+      "sha256": "5fc3d35c1f224e140ba8c2f248eaa582f12b0d0f74ea1a6040c7f5727d25bade"
     },
     "docs/evidence/native-integration/songs/SAKURA.mp3": {
-      "bytes": 638705,
-      "sha256": "8bd8121c9b518c3f3ccbf15dad0233b97c01126067cf1e2797dbf79f811ace57"
+      "bytes": 747354,
+      "sha256": "14287a5ae00ec0be7a23e803cd00d5010ff2270fd8ed2d0698249672d27ae253"
     },
     "docs/evidence/native-integration/songs/TORYANSE.mks": {
       "bytes": 4508,
-      "sha256": "97df3015e27c90bd160baf90c40f1f21f5ac86a682edd14994e864c37c42da48"
+      "sha256": "172077e5ab7130e72218caec9fbea99dbfb811a3cd54830ca1672dfbd4921006"
     },
     "docs/evidence/native-integration/songs/TORYANSE.mp3": {
-      "bytes": 657994,
-      "sha256": "32a87e3447d85b7985aba49fc0e2f238cfbf405f432aaed2a2d8a80791849454"
+      "bytes": 753205,
+      "sha256": "84fe3c9a99cb86eb00332d6dd2ba8f27602bdc811744b15fa6b2fe1a15eb40d6"
     },
     "docs/evidence/native-integration/stage-effects-review.gif": {
       "bytes": 42035,
@@ -201,6 +201,44 @@
     "docs/evidence/native-integration/wardrobe-measurements.json": {
       "bytes": 33785,
       "sha256": "5147dfe757be2589d9328f2aaf67b9e45db0258f56205f92191bacc95e55dc8a"
+    },
+    "docs/evidence/device-scenes/saved-look-after-reboot.png": {
+      "bytes": 5471,
+      "sha256": "34cb8b7b94546aa57974c81e181da0e1da4342d103995086bc01ea19f245c09e"
+    },
+    "docs/evidence/device-scenes/README.md": {
+      "bytes": 599,
+      "sha256": "f2f57ca96574560a8c65f75d69aadf321832b4aecd833386cbc7e106b2e23d58"
+    },
+    "docs/evidence/device-scenes/video-measurements.json": {
+      "bytes": 494,
+      "sha256": "7f18f3c912fe759ab8cb23cf3e11f1eb3b6549cf98a336742b773c1d56ab3224"
+    },
+    "docs/evidence/device-scenes/twelve-style-scenes.png": {
+      "bytes": 74786,
+      "sha256": "116098c90d620fdd7757ba0f7f3c78cd53abbd9f2cbcb90f96fcaa7ad7f2c058"
+    },
+    "docs/evidence/device-scenes/fm1-record.rs": {
+      "bytes": 2397,
+      "sha256": "314f110d35bbf1dac4ee8f8ca2bce8950d3fc1e609f3e6acf882b4db4e200287"
+    },
+    "docs/evidence/device-scenes/device-ui-walkthrough.mp4": {
+      "bytes": 1483189,
+      "sha256": "7c1d2f6adf799868d1dc0fa855a4f5cbc1af4db7daae664030960dc25d2ab29f"
+    },
+    "docs/evidence/device-scenes/sakura-scene.mp4": {
+      "bytes": 2276679,
+      "sha256": "06648b2e6fb2ca6e7ba3846f20f6dcdacac135d924ec160f1024876f62ccc14a"
+    },
+    "docs/evidence/device-scenes/four-demo-scenes.png": {
+      "bytes": 29247,
+      "sha256": "fc8d133c0e2efb6289e1a8e73a6478d525651996dc1d2d7ca12bab5d37cf2a77"
+    },
+    "docs/evidence/device-scenes/emulator-inputs.txt": {
+      "bytes": 394,
+      "sha256": "42181e1166d1c0702ab33896c07a8e1cf25c448a6d70de767bf98e7b4f8d3052"
     }
-  }
+  },
+  "scene_prefs_bytes": 44,
+  "scene_prefs_version": 3
 }

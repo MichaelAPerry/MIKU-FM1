@@ -1,5 +1,8 @@
 ## Current review handoff (2026-11-09)
 
+> Current device UI follow-up: [selectable per-song LOOK controls, electronic scenes, recordings and resource measurements](DEVICE_LOOK_HANDOFF.md). This supersedes earlier global-look settings and pre-follow-up audio/resource figures below.
+
+
 ## Latest native integration milestone
 
 Native lyrics and contemporary GEN are integrated. Twelve paired outfits,

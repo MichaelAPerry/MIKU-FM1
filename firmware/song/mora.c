@@ -19,6 +19,7 @@ static const Mo mo[MORA_N] = {
     M("da",A,D),M("de",E,D),M("do",O,D),
     M("ba",A,B),M("bi",I,B),M("bu",U,B),M("be",E,B),M("bo",O,B),
     M("pa",A,P),M("pi",I,P),M("pu",U,P),M("pe",E,P),M("po",O,P),
+    M("sha",A,SH),M("ja",A,J),M("rya",A,R), /* appended IDs: existing 0..69 unchanged; rya uses the R->A approximation */
 };
 const char *mora_str(uint32_t i){return i<MORA_N?mo[i].r:"";}
 uint32_t mora_vowel(uint32_t i){return i<MORA_N?mo[i].v:MV_A;}

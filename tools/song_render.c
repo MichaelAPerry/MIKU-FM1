@@ -35,7 +35,7 @@ int main(int argc, char **argv) {
     uint32_t frames = 0, tail = 3 * 44100u, maxf = 44100u * 400u;
     song_demo(&g);
     if (file) {
-        static uint8_t b[SONG_ENC_SIZE];
+        static uint8_t b[SONG_ENC_MAX];
         FILE *s = fopen(file, "rb");
         size_t nb = s ? fread(b, 1, sizeof b, s) : 0;
         if (!s || song_decode(&g, b, (uint32_t)nb) != SIO_OK) { fprintf(stderr, "song_render: cannot load %s\n", file); return 1; }

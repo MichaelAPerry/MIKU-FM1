@@ -1,0 +1,41 @@
+{
+  "856014": {
+    "song": {
+      "address": "0x97000",
+      "length": 4508,
+      "crc_ok": true
+    },
+    "settings": {
+      "address": "0xfc000",
+      "length": 44,
+      "crc_ok": true
+    },
+    "flash_sha256": "ae526f555b7a3b34cdadf17a85ff5101af004ae37f91454210eaaa70c7f7257d"
+  },
+  "B36014": {
+    "song": {
+      "address": "0x97000",
+      "length": 4508,
+      "crc_ok": true
+    },
+    "settings": {
+      "address": "0xfc000",
+      "length": 44,
+      "crc_ok": true
+    },
+    "flash_sha256": "ae526f555b7a3b34cdadf17a85ff5101af004ae37f91454210eaaa70c7f7257d"
+  },
+  "FFFFFF": {
+    "song": {
+      "address": "0x97000",
+      "length": 4294967295,
+      "crc_ok": false
+    },
+    "settings": {
+      "address": "0xfc000",
+      "length": 4294967295,
+      "crc_ok": false
+    },
+    "flash_sha256": "45c98e37970fc8abd0d4da68885219baff5123c03aee877a4be0965b5a14ce4b"
+  }
+}

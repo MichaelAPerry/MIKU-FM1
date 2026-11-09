@@ -1,0 +1,15 @@
+{
+  "description": "Actual linked image limit with no fixed flash-development reserve. Existing RAM/pool margins remain; allocations are reported separately from future feature estimates.",
+  "image": {
+    "limit": 581564,
+    "minimum_free": 0
+  },
+  "static_ram": {
+    "limit": 98304,
+    "minimum_free": 16384
+  },
+  "pool": {
+    "limit": 344064,
+    "minimum_free": 32768
+  }
+}

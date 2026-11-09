@@ -20,3 +20,24 @@ Replace it with your own art to make a different singer: `tools/sprite_pack.py` 
 
 - 「おとのはこ」(The Little Sound Box): original lyrics written for Miku-FM with ChatGPT, provided by Michael Perry;
   melody original to Miku-FM. Free to use with the firmware.
+
+## Wardrobe concepts (2026-11-08)
+
+`assets/singer/wardrobe/concepts-v1.png`, `concepts-v2.png` and `concepts-v3.png` were made with ChatGPT image generation using the existing reference, face and dance sheets. It contains unapproved costume concepts, including matching portrait insets, for owner review. It is Hatsune Miku fan art under the same PCL terms and credit above, not GPL/MIT. The adjacent catalog is review metadata, not a production sprite atlas.
+
+The lossless compact representation `firmware/ui/singer_compact.h` contains the same character pixels as `singer_sprites.h` and retains their PCL terms; compression does not relicense the artwork.
+
+## Paired wardrobe and stage sheets
+
+`assets/singer/outfits/*/sheet.png` are generated production source options with
+12 portrait states and eight dance poses per outfit, based on the original
+character art. All retain the singer's PCL notice above. They remain prototype
+visual choices pending owner review. `firmware/ui/wardrobe_sprites.h` contains
+the corresponding character pixels under the same terms.
+
+`assets/stage/effects.png` contains separately generated generic fireworks,
+sparkles, confetti and smoke; see `assets/stage/README.md`. It remains part of the
+separate art pack, not the code's GPL/MIT grant.
+
+The four selected public-domain factory tunes and transcription references are
+listed in `assets/songs/factory/README.md`.

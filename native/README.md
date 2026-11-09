@@ -1,16 +1,22 @@
-# Experimental native FM-1 application
+# Native FM-1 firmware
 
-This original **integer-only** test application uses the existing GPL-3.0-only
-Dinghy FM-1 platform (https://github.com/zvenson/dinghy), rather than
-creating a new emulator. Its application code draws an original singer and
-responds to PLAY, SEQ, the ALGORITHM encoder and note keys. The five vowel
-options are only distinct harmonic recipes, **not** Japanese phonemes or
-formant filtering. Eight steps play at a fixed tempo.
+`dinghy.c` builds the actual MIKU-FM1 device application on pinned Dinghy. It uses
+the formant singer, classic band and MSFA-derived six-operator DX7 backend; the
+native song library, lyrics/GEN, wardrobe/stage controls and DX7 BANK editor are
+integrated. The same device engine is used by host rendering tools. This is no
+longer the initial five-vowel/eight-step native prototype.
 
-The combined Dinghy-derived firmware must comply with GPL-3.0-only and
-retain upstream copyright and notices. This file does not replace the
-main MIT song engine; native integration of the complete engine is pending.
+Start review at [CLAUDE_CODE_REVIEW.md](../CLAUDE_CODE_REVIEW.md). Current DX7
+controls, source provenance, save format and native evidence are documented in
+[DX7_BANK_HANDOFF.md](../docs/DX7_BANK_HANDOFF.md). Setup and verification are in
+[VALIDATION.md](../docs/VALIDATION.md).
 
-CI tries to build a real firmware package with the Linux JieLi compiler
-and AC79 SDK. No device or emulator success is claimed unless verified.
-Do not flash an untested development binary on physical hardware.
+Set JIELI_TOOLCHAIN and AC79_SDK to the documented local dependencies, then run
+`bash native/build.sh`. `--video` builds the experimental MIDI+UVC profile;
+`--video-bench` builds its offline encoder benchmark. Run builds sequentially;
+they reuse/reset the ignored build/dinghy checkout. Preserve actual resource and
+HAL checks. Device DSP remains freestanding and integer-only.
+
+No physical hardware qualification or sustained USB-video result is claimed.
+Do not flash hardware, merge main, release or deploy without owner authorization.
+See LICENSING.md for GPL application, Apache MSFA and separate character-art terms.

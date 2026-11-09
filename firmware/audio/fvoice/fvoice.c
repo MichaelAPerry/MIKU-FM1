@@ -153,6 +153,15 @@ static void block(FvVoice *v) {
     ramp(&v->vg, &v->vgs, v->vgt, FV_KV); ramp(&v->ap, &v->aps, v->apt, FV_KN);
     v->nzon = v->nl || v->nls; if (!v->nzon) v->ny1 = v->ny2 = 0;
     tg = clampi((tg * fv_pgain[clampi((v->pcur * 3) >> 10, 0, 127)]) >> 12, 0, 49152);
+    /* Evaluation-only lift: voiced vowel path, never the separate consonant noise band.
+       Gate calibration to its measured character; the default (0) executes the old gain exactly. */
+    if (v->level_comp && v->chr == FV_CHR0 && !v->chf && !fv_cons(v)) {
+        int32_t cp = clampi(v->pcur - P_C5, 0, 8192), ni = cp * 3 >> 10;
+        int32_t frac = cp * 3 - (ni << 10), gain = fv_comp[ni * 5 + v->vowel];
+        if (ni < 24) gain += ((fv_comp[(ni + 1) * 5 + v->vowel] - gain) * frac) >> 10;
+        gain = 4096 + (gain - 4096) * (v->level_comp > 100 ? 100 : v->level_comp) / 100;
+        tg = clampi((tg * gain) >> 12, 0, 98304);
+    }
     int32_t df = tg - v->gcur;
     if (df > -16 && df < 16) { v->gcur = tg; v->gstep = 0; } else v->gstep = df >> 4;
 }
@@ -198,7 +207,10 @@ void fv_render(FvVoice *v, int32_t *out, uint32_t n) {
                 v->y2[q] = v->y1[q]; v->y1[q] = y; sum += y;
             }
             g += v->gstep;
-            int32_t o = clampi((clampi(sum, -32767, 32767) * g) >> 15, -32767, 32767);
+            int32_t bounded = clampi(sum, -32767, 32767);
+            /* The experimental +6 dB path can exceed Q16 unity: halve gain before
+               multiplying to keep the signed product inside 32 bits. */
+            int32_t o = clampi(g > 65535 ? (bounded * (g >> 1)) >> 14 : (bounded * g) >> 15, -32767, 32767);
             if (nzon) {                                 /* consonant noise band, after the envelope */
                 int32_t fn = clampi((nz0 * wn + nz1 * ny1 + nz2 * ny2) >> 14, -32767, 32767);
                 ny2 = ny1; ny1 = fn; nl += nls;

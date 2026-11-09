@@ -1,0 +1,38 @@
+{
+  "SAKURA": {
+    "frames": 2056704,
+    "sample_rate": 44100,
+    "seconds": 46.63727891156463,
+    "peak": 31512,
+    "rms": 6009.433222273313,
+    "full_scale_samples": 0,
+    "sha256_wav": "12d4f3b1d79a4b1e33b9b55e4a586e1bea0564147d14424fc8dfc84d61a50909"
+  },
+  "TORYANSE": {
+    "frames": 2072576,
+    "sample_rate": 44100,
+    "seconds": 46.99718820861678,
+    "peak": 30643,
+    "rms": 5299.686555615068,
+    "full_scale_samples": 0,
+    "sha256_wav": "eacff13a232a9df270e05c491602927890a89a5f5b98cf10786fa35071a73bb8"
+  },
+  "FURUSATO": {
+    "frames": 1984512,
+    "sample_rate": 44100,
+    "seconds": 45.00027210884354,
+    "peak": 30338,
+    "rms": 5443.175152205593,
+    "full_scale_samples": 0,
+    "sha256_wav": "0350945f44e818880de1ea0ceac9b201e41b0cac88cbf8af4397a4c5bd644c9e"
+  },
+  "KOJO": {
+    "frames": 2297088,
+    "sample_rate": 44100,
+    "seconds": 52.08816326530612,
+    "peak": 31344,
+    "rms": 5863.506262453167,
+    "full_scale_samples": 0,
+    "sha256_wav": "005e9178978eaa183c8ce83dad00517f74c3e590e35007f0daa590692447025a"
+  }
+}

@@ -2,17 +2,18 @@
 /* Sample-accurate song sequencer (44.1 kHz), integer only, for an audio ISR. sizeof(Seq) ~ 130 bytes.
  * sq_block() fills events for the next `frames` frames, each with a frame offset 0..frames-1 (events of one frame are
  * ordered NOTE_OFF, STEP, NOTE_ON/DRUM). Give it room for SQ_EVMAX events per block (frames <= 1024); excess is dropped.
- * Event fields: NOTE_ON/OFF: trk, note (MIDI, transpose applied), vel 0..127, aux (VOCAL: vowel MV_*, mora = mora index;
+ * Event fields: NOTE_ON/OFF: trk, note (MIDI, transpose applied), vel 0..127, aux (VOCAL: low3 bits vowel MV_*, VF_SUSTAIN high bit suppresses consonant; mora = mora index;
  * BASS: bit0 accent, bit1 "slide": legato into this note, the previous note got no NOTE_OFF; CHORDS 0).
  * DRUM: trk=3, note = instrument bit number 0..5 (D_KICK..D_PERC), vel. STEP: note = row, aux = step 0..15, at the
  * (swung) moment the step sounds. Track levels and the master are NOT applied here (the mixer does); mute/solo are.
- * Timing: swing delays odd sixteenths by swing% of a sixteenth. Notes: VOCAL off at 85% of len, BASS likewise unless
+ * Timing: swing delays odd sixteenths by swing% of a sixteenth. Notes: VOCAL off at 85% of len unless VF_LEGATO (held to next onset or len+2 frames); BASS likewise unless
  * BF_SLIDE (held to the next note), chords at len. Arp: one note per sixteenth (CM_*) or per 32nd (CM_*32), strum 15 ms. */
 #ifndef SEQ_H
 #define SEQ_H
 #include <stdint.h>
 #include "firmware/song/song.h"
 enum { SQ_NOTE_ON = 1, SQ_NOTE_OFF, SQ_DRUM, SQ_STEP };
+enum { SQ_VOCAL_REATTACK=128u }; /* internal event flag, not a persisted lyric bit */
 typedef struct { uint32_t at; uint8_t type, trk, note, vel, aux, mora; } SqEvent;
 #define SQ_FS 44100u
 #define SQ_STRUM 661u
@@ -24,7 +25,7 @@ typedef struct {
     uint16_t bpm, ap_left;
     uint32_t rem, slen;                         /* accumulator, frames of the current step */
     int32_t to_grid;                            /* frames to the next nominal sixteenth */
-    uint8_t vn, bn, bsl;                        /* sounding vocal / bass note (0 none), bass slide pending */
+    uint8_t vn, bn, bsl, vsl;                        /* sounding vocal / bass note (0 none), bass slide and vocal legato pending */
     uint8_t ncs, cs[8], ncn, cn[8], npv, pv[8]; /* sounding chord notes, current voicing, previous voicing */
     uint8_t cvel, ap_on, ap_mode, ap_i, ap_fast, sm_i;
     SqTm tm[SQ_NTM];

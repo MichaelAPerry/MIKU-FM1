@@ -1,5 +1,7 @@
 # Art prompts (for ChatGPT image generation)
 
+Current wardrobe work: see [NEXTGEN_WARDROBE.md](NEXTGEN_WARDROBE.md). Use all three existing character/reference, face and dance sheets together. The historical prompts below describe the initial generation process; their requests for an unrelated original character do not override the actual established singer, its PCL licensing, or the owner’s requirement to preserve her identity.
+
 > How the art was made. The prompts below asked for an "original character"; the finished art is presented and licensed
 > as **fan art of Hatsune Miku under the Piapro Character License** (free and non-commercial only, not under the code's
 > GPL): see [LICENSING.md](../LICENSING.md).

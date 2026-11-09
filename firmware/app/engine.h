@@ -13,16 +13,18 @@
 #include "firmware/audio/fvoice/fvoice.h"
 #include "firmware/audio/fmband/fmband.h"
 #include "firmware/audio/vfx/vfx.h"
-enum { EN_PLAY = 1, EN_STOP, EN_BPM, EN_ON, EN_OFF, EN_VOW, EN_PANIC };   /* PLAY a=row b=loop-one-row; BPM a; ON a=trk b=note c=mora (VOCAL) / unused; OFF a=trk b=note; VOW a=mora */
+#include "firmware/audio/dx7/dx7.h"
+enum { EN_PLAY = 1, EN_STOP, EN_BPM, EN_ON, EN_OFF, EN_VOW, EN_PANIC, EN_RATE };   /* PLAY a=row b=loop-one-row; BPM a; ON a=trk b=note c=mora (VOCAL) / unused; OFF a=trk b=note; VOW a=mora; RATE a=ANIMAL speech rate 0..100 (session setting) */
 #define EN_QN 32u
-typedef struct { uint32_t due; uint8_t on, note, mora, vel; uint16_t id; } EnVq;   /* a delayed vocal note event (on-beat) */
+typedef struct { uint32_t due; uint8_t on, note, mora, vel, flags; uint16_t id; } EnVq;   /* a delayed vocal note event, including VF_SUSTAIN (on-beat) */
 #define EN_VQN 16u
 typedef struct {
     Seq sq; FvVoice fv, fv2; ChSynth ch; BsSynth bs; DrKit dr;   /* fv2: the harmony voice */
+    DxSynth dx[2]; uint32_t dx_crc[2];uint8_t dx_loaded[2];          /* chord/bass DX7 engines; legacy voices stay selectable */
     const Song *g;
     SqEvent ev[SQ_EVMAX];
     int32_t vl, vr;
-    uint8_t pre[NTRK], vh, up, vnote, vvel, vmora;
+    uint8_t pre[NTRK], vh, up, vnote, vvel, vmora, arate;
     uint32_t bt, rng;                         /* ANIMAL / SCAT language: frames to the next babbled syllable; its random state */
     uint32_t clk, bw;                         /* frames rendered; band delay write position */
     EnVq vq[EN_VQN];                          /* on-beat: vocal note events waiting for their moment */

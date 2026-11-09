@@ -1,5 +1,39 @@
 # Validation
 
+> Current DX7 milestone: [real six-operator renderer, dedicated BANK/operator editor, embedded patch saving, native video/audio evidence and current measurements](DX7_BANK_HANDOFF.md). This supersedes earlier DX7-plan-only status.
+
+
+> Current policy and UI: [fixed 64 KiB flash reserve removed at owner request; neon console UI implemented; eight-voice DX7 audition bank prepared offline](NEON_UI_AND_DX7_BANK.md). Earlier fixed-flash-reserve instructions are superseded.
+
+
+> Hardware/DX7 review: [both known FM-1 flash variants pass emulator persistence checks; DX7 engine reuse is evaluated but not integrated](HARDWARE_AND_DX7_REVIEW.md).
+
+
+> Current device-wide visual pass: [pink/blue borders and gradients across all nine musical pages, popups and SAVE window, with native recordings and current measurements](evidence/device-theme/README.md). This supersedes the earlier menu-only UI scope and resource figures.
+
+
+> Current device UI follow-up: [selectable per-song LOOK controls, electronic scenes, recordings and resource measurements](DEVICE_LOOK_HANDOFF.md). This supersedes earlier global-look settings and pre-follow-up audio/resource figures below.
+
+
+## Current native integration validation
+
+Host Release: **38/38** checks pass. Default, MIDI+UVC and offline video-benchmark
+profiles build with the unchanged resource floors. Default/video emulator smoke
+runs each captured124928 audio frames with RMS2606 and23 screen colours.
+Actual slot10 save/CRC and fresh-emulator-boot playback pass. Native GEN/LYRICS,
+paired portrait/body/effects screens and all twelve companion costumes were
+exercised. The target expanded-fireworks benchmark produced3 JPEGs with no
+failures and no full-scale audio samples; maximum tile1.419ms, maximum frame
+39.593ms in the emulator. This is not physical USB enumeration or throughput.
+
+See [current handoff](../CLAUDE_HANDOFF.md),
+[durable snapshot](evidence/NEXTGEN_NATIVE_INTEGRATION_SNAPSHOT.json), and
+[actual screenshots/listening examples](evidence/native-integration/README.md).
+Fresh host tooling requires `python3 -m pip install -r tools/requirements-dev.txt`
+(or an equivalent virtualenv); CI installs those dependencies explicitly.
+
+The historical milestones below remain useful for baseline comparisons.
+
 Levels, never interchangeable: **built** (compiled), **host tests**, **emulator** (fm1-emu running the real package),
 **hardware** (a physical FM-1).
 
@@ -272,3 +306,38 @@ new control is exact: the demo, the vocal solo, ANIMAL, SCAT/TINY and a generate
   their job (SEL: next language; LFO: the LFO bank). Playing with harmony, on-beat and the source layer: emulator CPU 7-8 %,
   output peak 8,911, no clip, stereo. emu_smoke unchanged.
 
+
+
+## Next-generation feature branch (2026-11-08)
+
+Source baseline `88b0ef3`; branch `feature/miku-nextgen-performance`. Details: [development log](NEXTGEN_DEVELOPMENT.md).
+
+- Host Release: **19/19 CTest pass**, no build warnings. New tests: real native SELECT/rate handler against actual engine, every native DANCE atlas pixel, voice pitch/vowel compensation, lyrics/articulation, contemporary GEN, modern instrument baselines/envelopes, pedal routing/analysis and MIDI-safe performance packet. Packet assertions remain enabled in Release.
+- `gen_fvoice_tables.py`, `gen_fmband_tables.py`: deterministic, no generated diff. `python3 -I tools/sprite_pack.py --check`: up to date,65928 pixel bytes. `git diff --check` passes.
+- Actual `native/build.sh` with pinned Dinghy/JieLi/SDK: **image185208/581564 B**, **static RAM35540/98304 B**, **pool254784/344064 B**. Baseline183788/35492/254784; deltas+1420/+48/0. Register checks and916-instruction call-free `.ram_text` pass. Prototype host-only modules are not included in these linked figures.
+- Final `emu_smoke.sh`:124928 frames, RMS1504.38, peak7393, zero full-scale samples,57LCD frames. Emulator ISR8.6%. DANCE:93952 frames, peak9235,55LCD frames, ISR10.3%, corrected original sprite inspected. MIXER:151296 frames, peak1297, ISR3.8%, HARD ACID selection visually confirmed. These are emulator measurements, not physical ISR time, DAC output or deadline guarantees.
+- Targeted phase1 emulator SELECT: idle old preview peak7887/RMS1917.1 versus new45568 frames exact silence. Held C4 with two SELECT changes is bit-identical to no-turn reference across89600 stereo frames; final4000 frames silent after release. ANIMAL RATE66 screenshot retains BPM148 and language; release silent. PATTERN's intentional preview remains separately guarded.
+- ANIMAL engine rendered four-second note:51→23 onsets, mean79.31→177.91ms; old70–89.71/new141.22–219.82ms; peaks24297/22592, zero full-scale samples. Timing/release/language-isolation tested at sample resolution. Cadence remains provisional pending owner listening review.
+- Voice comparison: all five vowels/MIDI48–96; opt-in bounded gain with unchanged oscillator phase and no new clipped samples. Existing raw U92 overload remains. A96 RMS614→1228; high-note loss is reduced, not solved. No listening-quality claim.
+- Lyrics actual voice audition:2.18s, peak16909/RMS3718, no cap hits; sample-indexed mouth/consonant CSV. Contemporary GEN:360 configurations roundtrip/determinism/locks/local regeneration; ten WAV/MKS review examples, zero full-scale samples at candidate master80. Band A/B and original-preset hashes documented in [band](NEXTGEN_BAND.md).
+- Pedal ASan/UBSan tests pass, unity WAV byte-identical, pre-FX analysis independent of output mute, disconnect flushes input state. Effects render peak28655 with no cap hits; levels are not loudness matched. Live USB transport not implemented.
+- Experimental pi32v2 compile-only: lyrics638 B text, GEN3254 B text/rodata, pedal870 B text, performance wire588 B text, zero static data/BSS; no libc/float dependencies. GEN uses5032B stack scratch and must be reworked before native inclusion. Wire struct assignment initially lowered into memcpy; explicit scalar copy fixed it, verified no undefined symbols.
+- Companion Chromium/Playwright review passed: real-engine JSON/WAV import, seek/state display, original atlas load, invalid file rejection and no page errors. Screenshot `build/evidence/companion.png`. Recorded engine state is not live USB; full-body mouth compositing remains unfinished.
+
+Evidence under ignored `build/evidence/` and `build/nextgen/`: WAVs, editable generated songs, PNGs, CSVs, source/package hashes, build logs and resource JSON. `tools/nextgen_review.py` assembles `build/evidence/review.html`. Individual NEXTGEN documents contain regeneration commands.
+
+Not measured: physical-device audio/ISR load, real USB endpoint throughput/underruns/latency, simultaneous audio/MIDI/UVC descriptors, UVC frame rate, final perception/genre authenticity or approved visual design. No device flashed; no release, live website deployment or main merge.
+
+
+## Compact wardrobe and native UVC follow-up (2026-11-08)
+
+- Host Release26/26 after adding compact codec/generator, real native LCD draw comparison, bounded UVC class, incremental JPEG, real native video-producer tests and benchmark-listing decoding. Separate `python3 tests/test_native_video.py` compiles actual patched pinned Dinghy USB code against a fake SIE: descriptors/EP0 Probe/Commit/EP4 payload/DMA ownership/alt/reset/suspend/MIDI rescue all pass. Neither fake-SIE nor emulator proves real host enumeration.
+- All original131848 portrait/dance pixels, palettes, dirty rectangles and scaled LCD output remain exact. Compact generated data32884B versus65928B. Native default image152696B/static35540B/pool254784B:32512B image saved, zero extra static/pool.
+- Optional native `--video`: image159080B/static33732B/pool265216B; original loader9067B retained. This profile disables UAC/CDC, keeps MIDI and adds UVC160x120 nominal15fps. Default USB behavior is unchanged. No combined playback/capture/MIDI/UVC claim.
+- Minimum free reserves now checked in native builds: image65536B/static16384B/pool32768B. Video profile retains422484B/64572B/78848B. These are development floors, not measured future feature allocations or runtime stack guarantees.
+- Compact default and video package emulator smoke both124928 frames/RMS1504/23screen colors. Compact DANCE:58624 frames,35LCDframes, emulator ISR7.5%; image visually inspected. Video idle-source build still synthesizes normally without a host.
+- Integer JPEG26/26 fixtures independently decode; original/compact renderers yield identical bytes. Actual scene sizes3475–5027B. Real JPEG3794B packetizes into8 UVC packets and reassembles byte-identically. Encoder/context2240B plus single8192B output consumes10432B pool; no video framebuffer/core1 allocation.
+- Target `--video-bench` ran actual native audio+video code:3 JPEGs,0failures, recovered3794B image byte-identical to host reference. Emulator max MCU1.403ms/maxframewall32.206ms,totalISR13.1%;80640 audioframes,peak9653,zero fullscale. This is offline encoding, not delivered USB video FPS or physical-device timing. Benchmark parsing and reproduction tools committed.
+- Tables/sprites regenerated/check unchanged; sanitizer checks for codec/JPEG/class pass (LeakSanitizer unavailable under ptrace; those modules allocate no heap). No hardware flash, release, deployment or main merge.
+
+Review assets: revised eleven-outfit board includes corrected07 Signal Suit,08 Summer Beat,11 Moon Circuit witch; both face and dance requirements retained. These are concepts, not eleven completed native outfits. See [headroom report](NEXTGEN_MEMORY.md) and [wardrobe](NEXTGEN_WARDROBE.md).

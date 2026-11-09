@@ -1,0 +1,618 @@
+{
+  "branch": "feature/miku-nextgen-performance",
+  "implementation_commit": "2bb1662",
+  "main_base": "88b0ef3e568cf615eb5dfaa42d170d8c0f75d431",
+  "scope": "native integration milestone; PR21 remains draft; no physical hardware or live USB throughput claim",
+  "host_ctest": {
+    "passed": 46,
+    "failed": 0
+  },
+  "resources": {
+    "default": {
+      "image": {
+        "used": 531820,
+        "limit": 581564,
+        "free": 49744,
+        "minimum_free": 0,
+        "margin_above_reserve": 49744,
+        "pass": true
+      },
+      "static_ram": {
+        "used": 42512,
+        "limit": 98304,
+        "free": 55792,
+        "minimum_free": 16384,
+        "margin_above_reserve": 39408,
+        "pass": true
+      },
+      "pool": {
+        "used": 255624,
+        "limit": 344064,
+        "free": 88440,
+        "minimum_free": 32768,
+        "margin_above_reserve": 55672,
+        "pass": true
+      }
+    },
+    "video": {
+      "image": {
+        "used": 538444,
+        "limit": 581564,
+        "free": 43120,
+        "minimum_free": 0,
+        "margin_above_reserve": 43120,
+        "pass": true
+      },
+      "static_ram": {
+        "used": 40720,
+        "limit": 98304,
+        "free": 57584,
+        "minimum_free": 16384,
+        "margin_above_reserve": 41200,
+        "pass": true
+      },
+      "pool": {
+        "used": 266080,
+        "limit": 344064,
+        "free": 77984,
+        "minimum_free": 32768,
+        "margin_above_reserve": 45216,
+        "pass": true
+      }
+    },
+    "video_bench": {
+      "image": {
+        "used": 538328,
+        "limit": 581564,
+        "free": 43236,
+        "minimum_free": 0,
+        "margin_above_reserve": 43236,
+        "pass": true
+      },
+      "static_ram": {
+        "used": 40720,
+        "limit": 98304,
+        "free": 57584,
+        "minimum_free": 16384,
+        "margin_above_reserve": 41200,
+        "pass": true
+      },
+      "pool": {
+        "used": 266080,
+        "limit": 344064,
+        "free": 77984,
+        "minimum_free": 32768,
+        "margin_above_reserve": 45216,
+        "pass": true
+      }
+    }
+  },
+  "video_target_emulator": {
+    "encoded_frames": 3,
+    "encoder_failures": 0,
+    "jpeg_bytes": 4779,
+    "max_tile_us_emulator": 2306.9166666666665,
+    "max_frame_wall_us_emulator": 101067.91666666667,
+    "audio_frames": 137984,
+    "audio_peak": 9751,
+    "full_scale_samples": 0,
+    "isr_percent_emulator": 17.9,
+    "scope": "three JPEG frames during real native vocal+band playback; not real USB throughput or hardware timing",
+    "audio_render_moving_peak_us_emulator": 1137.7083333333333,
+    "audio_callback_deadline_us": 5804.988662131519,
+    "audio_render_worst_us_emulator": 1864.3333333333333,
+    "audio_overruns": 0,
+    "audio_init_us_emulator": 1062.8333333333333
+  },
+  "wardrobe_additional_bytes": 335463,
+  "wardrobe_count": 12,
+  "slot_count": 10,
+  "factory_songs": 4,
+  "stage_effect_frames": 16,
+  "stage_effect_atlas_bytes": 2441,
+  "jpeg_host_combinations": 720,
+  "jpeg_host_max_bytes": 5967,
+  "artifacts": {
+    "docs/evidence/native-integration/README.md": {
+      "bytes": 2621,
+      "sha256": "9f2fe747d24bec1b19a6e71fc0814a4f1971829458347240c811f17f6ae00a25"
+    },
+    "docs/evidence/native-integration/companion-wardrobe-effects.png": {
+      "bytes": 102570,
+      "sha256": "123451bdf4e53ba4d9810c7a823539a1794124b1b0ef6edcf25228d1d29b440f"
+    },
+    "docs/evidence/native-integration/native-fireworks.png": {
+      "bytes": 6305,
+      "sha256": "e6757d3d6d28a5a680eee16a4326ff9a4b0a097328031b8c1049c8e9a5a1d3fa"
+    },
+    "docs/evidence/native-integration/native-gen.png": {
+      "bytes": 3172,
+      "sha256": "d68f6105391e1b1e0143bc9e1cd6841c8358433a0035d63a4f2ab68d85697ef5"
+    },
+    "docs/evidence/native-integration/native-lyrics.png": {
+      "bytes": 2362,
+      "sha256": "224079cbfb932118b62b14b58afa24219e78ec04205e627be7c1ca5134bc1f95"
+    },
+    "docs/evidence/native-integration/native-witch-portrait.png": {
+      "bytes": 7295,
+      "sha256": "7568d41e49c547f120b3176d7019af69c2c061a41438a51f52853e321f606d50"
+    },
+    "docs/evidence/native-integration/paired-outfit-review.png": {
+      "bytes": 117001,
+      "sha256": "12c489a358c1625f8a8247af4e683ca2992829ae98b7ab68cc5d005e8dbeb4d1"
+    },
+    "docs/evidence/native-integration/slot-ten-reboot.png": {
+      "bytes": 1805,
+      "sha256": "325f5a46511c6eea7dc4eb20c736af4bacb092d82731287fef90d7b9a145fe72"
+    },
+    "docs/evidence/native-integration/slot-ten-save.json": {
+      "bytes": 115,
+      "sha256": "2fbf27d5c40d9417ca2d9c7f9bc781a666a3738bcccc49c46a76a8d23ce18f26"
+    },
+    "docs/evidence/native-integration/song-library.png": {
+      "bytes": 2302,
+      "sha256": "eefc41d0572a621ed4d1d529df6f59f07f3b54389744d128a5b9d4474541891f"
+    },
+    "docs/evidence/native-integration/song-measurements.json": {
+      "bytes": 1065,
+      "sha256": "d6b574cf762efbfaa7de1d0a1e5eeb2c08d2ec1c3018f2fe3adab67748aa4081"
+    },
+    "docs/evidence/native-integration/songs/FURUSATO.mks": {
+      "bytes": 4508,
+      "sha256": "36c10a51f8e5230edd474eed0080885fdecdbb96887ff6e0fdb202ae162bce19"
+    },
+    "docs/evidence/native-integration/songs/FURUSATO.mp3": {
+      "bytes": 721022,
+      "sha256": "8021581b971d19bef28d5b4ed53fdfa9f78bc06fd07aa105b61d6bace473d58e"
+    },
+    "docs/evidence/native-integration/songs/KOJO.mks": {
+      "bytes": 4508,
+      "sha256": "8916175a79f0e50f0d13a20118b682f0c5d36e8ac21700b44a36ead63dc449ce"
+    },
+    "docs/evidence/native-integration/songs/KOJO.mp3": {
+      "bytes": 834289,
+      "sha256": "9076f041a25f16ee8eca98cb9237629526bb32bb5a6ca8649378b319972176f3"
+    },
+    "docs/evidence/native-integration/songs/SAKURA.mks": {
+      "bytes": 4508,
+      "sha256": "5fc3d35c1f224e140ba8c2f248eaa582f12b0d0f74ea1a6040c7f5727d25bade"
+    },
+    "docs/evidence/native-integration/songs/SAKURA.mp3": {
+      "bytes": 747354,
+      "sha256": "14287a5ae00ec0be7a23e803cd00d5010ff2270fd8ed2d0698249672d27ae253"
+    },
+    "docs/evidence/native-integration/songs/TORYANSE.mks": {
+      "bytes": 4508,
+      "sha256": "172077e5ab7130e72218caec9fbea99dbfb811a3cd54830ca1672dfbd4921006"
+    },
+    "docs/evidence/native-integration/songs/TORYANSE.mp3": {
+      "bytes": 753205,
+      "sha256": "84fe3c9a99cb86eb00332d6dd2ba8f27602bdc811744b15fa6b2fe1a15eb40d6"
+    },
+    "docs/evidence/native-integration/stage-effects-review.gif": {
+      "bytes": 42035,
+      "sha256": "e628063d201c1204fc21c84e0140a52c28af10c4527b27f0f311a6423c5162c2"
+    },
+    "docs/evidence/native-integration/stage-effects-review.png": {
+      "bytes": 14996,
+      "sha256": "e6dafe2aeda1e5390c088ab20747204c3b23f4674c681d440e3609aa9fc2b8b9"
+    },
+    "docs/evidence/native-integration/video-measurements.json": {
+      "bytes": 484,
+      "sha256": "c1009aa90c6fbc7e6f758f4be3ce96564154f5613753acf4e43d414b65eb557c"
+    },
+    "docs/evidence/native-integration/wardrobe-measurements.json": {
+      "bytes": 33785,
+      "sha256": "5147dfe757be2589d9328f2aaf67b9e45db0258f56205f92191bacc95e55dc8a"
+    },
+    "docs/evidence/device-scenes/saved-look-after-reboot.png": {
+      "bytes": 5471,
+      "sha256": "34cb8b7b94546aa57974c81e181da0e1da4342d103995086bc01ea19f245c09e"
+    },
+    "docs/evidence/device-scenes/README.md": {
+      "bytes": 599,
+      "sha256": "f2f57ca96574560a8c65f75d69aadf321832b4aecd833386cbc7e106b2e23d58"
+    },
+    "docs/evidence/device-scenes/video-measurements.json": {
+      "bytes": 494,
+      "sha256": "7f18f3c912fe759ab8cb23cf3e11f1eb3b6549cf98a336742b773c1d56ab3224"
+    },
+    "docs/evidence/device-scenes/twelve-style-scenes.png": {
+      "bytes": 74786,
+      "sha256": "116098c90d620fdd7757ba0f7f3c78cd53abbd9f2cbcb90f96fcaa7ad7f2c058"
+    },
+    "docs/evidence/device-scenes/fm1-record.rs": {
+      "bytes": 3004,
+      "sha256": "6aa18b5046eb0e6161a07bb6c6215784d56544a2f31c6bf2d67824160482af41"
+    },
+    "docs/evidence/device-scenes/device-ui-walkthrough.mp4": {
+      "bytes": 1483189,
+      "sha256": "7c1d2f6adf799868d1dc0fa855a4f5cbc1af4db7daae664030960dc25d2ab29f"
+    },
+    "docs/evidence/device-scenes/sakura-scene.mp4": {
+      "bytes": 2276679,
+      "sha256": "06648b2e6fb2ca6e7ba3846f20f6dcdacac135d924ec160f1024876f62ccc14a"
+    },
+    "docs/evidence/device-scenes/four-demo-scenes.png": {
+      "bytes": 29247,
+      "sha256": "fc8d133c0e2efb6289e1a8e73a6478d525651996dc1d2d7ca12bab5d37cf2a77"
+    },
+    "docs/evidence/device-scenes/emulator-inputs.txt": {
+      "bytes": 394,
+      "sha256": "42181e1166d1c0702ab33896c07a8e1cf25c448a6d70de767bf98e7b4f8d3052"
+    },
+    "docs/evidence/menu-redesign/menu-walkthrough.mp4": {
+      "bytes": 1083501,
+      "sha256": "5c2b390d709af268d6632a86b0c99409ce17b6b737f9390cda7da7065742e3e6"
+    },
+    "docs/evidence/menu-redesign/captions.srt": {
+      "bytes": 599,
+      "sha256": "5a7b42562d8988275bb05114350fdbec2a35868701c557b229a2be964a232f30"
+    },
+    "docs/evidence/menu-redesign/README.md": {
+      "bytes": 2970,
+      "sha256": "8d629581866b7d0f3b242d64d21bfb353651be3046df0a399d2a1f7ff49bd1c6"
+    },
+    "docs/evidence/menu-redesign/song-library.png": {
+      "bytes": 2515,
+      "sha256": "7591c6260bb03503c25b8015273cf8da170d58bbbcaef5bde3fb692c28e2defb"
+    },
+    "docs/evidence/menu-redesign/restored-look.png": {
+      "bytes": 9299,
+      "sha256": "7a21c8048495ad5add3b469fd4b55eaa5ddc75e84ef4070deb5e513ca618e214"
+    },
+    "docs/evidence/menu-redesign/menus.png": {
+      "bytes": 17637,
+      "sha256": "c3f10bce54c673b5ce8b6068c916fa63d45f028179703e42bc602380b1bd4f2f"
+    },
+    "docs/evidence/menu-redesign/wardrobe.png": {
+      "bytes": 8340,
+      "sha256": "a0ce9917a5b4bd71046a863d11a30fedf59d973a1191d449e429b2c8154124c7"
+    },
+    "docs/evidence/device-theme/mixer.png": {
+      "bytes": 2711,
+      "sha256": "42918abdde287c642cdbffd7bb7b29c8aafbf803c714fcc3ec1ed9982cfa7688"
+    },
+    "docs/evidence/device-theme/README.md": {
+      "bytes": 4951,
+      "sha256": "79e500bd5bccf821647e99e47ceb3a1e53b4fbcab87919ba21ed21e820429ccd"
+    },
+    "docs/evidence/device-theme/pattern.png": {
+      "bytes": 1986,
+      "sha256": "8eb65b3ca579a0b1edd8394245e120a42a7585393b4c7446d16329f2a171735e"
+    },
+    "docs/evidence/device-theme/stage.png": {
+      "bytes": 8152,
+      "sha256": "36922a9db02241ee233c7eae46f4534016c6344869d7d51ca1dff1987e3cfe6a"
+    },
+    "docs/evidence/device-theme/gen.png": {
+      "bytes": 3703,
+      "sha256": "76698f4be5e8ebc8e456ba18f34a888e00c690d630aaa5fb0c1f690d0d725a54"
+    },
+    "docs/evidence/device-theme/all-pages-walkthrough.mp4": {
+      "bytes": 1385157,
+      "sha256": "2d352e668e4995535de70c08cb388e5dbc8a991a21044557401267ee4d9b00e6"
+    },
+    "docs/evidence/device-theme/library.png": {
+      "bytes": 3078,
+      "sha256": "433990f5c443c2a508b24e3b2384590d94128e2b2399c9742afc4f3247b7c6b5"
+    },
+    "docs/evidence/device-theme/voice-popup.png": {
+      "bytes": 7757,
+      "sha256": "bae4cc4b794005d6b136962fb1b843343332e4ff5e34193ad7399e867bc1bbb4"
+    },
+    "docs/evidence/device-theme/dance.png": {
+      "bytes": 5250,
+      "sha256": "3ed38abd85ce4a18eae1c072d671f2364267670d2b0f9546a9774f01201e9fc5"
+    },
+    "docs/evidence/device-theme/all-device-pages.png": {
+      "bytes": 58374,
+      "sha256": "81eb292864a2301e18187c529435e638652d3b58d0b76e436fa721ea5bf7c63d"
+    },
+    "docs/evidence/device-theme/song.png": {
+      "bytes": 3349,
+      "sha256": "38d02eeda14f6d216d9bb3947a3c5729e62e1b0cf61ae89a33105091ff624e68"
+    },
+    "docs/evidence/device-theme/look.png": {
+      "bytes": 9174,
+      "sha256": "1fd6e124075a9cf5238e5c506b045e9cd6086d69de81890b843e56bb0a54868c"
+    },
+    "docs/evidence/device-theme/lyrics.png": {
+      "bytes": 2779,
+      "sha256": "22a47846245e0b97113fa7e4501e56042aae135ed99a0ca2c53228b0102c352b"
+    },
+    "docs/evidence/device-theme/save-window.png": {
+      "bytes": 2384,
+      "sha256": "273bbfc24a2424fb50a419f647c3830cd16d554329e7e90f9a983fe5adda0a44"
+    },
+    "docs/evidence/device-theme/measurements.json": {
+      "bytes": 905,
+      "sha256": "ffeaa5e15cd12b962e077e65374e8a560a7f1066b64a8c915e7ad89b1c1f44e5"
+    },
+    "docs/evidence/hardware-variants/restored-856014.png": {
+      "bytes": 9578,
+      "sha256": "872e464012b4e169e63550d4561d84ca797e933252999e2c4a315bb520b25a2d"
+    },
+    "docs/evidence/hardware-variants/restored-B36014.png": {
+      "bytes": 9578,
+      "sha256": "872e464012b4e169e63550d4561d84ca797e933252999e2c4a315bb520b25a2d"
+    },
+    "docs/evidence/hardware-variants/both-restored.png": {
+      "bytes": 13883,
+      "sha256": "1399e6c13304444b3015e33c53429967de6cee7b7dbc70788ef59529ec4b8c2f"
+    },
+    "docs/evidence/hardware-variants/measurements.json": {
+      "bytes": 895,
+      "sha256": "89e576654889235f7f0d744b2e8f1088d362b3a52018e800fcf7f46ff05a9ae8"
+    },
+    "docs/evidence/neon-console/mixer.png": {
+      "bytes": 3939,
+      "sha256": "dbcc2416c6f069e51c7449ac1028adcd687b848e86d6ace01ea4105be88ab322"
+    },
+    "docs/evidence/neon-console/pattern.png": {
+      "bytes": 2691,
+      "sha256": "2c71b317a2025420f5769253af7302741672e0475cd4608432e8d80354107506"
+    },
+    "docs/evidence/neon-console/stage.png": {
+      "bytes": 8441,
+      "sha256": "f0e4918d1aa36defe0c732caf9f67b85327591414c0fe422da6f389b1915050d"
+    },
+    "docs/evidence/neon-console/wardrobe-before-after.png": {
+      "bytes": 18913,
+      "sha256": "e3ad0669602cfef2e5c1fad1fb1d5345279a9af7ce3684592ec24a22af2928fa"
+    },
+    "docs/evidence/neon-console/gen.png": {
+      "bytes": 4980,
+      "sha256": "54dc9ad0961a747c9c894bc6c4574c36233fb48a6c4435111893bf1b42052dd5"
+    },
+    "docs/evidence/neon-console/library.png": {
+      "bytes": 4027,
+      "sha256": "60d492afde3a9030aa499dd9174fd052696c44c76dd1862729bb90b2f43e2c71"
+    },
+    "docs/evidence/neon-console/all-pages.png": {
+      "bytes": 67446,
+      "sha256": "eefefb421164160ab06642fd552b42575ba0bad9e873a5cce860e81eee727ac6"
+    },
+    "docs/evidence/neon-console/voice-popup.png": {
+      "bytes": 7928,
+      "sha256": "012e2130492ff6f9e77f1dfab6eb9ae9795224adbd959e6d66df69b2551b2aa1"
+    },
+    "docs/evidence/neon-console/dance.png": {
+      "bytes": 5418,
+      "sha256": "076a4df38ab9367f7561788ad6d7109e68c7cc22375dc089b0f8596cd702f438"
+    },
+    "docs/evidence/neon-console/dx7-shortlist-verified.json": {
+      "bytes": 2738,
+      "sha256": "70e5a8da4cf6606aab18f53966acc87696ac6ccebdab19284d26e548aba887e9"
+    },
+    "docs/evidence/neon-console/song.png": {
+      "bytes": 4741,
+      "sha256": "ea8f424896b3619b12b8e01b75d88bac1260f01d52e1fe669839964972d163bc"
+    },
+    "docs/evidence/neon-console/look.png": {
+      "bytes": 10235,
+      "sha256": "8d25472856e3b41e36288d24f588a8038a6a2a1ba774c84ba10ff89d5edcb5c2"
+    },
+    "docs/evidence/neon-console/walkthrough.mp4": {
+      "bytes": 1430752,
+      "sha256": "f9c8141626d9dc69731cf251ce6c88d05366e742e0b4c3029cd452ede6be5180"
+    },
+    "docs/evidence/neon-console/lyrics.png": {
+      "bytes": 4144,
+      "sha256": "84ba0a531f457f16d1d85e58b18e0f3327d124a18efd1114e4a3a42995a70ddc"
+    },
+    "docs/evidence/neon-console/save-window.png": {
+      "bytes": 3213,
+      "sha256": "86a78f29acc2c5a8954a63978f1a9789a29602530ad627f95c11bdf3b1fb9b48"
+    },
+    "docs/evidence/neon-console/measurements.json": {
+      "bytes": 148,
+      "sha256": "57014c2e336d54e076a1967b84e1e367771f3f925567b40676c1e673d463c164"
+    },
+    "docs/evidence/dx7-bank/edited-native.mks": {
+      "bytes": 4764,
+      "sha256": "ea567f4c7471e7d3daea3c73890fd9b503eb5021f6e4d4b8cac8769086e7276c"
+    },
+    "docs/evidence/dx7-bank/dx7-device-pages.png": {
+      "bytes": 25834,
+      "sha256": "3caae6db96d05b2ebe05a50e59361db181c40cbf1c1842aff6579f7f8cc1e9a8"
+    },
+    "docs/evidence/dx7-bank/README.md": {
+      "bytes": 806,
+      "sha256": "5d1ddc45c5feb2249cb35dd6cef17b4c62d848b953611216f8f146479812990a"
+    },
+    "docs/evidence/dx7-bank/emulator-source.json": {
+      "bytes": 260,
+      "sha256": "3d3494224b84759667bed55c1b4e54dec6e747bf331d80491d0fc60759ad2597"
+    },
+    "docs/evidence/dx7-bank/restored-operator.png": {
+      "bytes": 4643,
+      "sha256": "40d8fb16656be9d2b5e21dae73f14dcb1014460d4f4bce92576e95655737972b"
+    },
+    "docs/evidence/dx7-bank/device-walkthrough.mp4": {
+      "bytes": 2003472,
+      "sha256": "10a2dbc16433f54e04bafc2921055f2164222e9e972c9da8eb6ec10c2ab78f79"
+    },
+    "docs/evidence/dx7-bank/bass.png": {
+      "bytes": 3961,
+      "sha256": "935a961ac7005fa9586fba65bb3476b0c72f5d09c549efd0b548e5e8bc545d91"
+    },
+    "docs/evidence/dx7-bank/operator.png": {
+      "bytes": 4658,
+      "sha256": "333e2ce80392ede194610a1364daf99c35b6c37e023d2603321bfd8fab91934b"
+    },
+    "docs/evidence/dx7-bank/keys.txt": {
+      "bytes": 644,
+      "sha256": "d0dec15c14d9641dc9a082b78673c2c0d02ccb682990ff34185a286d9f5e3f0f"
+    },
+    "docs/evidence/dx7-bank/video-measurements.json": {
+      "bytes": 633,
+      "sha256": "b3353641ac173fa42e9026b4f32e5469cbe91072ee1b6a196f6bbbc954a4116a"
+    },
+    "docs/evidence/dx7-bank/restored-puya.png": {
+      "bytes": 4643,
+      "sha256": "40d8fb16656be9d2b5e21dae73f14dcb1014460d4f4bce92576e95655737972b"
+    },
+    "docs/evidence/dx7-bank/rates.png": {
+      "bytes": 4524,
+      "sha256": "4e22f9f7946e9e9f31d1bb7937ecc623ed68b7f01673e268550f0b4a7b89d002"
+    },
+    "docs/evidence/dx7-bank/stage.png": {
+      "bytes": 5314,
+      "sha256": "6ffed139ca5032b3037daa4e24b407267c374e68bb4f90cc18ebe2144a82aacc"
+    },
+    "docs/evidence/dx7-bank/browser.png": {
+      "bytes": 4309,
+      "sha256": "1e058e3d95161acb35b32fb9ff80200a9bc17c4ee6638db2717d3ba666d93634"
+    },
+    "docs/evidence/dx7-bank/emulator-flash.patch": {
+      "bytes": 1214,
+      "sha256": "708c36eba8aaf96c1b6db688a70992f26bb916004461fce282f65531262e718b"
+    },
+    "docs/evidence/dx7-bank/persistence.json": {
+      "bytes": 216,
+      "sha256": "bbac694af460959b64f6f27bbe9fbb733a2060a72e9611e08f532ba6f4f30229"
+    },
+    "docs/evidence/dx7-bank/levels.png": {
+      "bytes": 4434,
+      "sha256": "b68785d1081c993494c1c2f983ec1006ed748f762dc7f42164b33e5880a503fa"
+    },
+    "docs/evidence/dx7-bank/measurements.json": {
+      "bytes": 2448,
+      "sha256": "094fa2a42bf49e5afdd4f56779746f3cc6f31797041bcc12f2cfa045f3adca77"
+    },
+    "docs/evidence/dx7-bank/audio-measurements.json": {
+      "bytes": 1296,
+      "sha256": "d955b4323905e2189244cf11b3b15a9f9426d9239aab3b551bcaf3a643965956"
+    },
+    "docs/evidence/dx7-bank/audio/dx7-3.mp3": {
+      "bytes": 88232,
+      "sha256": "645153b43dcfa732de3586ca27c0971d6898cfa55707ad0f1b7446a3454f14be"
+    },
+    "docs/evidence/dx7-bank/audio/dx7-2.mks": {
+      "bytes": 4764,
+      "sha256": "3b90b40fc74105b62c66f57be551984a71f4bcfb3190c464baea0376baa42207"
+    },
+    "docs/evidence/dx7-bank/audio/dx7-5.mks": {
+      "bytes": 4764,
+      "sha256": "9a2a89cd1fce510cbe3b2c9737cc7f51f1277f52d8fe6542e5a57596f8636afc"
+    },
+    "docs/evidence/dx7-bank/audio/dx7-4.mp3": {
+      "bytes": 88232,
+      "sha256": "081dda160871393d0799a4aea3e820ce86a3320100df86e02b9c8321a3103820"
+    },
+    "docs/evidence/dx7-bank/audio/dx7-6.mks": {
+      "bytes": 4764,
+      "sha256": "32fe323339c3f1358b37bcd70acd0474d1c6c3faecc17cb3d31fd8deb6190cc6"
+    },
+    "docs/evidence/dx7-bank/audio/classic-8.mp3": {
+      "bytes": 88232,
+      "sha256": "dd0e059f9fdf63ced118e94cafec833656a8abc9d3a92866560458b385865941"
+    },
+    "docs/evidence/dx7-bank/audio/dx7-6.mp3": {
+      "bytes": 88232,
+      "sha256": "8c4bab905ecf137c2c7b6f78c444ca92cefdb28c6bc7d01edf7d88b34cca73f5"
+    },
+    "docs/evidence/dx7-bank/audio/classic-8.mks": {
+      "bytes": 4508,
+      "sha256": "5fc3d35c1f224e140ba8c2f248eaa582f12b0d0f74ea1a6040c7f5727d25bade"
+    },
+    "docs/evidence/dx7-bank/audio/dx7-3.mks": {
+      "bytes": 4764,
+      "sha256": "260ecaff1920da5c1e878ac431272839aedf02c7842abc66af4488c9184b6b99"
+    },
+    "docs/evidence/dx7-bank/audio/dx7-0.mks": {
+      "bytes": 4764,
+      "sha256": "0645559d7e7691c71891001aa1108f5448b0e84da0a9181bb307af2ccaf7f1e0"
+    },
+    "docs/evidence/dx7-bank/audio/dx7-1.mks": {
+      "bytes": 4764,
+      "sha256": "3383a186fae4e3b07f8e8e047c8ad96942a1073bd33a913f33c7505e0d8b48dd"
+    },
+    "docs/evidence/dx7-bank/audio/dx7-1.mp3": {
+      "bytes": 88232,
+      "sha256": "ac505cdaafeb134fd2fa36cf3e8980cd5837a8943aef745ebc9858d1a157cda9"
+    },
+    "docs/evidence/dx7-bank/audio/full-band.mp3": {
+      "bytes": 328664,
+      "sha256": "9b80e803c1d95d255e48fd551f08695024fb4f0ead3ab3ab42ffcb714bac1efc"
+    },
+    "docs/evidence/dx7-bank/audio/dx7-7.mp3": {
+      "bytes": 88232,
+      "sha256": "2d685e769ea5de6bbb386912398995cc9dde9738e3f168563235f537a5da8c3b"
+    },
+    "docs/evidence/dx7-bank/audio/dx7-7.mks": {
+      "bytes": 4764,
+      "sha256": "db10142c1a8151021a6c30e7ef7e38391690e97785160ade99b79c1aeaada074"
+    },
+    "docs/evidence/dx7-bank/audio/dx7-4.mks": {
+      "bytes": 4764,
+      "sha256": "d2f0230f32f06e18e2273f9b4643b77e95ee7ffe6eba0ccc13d45e888fcaf05e"
+    },
+    "docs/evidence/dx7-bank/audio/dx7-5.mp3": {
+      "bytes": 88232,
+      "sha256": "01d5c83a3286a175cafe98b651b4419e7b325214fd4d5a831c1742a4b4dd76b9"
+    },
+    "docs/evidence/dx7-bank/audio/dx7-2.mp3": {
+      "bytes": 88232,
+      "sha256": "26b09ba64ee78a9b20f94f0d9eef3cc31a4e443129459e56553911152327336a"
+    },
+    "docs/evidence/dx7-bank/audio/dx7-0.mp3": {
+      "bytes": 88232,
+      "sha256": "b8436c0ce9c2cc600f320bc6b3bf124a8a6059f53818e4f82ad245a0fe42909c"
+    },
+    "docs/evidence/dx7-bank/audio/edited.mp3": {
+      "bytes": 328664,
+      "sha256": "07e467ee1fba88ee80caa584b6080152c8f481fbfa2b6e2b8cfde9550d962c81"
+    }
+  },
+  "scene_prefs_bytes": 44,
+  "scene_prefs_version": 3,
+  "video_benchmark_implementation_commit": "2bb1662",
+  "menu_redesign_image_delta": 160,
+  "device_theme_image_delta": {
+    "default": 696,
+    "video": 704
+  },
+  "device_theme_ram_delta": 0,
+  "device_theme_pool_delta": 0,
+  "hardware_flash_variants_emulated": [
+    "0x856014",
+    "0xB36014"
+  ],
+  "physical_hardware_qualification": false,
+  "flash_reserve_removed_by_owner": true,
+  "dx7_bank": {
+    "voices": 8,
+    "packed_bytes": 1024,
+    "status": "integrated six-operator renderer, native bank/operator editor and embedded project snapshots",
+    "project_version": 5,
+    "project_bytes": 4764
+  },
+  "native_dx7_timing": {
+    "recording": {
+      "render_worst_us": 1881.125,
+      "render_initialization_us": 1062.7083333333333,
+      "overruns": 0,
+      "callback_deadline_us": 5804.988662131519
+    },
+    "stress": {
+      "render_worst_us": 2717.625,
+      "render_initialization_us": 1062.7083333333333,
+      "overruns": 0,
+      "callback_deadline_us": 5804.988662131519
+    },
+    "audio_capture": {
+      "frames": 2021888,
+      "peak": 11381,
+      "rms": 1538.6298384509766,
+      "full_scale_samples": 0
+    },
+    "stress_capture": {
+      "frames": 279296,
+      "peak": 5548,
+      "rms": 1493.432609469654,
+      "full_scale_samples": 0
+    }
+  }
+}

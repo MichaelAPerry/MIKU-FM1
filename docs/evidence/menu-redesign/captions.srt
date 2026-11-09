@@ -1,0 +1,31 @@
+1
+00:00:00,700 --> 00:00:02,900
+DANCE → EDIT opens the visual wardrobe
+
+2
+00:00:03,000 --> 00:00:04,900
+SELECT changes paired outfit and stage preset
+
+3
+00:00:05,000 --> 00:00:07,900
+K1 background · K2 frame · K3 effect
+
+4
+00:00:08,000 --> 00:00:10,900
+K4 intensity · PRESETS color theme
+
+5
+00:00:11,000 --> 00:00:12,900
+SAVE keeps this song's look · EDIT returns
+
+6
+00:00:13,000 --> 00:00:15,900
+ARP opens the song library · SELECT chooses
+
+7
+00:00:16,000 --> 00:00:18,900
+LFO opens the selected song's own look
+
+8
+00:00:19,000 --> 00:00:26,000
+EDIT returns to stage · PLAY starts the song

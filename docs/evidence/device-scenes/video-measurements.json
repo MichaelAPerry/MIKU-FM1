@@ -1,0 +1,14 @@
+{
+  "encoded_frames": 3,
+  "encoder_failures": 0,
+  "jpeg_bytes": 4779,
+  "max_tile_us_emulator": 1577.125,
+  "max_frame_wall_us_emulator": 86064.16666666667,
+  "audio_frames": 137984,
+  "audio_peak": 10293,
+  "full_scale_samples": 0,
+  "isr_percent_emulator": 8.9,
+  "scope": "three JPEG frames during real native vocal+band playback; not real USB throughput or hardware timing",
+  "audio_render_moving_peak_us_emulator": 308.0833333333333,
+  "audio_callback_deadline_us": 5804.988662131519
+}

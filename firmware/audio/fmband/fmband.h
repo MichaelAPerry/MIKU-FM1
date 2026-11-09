@@ -8,17 +8,18 @@
 #define FMB_BLK 16
 #define CH_VOICES 4
 #define CH_NPRESET 8
-#define BS_NPRESET 4
-#define DR_NPRESET 2
+#define BS_NPRESET 6
+#define DR_NPRESET 4
 typedef struct { uint32_t e; uint8_t st; } FbEnv;   /* Q24 envelope; st: 0 idle 1 attack 2 decay 3 sustain 4 release */
 /* times are indices 0..63 into fmb_tms[] (2 ms .. 8 s); sus/isus 0..255; ratio Q8 (mod:carrier); ibase = peak index, Q8 radians */
 typedef struct {
     uint16_t ratio, ibase, lvl;           /* lvl <= 8192 (4 voices must not overflow) */
     uint8_t wave, atk, dec, sus, rel, idec, isus, ivel, ikt; /* wave 0 sine 1 soft square; ivel: velocity->brightness; ikt: index fall per semitone above C4 (/256) */
+    uint8_t detune;                      /* optional second carrier, cents 0..24; 0 = original single carrier */
 } ChPreset;
 typedef struct {
     FbEnv env;
-    uint32_t pc, pm, ic, im, ienv, age;
+    uint32_t pc, pm, ic, im, ienv, age, pu, iu;
     int32_t a, da, ik, dik, vg, ib;
     uint8_t note;
 } ChVoice;
@@ -31,6 +32,7 @@ typedef struct {
 } ChSynth;
 void ch_init(ChSynth *s);
 void ch_set_preset(ChSynth *s, uint8_t n);            /* 0 bells 1 EP 2 chip arp 3 pad 4 organ 5 pluck 6 marimba 7 clav */
+void ch_set_modern(ChSynth *s, uint8_t n);            /* opt-in profiles: 0 digital pluck, 1 glass pad; not song preset indices */
 void ch_set_mix(ChSynth *s, uint8_t level, uint8_t pan);
 void ch_note_on(ChSynth *s, uint8_t note, uint8_t vel);
 void ch_note_off(ChSynth *s, uint8_t note);
@@ -41,16 +43,17 @@ uint8_t ch_active(const ChSynth *s);                  /* sounding voices */
 typedef struct {
     uint16_t ratio, ibase, lvl, cut, cmod, res;
     uint8_t wave, atk, dec, sus, rel, idec, isus, porta, cdec;  /* wave 0 sine 1 soft square 2 saw+resonant SVF */
+    uint8_t drop, pdec, drive;            /* pitch drop in quarter-semitones, its decay index, saturation 0..127; all 0 bypass */
 } BsPreset;
 typedef struct {
     BsPreset p;
     FbEnv env;
-    uint32_t pc, pm, ic, ienv, cenv;
+    uint32_t pc, pm, ic, ienv, cenv, penv;
     int32_t pcur, ptgt, a, da, ik, dik, f, df, vg, ib, lp, bp, gl, gr;
     uint8_t acc, left, preset;
 } BsSynth;
 void bs_init(BsSynth *s);
-void bs_set_preset(BsSynth *s, uint8_t n);            /* 0 FM bass 1 sub 2 chip square 3 acid */
+void bs_set_preset(BsSynth *s, uint8_t n);            /* 0 FM bass 1 sub 2 chip square 3 acid 4 sub drop 5 hard acid */
 void bs_set_mix(BsSynth *s, uint8_t level, uint8_t pan);
 void bs_note_on(BsSynth *s, uint8_t note, uint8_t vel, uint8_t accent, uint8_t slide); /* slide while gated: glide, no retrigger */
 void bs_note_off(BsSynth *s);
@@ -71,7 +74,7 @@ typedef struct {
     uint8_t cbl, cnb, choke, hc, left, preset;
 } DrKit;
 void dr_init(DrKit *d);
-void dr_set_preset(DrKit *d, uint8_t n);              /* 0 808-ish, 1 chip/8-bit */
+void dr_set_preset(DrKit *d, uint8_t n);              /* 0 808-ish, 1 chip/8-bit, 2 punch, 3 digital */
 void dr_set_mix(DrKit *d, uint8_t level, uint8_t pan);
 void dr_trig(DrKit *d, uint8_t inst, uint8_t vel);    /* closed hat chokes the open hat */
 void dr_render(DrKit *d, int32_t *out, uint32_t frames);

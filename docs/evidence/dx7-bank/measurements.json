@@ -1,0 +1,103 @@
+{
+  "host_ctest": {
+    "passed": 46,
+    "failed": 0
+  },
+  "resources": {
+    "default": {
+      "image": {
+        "used": 531820,
+        "free": 49744,
+        "reserve": 0
+      },
+      "static_ram": {
+        "used": 42512,
+        "free": 55792,
+        "reserve": 16384
+      },
+      "pool": {
+        "used": 255624,
+        "free": 88440,
+        "reserve": 32768
+      }
+    },
+    "video": {
+      "image": {
+        "used": 538444,
+        "free": 43120,
+        "reserve": 0
+      },
+      "static_ram": {
+        "used": 40720,
+        "free": 57584,
+        "reserve": 16384
+      },
+      "pool": {
+        "used": 266080,
+        "free": 77984,
+        "reserve": 32768
+      }
+    },
+    "benchmark": {
+      "image": {
+        "used": 538328,
+        "free": 43236,
+        "reserve": 0
+      },
+      "static_ram": {
+        "used": 40720,
+        "free": 57584,
+        "reserve": 16384
+      },
+      "pool": {
+        "used": 266080,
+        "free": 77984,
+        "reserve": 32768
+      }
+    }
+  },
+  "native": {
+    "recording": {
+      "render_worst_us": 1881.125,
+      "render_initialization_us": 1062.7083333333333,
+      "overruns": 0,
+      "callback_deadline_us": 5804.988662131519
+    },
+    "stress": {
+      "render_worst_us": 2717.625,
+      "render_initialization_us": 1062.7083333333333,
+      "overruns": 0,
+      "callback_deadline_us": 5804.988662131519
+    },
+    "audio_capture": {
+      "frames": 2021888,
+      "peak": 11381,
+      "rms": 1538.6298384509766,
+      "full_scale_samples": 0
+    },
+    "stress_capture": {
+      "frames": 279296,
+      "peak": 5548,
+      "rms": 1493.432609469654,
+      "full_scale_samples": 0
+    }
+  },
+  "scope": "emulator measurements, not physical hardware/USB throughput",
+  "jpeg_benchmark": {
+    "encoded_frames": 3,
+    "encoder_failures": 0,
+    "jpeg_bytes": 4779,
+    "max_tile_us_emulator": 2306.9166666666665,
+    "max_frame_wall_us_emulator": 101067.91666666667,
+    "audio_frames": 137984,
+    "audio_peak": 9751,
+    "full_scale_samples": 0,
+    "isr_percent_emulator": 17.9,
+    "scope": "three JPEG frames during real native vocal+band playback; not real USB throughput or hardware timing",
+    "audio_render_moving_peak_us_emulator": 1137.7083333333333,
+    "audio_callback_deadline_us": 5804.988662131519,
+    "audio_render_worst_us_emulator": 1864.3333333333333,
+    "audio_overruns": 0,
+    "audio_init_us_emulator": 1062.8333333333333
+  }
+}

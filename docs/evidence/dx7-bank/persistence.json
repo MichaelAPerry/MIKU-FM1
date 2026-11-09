@@ -1,0 +1,13 @@
+{
+  "UC25HQ80": {
+    "record_bytes": 4764,
+    "song_version": 5,
+    "crc_ok": true
+  },
+  "Puya": {
+    "record_bytes": 4764,
+    "song_version": 5,
+    "crc_ok": true
+  },
+  "patches_match_both_chip_ids": true
+}

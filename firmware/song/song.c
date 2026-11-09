@@ -12,6 +12,7 @@ void sg_init(Song *g){
         k2->level=lv[t];k2->mute=0;k2->solo=0;k2->preset=0;
         k2->vib=35;k2->porta=10;k2->breath=8;k2->bright=79;
     }
+    for(t=0;t<2u;t++)for(i=0;i<128u;i++)g->dx7[t][i]=0;
     sg_voice_default(&g->vx);
     for(i=0;i<NROW;i++){for(t=0;t<NTRK;t++)g->row[i].pat[t]=ROW_OFF;g->row[i].sect=SEC_NONE;}
     for(t=0;t<NTRK;t++)for(p=0;p<NPAT;p++)for(s=0;s<NSTEP;s++)for(k=0;k<4;k++)g->pat[t][p][s].v[k]=0;

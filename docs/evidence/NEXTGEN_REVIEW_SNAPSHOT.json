@@ -1,0 +1,157 @@
+{
+  "recorded_on": "2026-11-09",
+  "implementation_snapshot": "984383b0b528112a3808551460977a46287d477e",
+  "base_main": "88b0ef3e568cf615eb5dfaa42d170d8c0f75d431",
+  "evidence_scope": "Host tests and native/emulator builds; no physical-device or real USB-host validation.",
+  "host_ctest": {
+    "passed": 26,
+    "failed": 0,
+    "rerun_date": "2026-11-09"
+  },
+  "native_profiles": {
+    "default": {
+      "image": {
+        "used": 152696,
+        "limit": 581564,
+        "free": 428868,
+        "minimum_free": 65536,
+        "margin_above_reserve": 363332,
+        "pass": true
+      },
+      "static_ram": {
+        "used": 35540,
+        "limit": 98304,
+        "free": 62764,
+        "minimum_free": 16384,
+        "margin_above_reserve": 46380,
+        "pass": true
+      },
+      "pool": {
+        "used": 254784,
+        "limit": 344064,
+        "free": 89280,
+        "minimum_free": 32768,
+        "margin_above_reserve": 56512,
+        "pass": true
+      }
+    },
+    "video": {
+      "image": {
+        "used": 159080,
+        "limit": 581564,
+        "free": 422484,
+        "minimum_free": 65536,
+        "margin_above_reserve": 356948,
+        "pass": true
+      },
+      "static_ram": {
+        "used": 33732,
+        "limit": 98304,
+        "free": 64572,
+        "minimum_free": 16384,
+        "margin_above_reserve": 48188,
+        "pass": true
+      },
+      "pool": {
+        "used": 265216,
+        "limit": 344064,
+        "free": 78848,
+        "minimum_free": 32768,
+        "margin_above_reserve": 46080,
+        "pass": true
+      }
+    },
+    "video_bench": {
+      "image": {
+        "used": 158984,
+        "limit": 581564,
+        "free": 422580,
+        "minimum_free": 65536,
+        "margin_above_reserve": 357044,
+        "pass": true
+      },
+      "static_ram": {
+        "used": 33732,
+        "limit": 98304,
+        "free": 64572,
+        "minimum_free": 16384,
+        "margin_above_reserve": 48188,
+        "pass": true
+      },
+      "pool": {
+        "used": 265216,
+        "limit": 344064,
+        "free": 78848,
+        "minimum_free": 32768,
+        "margin_above_reserve": 46080,
+        "pass": true
+      }
+    }
+  },
+  "artifacts": {
+    "build/native/miku-fm.fwsc": {
+      "bytes": 612223,
+      "sha256": "3ba7a8667f4a92319ef868813ec55a0b7af1976c7e1d520b3b1a6299a32e6e74"
+    },
+    "build/native/miku-fm-app.bin": {
+      "bytes": 152696,
+      "sha256": "0de04253b07af111ac36fc264e7f9bedcc564596c33ae640e14a21f3ce391b88"
+    },
+    "build/native/miku-fm-video.fwsc": {
+      "bytes": 612223,
+      "sha256": "157448b88eb6ba4f5dce16128bb7f595f23d8c36ea04da0e837f663ab6c83b15"
+    },
+    "build/native/miku-fm-video-app.bin": {
+      "bytes": 159080,
+      "sha256": "034afa1327a4bf4922872df2f75574ee2646e5bcc582bb3f40f55cb6f211cfd7"
+    },
+    "build/native/miku-fm-video-bench.fwsc": {
+      "bytes": 612223,
+      "sha256": "e65087b5367d0dfe63ea286ce8972fc682f3c45651a787ed896c560a804be209"
+    },
+    "build/evidence/video-bench/actual-native.jpg": {
+      "bytes": 3794,
+      "sha256": "5b8a9107abb1a31640fa74bbf97240cc58f48bc7d4ab7eb8ce3e9bee28c98a5b"
+    }
+  },
+  "native_jpeg_emulator": {
+    "encoded_frames": 3,
+    "encoder_failures": 0,
+    "jpeg_bytes": 3794,
+    "max_tile_us_emulator": 1403.375,
+    "max_frame_wall_us_emulator": 32205.583333333332,
+    "audio_frames": 80640,
+    "audio_peak": 9653,
+    "full_scale_samples": 0,
+    "isr_percent_emulator": 13.1,
+    "scope": "three JPEG frames during real native vocal+band playback; not real USB throughput or hardware timing"
+  },
+  "reserves": {
+    "description": "Development headroom after linked allocations; future USB/audio/video work must remain within this margin until budgets are remeasured.",
+    "image": {
+      "limit": 581564,
+      "minimum_free": 65536
+    },
+    "static_ram": {
+      "limit": 98304,
+      "minimum_free": 16384
+    },
+    "pool": {
+      "limit": 344064,
+      "minimum_free": 32768
+    }
+  },
+  "generated_checks": [
+    "gen_fvoice_tables",
+    "gen_fmband_tables",
+    "sprite_pack --check",
+    "sprite_compact --check"
+  ],
+  "separate_integration_test": "tests/test_native_video.py passed 2026-11-09",
+  "limitations": [
+    "Wardrobe images are concepts; only original outfit is native-registered.",
+    "Real UVC enumeration/delivery unverified.",
+    "USB computer-playback/pedal transport unimplemented.",
+    "GEN/lyrics/pedal/performance event modules are not complete native product features."
+  ]
+}

@@ -1,0 +1,3 @@
+# Host-only sprite packing / validation. Device firmware has no Python dependency.
+Pillow>=10,<14
+numpy>=1.24,<3

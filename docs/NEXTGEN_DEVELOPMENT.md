@@ -1,0 +1,143 @@
+# Next-generation development log
+
+> Current DX7 milestone: [real six-operator renderer, dedicated BANK/operator editor, embedded patch saving, native video/audio evidence and current measurements](DX7_BANK_HANDOFF.md). This supersedes earlier DX7-plan-only status.
+
+
+> Current policy and UI: [fixed 64 KiB flash reserve removed at owner request; neon console UI implemented; eight-voice DX7 audition bank prepared offline](NEON_UI_AND_DX7_BANK.md). Earlier fixed-flash-reserve instructions are superseded.
+
+
+> Hardware/DX7 review: [both known FM-1 flash variants pass emulator persistence checks; DX7 engine reuse is evaluated but not integrated](HARDWARE_AND_DX7_REVIEW.md).
+
+
+> Current device-wide visual pass: [pink/blue borders and gradients across all nine musical pages, popups and SAVE window, with native recordings and current measurements](evidence/device-theme/README.md). This supersedes the earlier menu-only UI scope and resource figures.
+
+
+> Latest UI pass: [visual wardrobe and song-library menus, native walkthrough and current build measurements](evidence/menu-redesign/README.md).
+
+
+> Current device UI follow-up: [selectable per-song LOOK controls, electronic scenes, recordings and resource measurements](DEVICE_LOOK_HANDOFF.md). This supersedes earlier global-look settings and pre-follow-up audio/resource figures below.
+
+
+Branch: `feature/miku-nextgen-performance`, from `origin/main` `88b0ef3` (2026-11-08).
+No release, website deployment, main merge or physical-device flash is authorized or performed.
+The original art, four tracks and MKS2 saved-song layout remain the compatibility baseline.
+
+## Phase 1: live performance
+
+STAGE/DANCE SELECT now changes only `ed_mora` and requests redraw. It creates no note-on, note-off, audition deadline or pitch command. The visual wheel retains its existing main-loop animation. Live keys still post the selected mora on their next note-on. PATTERN ALGORITHM retains its separately guarded 300 ms editor audition, disabled during playback or held keys. No new audition gesture has been selected.
+
+`tests/test_live_select.py` compiles the actual native SELECT handler against the real engine. It checks mailbox and full engine state unchanged, exact output samples idle/held/playing, key release, wraparound and next-key syllable. It is a host adapter, not a HAL/emulator test.
+
+ANIMAL uses the same integer sample-counter helper at initial note and every subsequent articulation. Default intervals 140–220 ms (previously 70–90); speech rate 0/50/100 gives 180–260/140–220/100–180 ms. On STAGE/DANCE in ANIMAL, hold SCL/SEL and turn PRESETS; it consumes the short language tap and keeps tempo unchanged. Rate affects the next scheduled interval and does not retrigger a held note. It is session-only and resets to 50 at boot, avoiding a silent change to saved songs. Existing ANIMAL pitch-jump character remains; the held base note and release are unchanged. JP/SCAT/VOWELS keep independent timing.
+
+Measured over a four-second held note (same engine, same initial settings): old/new 51/23 onsets, mean interval 79.31/177.91 ms, peaks 24297/22592, no full-scale samples, release gate off. Evidence `build/nextgen/animal-{before,after}.{wav,csv}`. Reproduce using `tools/animal_render.c` linked to each revision's engine. This is measured timing, not a listening judgment. Final cadence, pauses and phrasing need owner listening review.
+
+Host CMake Release suite passed 13 tests including SELECT before later independent modules were added; final aggregate results are recorded below. Generated voice/band tables and sprite-header check passed. Native/emulator final results pending.
+
+## Phase 2: voice and lyrics
+
+See [voice evaluation](NEXTGEN_VOICE.md). Compensation is opt-in in `FvVoice`, baseline 0, not yet a device control or saved setting. A96 gains 6 dB but still has substantial high-note loss. Raw U92 at maximum velocity already clips; no global no-clipping claim. Text/phrase compiler and articulation evaluation are in development; final integration is recorded below.
+
+## Phases 3–6
+
+Backing presets, candidate generator and modular visuals are development experiments; final product lineup and visual designs require owner review. USB research is complete in [USB research](NEXTGEN_USB_RESEARCH.md); no USB stack rewrite or hardware functionality is claimed. UAC input must be available before app effects; existing mono global voice effects cannot simply be reused for a stereo pedal. Native UVC is a separate feasibility task.
+
+## Resource baseline (actual native build)
+
+`origin/main`: image 183788 / 581564 bytes; static RAM 35492 / 98304; pool 254784 / 344064. JieLi toolchain 20260730.1, Dinghy f77bf03, SDK binaries verified against pinned hashes. Remaining pool 89280 bytes. Host timings and emulator CPU are not physical-device ISR measurements. No hardware timing or USB throughput measured.
+
+## Owner decisions pending
+
+- Listen to default ANIMAL cadence and select final pacing/phrasing; approve or revise the session-rate gesture before final product integration.
+- Evaluate compensation audio and choose whether/how to expose it; no replacement default selected.
+- Review two examples of each of Hyperpop, Future Bass, Jersey Club, Digicore/Glitch Pop and Electropop/Idol Pop before final GEN lineup.
+- Approve costumes/character concepts, backgrounds, frames and choreography before final art.
+- Select performance-events companion versus further UVC work after feasibility evidence; no platform migration proposed.
+
+## Phase 2 milestone
+
+The reusable `lyrics.c/h` compiler now supports explicit mora words, durations, word/phrase boundaries, rests, separate onsets and vowel melismas. It uses caller-owned four-byte units, validates before writing, refuses unsupported phonemes, and leaves MKS2 unchanged. `lyrics_render` demonstrates actual voice articulation and exports actual mouth/consonant states. Native lyric editing/persistence and a live phrase-player adapter remain unfinished; see [lyrics](NEXTGEN_LYRICS.md).
+
+## Phase 3 milestone
+
+New native MIXER choices: bass SUB DROP/HARD ACID and drums PUNCH/DIGITAL. Optional chord profiles DIGITAL PLUCK/GLASS PAD remain an API audition because the stored eight-entry chord bank is full. Original preset audio hashes are unchanged. Same-score A/B renders and envelopes/pitch/drop/glide/release/clipping tests are documented in [band](NEXTGEN_BAND.md). No fifth track, supersaw, shared band effects or new operator topology is claimed. New presets use no pool buffers; gain differences in auditions are disclosed.
+
+## Phase 4 milestone
+
+`gen_next.c/h` provides five experimental candidates with distinct forms, rhythmic templates, harmony, bass/melody phrasing, density and energy/complexity. Ten WAV/MKS examples use the actual engine. 360 combinations test determinism, editable valid song output, roundtrips, locked tracks and local phrase regeneration. Existing native GEN remains unchanged until style approval and explicit scratch-storage work: the prototype uses 5032 stack bytes. No tempo/grid/song format change. See [GEN](NEXTGEN_GEN.md).
+
+## Phase 5 milestone
+
+`performance.c/h` separates outfit metadata, procedural scene geometry and absolute clock/beat animation state. Native DANCE uses it with original defaults; atlas storage is unchanged. The original eight-frame dance decoder now reads odd-width rows correctly, tested against every packed pixel. Three 240x240 visual concepts are generated from the actual atlas. Only ORIGINAL outfit is registered; no new costume or genre mapping finalized. See [visuals](NEXTGEN_VISUALS.md).
+
+## Phase 6 milestone
+
+`pedal.c/h` provides a tested integer stereo processing path with pre-effect input analysis, independent saturation/filter state, wet/dry, smoothed bypass/levels, optional synth mix/headroom and disconnect handling. The WAV tool is exact at unity; this is ready-to-feed DSP, not a USB endpoint. `performance_wire.c/h` supplies a versioned MIDI-safe packet; the actual engine exporter records audio plus sample-clocked visual state. The companion renders that recorded state with existing art and attribution. Browser playback/import validation passed. Live endpoint/feedback/ring-buffer integration, live event transmission, true full-body mouth layering and UVC are unfinished. See [pedal](NEXTGEN_PEDAL.md), [companion](NEXTGEN_COMPANION.md), [source research](NEXTGEN_USB_RESEARCH.md).
+
+## Final validation and resource accounting
+
+Host Release suite: 19 tests, including all new modules, before final documentation. Generated voice and band tables leave no changes; sprite header check passes (65928 pixel bytes). Final aggregate rerun recorded in VALIDATION.md.
+
+Actual final native build: image 185208/581564 bytes (+1420); static RAM 35540/98304 (+48); pool 254784/344064 unchanged. Dinghy register checks and .ram_text gate pass. This includes default visual state, silent SELECT, ANIMAL control, voice evaluation branch and added native bass/drum presets. It does not link host-only GEN/lyrics/pedal/wire prototypes.
+
+Phase1 real-package emulator: smoke124928 frames/RMS1504, idle SELECT exact digital silence versus baseline peak7887/RMS1917.1, held-note with SELECT bit-identical across89600 stereo frames to no-turn reference, natural release silent. Rate gesture screenshot shows66/BPM148 unchanged. Emulator ISR8.3% baseline/8.6% phase1; not a physical-device timing result. Final package smoke:124928frames/RMS1504/peak7393/no full-scale samples, emulator ISR8.6%; DANCE ISR10.3%, corrected sprites inspected; MIXER HARD ACID confirmed. Full evidence is in VALIDATION.md.
+
+Compile-only pi32v2 prototype code sizes: lyrics638 bytes; GEN3254 bytes text+constants; pedal870 bytes; wire588 bytes after freestanding-copy correction. No prototype static/pool allocations, except caller-owned state/workspace described in individual docs. Compile-only sizes do not establish linked native budgets or real-time safety.
+
+Physical device ISR deadlines, output-stage artifacts, buffer underruns, USB throughput/latency and UVC frame rate remain unmeasured. No physical device was modified.
+
+## Next concrete coding tasks
+
+1. Refine approved musical/visual examples; implement caller-owned GEN scratch before device UI integration.
+2. Implement bounded live lyric phrase-player adapter and versioned persistence proposal after editing-interface review.
+3. Prototype Dinghy integer UAC1 input + feedback + ring buffers, expose frames BEFORE pedal DSP, then test native/emulator transport and combined descriptors. Performance-event companion is the recommended first computer renderer; UVC requires its own measured resource prototype.
+
+## Wardrobe follow-up (2026-11-08)
+
+Owner requested at least ten outfits and emphasized matching singer-face sheets as well as dancing sprites. Visually inspected all three source sheets and generated ten paired body/portrait concepts under `assets/singer/wardrobe/`, preserving all original art. No designs approved or runtime skins claimed. See [wardrobe review](NEXTGEN_WARDROBE.md) for concepts, required paired animation states and flash/storage constraints.
+
+Wardrobe revision2: owner requested replacing07 Starlight with Zettai and08 Rain Signal with a bikini (Summer Beat). Generated paired full-body/portrait concepts using the existing contact sheet, face sheet and dance sheet as references; saved revision2 while preserving revision1. No final atlas or runtime skin integration claimed.
+
+## Compact wardrobe / native USB-video milestone
+
+Owner clarified07 as a sci-fi bodysuit, retained08 bikini, requested witch; revision3 presents eleven paired body/portrait concepts with corrected07 Signal Suit and11 Moon Circuit. Original art remains intact, production atlases not finalized. Owner authorized adjusting outfit count and preserving USB-video headroom.
+
+Implemented lossless shared-row/delta sprite storage for both LCD views. Actual default image152696B saves32512B; static/pool unchanged. Optional native MIDI+UVC development profile now includes real integer incremental JPEG and class/endpoint code on Dinghy, preserving the original update-loader source via a checked build patch. Actual video profile159080B image/33732B static/265216B pool. It deliberately excludes UAC/CDC; no combined audio/video descriptor promise.
+
+Headroom is now enforced in each native build: minimum64KiB image,16KiB static RAM,32KiB pool free. Video profile still has422484/64572/78848 bytes respectively. See [headroom report](NEXTGEN_MEMORY.md). Host Release25/25 plus real patched-driver fake-SIE tests pass; both actual native packages pass emulator smoke. Integer JPEG scenes3475–5027B,26/26 independently decoded fixtures; raw/compact renderer output is byte-identical. Native emulated encode benchmark is recorded in final validation when complete. No hardware flashed.
+
+Publishing status: compact-sprite/native-video follow-up commits are local on the feature branch. Automatic approval review rejected the attempted GitHub push because it did not find clear authorization to publish the new commits/art remotely. Owner publication approval requested; PR21 remains unchanged/draft. No workaround or indirect publication attempted.
+
+## Owner-authorized publication and Claude review (2026-11-09)
+
+The owner explicitly authorized pushing these features to the development branch and requested a verbose handoff for Claude before main integration. The earlier publication block is resolved by that instruction. Added root `CLAUDE_HANDOFF.md`, replaced the stacked current handoff with an index, preserved historical handoffs in `docs/archive/`, and committed a durable JSON evidence snapshot. No merge/main push, release, deployment or physical-device flash is authorized. Host26/26 and generated/real-driver checks rerun sequentially; source generators remain unchanged.
+
+## Native integration, complete factory-song library and reusable stage sheets
+
+Implemented native workspace GEN, lyric-unit editing and delayed-queue
+articulation, twelve paired outfits, five reusable stage-effect modes, visual
+preferences, and the owner-confirmed ten-slot song library. The four selected
+first-verse factory songs reconstruct normal editable four-track projects;
+existing saved records always take precedence. Slot 10 was saved at 0xBB000
+with a valid 4508-byte CRC record, restored on a fresh emulator boot and played.
+
+The final contact sheet caught black source-grid separators and unequal outer
+extents that caused cropped/shrunken actors. Those were fixed using separator
+recovery and explicit reviewed source bounds; source originals were not edited.
+A neighboring-row compression option recovered 4304 bytes without changing
+pixels or adding decoder depth. Final additional wardrobe accounting is 335463
+bytes. All twelve options fit; no outfit, song or effect was dropped.
+
+Final native default: image504416/static35728/pool255624 bytes. MIDI+UVC:
+510900/33924/266080 bytes; image free70664, including the unchanged64 KiB reserve.
+The expanded-firework target benchmark encodes3 frames without failures:
+39.593 ms maximum frame wall time,1.419 ms maximum tile step,7.2% emulated ISR
+share,759.125 µs audio-render moving peak, zero full-scale samples. These are
+emulator figures, not physical timing or USB throughput.
+
+Host38/38, original generated checks, independent11-pair source audit, all144
+outfit/effect/pose JPEG combinations, browser costume/mouth validation, native
+screens and slot save/reboot evidence are documented in CLAUDE_HANDOFF.md.
+Complete first-verse listening copies and .mks files are committed in
+`docs/evidence/native-integration/songs/` with WAV measurements. Creative
+approval and native UAC/pedal/live-telemetry/physical-device work remain open.

@@ -6,7 +6,7 @@ Claude review and main integration before any experimental firmware is placed
 on their FM-1. No device was accessed, flashed, or asked to run this branch.
 
 - Host Release: **52/52 CTest checks pass** (v0.7 has 50, unlike newer main).
-  New checks exercise patch invalidation, live sustain, and 729 BANK/LIBRARY
+  New checks exercise patch invalidation, live/sequence/delayed-vocal sustain, and 729 BANK/LIBRARY
   text-layout states. Existing v4/v5 song roundtrips, both flash-ID assertions,
   native LCD pixel checks, audio, generated assets, and UVC checks remain enabled.
 - A deterministic full-band DX7 host benchmark renders 10,335 blocks (about

@@ -29,11 +29,13 @@ enum { S_FADDR''')
     sub('#define CFG_LEN (101 + 74 * FELUCCA_CDC + 74 * FELUCCA_UAC + 3 * FELUCCA_UAC_48K)', '#define CFG_LEN (252) /* MIDI101 + audioIAD8 + video143 */')
     sub('#define USB_NIF (2 + FELUCCA_UAC + 2 * FELUCCA_CDC)', '#define USB_NIF 4')
     sub('18, 1, 0x10, 0x01, 0, 0, 0, 64, 0x09, 0x12, FELUCCA_USB_PID & 0xFF,','18, 1, 0x00, 0x02, 0xEF, 2, 1, 64, 0x09, 0x12, FELUCCA_USB_PID & 0xFF,')
-    sub('FELUCCA_USB_PID >> 8, 0x00 + 0x10 * (FELUCCA_UAC + FELUCCA_UAC_48K), 0x03,','FELUCCA_USB_PID >> 8, 0x10, 0x04, /* development video descriptor revision4.10 */')
+    sub('FELUCCA_USB_PID >> 8, 0x00 + 0x10 * (FELUCCA_UAC + FELUCCA_UAC_48K), 0x03,','FELUCCA_USB_PID >> 8, 0x11, 0x04, /* development video descriptor revision4.11 */')
     sub('    9, 4, 0, 0, 0, 1, 1, 0, 0,','    8, 11, 0, 2, 1, 0, 0, 0, /* audio/MIDI IAD; EP1 unchanged */\n    9, 4, 0, 0, 0, 1, 1, 0, 0,')
+    sub("static const uint8_t STR2[] = {16, 3, 'F', 0, 'e', 0, 'l', 0, 'u', 0, 'c', 0, 'c', 0, 'a', 0};",
+        "static const uint8_t STR2[] = {28, 3, 'M', 0, 'I', 0, 'K', 0, 'U', 0, '-', 0, 'F', 0, 'M', 0, ' ', 0, 'V', 0, 'I', 0, 'D', 0, 'E', 0, 'O', 0};")
     marker='#if FELUCCA_CDC\n    8, 0x0B, CDC_IF, 2, 2, 2, 1, 0,'
     video='''    /* UVC1.0 MJPEG160x120, nominal15fps; isolated EP4 IN512. */
-    8,11,2,2,14,3,0,0,
+    8,11,2,2,14,3,0,2,
     9,4,2,0,0,14,1,0,0,
     13,36,1,0,1,40,0,0,108,220,2,1,3,
     18,36,2,1,1,2,0,0,0,0,0,0,0,0,3,0,0,0,

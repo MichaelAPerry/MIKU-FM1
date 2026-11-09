@@ -2,7 +2,7 @@ DX7 playback in 0.7 recomputes patch checksums in each audio block, and the isol
 
 USB video now has corrected UVC camera-terminal control-bitmap geometry, immutable session-stamped JPEG publication, suspend/resume and endpoint-timeout recovery, deadline-based packet pacing, bounded decoded-row caching, and transmitted-frame/size/interval counters. It stays a separate 160x120 MJPEG/MIDI profile; USB-audio sharing is excluded because both profiles use EP4.
 
-Also included: BANK/LIBRARY hint layouts, checked user-bank slot naming, and CC64 for classic chords, bass and singer live notes. Song format, both flash IDs and resource limits are retained.
+Also included: BANK/LIBRARY hint layouts, checked user-bank slot naming, and CC64 for classic chords, bass and singer notes. Song format, both flash IDs and resource limits are retained.
 
 Validation:
 - 52/52 host CTest checks pass, including 729 layout states and cached/reference JPEG byte equality across the wardrobe/effect fixtures.

@@ -11,6 +11,8 @@ unfinished. The follow-up includes these concrete video changes:
 - `tools/patch_dinghy_video.py` and `firmware/usb/video/uvc.c`: UVC camera-terminal
   control bitmap length now matches the 18-byte descriptor. Inspect the full
   MIDI/video IAD/interface/endpoint tree, Probe/Commit and alternate settings.
+  The camera advertises `MIKU-FM VIDEO` and descriptor revision 4.11, while the
+  default and rescue USB descriptors retain the exact pinned implementation.
 - `native/video_usb.inc`: retain the selected camera across suspend/resume,
   recover stalled endpoint transactions, reject stale JPEGs across stream
   generations, and retain immutable DMA ownership. Check each possible preemption
@@ -32,7 +34,7 @@ Playback and small-item source map:
 | Smooth display | row reuse in native DANCE, phase-preserving cadence, existing musical-clock animation, draw/audio telemetry |
 | Sprite size jumps | upright outfit pose normalization before packing, bow preserved, original outfit untouched, source/companion generated together |
 | BANK/LIBRARY layout | actual page text checked in 729 states, both tracks/all 11 bank pages, pending hints, long names, playing/stopped library |
-| Sustain | classic chords/bass/singer live releases deferred under CC64; retrigger/pedal-up/panic and same MIDI-batch ordering tests |
+| Sustain | classic chords/bass/singer note releases deferred under CC64; retrigger/pedal-up/panic and same MIDI-batch ordering tests |
 | User-slot name editing | USER browse → EDIT, SELECT letter, K1 character, REC save/GLO cancel; storage failures retain the edit |
 | Budgets/compatibility | unchanged native resource floors, both flash-ID assertions, unchanged MKS2 v4/v5 serialization |
 

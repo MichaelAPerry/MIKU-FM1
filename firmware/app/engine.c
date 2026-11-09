@@ -70,6 +70,7 @@ void en_unlock(Engine *e, uint32_t (*wait)(void)) {
 }
 typedef char en_cons_chk[((int)MC_NONE == (int)FC_NONE && (int)MC_K == (int)FC_K && (int)MC_NN == (int)FC_NN && (int)MC_P == (int)FC_P && (int)MC_Y == (int)FC_Y) ? 1 : -1];
 static void sing(Engine *e, uint32_t note, uint32_t mora, uint32_t vel, uint32_t flags) {   /* consonant + vowel; moraic n is a hum (vowel ignored) */
+    e->deferred[TR_VOCAL][0]=0; /* a new mono note replaces any pedal-held release */
     if(flags & SQ_VOCAL_REATTACK)voff(e);
     uint32_t v = (flags & VF_SUSTAIN) && e->fv.gated ? e->vh : mora_vowel(mora);
     uint32_t lang = e->g->vx.lang, cons = lang == VL_VOWEL || (flags & VF_SUSTAIN) ? FC_NONE : mora_cons(mora);
@@ -83,6 +84,12 @@ static void live_off(Engine *e,uint32_t track,uint32_t note){
     if(track==TR_VOCAL)voff(e);
     else if(track==TR_CHORDS){ch_note_off(&e->ch,(uint8_t)note);dx_note_off(&e->dx[0],(uint8_t)note);}
     else if(track==TR_BASS){bs_note_off(&e->bs);dx_all_off(&e->dx[1]);}
+}
+static void pedal_off(Engine *e,uint32_t track,uint32_t note){
+    if(track<3u&&note<128u&&e->pedal[track]){
+        uint32_t key=track==TR_CHORDS?note:0u;
+        e->deferred[track][key>>3]|=(uint8_t)(1u<<(key&7u));
+    }else live_off(e,track,note);
 }
 static void command(Engine *e, uint32_t w) {
     uint32_t a = w >> 16 & 255u, b = w >> 8 & 255u, c = w & 255u;
@@ -99,8 +106,7 @@ static void command(Engine *e, uint32_t w) {
         else if (b < DR_N) dr_trig(&e->dr, (uint8_t)b, 110);
         break;
     case EN_OFF:
-        if(a<3u&&b<128u&&e->pedal[a]){uint32_t note=a==TR_CHORDS?b:0u;e->deferred[a][note>>3]|=(uint8_t)(1u<<(note&7u));break;}
-        live_off(e,a,b);
+        pedal_off(e,a,b);
         break;
     case EN_VOW: if (mora_vowel(a) < 5u) { e->vh = (uint8_t)mora_vowel(a); fv_set_vowel(&e->fv, e->vh); } break;
     case EN_BEND:
@@ -128,14 +134,14 @@ static void vq_push(Engine *e, uint32_t on, uint32_t delay, const SqEvent *v, ui
 }
 static void vq_apply(Engine *e, const EnVq *q) {
     if (q->on) { sing(e, q->note, q->mora, q->vel, q->flags); e->vcur = q->id; }
-    else if (q->id == e->vcur) voff(e);
+    else if (q->id == e->vcur) pedal_off(e,TR_VOCAL,0);
 }
 static void vocal_event(Engine *e, const SqEvent *v, uint32_t on) {   /* a sequenced vocal note: now, or queued (on-beat) */
     const Voice *x = &e->g->vx;
     uint32_t d = obd(x);
     if ((!d && !e->vqn) || e->vqn >= EN_VQN) {
         if (on) { sing(e, v->note, v->mora, v->vel, v->aux); e->vcur = ++e->vid; }
-        else voff(e);
+        else pedal_off(e,TR_VOCAL,0);
         return;
     }
     if (on) {
@@ -161,14 +167,15 @@ static uint32_t vq_wait(const Engine *e) {         /* frames to the next queued 
 static void event(Engine *e, const SqEvent *v) {
     switch (v->type) {
     case SQ_NOTE_ON:
+        if(v->trk==TR_CHORDS)e->deferred[TR_CHORDS][v->note>>3]&=(uint8_t)~(1u<<(v->note&7u));
+        else if(v->trk==TR_BASS)e->deferred[TR_BASS][0]=0;
         if (v->trk == TR_VOCAL) vocal_event(e, v, 1);
         else if (v->trk == TR_CHORDS) {if(e->pre[1]>=SG_DX7_FIRST)dx_note_on(&e->dx[0],v->note,v->vel);else ch_note_on(&e->ch, v->note, v->vel);}
         else {if(e->pre[2]>=SG_DX7_FIRST){if(v->aux>>1&1u)dx_note_legato(&e->dx[1],v->note,v->vel,EN_DX_SLIDE_MS);else dx_note_on(&e->dx[1],v->note,v->vel);}else bs_note_on(&e->bs, v->note, v->vel, (uint8_t)(v->aux & 1u), (uint8_t)(v->aux >> 1 & 1u));}
         break;
     case SQ_NOTE_OFF:
         if (v->trk == TR_VOCAL) vocal_event(e, v, 0);
-        else if (v->trk == TR_CHORDS) {ch_note_off(&e->ch, v->note);dx_note_off(&e->dx[0],v->note);}
-        else {bs_note_off(&e->bs);dx_all_off(&e->dx[1]);}
+        else pedal_off(e,v->trk,v->note);
         break;
     case SQ_DRUM: dr_trig(&e->dr, v->note, v->vel); break;
     case SQ_STEP: e->pos = (e->pos & 0x10000u) | (uint32_t)v->note << 8 | v->aux; break;

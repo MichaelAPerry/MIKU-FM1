@@ -14,7 +14,7 @@
 #include "firmware/audio/fmband/fmband.h"
 #include "firmware/audio/vfx/vfx.h"
 #include "firmware/audio/dx7/dx7.h"
-enum { EN_PLAY = 1, EN_STOP, EN_BPM, EN_ON, EN_OFF, EN_VOW, EN_PANIC, EN_RATE, EN_HUSH, EN_BEND, EN_SUSTAIN };   /* PLAY a=row b=loop-one-row; BPM a; ON a=trk b=note c=mora (VOCAL) / unused; OFF a=trk b=note; VOW a=mora; RATE a=ANIMAL speech rate 0..100 (session setting); HUSH = PANIC plus a fast fade-out of the DX7 tails (SAVE); BEND a=trk (1 chords, 2 bass) b=14-bit bend LSB (7 bits) c=MSB (7 bits), centre 8192, DX7 engines only (classic chord/bass ignore it); SUSTAIN a=trk b=0/1 pedal, all pitched live tracks (PANIC/HUSH clear it) */
+enum { EN_PLAY = 1, EN_STOP, EN_BPM, EN_ON, EN_OFF, EN_VOW, EN_PANIC, EN_RATE, EN_HUSH, EN_BEND, EN_SUSTAIN };   /* PLAY a=row b=loop-one-row; BPM a; ON a=trk b=note c=mora (VOCAL) / unused; OFF a=trk b=note; VOW a=mora; RATE a=ANIMAL speech rate 0..100 (session setting); HUSH = PANIC plus a fast fade-out of the DX7 tails (SAVE); BEND a=trk (1 chords, 2 bass) b=14-bit bend LSB (7 bits) c=MSB (7 bits), centre 8192, DX7 engines only (classic chord/bass ignore it); SUSTAIN a=trk b=0/1 pedal, all pitched tracks (PANIC/HUSH clear it) */
 #define EN_DX_SLIDE_MS 60u   /* DX7 bass slide: linear glide time; the classic acid bass settles an octave in about 50-130 ms (porta 24-32) */
 #define EN_QN 32u
 typedef struct { uint32_t due; uint8_t on, note, mora, vel, flags; uint16_t id; } EnVq;   /* a delayed vocal note event, including VF_SUSTAIN (on-beat) */
@@ -31,7 +31,7 @@ typedef struct {
     EnVq vq[EN_VQN];                          /* on-beat: vocal note events waiting for their moment */
     uint16_t vid, vcur;                       /* note ids: the newest, the one sounding (a delayed note-off ends only its own note) */
     uint8_t vqn, bdon;
-    uint8_t pedal[3], deferred[3][16]; /* live-key releases held by CC64; not sequencer events */
+    uint8_t pedal[3], deferred[3][16]; /* note releases held by CC64, including sequenced notes */
     volatile uint8_t pan[NTRK];               /* 0..127, 64 centre; main loop writes (device setting, not in the song) */
     volatile uint32_t q[EN_QN], qh, qt;       /* command ring: main writes q[qh] then qh; ISR reads q[qt] then qt */
     volatile uint32_t lock, ack;              /* main: lock=1 and wait ack==1: the ISR no longer runs the sequencer or reads commands */

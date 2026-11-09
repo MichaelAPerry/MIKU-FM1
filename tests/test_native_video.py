@@ -69,6 +69,10 @@ static void finish_in(void){for(unsigned n=0;usb.e0_tx&&n<16;n++){regs[0][S_CSR0
 int main(void){
     uint8_t probe[26],jpeg[1200];
     usb.up=1;
+    request(0x80,6,0x100,0,18);finish_in();
+    assert(control_n==18&&control[4]==0xef&&control[5]==2&&control[6]==1&&control[12]==0x11&&control[13]==4);
+    request(0x80,6,0x302,0x409,64);finish_in();assert(control_n==28&&control[0]==28);
+    const char *product="MIKU-FM VIDEO";for(unsigned i=0;i<13;i++)assert(control[2+2*i]==product[i]&&!control[3+2*i]);
     request(0x80,6,0x200,0,512);finish_in();assert(control_n==252&&control[4]==4);
     unsigned off=0,ep1=0,ep4=0,ifs=0;
     while(off<control_n){unsigned n=control[off];assert(n>=2&&off+n<=control_n);

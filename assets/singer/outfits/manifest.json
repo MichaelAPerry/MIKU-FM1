@@ -23,7 +23,24 @@
       "status": "prototype",
       "sheet": "retro-wave/sheet.png",
       "layout": "paired4x5",
-      "margin": 4
+      "margin": 4,
+      "grid": {
+        "x": [
+          0,
+          274,
+          546,
+          819,
+          1092
+        ],
+        "y": [
+          0,
+          281,
+          562,
+          842,
+          1112,
+          1389
+        ]
+      }
     },
     {
       "id": "prism",
@@ -47,7 +64,24 @@
       "status": "prototype",
       "sheet": "city-beat/sheet.png",
       "layout": "paired4x5",
-      "margin": 4
+      "margin": 4,
+      "grid": {
+        "x": [
+          0,
+          362,
+          724,
+          1086,
+          1448
+        ],
+        "y": [
+          0,
+          213,
+          425,
+          637,
+          848,
+          1086
+        ]
+      }
     },
     {
       "id": "signal-suit",

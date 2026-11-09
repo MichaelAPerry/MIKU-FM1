@@ -41,13 +41,18 @@ def recover_boxes(path, cols, rows):
     # division alone can silently import a neighboring cell's hair or hat.
     with Image.open(path) as src:
         im = src.convert("RGBA")
-    occupied_x, occupied_y = [False] * im.width, [False] * im.height
-    for pos, pixel in enumerate(getattr(im, "get_flattened_data", im.getdata)()):
-        if opaque_pixel(pixel):
-            occupied_x[pos % im.width] = True
-            occupied_y[pos // im.width] = True
+    pixels=list(getattr(im,"get_flattened_data",im.getdata)())
+    dark_x,dark_y=[0]*im.width,[0]*im.height
+    for pos,(red,green,blue,alpha) in enumerate(pixels):
+        if alpha>=128 and max(red,green,blue)<48:
+            dark_x[pos%im.width]+=1;dark_y[pos//im.width]+=1
+    seam_x=[n/im.height>.92 for n in dark_x];seam_y=[n/im.width>.92 for n in dark_y]
+    occupied_x,occupied_y=[False]*im.width,[False]*im.height
+    for pos,pixel in enumerate(pixels):
+        x,y=pos%im.width,pos//im.width
+        if not seam_x[x] and not seam_y[y] and opaque_pixel(pixel):occupied_x[x]=True;occupied_y[y]=True
     axes = []
-    for occupied, count, window in [(occupied_x, cols, .15), (occupied_y, rows, .28)]:
+    for occupied, seam, count, window in [(occupied_x,seam_x,cols,.15),(occupied_y,seam_y,rows,.28)]:
         length, edges = len(occupied), [0]
         for index in range(1, count):
             centre = index * length / count
@@ -61,7 +66,9 @@ def recover_boxes(path, cols, rows):
                     if len(run) >= 2:
                         mids.append((run[0] + run[-1] + 1) // 2)
                     run = []
-            edges.append(min(mids, key=lambda v: abs(v - centre)) if mids else round(centre))
+            lines=[j for j in range(lo,hi) if seam[j]]
+            candidates=lines or mids
+            edges.append(min(candidates,key=lambda v:abs(v-centre)) if candidates else round(centre))
         edges.append(length)
         axes.append(edges)
     xx, yy = axes
@@ -154,7 +161,13 @@ def main():
         try:
             if paired:
                 path = source_path(args.manifest.parent, paired)
-                boxes, axes = recover_boxes(path, 4, 5)
+                boxes,axes=recover_boxes(path,4,5)
+                if 'grid' in outfit:
+                    axes=[outfit['grid']['x'],outfit['grid']['y']]
+                    with Image.open(path) as source_im:
+                        for bounds,count,limit in [(axes[0],4,source_im.width),(axes[1],5,source_im.height)]:
+                            if len(bounds)!=count+1 or any(not isinstance(v,int) for v in bounds) or bounds[0]<0 or bounds[-1]>limit or any(a>=b for a,b in zip(bounds,bounds[1:])):raise ValueError('invalid explicit source grid')
+                    boxes=[(axes[0][x],axes[1][y],axes[0][x+1],axes[1][y+1]) for y in range(5) for x in range(4)]
                 row["source_grid_boundaries"] = {"x": axes[0], "y": axes[1]}
                 row["faces"], fs = sheet(path, 4, 3, boxes[:12],margin)
                 row["stage"], ss = sheet(path, 4, 2, boxes[12:],margin)

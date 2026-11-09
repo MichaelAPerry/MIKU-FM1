@@ -26,6 +26,17 @@ def fixture(path):
 
 
 class WardrobeTests(unittest.TestCase):
+    def test_unequal_black_grid(self):
+        im=Image.new('RGB',(400,500),(255,0,255));d=ImageDraw.Draw(im)
+        ys=[0,95,190,280,390,500]
+        for x in [0,100,200,300,399]:d.line((x,0,x,499),fill=(0,0,0),width=2)
+        for y in ys:d.line((0,min(y,499),399,min(y,499)),fill=(0,0,0),width=2)
+        for y0,y1 in zip(ys,ys[1:]):
+            for x in range(4):d.rectangle((x*100+25,y0+6,x*100+75,y1-6),fill=(20,180,180))
+        xb,yb=pack.grid_boundaries(im,4,5)
+        self.assertTrue(all(abs(a-b)<=2 for a,b in zip(yb,ys)),yb)
+        self.assertTrue(all(abs(a-b)<=2 for a,b in zip(xb,[0,100,200,300,400])),xb)
+
     def test_original_and_pending(self):
         text, report = pack.generate({'version': 1, 'outfits': [dict(id='future', name='FUTURE', status='pending')]}, ROOT)
         self.assertIn('#define WD_OUTFIT_N 1u', text)

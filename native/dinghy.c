@@ -502,23 +502,45 @@ static void dance_update(void){
 }
 /* ---- pages. The screen below the face is drawn in bands of 48 lines (bit n of `dirty` = band n; bit 5 = the STAGE strip) */
 static uint32_t shown_row(void){return playing?(ppos>>8&255u):crow;}
-/* Shared integer-only chrome. Gradients are procedural, with no new buffers. */
+/* Shared integer-only neon chrome, generated into the existing clipped canvas. */
 static void ui_panel(int32_t x,int32_t y,int32_t w,int32_t h,uint32_t selected){
     int32_t k;uint32_t v;
-    for(k=0;k<h;k+=4){v=(uint32_t)k*8u/(uint32_t)h;cv_rect(x,y+k,w,h-k<4?h-k:4,RGB(12+v+(selected?7u:0u),16+v,32+v*2u));}
-    cv_rect(x,y,w,1,selected?UI_BLUE:UI_EDGE);cv_rect(x,y,1,h,selected?UI_BLUE:UI_EDGE);
-    cv_rect(x,y+h-1,w,1,selected?UI_PINK:UI_EDGE);cv_rect(x+w-1,y,1,h,UI_EDGE);
+    for(k=0;k<h;k+=2){v=(uint32_t)k*12u/(uint32_t)h;cv_rect(x,y+k,w,h-k<2?h-k:2,RGB(12+v*2u+(selected?10u:0u),15+v,35+v*3u));}
+    cv_rect(x+3,y,w-6,1,selected?UI_BLUE:UI_EDGE);cv_rect(x,y+3,1,h-6,selected?UI_BLUE:UI_EDGE);
+    cv_rect(x+3,y+h-1,w-6,1,selected?UI_PINK:UI_EDGE);cv_rect(x+w-1,y+3,1,h-6,UI_EDGE);
+    cv_rect(x+1,y+2,1,1,UI_EDGE);cv_rect(x+2,y+1,1,1,UI_EDGE);
+    cv_rect(x+w-2,y+h-3,1,1,UI_EDGE);cv_rect(x+w-3,y+h-2,1,1,UI_EDGE);
+    if(selected){cv_rect(x+4,y+2,w-8,1,RGB(28,65,105));cv_rect(x+4,y+h-3,w-8,1,RGB(92,28,77));}
+}
+static void ui_back(uint32_t band){
+    int32_t y=(int32_t)band*48,k,x;
+    for(k=0;k<48;k+=4)cv_rect(0,y+k,240,4,RGB(6+(uint32_t)(y+k)/40u,10,24+(uint32_t)(y+k)/12u));
+    for(k=8;k<48;k+=24)for(x=12;x<240;x+=24)cv_rect(x,y+k,1,1,RGB(33,38,66));
+}
+static void ui_header(void){
+    int32_t x;uint32_t v;
+    ui_panel(1,0,238,48,1);
+    for(x=3;x<237;x+=6){v=(uint32_t)x*32u/240u;cv_rect(x,2,6,27,RGB(22+v,29-v/3u,62+v));cv_rect(x,29,6,2,RGB(56+v*4u,70,172+v*2u));}
+}
+static void ui_badge(void){
+    /* 5x5 page pictograms, scaled 2x. No font or image assets required. */
+    static const uint32_t glyph[PG_N]={0xEABAE,0x457D44,0x1F8FE3F,0x1555555,0xAFAAA,0x1557D5,0x1D5D41C,0x115F544,0x1F8C63F};
+    uint32_t x,y,bits=glyph[page];
+    cv_rect(7,7,18,18,RGB(12,20,46));
+    for(y=0;y<5;y++)for(x=0;x<5;x++)if(bits&(1u<<(y*5u+x)))cv_rect(11+(int32_t)x*2,11+(int32_t)y*2,2,2,y<3?UI_BLUE:UI_PINK);
 }
 static void ui_rim(int32_t y,int32_t h){
     cv_rect(0,y,1,h,UI_BLUE);cv_rect(239,y,1,h,UI_PINK);
     cv_rect(0,y,120,1,UI_BLUE);cv_rect(120,y,120,1,UI_PINK);
     cv_rect(0,y+h-1,120,1,UI_PINK);cv_rect(120,y+h-1,120,1,UI_BLUE);
 }
-static void band_begin(uint32_t b){cv_begin(240,48,BG);cv_oy=-(int32_t)(b*48u);if(!b)ui_panel(1,0,238,48,1);}
+static void band_begin(uint32_t b){cv_begin(240,48,BG);cv_oy=-(int32_t)(b*48u);ui_back(b);if(!b)ui_header();}
 static void band_end(uint32_t b){cv_oy=0;cv_blit(0,b*48u);}
 static void txt(int32_t x,int32_t y,const felucca_font_t *f,const char *s,uint16_t c,int al){
     int32_t w=text_w(f,s);
-    cv_text(al==1?x-w/2:al==2?x-w:x,y,f,s,c);
+    x=al==1?x-w/2:al==2?x-w:x;
+    if(f==&FONT_L)cv_text(x+1,y+2,f,s,RGB(3,5,17));
+    cv_text(x,y,f,s,c);
 }
 static void cell(int32_t x,int32_t y,int32_t w,int32_t h,const char *s,uint16_t fg,uint16_t bg){
     cv_rect(x,y,w,h,bg);cv_rect(x,y,w,1,UI_BLUE);cv_rect(x,y+h-1,w,1,UI_PINK);txt(x+w/2,y+(h-16)/2,&FONT_S,s,fg,1);
@@ -528,7 +550,7 @@ static void head(const char *name,const char *l2,uint16_t c2){
     uint32_t t=fm1_ms;
     if(toast_s && (int32_t)(t-toast_until)<0)txt(4,0,&FONT_L,toast_s,toast_err?RGB(255,110,110):RGB(249,207,94),0);
     else{
-        txt(4,0,&FONT_L,name,UI_BLUE,0);
+        ui_badge();txt(30,0,&FONT_L,name,C_WHITE,0);
         s[0]=0;cat(s,tname[trk]);txt(236,8,&FONT_S,s,tcol[trk],2);
     }
     txt(4,32,&FONT_S,l2,c2,0);
@@ -661,7 +683,7 @@ static void pg_mixer(uint32_t b){
         txt(88,y+4,&FONT_S,pnm[t][e],RGB(150,160,190),0);
         if(mu)cell(196,y+3,18,18,"M",BG,RGB(255,110,110));
         if(k->solo)cell(216,y+3,18,18,"S",BG,RGB(249,207,94));
-        cv_rect(6,y+30,110,10,RGB(30,40,70));
+        cv_rect(6,y+29,110,12,RGB(60,49,94));cv_rect(7,y+30,108,10,RGB(12,20,40));
         cv_rect(6,y+30,(int32_t)k->level*110/127,10,mu?RGB(90,100,130):tcol[t]);
         cv_rect(130,y+34,100,2,RGB(60,70,100));
         cv_rect(180,y+28,2,14,RGB(60,70,100));

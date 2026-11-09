@@ -18,17 +18,19 @@ source=r'''
 #include <stdio.h>
 #include "firmware/song/factory.h"
 #include "firmware/ui/performance.h"
+#include "firmware/ui/scene_prefs.h"
 #define NSLOT 10
 #define EN_PANIC 0
 static Song sg,prior;
 static uint8_t enc[SONG_ENC_SIZE],flash[10][SONG_ENC_SIZE],valid[10];
-static struct {uint32_t magic;uint8_t ver,slot,pan[4],pad[2];}pf,persist;
+static ScenePrefs pf,persist;
 static struct {uint32_t act;}en;
 static PerfState performance;
 static uint32_t modified,pend,pend_t,pend_arg,fm1_ms,playing,toast_err;
 static const char *last_toast;
 static void toast(const char *s,uint32_t e){last_toast=s;toast_err=e;}
 static void lk(void){}static void ulk(void){}static void platform_poll(void){fm1_ms++;}
+static void scene_load(uint32_t slot){assert(slot<10);perf_scene_decode(&performance,pf.scene[slot]);}
 static void stop_wait(void){playing=0;}static void after_load(void){modified=0;}
 static int en_post(void *e,unsigned a,unsigned b,unsigned c,unsigned d){(void)e;(void)a;(void)b;(void)c;(void)d;return 1;}
 static int settings_save(const void *p,unsigned n){assert(n==sizeof persist);memcpy(&persist,p,n);return 0;}
@@ -40,11 +42,11 @@ DO_SAVE
 DO_LOAD
 GUARDED
 int main(void){
- char name[9];
+ char name[9];sp_defaults(&pf);perf_init(&performance);
  for(unsigned i=0;i<10;i++){assert(slot_name(i,name)==(i<4));if(i<4){do_load(i);assert(pf.slot==i&&song_encode(&sg,enc,sizeof enc)==sizeof enc);}}
  for(unsigned i=0;i<10;i++){
   sf_load(&sg,i%4);sg.bpm=(uint8_t)(80+i);modified=1;performance.outfit=(uint8_t)(i%12);performance.intensity=80;do_save(i);
-  assert(valid[i]&&!modified&&pf.slot==i&&!toast_err);assert(persist.slot==i);assert((persist.pad[0]&15u)==i%12);
+  assert(valid[i]&&!modified&&pf.slot==i&&!toast_err);assert(persist.slot==i);assert((persist.scene[i][0]&15u)==i%12);
   sg_init(&sg);do_load(i);assert(sg.bpm==80+i&&pf.slot==i&&!modified);
  }
  prior=sg;modified=1;fm1_ms=10;guarded(1,0);assert(!memcmp(&sg,&prior,sizeof sg)&&modified);
@@ -61,5 +63,5 @@ int main(void){
 for key,name in [('SLOT_NAME','slot_name'),('DO_SAVE','do_save'),('DO_LOAD','do_load'),('GUARDED','guarded')]:source=source.replace(key,function(name))
 with tempfile.TemporaryDirectory() as tmp:
  p=Path(tmp);(p/'library.c').write_text(source)
- subprocess.run([cc,'-std=c11','-O2','-Wall','-Wextra','-I'+str(root),str(p/'library.c'),*[str(root/'firmware/song'/f) for f in ['song.c','song_io.c','factory.c','mora.c','demo.c']],'-o',str(p/'test')],check=True)
+ subprocess.run([cc,'-std=c11','-O2','-Wall','-Wextra','-I'+str(root),str(p/'library.c'),*[str(root/'firmware/song'/f) for f in ['song.c','song_io.c','factory.c','mora.c','demo.c']],str(root/'firmware/ui/performance.c'),str(root/'firmware/ui/stagefx.c'),str(root/'firmware/ui/sprite_codec.c'),str(root/'firmware/ui/scene_prefs.c'),'-o',str(p/'test')],check=True)
  subprocess.run([str(p/'test')],check=True)

@@ -30,6 +30,7 @@
 _Static_assert(WD_OUTFIT_N==PERF_OUTFIT_N,"wardrobe metadata mismatch");
 #include "firmware/ui/stagefx.c"
 #include "firmware/ui/performance.c"
+#include "firmware/ui/scene_prefs.c"
 #if MIKU_UVC
 #define MIKU_COMPACT_SPRITES 1
 #include "firmware/usb/jpeg/mjpeg.c"
@@ -166,7 +167,7 @@ static void ktext(uint32_t b,uint32_t k,char *o){          /* the value as shown
 }
 static uint32_t take,take_mod,gvar;
 static uint8_t enc[SONG_ENC_SIZE];                 /* slot I/O buffer */
-static struct { uint32_t magic; uint8_t ver, slot, pan[NTRK], pad[2]; } pf;   /* settings: 0.3 saved 37 bytes, so its data never loads here */
+static ScenePrefs pf;   /* settings: 0.3 saved 37 bytes, so its data never loads here */
 #define PF_MAGIC 0x4D4B5632u
 static volatile uint32_t pub_peak;
 static Step clip[NSTEP];
@@ -334,11 +335,11 @@ static void do_undo(void){
     toast(r?"UNDO":"NOTHING TO UNDO",!r);mk(0x3Fu);
 }
 /* ---- storage */
-static void pf_defaults(void){
-    static const uint8_t pn[NTRK]={64,44,64,64};
-    uint32_t i;
-    pf.magic=PF_MAGIC;pf.ver=2;pf.slot=0;pf.pad[0]=0xc0u;pf.pad[1]=0;
-    for(i=0;i<NTRK;i++)pf.pan[i]=pn[i];
+static void stage_init(void);
+static void pf_defaults(void){sp_defaults(&pf);}
+static void scene_load(uint32_t slot){
+    if(slot<SP_SLOTS)perf_scene_decode(&performance,pf.scene[slot]);
+    stage_init();face_cur=SF_NEUTRAL;dance_cur=99;
 }
 static void pf_apply(void){uint32_t i;for(i=0;i<NTRK;i++)en.pan[i]=pf.pan[i];}
 static void after_load(void){
@@ -372,7 +373,7 @@ static void do_save(uint32_t s){
     en_post(&en,EN_PANIC,0,0,0);
     while(en.act && fm1_ms-t<800u)platform_poll();      /* erase only when silent */
     ok=song_encode(&sg,enc,sizeof enc)==SONG_ENC_SIZE && slot_save(s,enc,SONG_ENC_SIZE)==0;
-    if(ok){pf.slot=(uint8_t)s;pf.pad[0]=(uint8_t)(performance.outfit|(((performance.intensity*15u+50u)/100u)<<4));pf.pad[1]=(uint8_t)(performance.background|(performance.frame<<2)|(performance.effect<<4));ok=settings_save(&pf,sizeof pf)==0;}
+    if(ok){pf.slot=(uint8_t)s;perf_scene_encode(&performance,pf.scene[s]);ok=settings_save(&pf,sizeof pf)==0;}
     if(ok)modified=0;
     toast(ok?"SAVED":"SAVE FAILED",!ok);
 }
@@ -380,14 +381,14 @@ static void do_load(uint32_t s){
     stop_wait();
     uint32_t n=sload(s);
     if(!n){
-        if(s<SF_COUNT){lk();sf_load(&sg,s);ulk();pf.slot=(uint8_t)s;after_load();toast("FACTORY SONG",0);}
+        if(s<SF_COUNT){lk();sf_load(&sg,s);ulk();pf.slot=(uint8_t)s;scene_load(s);after_load();toast("FACTORY SONG",0);}
         else toast("EMPTY SLOT - EDIT NEW",1);
         return;
     }
     lk();
     {int r=song_decode(&sg,enc,n);ulk();
      if(r!=SIO_OK){toast("LOAD FAILED",1);return;}}
-    pf.slot=(uint8_t)s;after_load();toast("LOADED",0);
+    pf.slot=(uint8_t)s;scene_load(s);after_load();toast("LOADED",0);
 }
 static void do_new(void){
     stop_wait();lk();
@@ -400,8 +401,8 @@ static void guarded(uint32_t act,uint32_t arg){            /* actions that drop 
     if(modified && !(pend==act && pend_arg==arg && (int32_t)(fm1_ms-pend_t)<0)){pend=act;pend_arg=arg;pend_t=fm1_ms+3000u;toast("UNSAVED! AGAIN",1);return;}
     pend=0;
     if(act==1)do_load(arg);else if(act==2)do_new();
-    else if(act==5){stop_wait();lk();sf_load(&sg,arg);ulk();pf.slot=(uint8_t)arg;after_load();modified=1;toast("FACTORY RESTORED",0);}
-    else if(act==6){do_new();pf.slot=(uint8_t)arg;modified=1;}
+    else if(act==5){stop_wait();lk();sf_load(&sg,arg);ulk();pf.slot=(uint8_t)arg;sp_reset_scene(&pf,arg);scene_load(arg);after_load();modified=1;toast("FACTORY RESTORED",0);}
+    else if(act==6){do_new();pf.slot=(uint8_t)arg;scene_load(arg);modified=1;}
     else do_demo();
 }
 /* ---- face: 4bpp sprite rows, 2x, into the canvas buffer, blitted (the panel wants bytes swapped: swap16) */
@@ -894,8 +895,8 @@ static void pg_dance(void){
     cv_begin(240,26,RGB(12,20,40));
     if(toast_s && (int32_t)(fm1_ms-toast_until)<0)txt(120,4,&FONT_S,toast_s,toast_err?RGB(255,110,110):RGB(249,207,94),1);
     else{
-        cv_text(4,4,&FONT_S,r1,RGB(150,160,190));
-        cv_text(120-text_w(&FONT_S,up)/2,4,&FONT_S,up,C_WHITE);
+        cv_text(4,4,&FONT_S,playing?r1:"EDIT: LOOKS",RGB(150,160,190));
+        cv_text(120-text_w(&FONT_S,playing?up:"ARP SONGS")/2,4,&FONT_S,playing?up:"ARP SONGS",C_WHITE);
         cv_text(236-text_w(&FONT_S,s),4,&FONT_S,s,RGB(249,207,94));
     }
     cv_blit(0,214);
@@ -951,18 +952,16 @@ static void menu_draw(void){
 static void app_main(void){
     uint32_t i;
     pf_defaults();
-    {uint32_t k;if(settings_load(&pf,sizeof pf)!=0 || pf.magic!=PF_MAGIC || (pf.ver!=1 && pf.ver!=2) || pf.slot>=NSLOT)pf_defaults();
-     if(pf.ver==1){pf.ver=2;pf.pad[0]=0xc0u;pf.pad[1]=0;}
-     for(k=0;k<NTRK;k++)if(pf.pan[k]>127)pf.pan[k]=64;}
+    if(settings_load(&pf,sizeof pf)!=0||!sp_valid(&pf)){
+        uint8_t old[12];pf_defaults();if(settings_load(old,sizeof old)==0)sp_migrate(&pf,old);
+    }
     if(pf.slot<SF_COUNT)sf_load(&sg,pf.slot);else song_demo(&sg);
     {uint32_t n=sload(pf.slot);if(n)song_decode(&sg,enc,n);}   /* untouched (= the demo) when it fails */
     un_init(&un);
     while(!en.up)platform_poll();
     pf_apply();
     perf_init(&performance);
-    {uint32_t o=pf.pad[0]&15u,bg=pf.pad[1]&3u,fr=(pf.pad[1]>>2)&3u,fx=pf.pad[1]>>4;
-     if(o<WD_OUTFIT_N&&bg<PERF_BG_N&&fr<PERF_FRAME_N&&fx<STFX_N){perf_select(&performance,o,bg,fr,0);performance.effect=(uint8_t)fx;performance.intensity=(uint8_t)cl((pf.pad[0]>>4)*100/15,0,100);}}
-    stage_init();
+    scene_load(pf.slot);
     next_blink=fm1_ms+3000u;full=1;
     bank_leds();
     for(;;){
@@ -1018,6 +1017,7 @@ static void app_main(void){
                 if(tb==0)guarded(1,library_cursor);
                 else if(tb==1)guarded(6,library_cursor);
                 else if(tb==2 && library_cursor<SF_COUNT)guarded(5,library_cursor);
+                else if(tb==3){if(library_cursor!=pf.slot)guarded(1,library_cursor);if(library_cursor==pf.slot){page=PG_VISUALS;full=1;}}
                 mk(0x1fu);
             }
             else if(b&bit){lp_on[tb]=0;if(page==PG_GEN && tb==trk)gcf.lock^=(uint8_t)(1u<<tb);trk=tb;mk(0x3Fu);}
@@ -1031,7 +1031,7 @@ static void app_main(void){
         }
         if(b&(1u<<BTN_SEQ)){if(page==PG_LIBRARY){page=PG_SONG;full=1;mk(0x1fu);}else stop_play();}
         if(b&(1u<<BTN_GLO)){if(page==PG_SONG||page==PG_PATTERN||page==PG_LYRICS){do_undo();if(page==PG_LYRICS)lyric_load();}else if(page==PG_GEN)gen_drop();}
-        if(b&(1u<<BTN_ARP)){anchor=cstep;arp_c=0;if(page==PG_SONG && sg.nrows && sg.nrows<NROW){u_pushrows();lk();sg_row_dup(&sg,(int)crow);ulk();crow++;modified=1;mk(0x1Fu);}
+        if(b&(1u<<BTN_ARP)){if(page==PG_STAGE||page==PG_DANCE){page=PG_LIBRARY;library_cursor=pf.slot;full=1;mk(0x3fu);}anchor=cstep;arp_c=0;if(page==PG_SONG && sg.nrows && sg.nrows<NROW){u_pushrows();lk();sg_row_dup(&sg,(int)crow);ulk();crow++;modified=1;mk(0x1Fu);}
             if(page==PG_MIXER){sg.trk[trk].solo^=1u;modified=1;mk(0x1Fu);}
             if(page==PG_GEN)gen_go(1);
             }
@@ -1048,7 +1048,9 @@ static void app_main(void){
             else if(page==PG_SONG && sg.nrows){u_pushrows();lk();sg_row_delete(&sg,(int)crow);ulk();modified=1;if(crow && crow>=sg.nrows)crow=sg.nrows-1u;mk(0x1Fu);}
         }
         if(b&(1u<<BTN_EDIT)){
-            if(page==PG_SONG){
+            if(page==PG_DANCE){page=PG_VISUALS;full=1;mk(0x3fu);}
+            else if(page==PG_VISUALS){page=PG_DANCE;full=1;mk(0x3fu);}
+            else if(page==PG_SONG){
                 if(sg.nrows<NROW){u_pushrows();lk();sg_row_insert(&sg,(int)(sg.nrows?crow:0));ulk();modified=1;mk(0x1Fu);}
             }else if(page==PG_PATTERN && (fm1_in.buttons&(1u<<BTN_ARP))){
                 uint32_t p=pat_of();
@@ -1138,12 +1140,13 @@ static void app_main(void){
         }else if(page==PG_LIBRARY){
             if(dS||dP){library_cursor=(uint32_t)wr((int32_t)library_cursor+dS+dP,NSLOT);mk(0x1fu);}
         }else if(page==PG_VISUALS){
-            if(dS){performance.outfit=(uint8_t)wr((int32_t)performance.outfit+dS,WD_OUTFIT_N);stage_init();face_cur=SF_NEUTRAL;dance_cur=99;}
+            if(dS){perf_style(&performance,(uint32_t)wr((int32_t)performance.outfit+dS,WD_OUTFIT_N));stage_init();face_cur=SF_NEUTRAL;dance_cur=99;}
+            if(dP)performance.palette=(uint8_t)wr((int32_t)performance.palette+dP,PERF_PALETTE_N);
             if(dK[0])performance.background=(uint8_t)wr((int32_t)performance.background+dK[0],PERF_BG_N);
             if(dK[1])performance.frame=(uint8_t)wr((int32_t)performance.frame+dK[1],PERF_FRAME_N);
             if(dK[2]||dA){performance.effect=(uint8_t)wr((int32_t)performance.effect+dK[2]+dA,STFX_N);performance.effect_epoch=now;}
             if(dK[3])performance.intensity=(uint8_t)cl((int32_t)performance.intensity+dK[3]*4,0,100);
-            if(dS||dA||dK[0]||dK[1]||dK[2]||dK[3])mk(0x1fu);
+            if(dS||dA||dP||dK[0]||dK[1]||dK[2]||dK[3]){modified=1;mk(0x1fu);}
         }else if(page==PG_GEN){
             if(dS&&sg.nrows){crow=(uint32_t)cl((int32_t)crow+dS,0,(int32_t)sg.nrows-1);mk(1u);}
             if(dP){tweak(&sg.bpm,dP,40,240);if(playing)en_post(&en,EN_BPM,sg.bpm,0,0);mk(4u);}

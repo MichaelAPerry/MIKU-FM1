@@ -15,7 +15,7 @@ static uint16_t sprite_pixel(const PerfState*s,unsigned x,unsigned y){
     return i?WD_OUTFITS[s->outfit].stage_palette[i]:perf_pixel(s,x,y);
 }
 int main(int argc,char**argv){
-    static const char*names[]={"original","grid","horizon","concert"};char path[1024];
+    static const char*names[]={"original","grid","horizon","concert","led"};char path[1024];
     if(argc<2||argc>6)return 1;
     for(unsigned bg=0;bg<PERF_BG_N;bg++){
         PerfState s;PerfInput in={1000,256,1,3,0,180,200,150};perf_init(&s);perf_select(&s,argc>2?(unsigned)atoi(argv[2]):0,bg,bg%PERF_FRAME_N,bg==2?1:0);perf_update(&s,&in);

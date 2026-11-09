@@ -3,7 +3,7 @@
 #define MIKU_PERFORMANCE_H
 #include <stdint.h>
 enum { PERF_W=240, PERF_H=240, PERF_SCENE_H=214 };
-enum { PERF_BG_ORIGINAL, PERF_BG_GRID, PERF_BG_HORIZON, PERF_BG_CONCERT, PERF_BG_N };
+enum { PERF_BG_ORIGINAL, PERF_BG_GRID, PERF_BG_HORIZON, PERF_BG_CONCERT, PERF_BG_LED, PERF_BG_N };
 enum { PERF_FRAME_NONE, PERF_FRAME_CORNERS, PERF_FRAME_RAILS, PERF_FRAME_N };
 enum { PERF_PALETTE_ORIGINAL, PERF_PALETTE_AMBER, PERF_PALETTE_N };
 enum { PERF_DIRTY_SPRITE=1, PERF_DIRTY_MOUTH=2, PERF_DIRTY_STAGE=4, PERF_DIRTY_STATUS=8 };
@@ -30,6 +30,10 @@ void perf_init(PerfState *s);
    exploration presets; no costume is synthesized or substituted. */
 uint32_t perf_select(PerfState *s,uint32_t outfit,uint32_t background,uint32_t frame,uint32_t palette);
 uint32_t perf_update(PerfState *s,const PerfInput *in);
+/* Complete outfit + stage review preset; decoder accepts only valid scene data. */
+uint32_t perf_style(PerfState *s,uint32_t outfit);
+uint32_t perf_scene_encode(const PerfState *s,uint8_t out[3]);
+uint32_t perf_scene_decode(PerfState *s,const uint8_t in[3]);
 /* Procedural background + decorative framing only; overlay the original atlas
    transparently afterwards. Outside the scene is black (status/footer belongs
    to caller). No framebuffer, allocations, floats, USB or display operations. */

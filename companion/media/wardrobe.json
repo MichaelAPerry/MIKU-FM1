@@ -3,72 +3,204 @@
     "id": "original",
     "name": "ORIGINAL",
     "faces": "original-face.png",
-    "stage": "original-stage.png"
+    "stage": "original-stage.png",
+    "scene": {
+      "background": 1,
+      "frame": 1,
+      "effect": 2,
+      "intensity": 80,
+      "colours": [
+        11993,
+        4488,
+        2213
+      ]
+    }
   },
   {
     "id": "encore",
     "name": "ENCORE",
     "faces": "encore-face.png",
-    "stage": "encore-stage.png"
+    "stage": "encore-stage.png",
+    "scene": {
+      "background": 3,
+      "frame": 1,
+      "effect": 2,
+      "intensity": 80,
+      "colours": [
+        64438,
+        18605,
+        6311
+      ]
+    }
   },
   {
     "id": "off-duty",
     "name": "OFF DUTY",
     "faces": "off-duty-face.png",
-    "stage": "off-duty-stage.png"
+    "stage": "off-duty-stage.png",
+    "scene": {
+      "background": 2,
+      "frame": 1,
+      "effect": 2,
+      "intensity": 80,
+      "colours": [
+        38559,
+        10571,
+        4294
+      ]
+    }
   },
   {
     "id": "retro-wave",
     "name": "RETRO WAVE",
     "faces": "retro-wave-face.png",
-    "stage": "retro-wave-stage.png"
+    "stage": "retro-wave-stage.png",
+    "scene": {
+      "background": 4,
+      "frame": 2,
+      "effect": 3,
+      "intensity": 80,
+      "colours": [
+        64842,
+        18860,
+        6310
+      ]
+    }
   },
   {
     "id": "prism",
     "name": "PRISM",
     "faces": "prism-face.png",
-    "stage": "prism-stage.png"
+    "stage": "prism-stage.png",
+    "scene": {
+      "background": 2,
+      "frame": 1,
+      "effect": 5,
+      "intensity": 80,
+      "colours": [
+        43007,
+        10733,
+        2247
+      ]
+    }
   },
   {
     "id": "neon-punk",
     "name": "NEON PUNK",
     "faces": "neon-punk-face.png",
-    "stage": "neon-punk-stage.png"
+    "stage": "neon-punk-stage.png",
+    "scene": {
+      "background": 4,
+      "frame": 2,
+      "effect": 3,
+      "intensity": 80,
+      "colours": [
+        63540,
+        26637,
+        6149
+      ]
+    }
   },
   {
     "id": "city-beat",
     "name": "CITY BEAT",
     "faces": "city-beat-face.png",
-    "stage": "city-beat-stage.png"
+    "stage": "city-beat-stage.png",
+    "scene": {
+      "background": 3,
+      "frame": 1,
+      "effect": 3,
+      "intensity": 80,
+      "colours": [
+        18416,
+        6601,
+        2277
+      ]
+    }
   },
   {
     "id": "signal-suit",
     "name": "SIGNAL SUIT",
     "faces": "signal-suit-face.png",
-    "stage": "signal-suit-stage.png"
+    "stage": "signal-suit-stage.png",
+    "scene": {
+      "background": 4,
+      "frame": 2,
+      "effect": 5,
+      "intensity": 80,
+      "colours": [
+        1535,
+        560,
+        135
+      ]
+    }
   },
   {
     "id": "summer-beat",
     "name": "SUMMER BEAT",
     "faces": "summer-beat-face.png",
-    "stage": "summer-beat-stage.png"
+    "stage": "summer-beat-stage.png",
+    "scene": {
+      "background": 2,
+      "frame": 1,
+      "effect": 2,
+      "intensity": 80,
+      "colours": [
+        65321,
+        10765,
+        4359
+      ]
+    }
   },
   {
     "id": "snow-glow",
     "name": "SNOW GLOW",
     "faces": "snow-glow-face.png",
-    "stage": "snow-glow-stage.png"
+    "stage": "snow-glow-stage.png",
+    "scene": {
+      "background": 2,
+      "frame": 1,
+      "effect": 4,
+      "intensity": 80,
+      "colours": [
+        47103,
+        14897,
+        4426
+      ]
+    }
   },
   {
     "id": "festival",
     "name": "FESTIVAL",
     "faces": "festival-face.png",
-    "stage": "festival-stage.png"
+    "stage": "festival-stage.png",
+    "scene": {
+      "background": 3,
+      "frame": 1,
+      "effect": 3,
+      "intensity": 80,
+      "colours": [
+        65138,
+        20941,
+        8360
+      ]
+    }
   },
   {
     "id": "moon-circuit",
     "name": "MOON CIRCUIT",
     "faces": "moon-circuit-face.png",
-    "stage": "moon-circuit-stage.png"
+    "stage": "moon-circuit-stage.png",
+    "scene": {
+      "background": 1,
+      "frame": 1,
+      "effect": 1,
+      "intensity": 80,
+      "colours": [
+        52159,
+        16400,
+        4103
+      ]
+    }
   }
 ]

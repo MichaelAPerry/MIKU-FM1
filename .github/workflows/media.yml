@@ -1,0 +1,71 @@
+# SPDX-License-Identifier: MIT
+# Website media from a published release: a captioned walkthrough video and page stills, recorded from the real
+# package in fm1-emu (tools/video/walkthrough.py). The result is committed to the branch media/<tag> for review;
+# it never touches main or the live site by itself.
+name: Media
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "release tag to record (vX.Y)"
+        required: true
+        default: "v0.7"
+  push:
+    branches: ['claude/**']
+    paths: ['tools/video/**', '.github/workflows/media.yml']
+
+permissions:
+  contents: write
+
+concurrency:
+  group: media
+  cancel-in-progress: true
+
+jobs:
+  record:
+    runs-on: ubuntu-24.04
+    env:
+      TAG: ${{ inputs.tag || 'v0.7' }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Tools
+        run: |
+          set -euo pipefail
+          sudo apt-get update -q && sudo apt-get install -y -q ffmpeg fonts-dejavu-core
+          python3 -m pip install -q Pillow
+      - name: Release package
+        run: |
+          set -euo pipefail
+          mkdir -p build/media
+          gh release download "$TAG" --pattern "miku-fm-${TAG#v}.fwsc" --dir build/media
+      - name: fm1-emu (the revision the site uses)
+        run: |
+          set -euo pipefail
+          git clone -q https://github.com/joakimeriksson/fm1-emu build/fm1-emu-src
+          git -C build/fm1-emu-src -c advice.detachedHead=false checkout -q 9de1ef0
+          (cd build/fm1-emu-src && cargo build -q --release -p fm1-emu)
+      - name: Record
+        run: python3 tools/video/walkthrough.py "build/media/miku-fm-${TAG#v}.fwsc" build/fm1-emu-src/target/release/fm1-emu build/media/out
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: media
+          path: |
+            build/media/out/trailer.mp4
+            build/media/out/trailer.jpg
+            build/media/out/screens/
+            build/media/out/run/emu.log
+      - name: Commit to media/${{ env.TAG }}
+        run: |
+          set -euo pipefail
+          mkdir -p site/media/screens
+          cp build/media/out/trailer.mp4 build/media/out/trailer.jpg site/media/
+          cp build/media/out/screens/*.png site/media/screens/
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -B "media/$TAG"
+          git add site/media
+          git commit -q -m "Media: walkthrough video and page stills recorded from the $TAG package in fm1-emu"
+          git push -f origin "media/$TAG"

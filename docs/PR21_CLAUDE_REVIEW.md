@@ -258,3 +258,24 @@ can reach, or data loss. **Low** = edge case, polish, or documentation accuracy.
 F6–F9 can follow. Physical-device and USB qualification remain open regardless, and this review does not count the
 original multi-phase assignment as finished. Areas covered only by automated checks: sprite/wardrobe packing, stage
 effects, companion, site, UVC/JPEG and lyric/GEN internals beyond the DX7 interactions above.
+
+## 7. Fix status (follow-up on `claude/zealous-ramanujan-31p6l5`, not on the PR branch)
+
+At the owner's request, F2–F9 were fixed on this review branch, which contains the PR21 head plus the review. Merging
+the fixes into PR21 is the owner's decision. Host CTest: **47/47** (adds `dx7_fixes`). The ASan+UBSan DX7 test is
+clean. Nothing was compiled with the native toolchain or run on a device.
+
+| Finding | Fix | Verified on host | Still unverified |
+|---|---|---|---|
+| F1 licensing | Not fixed in code. Ten original voices proposed (`docs/DX7_PATCH_PROPOSAL.md`) | candidates are valid and render | owner listening and choice; bank swap |
+| F2 LFO delay | wrap test against the previous state | delays 0–99 for 65 s never drop | — |
+| F3 SAVE tails | new `EN_HUSH` / `dx_hush` (≤2 blocks) used by SAVE; quiet-gain retirement; "SONG SAVED - LOOK NOT SAVED" | hush clears `act` in 2 blocks; factory tails retire about 35 % sooner | native compile; device feel |
+| F4 edit loss | CUSTOM is its own MIXER stop with a one-level copy; second press required to replace an edit (MIXER and BANK REC) | syntax-checked extracts only | native compile; inline main-loop logic not unit-tested |
+| F5 steal clicks | 64-sample faded tail buffer per synth (`sizeof(DxSynth)` 2948 → 3208) | step across steal: SLOW3D PAD 1951 → 94, TIGHT BASS 3324 → 684 | device listening; a chord-change block costs about 29 % more DX render time on the host (`p_stealcost.c`) |
+| F6 L4 cut | a voice with an audible carrier L4 keeps sounding until stolen (with fade) or hushed | probe | — |
+| F7 lock | `db_set`/`db_toggle` under `lk()` | reading | audibility of a lock per knob step while playing |
+| F8 test gap | mock accepts v5; v5 save, name, reload, then v4 overwrite | CTest | — |
+| F9 notices | release assets include LICENSE, LICENSING.md and the MSFA Apache text | reading | external reusable workflow's checksum step |
+
+Retirement uses a −72 dBFS gain floor (`DX_QUIET`), so very slow edited releases (R4 = 0, about 4 minutes) still hold a
+voice until stolen or hushed. SAVE no longer waits on them.

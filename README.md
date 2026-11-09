@@ -10,6 +10,10 @@ all, over FM chords, bass and drums. Shape her voice, write patterns or let her 
 <img src="site/media/screens/song.png" width="200" alt="SONG: the arrangement">
 <img src="site/media/screens/pattern.png" width="200" alt="PATTERN: the piano roll">
 <img src="site/media/screens/gen.png" width="200" alt="GEN: the song generator">
+<img src="site/media/screens/look.png" width="200" alt="LOOK: outfits and stage effects">
+<img src="site/media/screens/bank.png" width="200" alt="DX7 BANK: browsing the voices">
+<img src="site/media/screens/bank-edit.png" width="200" alt="DX7 BANK: editing an operator">
+<img src="site/media/screens/library.png" width="200" alt="LIBRARY: ten song slots">
 </p>
 
 **Current release: [Miku-FM 0.7](https://github.com/MichaelAPerry/MIKU-FM1/releases/tag/v0.7)**: a six-operator DX7 engine with ten

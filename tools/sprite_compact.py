@@ -31,26 +31,32 @@ def direct(row):
     return bytes([1] + runs) if len(runs) < len(packed) else bytes([0]) + packed
 
 
-def pack_atlas(frames, width, height, use_delta=True):
+def pack_atlas(frames, width, height, use_delta=True, nearby=0):
     lookup, records, originals, ids = {}, [], [], []
+    direct_y=[set() for _ in range(height)]
     for fi, flat in enumerate(frames):
         for y in range(height):
             row = tuple(flat[y * width:(y + 1) * width])
             if row not in lookup:
                 record = direct(row)
                 if use_delta and fi:
-                    base = tuple(frames[0][y * width:(y + 1) * width])
-                    base_id = lookup[base]
-                    # No delta chains: base records must be independently decodable.
-                    diff = [x for x in range(width) if row[x] != base[x]]
-                    if diff and records[base_id][0] != 2:
-                        x, end = diff[0], diff[-1] + 1
-                        delta = bytes([2, base_id & 255, base_id >> 8, x, end - x]) + direct(row[x:end])
-                        if len(delta) < len(record):
-                            record = delta
+                    base_id=lookup[tuple(frames[0][y*width:(y+1)*width])]
+                    candidates={base_id}
+                    if nearby:
+                        for yy in range(max(0,y-nearby),min(height,y+nearby+1)):candidates.update(direct_y[yy])
+                    for base_id in sorted(candidates):
+                        # One-level deltas only; the decoder's worst-case depth is unchanged.
+                        if records[base_id][0]==2:continue
+                        base=originals[base_id]
+                        diff=[x for x in range(width) if row[x]!=base[x]]
+                        if diff:
+                            x,end=diff[0],diff[-1]+1
+                            delta=bytes([2,base_id&255,base_id>>8,x,end-x])+direct(row[x:end])
+                            if len(delta)<len(record):record=delta
                 lookup[row] = len(records)
                 records.append(record)
                 originals.append(row)
+            if nearby and records[lookup[row]][0]!=2:direct_y[y].add(lookup[row])
             ids.append(lookup[row])
     offsets, data = [0], bytearray()
     for record in records:

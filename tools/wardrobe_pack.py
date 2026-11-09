@@ -181,7 +181,7 @@ def compose_portraits(frames, palette, box=(25, 28, 42, 39)):
 
 def atlas_text(name, frames):
     h, w = frames[0].shape
-    data = compact.pack_atlas([a.reshape(-1).tolist() for a in frames], w, h)
+    data = compact.pack_atlas([a.reshape(-1).tolist() for a in frames], w, h, nearby=2)
     ids, offsets, payload, originals = data
     for i, row in enumerate(originals):
         if compact.decode_python(data, i) != list(row):

@@ -33,6 +33,21 @@ class CompactTests(unittest.TestCase):
                         expected = frame[y * width:(y + 1) * width]
                         self.assertEqual(codec.decode_python(packed, packed[0][fi * 5 + y]), expected)
 
+    def test_neighbor_rows_save_bytes_without_chains(self):
+        rng=random.Random(390007);w=61;h=5
+        base=[rng.randrange(16) for _ in range(w*h)]
+        changed=base[w:]+base[:w]
+        changed[w//2]^=1
+        old=codec.pack_atlas([base,changed],w,h)
+        new=codec.pack_atlas([base,changed],w,h,nearby=2)
+        self.assertLess(len(new[2]),len(old[2]))
+        for frame,expected in enumerate([base,changed]):
+            for y in range(h):self.assertEqual(codec.decode_python(new,new[0][frame*h+y]),expected[y*w:(y+1)*w])
+        for offset in new[1][:-1]:
+            if new[2][offset]==2:
+                base_id=new[2][offset+1]|new[2][offset+2]<<8
+                self.assertNotEqual(new[2][new[1][base_id]],2)
+
     def test_invalid_source_rejected(self):
         src = (ROOT / 'firmware/ui/singer_sprites.h').read_text()
         src = src.replace('singer_face_0', 'missing_face_0')

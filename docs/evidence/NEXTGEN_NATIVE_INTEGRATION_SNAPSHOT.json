@@ -1,6 +1,6 @@
 {
   "branch": "feature/miku-nextgen-performance",
-  "implementation_commit": "d880f21",
+  "implementation_commit": "2414571281b179cc4a6133e291cd1e1d025450e2",
   "main_base": "88b0ef3e568cf615eb5dfaa42d170d8c0f75d431",
   "scope": "native integration milestone; PR21 remains draft; no physical hardware or live USB throughput claim",
   "host_ctest": {
@@ -10,11 +10,11 @@
   "resources": {
     "default": {
       "image": {
-        "used": 506700,
+        "used": 507396,
         "limit": 581564,
-        "free": 74864,
+        "free": 74168,
         "minimum_free": 65536,
-        "margin_above_reserve": 9328,
+        "margin_above_reserve": 8632,
         "pass": true
       },
       "static_ram": {
@@ -36,11 +36,11 @@
     },
     "video": {
       "image": {
-        "used": 513340,
+        "used": 514044,
         "limit": 581564,
-        "free": 68224,
+        "free": 67520,
         "minimum_free": 65536,
-        "margin_above_reserve": 2688,
+        "margin_above_reserve": 1984,
         "pass": true
       },
       "static_ram": {
@@ -265,10 +265,76 @@
     "docs/evidence/menu-redesign/wardrobe.png": {
       "bytes": 8340,
       "sha256": "a0ce9917a5b4bd71046a863d11a30fedf59d973a1191d449e429b2c8154124c7"
+    },
+    "docs/evidence/device-theme/mixer.png": {
+      "bytes": 2711,
+      "sha256": "42918abdde287c642cdbffd7bb7b29c8aafbf803c714fcc3ec1ed9982cfa7688"
+    },
+    "docs/evidence/device-theme/README.md": {
+      "bytes": 4951,
+      "sha256": "79e500bd5bccf821647e99e47ceb3a1e53b4fbcab87919ba21ed21e820429ccd"
+    },
+    "docs/evidence/device-theme/pattern.png": {
+      "bytes": 1986,
+      "sha256": "8eb65b3ca579a0b1edd8394245e120a42a7585393b4c7446d16329f2a171735e"
+    },
+    "docs/evidence/device-theme/stage.png": {
+      "bytes": 8152,
+      "sha256": "36922a9db02241ee233c7eae46f4534016c6344869d7d51ca1dff1987e3cfe6a"
+    },
+    "docs/evidence/device-theme/gen.png": {
+      "bytes": 3703,
+      "sha256": "76698f4be5e8ebc8e456ba18f34a888e00c690d630aaa5fb0c1f690d0d725a54"
+    },
+    "docs/evidence/device-theme/all-pages-walkthrough.mp4": {
+      "bytes": 1385157,
+      "sha256": "2d352e668e4995535de70c08cb388e5dbc8a991a21044557401267ee4d9b00e6"
+    },
+    "docs/evidence/device-theme/library.png": {
+      "bytes": 3078,
+      "sha256": "433990f5c443c2a508b24e3b2384590d94128e2b2399c9742afc4f3247b7c6b5"
+    },
+    "docs/evidence/device-theme/voice-popup.png": {
+      "bytes": 7757,
+      "sha256": "bae4cc4b794005d6b136962fb1b843343332e4ff5e34193ad7399e867bc1bbb4"
+    },
+    "docs/evidence/device-theme/dance.png": {
+      "bytes": 5250,
+      "sha256": "3ed38abd85ce4a18eae1c072d671f2364267670d2b0f9546a9774f01201e9fc5"
+    },
+    "docs/evidence/device-theme/all-device-pages.png": {
+      "bytes": 58374,
+      "sha256": "81eb292864a2301e18187c529435e638652d3b58d0b76e436fa721ea5bf7c63d"
+    },
+    "docs/evidence/device-theme/song.png": {
+      "bytes": 3349,
+      "sha256": "38d02eeda14f6d216d9bb3947a3c5729e62e1b0cf61ae89a33105091ff624e68"
+    },
+    "docs/evidence/device-theme/look.png": {
+      "bytes": 9174,
+      "sha256": "1fd6e124075a9cf5238e5c506b045e9cd6086d69de81890b843e56bb0a54868c"
+    },
+    "docs/evidence/device-theme/lyrics.png": {
+      "bytes": 2779,
+      "sha256": "22a47846245e0b97113fa7e4501e56042aae135ed99a0ca2c53228b0102c352b"
+    },
+    "docs/evidence/device-theme/save-window.png": {
+      "bytes": 2384,
+      "sha256": "273bbfc24a2424fb50a419f647c3830cd16d554329e7e90f9a983fe5adda0a44"
+    },
+    "docs/evidence/device-theme/measurements.json": {
+      "bytes": 905,
+      "sha256": "ffeaa5e15cd12b962e077e65374e8a560a7f1066b64a8c915e7ad89b1c1f44e5"
     }
   },
   "scene_prefs_bytes": 44,
   "scene_prefs_version": 3,
   "video_benchmark_implementation_commit": "71035d9",
-  "menu_redesign_image_delta": 160
+  "menu_redesign_image_delta": 160,
+  "device_theme_image_delta": {
+    "default": 696,
+    "video": 704
+  },
+  "device_theme_ram_delta": 0,
+  "device_theme_pool_delta": 0
 }

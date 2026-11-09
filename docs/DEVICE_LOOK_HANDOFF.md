@@ -1,5 +1,8 @@
 # Device LOOK controls and electronic stage follow-up
 
+> Current device-wide visual pass: [pink/blue borders and gradients across all nine musical pages, popups and SAVE window, with native recordings and current measurements](evidence/device-theme/README.md). This supersedes the earlier menu-only UI scope and resource figures.
+
+
 > Latest UI pass: [visual wardrobe and song-library menus, native walkthrough and current build measurements](evidence/menu-redesign/README.md).
 
 

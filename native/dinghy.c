@@ -113,6 +113,7 @@ _Static_assert(WD_OUTFIT_N==PERF_OUTFIT_N,"wardrobe metadata mismatch");
 #include "firmware/audio/dx7/dx7.c"
 #include "firmware/audio/dx7/bank.h"
 #include "firmware/song/dx7_edit.c"
+#include "firmware/song/dx7_sysex.c"
 #include "firmware/app/engine.c"
 #define BUDGET_TICKS (5805u*FM1_TICKS_PER_US)       /* 256 frames at 44.1 kHz */
 #define BG RGB(8,10,24)
@@ -426,6 +427,173 @@ static void dx_factory(uint32_t t,uint32_t bank){          /* load factory patch
 }
 static void dx_restore(uint32_t t){                        /* back to the stashed edit */
     uint32_t i;lk();for(i=0;i<128u;i++)sg.dx7[t-1u][i]=dx_bak[t-1u][i];sg.trk[t].preset=SG_DX7_CUSTOM;ulk();
+}
+/* ---- DX7 user bank: 32 voices of device data (never in a song file: a song embeds the snapshot it uses), kept in RAM and in
+ * Dinghy blobs 0 and 1 (16 voices, 2048 B each). It arrives as a DX7 bulk dump / single voice over USB SysEx (app_sysex, called from
+ * platform_poll through the build-time patch tools/patch_dinghy_sysex.py), is parsed into imp[] and only applied after REC.
+ * Flash writes stop the audio: like do_save they run after EN_HUSH once en.act is clear, and never while a song plays. */
+#define UB_N DXS_BANK_N
+#define UB_HALF (DXS_BANK_BYTES/2u)
+static uint8_t ub[DXS_BANK_BYTES],ub_ok;                          /* the user bank, and whether one exists (valid in flash) */
+static uint8_t imp[DXS_BANK_BYTES] __attribute__((section(".pool")));                  /* a received, validated dump waiting for REC */
+static uint8_t xbuf[DXS_BULK_FRAME+2u] __attribute__((section(".pool")));              /* F0 + dump + F7 for the export */
+static uint8_t imp_kind,imp_dst,imp_trk,imp_slot,imp_busy,st_on,st_slot;
+static uint32_t imp_until,st_until,dx_src,ub_cursor;               /* dx_src: BROWSE shows 0 FACTORY / 1 USER */
+static char sxmsg[28];
+static void ub_load(void){
+    uint32_t h,i;ub_ok=0;
+    for(h=0;h<2u;h++)if(blob_load(h,ub+h*UB_HALF,UB_HALF))return;
+    for(i=0;i<UB_N;i++)if(!dx_patch_valid(ub+i*DXS_VOICE))return;
+    ub_ok=1;
+}
+static uint32_t silence(void){                             /* 1 = the audio is quiet and a flash erase may run */
+    uint32_t t=fm1_ms;
+    en_post(&en,EN_HUSH,0,0,0);
+    while(en.act && fm1_ms-t<800u)platform_poll();
+    return !en.act;
+}
+static uint32_t ub_put(uint32_t slot,const uint8_t *v){    /* voice v into user slot (the first one creates the bank from INIT VOICEs); 1 = stored */
+    uint8_t old[DXS_VOICE];uint32_t i,had=ub_ok,h;
+    for(i=0;i<DXS_VOICE;i++)old[i]=ub[slot*DXS_VOICE+i];
+    if(!had)for(i=0;i<UB_N;i++)dxs_init_voice(ub+i*DXS_VOICE);
+    for(i=0;i<DXS_VOICE;i++)ub[slot*DXS_VOICE+i]=v[i];
+    if(silence()){
+        uint32_t ok=1;
+        for(h=0;h<2u;h++)if((!had||h==slot/16u)&&ok)ok=blob_save(h,ub+h*UB_HALF,UB_HALF)==0;
+        if(ok){ub_ok=1;return 1;}
+    }else toast("TAIL PLAYING - AGAIN",1);
+    if(had)for(i=0;i<DXS_VOICE;i++)ub[slot*DXS_VOICE+i]=old[i];else ub_ok=0;
+    return 0;
+}
+static void ub_use(uint32_t t,uint32_t slot){              /* user voice -> track t's snapshot (the caller has confirmed if this drops an edit) */
+    uint32_t i;
+    if(sg.trk[t].preset>=SG_DX7_CUSTOM)dx_stash(t);
+    lk();for(i=0;i<DXS_VOICE;i++)sg.dx7[t-1u][i]=ub[slot*DXS_VOICE+i];sg.trk[t].preset=SG_DX7_USER;ulk();
+}
+static void bank_sync(void){                               /* entering BANK / switching track: BROWSE on what the track holds */
+    dx_page=0;dx_src=sg.trk[trk].preset==SG_DX7_USER&&ub_ok;
+    dx_cursor=db_active(&sg,trk)&&sg.trk[trk].preset<SG_DX7_CUSTOM?sg.trk[trk].preset-SG_DX7_FIRST:0;
+}
+static void sx_prompt(const char *a,uint32_t slot,const char *b){
+    sxmsg[0]=0;cat(sxmsg,a);if(slot){catn(sxmsg,slot);}cat(sxmsg,b);toast(sxmsg,0);
+}
+/* A DX7 frame from USB (main loop, inside platform_poll): validate now, apply on REC within ~10 s. A bulk dump replaces the whole
+ * user bank. A single voice goes to the edit buffer of the open BANK edit page's track, anywhere else to the selected user slot. */
+static void app_sysex(const uint8_t *p,uint32_t n){
+    DxsInfo in;uint32_t r;
+    if(imp_busy)return;
+    r=dxs_parse(p,n,imp,&in);
+    if(in.kind==DXS_NONE)return;                           /* another Yamaha message: not ours */
+    if(r!=DXS_OK){
+        sxmsg[0]=0;
+        if(r==DXS_E_VOICE){if(in.kind==DXS_BULK){cat(sxmsg,"INVALID VOICE ");catn(sxmsg,in.bad);}else cat(sxmsg,"INVALID VOICE DATA");}
+        else if(r==DXS_E_CHECKSUM)cat(sxmsg,"BAD CHECKSUM");
+        else cat(sxmsg,"BAD DX7 LENGTH");
+        toast(sxmsg,1);return;
+    }
+    imp_kind=in.kind;imp_until=fm1_ms+10000u;
+    if(in.kind==DXS_BULK)toast("IMPORT 32 VOICES? REC",0);
+    else if(page==PG_BANK&&dx_page&&db_active(&sg,trk)){imp_dst=1;imp_trk=(uint8_t)trk;toast("VOICE TO EDIT? REC",0);}
+    else{imp_dst=0;imp_slot=(uint8_t)ub_cursor;sx_prompt("VOICE TO USER ",ub_cursor+1u,"? REC");}
+    toast_until=imp_until;
+}
+static uint32_t imp_pending(uint32_t now){
+    if(imp_kind&&(int32_t)(now-imp_until)>=0)imp_kind=0;
+    return imp_kind;
+}
+static void import_apply(void){                            /* REC on the prompt */
+    uint32_t t,i,ok;
+    if(imp_kind==DXS_SINGLE&&imp_dst){
+        t=imp_trk;imp_kind=0;
+        if(!db_active(&sg,t)){toast("NO DX7 TRACK",1);return;}
+        if(sg.trk[t].preset>=SG_DX7_CUSTOM)dx_stash(t);
+        lk();for(i=0;i<DXS_VOICE;i++)sg.dx7[t-1u][i]=imp[i];sg.trk[t].preset=SG_DX7_CUSTOM;ulk();
+        modified=1;toast("VOICE IN EDIT BUFFER",0);return;
+    }
+    if(playing){toast("STOP FIRST",1);imp_until=fm1_ms+10000u;toast_until=imp_until;return;}
+    imp_busy=1;
+    if(imp_kind==DXS_SINGLE){
+        ok=ub_put(imp_slot,imp);imp_kind=0;
+        if(ok)sx_prompt("STORED TO USER ",(uint32_t)imp_slot+1u,"");else if(toast_s!=sxmsg)toast("STORE FAILED",1);
+    }else{
+        ok=0;
+        if(silence()){
+            ok=blob_save(0,imp,UB_HALF)==0&&blob_save(1,imp+UB_HALF,UB_HALF)==0;
+            if(ok){for(i=0;i<DXS_BANK_BYTES;i++)ub[i]=imp[i];ub_ok=1;ub_cursor=0;if(page==PG_BANK){dx_src=1;full=1;}}
+            else if(ub_ok){blob_save(0,ub,UB_HALF);blob_save(1,ub+UB_HALF,UB_HALF);}    /* put the old bank back */
+        }
+        imp_kind=0;toast(ok?"32 USER VOICES IMPORTED":"IMPORT FAILED",!ok);
+    }
+    imp_busy=0;mk(0x3Fu);
+}
+static uint32_t st_pending(uint32_t now){
+    if(st_on&&(int32_t)(now-st_until)>=0)st_on=0;
+    return st_on;
+}
+static void st_start(void){                                /* GLO on an edit page: pick a user slot (again: the next one), REC stores */
+    uint32_t now=fm1_ms;
+    if(!db_active(&sg,trk)){toast("NO DX7 PATCH",1);return;}
+    st_slot=(uint8_t)(st_pending(now)?(st_slot+1u)%UB_N:ub_cursor);ub_cursor=st_slot;
+    st_on=1;st_until=now+8000u;
+    sx_prompt("STORE USER ",(uint32_t)st_slot+1u,"? REC");toast_until=st_until;
+}
+static void st_apply(void){                                /* REC on the prompt: the current snapshot (its name too) into the slot */
+    uint32_t ok;
+    st_on=0;
+    if(playing){toast("STOP FIRST",1);return;}
+    if(!db_active(&sg,trk)){toast("NO DX7 PATCH",1);return;}
+    imp_busy=1;ok=ub_put(st_slot,sg.dx7[trk-1u]);imp_busy=0;
+    if(ok)sx_prompt("STORED TO USER ",(uint32_t)st_slot+1u,"");else if(toast_s!=sxmsg)toast("STORE FAILED",1);
+    mk(0x3Fu);
+}
+static void bank_export(void){                             /* BROWSE + GLO: the user bank to the computer as a DX7 bulk dump */
+    uint32_t n;
+    if(!ub_ok){toast("NO USER BANK TO SEND",1);return;}
+    n=dxs_build_bulk(ub,0,xbuf+1);xbuf[0]=0xF0u;xbuf[n+1u]=0xF7u;
+    {int r=ota_wire_send(xbuf,n+2u);toast(r==0?"USER BANK SENT":"SEND FAILED - NO USB MIDI",r!=0);}
+}
+/* ---- external MIDI in (USB and the TRS jack share Dinghy's ring): notes play the current track like the keys do. mi_own[note]
+ * remembers which track started a note, so its note-off goes there even after the page or track changed (like kn_track); bit 7
+ * marks a note-off the full command ring refused: it is retried every loop. The wheel and the pedal follow the current track:
+ * a track that stops being current gets centre / pedal up. MIDI does not write pattern steps. */
+static uint8_t mi_own[128],mi_npend,mi_ped,mi_sent_s[3];
+static uint16_t mi_wheel=8192,mi_sent_b[3]={8192,8192,8192};
+static uint32_t mi_off(uint32_t n){                         /* 1 = note-off posted (or nothing to post) */
+    uint32_t o=mi_own[n]&7u,t,k,other=0;
+    if(!o)return 1;
+    t=o-1u;
+    if(t==TR_CHORDS){if(!en_post(&en,EN_OFF,t,n,0))return 0;}
+    else if(t==TR_VOCAL||t==TR_BASS){                       /* monophonic: released with the last key held on it, MIDI or physical */
+        for(k=0;k<128u;k++)if(k!=n&&(mi_own[k]&0x87u)==o)other=1;
+        for(k=0;k<27u;k++)if((fm1_in.notes>>k&1u)&&kn_track[k]==t)other=1;
+        if(!other&&!en_post(&en,EN_OFF,t,0,0))return 0;
+    }
+    mi_own[n]=0;return 1;
+}
+static void mi_note_off(uint32_t n){if(!mi_off(n)){mi_own[n]|=0x80u;mi_npend=1;}}
+static void mi_on(uint32_t n,uint32_t kt){
+    if(!n)return;
+    if(kt==TR_DRUMS){uint32_t k=n%12u;en_post(&en,EN_ON,kt,k<6u?k:k-6u,0);return;}      /* the 12 keys' drum map, in every octave */
+    if(mi_own[n]&7u)mi_off(n);                              /* retrigger, or the note belonged to another track */
+    if(en_post(&en,EN_ON,kt,n,ed_mora))mi_own[n]=(uint8_t)(kt+1u);
+}
+static void midi_service(uint32_t kt){
+    uint8_t st,d1,d2;uint32_t n,t;
+    if(mi_npend){mi_npend=0;for(n=0;n<128u;n++)if((mi_own[n]&0x80u)&&!mi_off(n))mi_npend=1;}
+    for(n=0;n<48u&&midi_get(&st,&d1,&d2);n++){
+        uint32_t s=st&0xF0u;
+        if(s==0x90u&&d2)mi_on(d1,kt);
+        else if(s==0x80u||s==0x90u)mi_note_off(d1);
+        else if(s==0xB0u){
+            if(d1==64u)mi_ped=d2>=64u;
+            else if(d1==120u||d1==123u)for(t=0;t<128u;t++)if(mi_own[t]&7u)mi_note_off(t);
+        }else if(s==0xE0u)mi_wheel=(uint16_t)(d1|d2<<7);
+    }
+    for(t=TR_CHORDS;t<=TR_BASS;t++){                        /* only the current chords/bass track bends and sustains */
+        uint32_t wb=t==kt?mi_wheel:8192u,ws=t==kt?mi_ped:0u;
+        if(wb!=mi_sent_b[t]&&en_post(&en,EN_BEND,t,wb&127u,wb>>7))mi_sent_b[t]=(uint16_t)wb;
+        if(ws!=mi_sent_s[t]&&en_post(&en,EN_SUSTAIN,t,ws,0))mi_sent_s[t]=(uint8_t)ws;
+    }
 }
 static void guarded(uint32_t act,uint32_t arg){            /* actions that drop the current song need a second press when it is unsaved */
     if(modified && !(pend==act && pend_arg==arg && (int32_t)(fm1_ms-pend_t)<0)){pend=act;pend_arg=arg;pend_t=fm1_ms+3000u;toast("UNSAVED! AGAIN",1);return;}
@@ -1037,6 +1205,7 @@ static void app_main(void){
     if(settings_load(&pf,sizeof pf)!=0||!sp_valid(&pf)){
         uint8_t old[12];pf_defaults();if(settings_load(old,sizeof old)==0)sp_migrate(&pf,old);
     }
+    ub_load();                                              /* the DX7 user bank (blobs 0 and 1), if one was imported */
     if(pf.slot<SF_COUNT)sf_load(&sg,pf.slot);else song_demo(&sg);
     {uint32_t n=sload(pf.slot);if(n)song_decode(&sg,enc,n);}   /* untouched (= the demo) when it fails */
     un_init(&un);
@@ -1077,7 +1246,7 @@ static void app_main(void){
             prev_keys=keys;
             continue;
         }
-        if(b&(1u<<BTN_HOME)){if(page==PG_GEN){take=0;gen_edit=0;}page=page+1u<PG_N?page+1u:0;if(page==PG_LYRICS){trk=TR_VOCAL;lyric_load();}if(page==PG_LIBRARY)library_cursor=pf.slot;if(page==PG_BANK){if(trk!=1&&trk!=2)trk=1;dx_page=0;dx_cursor=0;}full=1;mk(0x3Fu);bank_leds();}
+        if(b&(1u<<BTN_HOME)){if(page==PG_GEN){take=0;gen_edit=0;}page=page+1u<PG_N?page+1u:0;if(page==PG_LYRICS){trk=TR_VOCAL;lyric_load();}if(page==PG_LIBRARY)library_cursor=pf.slot;if(page==PG_BANK){if(trk!=1&&trk!=2)trk=1;bank_sync();}full=1;mk(0x3Fu);bank_leds();}
         for(tb=0;tb<4u;tb++){
             uint32_t bit=1u<<(BTN_FX+tb),held=(fm1_in.buttons&bit)!=0;
             if(page<=PG_DANCE){
@@ -1102,7 +1271,7 @@ static void app_main(void){
                 else if(tb==3){if(library_cursor!=pf.slot)guarded(1,library_cursor);if(library_cursor==pf.slot){page=PG_VISUALS;full=1;}}
                 mk(0x1fu);
             }
-            else if(page==PG_BANK&&(b&bit)){if(tb==1u||tb==2u){trk=tb;dx_page=0;dx_cursor=db_active(&sg,trk)&&sg.trk[trk].preset<SG_DX7_CUSTOM?sg.trk[trk].preset-SG_DX7_FIRST:0;mk(0x1fu);}else toast("DX7: SCL CHORDS ENV BASS",0);}
+            else if(page==PG_BANK&&(b&bit)){if(tb==1u||tb==2u){trk=tb;bank_sync();mk(0x1fu);}else toast("DX7: SCL CHORDS ENV BASS",0);}
             else if(b&bit){lp_on[tb]=0;if(page==PG_GEN && tb==trk)gcf.lock^=(uint8_t)(1u<<tb);trk=tb;mk(0x3Fu);}
         }
         bank_leds();
@@ -1113,14 +1282,19 @@ static void app_main(void){
             else do_play();
         }
         if(b&(1u<<BTN_SEQ)){if(page==PG_LIBRARY){page=PG_SONG;full=1;mk(0x1fu);}else stop_play();}
-        if(b&(1u<<BTN_GLO)){if(page==PG_SONG||page==PG_PATTERN||page==PG_LYRICS){do_undo();if(page==PG_LYRICS)lyric_load();}else if(page==PG_GEN)gen_drop();}
-        if(b&(1u<<BTN_ARP)){if(page==PG_BANK){uint32_t r;lk();r=db_toggle(&sg,trk,dx_op,dx_page);ulk();if(r){modified=1;mk(0x1fu);}}if(page==PG_STAGE||page==PG_DANCE){page=PG_LIBRARY;library_cursor=pf.slot;full=1;mk(0x3fu);}anchor=cstep;arp_c=0;if(page==PG_SONG && sg.nrows && sg.nrows<NROW){u_pushrows();lk();sg_row_dup(&sg,(int)crow);ulk();crow++;modified=1;mk(0x1Fu);}
+        if(b&(1u<<BTN_GLO)){if(page==PG_SONG||page==PG_PATTERN||page==PG_LYRICS){do_undo();if(page==PG_LYRICS)lyric_load();}else if(page==PG_GEN)gen_drop();else if(page==PG_BANK){if(dx_page)st_start();else bank_export();mk(0x1fu);}}
+        if(b&(1u<<BTN_ARP)){if(page==PG_BANK&&!dx_page){if(dx_src)dx_src=0;else if(ub_ok)dx_src=1;else toast("NO USER BANK - SEND DX7 SYSEX",1);mk(0x1fu);}else if(page==PG_BANK){uint32_t r;lk();r=db_toggle(&sg,trk,dx_op,dx_page);ulk();if(r){modified=1;mk(0x1fu);}}if(page==PG_STAGE||page==PG_DANCE){page=PG_LIBRARY;library_cursor=pf.slot;full=1;mk(0x3fu);}anchor=cstep;arp_c=0;if(page==PG_SONG && sg.nrows && sg.nrows<NROW){u_pushrows();lk();sg_row_dup(&sg,(int)crow);ulk();crow++;modified=1;mk(0x1Fu);}
             if(page==PG_MIXER){sg.trk[trk].solo^=1u;modified=1;mk(0x1Fu);}
             if(page==PG_GEN)gen_go(1);
             }
-        if(b&(1u<<BTN_REC)){
-            if(page==PG_MIXER){page=PG_BANK;if(trk!=1&&trk!=2)trk=1;dx_page=0;dx_cursor=db_active(&sg,trk)&&sg.trk[trk].preset<SG_DX7_CUSTOM?sg.trk[trk].preset-SG_DX7_FIRST:0;full=1;mk(0x1fu);}
-            else if(page==PG_BANK){if(!dx_page){if(sg.trk[trk].preset<SG_DX7_CUSTOM||dx_confirm(0x80u|(trk<<8)|dx_cursor)){dx_factory(trk,dx_cursor);modified=1;toast("DX7 LOADED - KEYS TRY",0);}}else dx_page=0;mk(0x1fu);}
+        if((b&(1u<<BTN_REC))&&imp_pending(now)){import_apply();mk(0x1fu);}            /* REC on an import prompt (any page) */
+        else if((b&(1u<<BTN_REC))&&page==PG_BANK&&dx_page&&st_pending(now)){st_apply();mk(0x1fu);}
+        else if(b&(1u<<BTN_REC)){
+            if(page==PG_MIXER){page=PG_BANK;if(trk!=1&&trk!=2)trk=1;bank_sync();full=1;mk(0x1fu);}
+            else if(page==PG_BANK){if(!dx_page){
+                if(dx_src){if(sg.trk[trk].preset<SG_DX7_CUSTOM||dx_confirm(0x4000u|(trk<<8)|ub_cursor)){ub_use(trk,ub_cursor);modified=1;toast("USER VOICE LOADED - KEYS TRY",0);}}
+                else if(sg.trk[trk].preset<SG_DX7_CUSTOM||dx_confirm(0x80u|(trk<<8)|dx_cursor)){dx_factory(trk,dx_cursor);modified=1;toast("DX7 LOADED - KEYS TRY",0);}
+            }else dx_page=0;mk(0x1fu);}
             else if(page==PG_LIBRARY){
                 char nm[9];if(library_cursor!=pf.slot&&slot_name(library_cursor,nm)&&!(pend==4u&&pend_arg==library_cursor&&(int32_t)(now-pend_t)<0)){pend=4;pend_arg=library_cursor;pend_t=now+3000u;toast("OVERWRITE? REC AGAIN",1);}
                 else{pend=0;do_save(library_cursor);}mk(0x1fu);
@@ -1225,7 +1399,7 @@ static void app_main(void){
             if(dP){tweak(&sg.bpm,dP,40,240);if(playing)en_post(&en,EN_BPM,sg.bpm,0,0);mk(1u);}
         }else if(page==PG_BANK){
             if(dP){if(db_active(&sg,trk))dx_page=(uint32_t)wr((int32_t)dx_page+dP,DB_PAGES);else toast("LOAD DX7 WITH REC",0);mk(0x1fu);}
-            if(!dx_page){if(dS){dx_cursor=(uint32_t)wr((int32_t)dx_cursor+dS,DX7_BANK_N);mk(0x1fu);}}
+            if(!dx_page){if(dS){if(dx_src)ub_cursor=(uint32_t)wr((int32_t)ub_cursor+dS,UB_N);else dx_cursor=(uint32_t)wr((int32_t)dx_cursor+dS,DX7_BANK_N);mk(0x1fu);}}
             else{
                 if(dS||dA){dx_op=(uint32_t)wr((int32_t)dx_op+dS+dA,6);mk(0x1fu);}
                 for(i=0;i<4;i++)if(dK[i]){
@@ -1291,6 +1465,7 @@ static void app_main(void){
         }
         if(prev_keys&~keys)keys_release(prev_keys&~keys,keys);
         prev_keys=keys;
+        midi_service(kt);
         if(pv_off && (int32_t)(now-pv_off)>=0){pv_off=0;if(!keys)en_post(&en,EN_OFF,0,0,0);}
         /* what the engine tells us */
         if(ppos!=oldpos||playing!=(oldpos>>16&1u)){
@@ -1301,6 +1476,7 @@ static void app_main(void){
             else if(page==PG_PATTERN)mk(1u);
         }
         if(en.act!=last_act){last_act=en.act;if(page==PG_STAGE||page==PG_DANCE)mk(0x20u);}
+        if(st_on&&!st_pending(now))mk(0x1fu);
         if(toast_s && (int32_t)(now-toast_until)>=0){toast_s=0;mk(0x21u);}
         {   /* Animation state advances from the musical clock, independently of LCD redraw. */
             uint32_t row=ppos>>8&255u;

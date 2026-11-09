@@ -63,5 +63,5 @@ int main(void){
 for key,name in [('SLOT_NAME','slot_name'),('DO_SAVE','do_save'),('DO_LOAD','do_load'),('GUARDED','guarded')]:source=source.replace(key,function(name))
 with tempfile.TemporaryDirectory() as tmp:
  p=Path(tmp);(p/'library.c').write_text(source)
- subprocess.run([cc,'-std=c11','-O2','-Wall','-Wextra','-I'+str(root),str(p/'library.c'),*[str(root/'firmware/song'/f) for f in ['song.c','song_io.c','factory.c','mora.c','demo.c']],str(root/'firmware/ui/performance.c'),str(root/'firmware/ui/stagefx.c'),str(root/'firmware/ui/sprite_codec.c'),str(root/'firmware/ui/scene_prefs.c'),'-o',str(p/'test')],check=True)
+ subprocess.run([cc,'-std=c11','-O2','-Wall','-Wextra','-I'+str(root),str(p/'library.c'),*[str(root/'firmware/song'/f) for f in ['song.c','song_io.c','factory.c','mora.c','demo.c']],str(root/'firmware/audio/dx7/dx7.c'),str(root/'firmware/audio/fmband/fmband_mx.c'),str(root/'firmware/audio/fmband/fmband_tables.c'),str(root/'firmware/ui/performance.c'),str(root/'firmware/ui/stagefx.c'),str(root/'firmware/ui/sprite_codec.c'),str(root/'firmware/ui/scene_prefs.c'),'-o',str(p/'test')],check=True)
  subprocess.run([str(p/'test')],check=True)

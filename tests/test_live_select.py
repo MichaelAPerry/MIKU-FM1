@@ -97,6 +97,6 @@ with tempfile.TemporaryDirectory() as td:
     subprocess.run([cc, '-std=c11', '-O2', '-Wall', '-Wextra', '-Wno-unused-variable',
                     '-I'+str(root), str(source), str(build/'firmware/app/libmiku_engine.a'),
                     str(build/'firmware/song/libmiku_song.a'),
-                    str(build/'firmware/audio/fmband/libfmband.a'), str(build/'libmiku_core.a'),
+                    str(build/'libmiku_dx7.a'), str(build/'firmware/audio/fmband/libfmband.a'), str(build/'libmiku_core.a'),
                     '-lm', '-o', str(binary)], check=True)
     subprocess.run([str(binary)], check=True)

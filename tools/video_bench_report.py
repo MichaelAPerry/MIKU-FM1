@@ -58,6 +58,10 @@ def main():
     if 'pub_peak' in symbols:
         report['audio_render_moving_peak_us_emulator']=word('pub_peak')/24
         report['audio_callback_deadline_us']=256/44100*1000000
+    if 'audio_hard_peak' in symbols:
+        report['audio_render_worst_us_emulator']=word('audio_hard_peak')/24
+        report['audio_overruns']=word('audio_overruns')
+        report['audio_init_us_emulator']=word('audio_init_ticks')/24
     (out/'measurements.json').write_text(json.dumps(report,indent=2)+'\n')
     print(json.dumps(report,indent=2))
 

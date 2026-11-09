@@ -27,13 +27,15 @@ git fetch --depth 1 origin "$DINGHY_COMMIT"
 git checkout -q --detach "$DINGHY_COMMIT"
 python3 "$ROOT/tools/patch_dinghy_slots.py" "$ROOT/build/dinghy"
 cp "$ROOT/native/dinghy.c" firmware/src/dinghy.c
-cp "$ROOT/native/lyrics_ui.inc" "$ROOT/native/visuals_ui.inc" "$ROOT/native/library_ui.inc" firmware/src/
+cp "$ROOT/native/lyrics_ui.inc" "$ROOT/native/visuals_ui.inc" "$ROOT/native/library_ui.inc" "$ROOT/native/bank_ui.inc" firmware/src/
 # the modules keep their repo paths (their .c files #include "firmware/..."; -Ifirmware/src finds them); dinghy.c includes the .c files
 mkdir -p firmware/src/firmware/audio/fvoice firmware/src/firmware/audio/vfx firmware/src/firmware/audio/fmband firmware/src/firmware/ui firmware/src/firmware/song firmware/src/firmware/app
 for f in fvoice.c fvoice.h fvoice_tables.h; do cp "$ROOT/firmware/audio/fvoice/$f" firmware/src/firmware/audio/fvoice/; done
 cp "$ROOT"/firmware/audio/fmband/fmband*.[ch] firmware/src/firmware/audio/fmband/
 cp "$ROOT"/firmware/audio/vfx/vfx.[ch] firmware/src/firmware/audio/vfx/
 cp "$ROOT"/firmware/song/*.[ch] firmware/src/firmware/song/
+mkdir -p firmware/src/firmware/audio/dx7
+cp "$ROOT"/firmware/audio/dx7/*.[ch] firmware/src/firmware/audio/dx7/
 cp "$ROOT"/firmware/app/engine.[ch] firmware/src/firmware/app/
 cp "$ROOT/firmware/ui/singer_sprites.h" firmware/src/firmware/ui/
 cp "$ROOT"/firmware/ui/performance.[ch] "$ROOT"/firmware/ui/scene_prefs.[ch] firmware/src/firmware/ui/

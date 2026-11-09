@@ -31,11 +31,12 @@ static void hnote(Engine *e, int32_t note, uint32_t cons, uint32_t vw, uint32_t 
     fv_note_on_mora(&e->fv2, (uint8_t)(note < 1 ? 1 : note > 127 ? 127 : note), (uint8_t)cons, (uint8_t)vw, (uint8_t)vel);
 }
 static void voff(Engine *e) { fv_note_off(&e->fv); fv_note_off(&e->fv2); }
-uint32_t en_pre(uint32_t t, uint32_t p) { return p < npre[t] ? p : 0; }
+uint32_t en_pre(uint32_t t, uint32_t p) { return (t==TR_CHORDS||t==TR_BASS)&&p>=SG_DX7_FIRST&&p<=SG_DX7_CUSTOM?p:p < npre[t] ? p : 0; }
 void en_init(Engine *e, const Song *g) {
     uint32_t t;
     e->g = g;
     sq_init(&e->sq); fv_init(&e->fv); fv_init(&e->fv2); ch_init(&e->ch); bs_init(&e->bs); dr_init(&e->dr); vx_init();
+    dx_init(&e->dx[0],4);dx_init(&e->dx[1],1);e->dx_crc[0]=e->dx_crc[1]=0;e->dx_loaded[0]=e->dx_loaded[1]=0;
     e->fv2.rng = 0x2545F491u;                       /* the harmony voice drifts on its own */
     e->clk = e->bw = 0; e->vqn = 0; e->bdon = 0; e->vid = e->vcur = 0;
     e->arate = 50; e->bt = 0; e->rng = 0x6D2B79F5u; e->vnote = 60; e->vvel = 110; e->vmora = 0;
@@ -79,17 +80,17 @@ static void command(Engine *e, uint32_t w) {
     case EN_RATE: e->arate = (uint8_t)(a > 100u ? 100u : a); break;   /* next interval only; never retrigger a held note */
     case EN_ON:
         if (a == TR_VOCAL) { sing(e, b, c, 110, 0); e->vcur = ++e->vid; }
-        else if (a == TR_CHORDS) ch_note_on(&e->ch, (uint8_t)b, 100);
-        else if (a == TR_BASS) bs_note_on(&e->bs, (uint8_t)b, 100, 0, 0);
+        else if (a == TR_CHORDS) {if(e->pre[a]>=SG_DX7_FIRST)dx_note_on(&e->dx[0],(uint8_t)b,100);else ch_note_on(&e->ch, (uint8_t)b, 100);}
+        else if (a == TR_BASS) {if(e->pre[a]>=SG_DX7_FIRST)dx_note_on(&e->dx[1],(uint8_t)b,100);else bs_note_on(&e->bs, (uint8_t)b, 100, 0, 0);}
         else if (b < DR_N) dr_trig(&e->dr, (uint8_t)b, 110);
         break;
     case EN_OFF:
         if (a == TR_VOCAL) voff(e);
-        else if (a == TR_CHORDS) ch_note_off(&e->ch, (uint8_t)b);
-        else if (a == TR_BASS) bs_note_off(&e->bs);
+        else if (a == TR_CHORDS) {ch_note_off(&e->ch, (uint8_t)b);dx_note_off(&e->dx[0],(uint8_t)b);}
+        else if (a == TR_BASS) {bs_note_off(&e->bs);dx_all_off(&e->dx[1]);}
         break;
     case EN_VOW: if (mora_vowel(a) < 5u) { e->vh = (uint8_t)mora_vowel(a); fv_set_vowel(&e->fv, e->vh); } break;
-    case EN_PANIC: voff(e); e->vqn = 0; ch_all_off(&e->ch); bs_note_off(&e->bs); break;
+    case EN_PANIC: voff(e); e->vqn = 0; ch_all_off(&e->ch); bs_note_off(&e->bs);dx_all_off(&e->dx[0]);dx_all_off(&e->dx[1]); break;
     }
 }
 static void vq_push(Engine *e, uint32_t on, uint32_t delay, const SqEvent *v, uint16_t id) {
@@ -132,13 +133,13 @@ static void event(Engine *e, const SqEvent *v) {
     switch (v->type) {
     case SQ_NOTE_ON:
         if (v->trk == TR_VOCAL) vocal_event(e, v, 1);
-        else if (v->trk == TR_CHORDS) ch_note_on(&e->ch, v->note, v->vel);
-        else bs_note_on(&e->bs, v->note, v->vel, (uint8_t)(v->aux & 1u), (uint8_t)(v->aux >> 1 & 1u));
+        else if (v->trk == TR_CHORDS) {if(e->pre[1]>=SG_DX7_FIRST)dx_note_on(&e->dx[0],v->note,v->vel);else ch_note_on(&e->ch, v->note, v->vel);}
+        else {if(e->pre[2]>=SG_DX7_FIRST)dx_note_on(&e->dx[1],v->note,v->vel);else bs_note_on(&e->bs, v->note, v->vel, (uint8_t)(v->aux & 1u), (uint8_t)(v->aux >> 1 & 1u));}
         break;
     case SQ_NOTE_OFF:
         if (v->trk == TR_VOCAL) vocal_event(e, v, 0);
-        else if (v->trk == TR_CHORDS) ch_note_off(&e->ch, v->note);
-        else bs_note_off(&e->bs);
+        else if (v->trk == TR_CHORDS) {ch_note_off(&e->ch, v->note);dx_note_off(&e->dx[0],v->note);}
+        else {bs_note_off(&e->bs);dx_all_off(&e->dx[1]);}
         break;
     case SQ_DRUM: dr_trig(&e->dr, v->note, v->vel); break;
     case SQ_STEP: e->pos = (e->pos & 0x10000u) | (uint32_t)v->note << 8 | v->aux; break;
@@ -185,10 +186,10 @@ static void seg(Engine *e, int32_t *out, uint32_t at, uint32_t n) {
         o[2u * i + 1u] = ((o[2u * i + 1u] * e->vr) >> 15) * 3;
     }
     bd = obd(x);
-    if (!bd) { e->bdon = 0; ch_render(&e->ch, o, n); bs_render(&e->bs, o, n); dr_render(&e->dr, o, n); return; }
+    if (!bd) { e->bdon = 0; ch_render(&e->ch, o, n); bs_render(&e->bs, o, n); dr_render(&e->dr, o, n);dx_render(&e->dx[0],o,n);dx_render(&e->dx[1],o,n); return; }
     if (!e->bdon) { for (j = 0; j < 2u * BDN; j++) bdl[j] = 0; e->bdon = 1; }
     for (j = 0; j < 2u * n; j++) btmp[j] = 0;
-    ch_render(&e->ch, btmp, n); bs_render(&e->bs, btmp, n); dr_render(&e->dr, btmp, n);
+    ch_render(&e->ch, btmp, n); bs_render(&e->bs, btmp, n); dr_render(&e->dr, btmp, n);dx_render(&e->dx[0],btmp,n);dx_render(&e->dx[1],btmp,n);
     for (j = 0; j < n; j++) {                      /* on-beat: the band, D frames late */
         uint32_t r = (e->bw - bd) & (BDN - 1u);
         bdl[2u * e->bw] = btmp[2u * j]; bdl[2u * e->bw + 1u] = btmp[2u * j + 1u];
@@ -231,9 +232,14 @@ void en_render(Engine *e, int32_t *out, uint32_t n) {
         }
         if (p != e->pre[k]) {
             e->pre[k] = (uint8_t)p;
-            if (k == TR_CHORDS) ch_set_preset(&e->ch, (uint8_t)p);
+            if(p>=SG_DX7_FIRST){}
+            else if (k == TR_CHORDS) ch_set_preset(&e->ch, (uint8_t)p);
             else if (k == TR_BASS) bs_set_preset(&e->bs, (uint8_t)p);
             else dr_set_preset(&e->dr, (uint8_t)p);
+        }
+        if((k==TR_CHORDS||k==TR_BASS)&&!l){
+            dx_set_mix(&e->dx[k-1u],(uint8_t)lv,(uint8_t)pn);
+            if(p>=SG_DX7_FIRST){uint32_t crc=sg_crc32(g->dx7[k-1u],128);if((!e->dx_loaded[k-1u]||crc!=e->dx_crc[k-1u])&&dx_patch(&e->dx[k-1u],g->dx7[k-1u])){e->dx_crc[k-1u]=crc;e->dx_loaded[k-1u]=1;}}
         }
         if (k == TR_CHORDS) ch_set_mix(&e->ch, (uint8_t)lv, (uint8_t)pn);
         else if (k == TR_BASS) bs_set_mix(&e->bs, (uint8_t)lv, (uint8_t)pn);
@@ -258,5 +264,5 @@ void en_render(Engine *e, int32_t *out, uint32_t n) {
     }
     mx_limit(out, n);
     e->mouth = fv_mouth(&e->fv); e->level = fv_level(&e->fv);
-    e->act = (fv_level(&e->fv) > 40u) | (uint32_t)(ch_active(&e->ch) != 0) << 1 | (uint32_t)(bs_active(&e->bs) != 0) << 2 | (uint32_t)(dr_active(&e->dr) != 0) << 3;
+    e->act = (fv_level(&e->fv) > 40u) | (uint32_t)((ch_active(&e->ch)|dx_active(&e->dx[0])) != 0) << 1 | (uint32_t)((bs_active(&e->bs)|dx_active(&e->dx[1])) != 0) << 2 | (uint32_t)(dr_active(&e->dr) != 0) << 3;
 }

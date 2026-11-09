@@ -37,6 +37,12 @@ def main():
     def word(name): return int.from_bytes(bytes(mem[symbols[name]+i] for i in range(4)),'little')
     manifest=json.loads((out/'manifest.json').read_text()) if (out/'manifest.json').exists() else {}
     expected=manifest.get('expected_frames',3)
+    counters={}
+    for name in symbols:
+        if name=='video_jpeg':continue
+        try:counters[name]=word(name)
+        except KeyError:counters[name]=None
+    (out/'counters.json').write_text(json.dumps({'expected_frames':expected,'counters':counters},indent=2)+'\n')
     n=word('video_last_bytes')
     if not 4<=n<=8192 or word('video_encoded')!=expected or word('video_failed'):
         raise SystemExit('native benchmark incomplete or encoder failed')

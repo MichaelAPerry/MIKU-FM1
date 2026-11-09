@@ -21,7 +21,7 @@ def main():
     p.add_argument('--symbols',type=Path,required=True)
     p.add_argument('--out',type=Path,required=True)
     p.add_argument('--page',choices=['stage','dance'],required=True)
-    p.add_argument('--ms',type=int,default=35000)
+    p.add_argument('--ms',type=int,default=40000)
     p.add_argument('--allow-overruns',action='store_true',help='retain failing baseline measurements; never use for candidate acceptance')
     a=p.parse_args()
     if a.ms<8000:p.error('measure at least eight seconds')
@@ -34,14 +34,14 @@ def main():
         if not m:raise SystemExit('missing measured symbol: '+name)
         addresses[name]=int(m[1],16)
     # Generate HYPERPOP (both DX7 tracks), keep, return to STAGE/DANCE, PLAY.
-    events=[f'{100+200*i}:HOME' for i in range(5)]
-    events+=['1200:REC','1500:EDIT']+[f'{1700+200*i}:HOME' for i in range(5)]
-    if a.page=='dance':events+=['2700:HOME']
-    events+=['3100:PLAY']
+    events=[f'{2000+500*i}:HOME' for i in range(5)]
+    events+=['4500:REC','5000:EDIT']+[f'{5500+500*i}:HOME' for i in range(5)]
+    if a.page=='dance':events+=['8000:HOME']
+    events+=['8500:PLAY']
     env=os.environ.copy();env['FM1_LCD_TIMED']='1'
     env['FM1_LIST_END']=','.join(f'{addresses[n]:x}:{24 if n.endswith("profile") else 4:x}' for n in names)
     command=[str(a.emu.resolve()),'--fwsc',str(a.package.resolve()),'--ms',str(a.ms),'--keys',','.join(events),
-             '--snap','5000,7000','--wav','audio.wav']
+             '--snap','10000,12000','--wav','audio.wav']
     with (out/'boot.log').open('w') as log:
         subprocess.run(command,cwd=out,env=env,stdout=log,stderr=subprocess.STDOUT,check=True)
     log=(out/'boot.log').read_text();mem=memory(log)

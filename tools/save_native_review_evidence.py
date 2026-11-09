@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: GPL-3.0-only
-"""Retain only measured JSON and rendered image evidence; exclude binaries/audio; log tails only on failed runs."""
+"""Retain only measured JSON and rendered image evidence; exclude binaries/audio; bounded logs only on failed runs."""
 import argparse
 import json
 from pathlib import Path
@@ -18,7 +18,10 @@ def main():
         if not source.is_file() or source.suffix not in ('.json','.png','.jpg','.log'):continue
         if source.suffix=='.log' and not a.incomplete:continue
         relative=source.relative_to(a.source);dest=a.destination/relative;dest.parent.mkdir(parents=True,exist_ok=True)
-        if source.suffix=='.log':dest.write_text('\n'.join(source.read_text(errors='replace').splitlines()[-150:])+'\n')
+        if source.suffix=='.log':
+            text=source.read_text(errors='replace')
+            if len(text)>2000000:text=text[:1000000]+'\n[log middle omitted]\n'+text[-1000000:]
+            dest.write_text(text)
         else:shutil.copyfile(source,dest)
         manifest['files'].append(relative.as_posix())
     (a.destination/'manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')

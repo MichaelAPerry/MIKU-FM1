@@ -11,15 +11,18 @@ static struct {
     volatile uint32_t length;
     volatile uint8_t owner; /* 0 free; main publishes1; timer owns2 until DMA completion/flush */
     volatile uint8_t active;
+    volatile uint32_t generation,source_generation;
+    uint8_t paused;
     uint8_t pending,wait;
     uint32_t completed,cancelled,stalls;
 } video_usb;
 static __attribute__((unused)) uint32_t video_usb_busy(void){return video_usb.owner!=0;}
-static __attribute__((unused)) uint32_t video_usb_active(void){return video_usb.active;}
-static __attribute__((unused)) uint32_t video_usb_publish(const uint8_t *data,uint32_t bytes){
-    if(!video_usb.active || video_usb.owner || !data || bytes<4u || bytes>MUVC_FRAME_CAP ||
+static __attribute__((unused)) uint32_t video_usb_active(void){return video_usb.active&&!usb.suspended;}
+static __attribute__((unused)) uint32_t video_usb_generation(void){return video_usb.generation;}
+static __attribute__((unused)) uint32_t video_usb_publish(const uint8_t *data,uint32_t bytes,uint32_t generation){
+    if(generation!=video_usb.generation || usb.suspended || !video_usb.active || video_usb.owner || !data || bytes<4u || bytes>MUVC_FRAME_CAP ||
        data[0]!=255 || data[1]!=216 || data[bytes-2]!=255 || data[bytes-1]!=217)return 0;
-    video_usb.source=data;video_usb.length=bytes;
+    video_usb.source=data;video_usb.length=bytes;video_usb.source_generation=generation;
     RING_PUBLISH();video_usb.owner=1;return 1;
 }
 static void video_ep4_flush(void){
@@ -36,7 +39,7 @@ static void video_collect_release(void){
     }
 }
 static void video_usb_stop(uint32_t reset){
-    video_usb.active=0;video_ep4_flush();
+    video_usb.active=0;video_usb.paused=0;video_usb.generation++;video_ep4_flush();
     if(reset)muvc_reset(&video_class);else muvc_stream(&video_class,0);
     video_collect_release();
     /* Also cancel a main-loop publication not yet offered to the class core. */
@@ -73,11 +76,20 @@ static void video_usb_service(void){
         if(video_usb.owner==1u){RING_PUBLISH();video_usb.owner=0;}
         return;
     }
-    if(usb.suspended){video_usb_stop(0);return;}
+    if(usb.suspended){
+        if(!video_usb.paused){video_usb_stop(0);video_usb.active=1;video_usb.paused=1;}
+        return;
+    }
+    if(video_usb.paused){video_usb.paused=0;if(!video_usb_alt(1))return;}
     sie_wr(S_INDEX,4);csr=sie_rd(S_TXCSR1);
     if(video_usb.pending){
         if(csr&1u){
-            if(++video_usb.wait>=40u){video_usb.stalls++;video_usb_stop(0);}
+            if(++video_usb.wait>=40u){
+                video_usb.stalls++;
+                /* Drop this stalled frame; a camera app need not reselect alt1
+                   merely because one endpoint transaction failed. */
+                video_usb_alt(1);
+            }
             return;
         }
         video_usb.pending=video_usb.wait=0;
@@ -85,7 +97,7 @@ static void video_usb_service(void){
     }
     if(video_usb.owner==1u){
         RING_PUBLISH();
-        if(muvc_offer(&video_class,video_usb.source,video_usb.length,1))video_usb.owner=2;
+        if(video_usb.source_generation==video_usb.generation && muvc_offer(&video_class,video_usb.source,video_usb.length,1))video_usb.owner=2;
         else{video_usb.cancelled++;RING_PUBLISH();video_usb.owner=0;}
     }
     n=muvc_prepare(&video_class,fm1_ms*1000u,video_dma,sizeof video_dma);

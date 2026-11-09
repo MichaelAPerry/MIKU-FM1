@@ -63,7 +63,9 @@ uint32_t muvc_prepare(Muvc *s,uint32_t now,uint8_t *out,uint32_t cap){
     if(n>cap-2)return 0; /* hardware buffer too small: never split according to accidental caller capacity */
     if(!s->started){
         if(s->clocked && (uint32_t)(now-s->last_start_us)<MUVC_FRAME_US)return 0;
-        s->started=1;s->clocked=1;s->last_start_us=now;
+        if(!s->clocked)s->last_start_us=now;
+        else s->last_start_us+=((uint32_t)(now-s->last_start_us)/MUVC_FRAME_US)*MUVC_FRAME_US;
+        s->started=1;s->clocked=1;
     }
     last=s->error || s->offset+n==s->length;
     out[0]=2;out[1]=(uint8_t)(0x80u|s->fid|(last?2u:0u)|(s->error?0x40u:0u));

@@ -18,11 +18,13 @@ harness=r'''
 #include "firmware/usb/jpeg/performance_frame.h"
 #include "firmware/usb/video/uvc.h"
 #include "firmware/ui/stagefx.h"
-static uint32_t active,busy,ticks,published;
+static uint32_t active,busy,ticks,published,generation;
 static uint32_t fm1_ticks(void){ticks+=100;return ticks;}
+static uint32_t video_usb_generation(void){return generation;}
 static uint32_t video_usb_active(void){return active;}
 static uint32_t video_usb_busy(void){return busy;}
-static uint32_t video_usb_publish(const uint8_t*p,uint32_t n){
+static uint32_t video_usb_publish(const uint8_t*p,uint32_t n,uint32_t epoch){
+    assert(epoch==generation);
     assert(active&&!busy&&p&&n<=8192&&p[0]==255&&p[1]==216&&p[n-2]==255&&p[n-1]==217);
     busy=1;published=n;return 1;
 }
@@ -35,6 +37,7 @@ int main(void){
     active=1;
     for(unsigned i=0;i<79;i++){video_update(&scene);assert(!published);}
     video_update(&scene);assert(video_encoded==1&&busy&&published);
+    assert(video_cache.decoded_rows<=71u);
     memcpy(prior,video_jpeg,published);uint32_t n=published;
     assert(mj_begin(&reference,160,120,65,want,sizeof want,mj_perf_pixel,&scene));
     assert(mj_step(&reference,80)==1&&mj_size(&reference)==n&&!memcmp(prior,want,n));
@@ -45,11 +48,16 @@ int main(void){
     for(unsigned i=0;i<10;i++)video_update(&scene);
     assert(video_encoding&&!published);
     active=0;video_update(&scene);assert(!video_encoding); /* disconnect aborts unfinished frame */
-    active=1;
+    active=1;generation++;
     for(unsigned i=0;i<80;i++)video_update(&scene);
     assert(busy&&video_encoded==2&&published);
     assert(mj_begin(&reference,160,120,65,want,sizeof want,mj_perf_pixel,&scene));
     assert(mj_step(&reference,80)==1&&mj_size(&reference)==published&&!memcmp(video_jpeg,want,published));
+    busy=0;published=0;for(unsigned i=0;i<10;i++)video_update(&scene);
+    assert(video_encoding);generation++;scene.sprite=2;
+    for(unsigned i=0;i<79;i++){video_update(&scene);assert(!published);}
+    video_update(&scene);assert(published&&video_encoded==3);
+    assert(video_min_bytes&&video_max_bytes>=video_min_bytes&&video_total_bytes>=published);
     puts("native video main: incremental budget, immutable USB ownership, disconnect/restart, exact JPEG");
 }
 '''.replace('PRODUCER',producer)

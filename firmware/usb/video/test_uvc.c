@@ -49,6 +49,13 @@ int main(void){
     T(muvc_offer(&s,short_jpeg,4,12));T(!muvc_prepare(&s,0x10u,packet,sizeof packet));
     T(muvc_prepare(&s,0xfffffff0u+MUVC_FRAME_US,packet,sizeof packet)==6);T(muvc_ack(&s,1));T(muvc_take_release(&s,0,0));
     T(!muvc_offer(&s,jpeg,3,12));T(!muvc_offer(&s,jpeg,MUVC_FRAME_CAP+1,12));
+    /* Late producer slots skip missed deadlines without accumulating phase drift. */
+    muvc_stream(&s,0);muvc_stream(&s,1);
+    T(muvc_offer(&s,short_jpeg,4,13));T(muvc_prepare(&s,1000,packet,sizeof packet));T(muvc_ack(&s,1));T(muvc_take_release(&s,0,0));
+    T(muvc_offer(&s,short_jpeg,4,14));T(muvc_prepare(&s,1000+MUVC_FRAME_US+10000,packet,sizeof packet));
+    T(muvc_ack(&s,1));T(muvc_take_release(&s,0,0));
+    T(muvc_offer(&s,short_jpeg,4,15));T(!muvc_prepare(&s,1000+2*MUVC_FRAME_US-1,packet,sizeof packet));
+    T(muvc_prepare(&s,1000+2*MUVC_FRAME_US,packet,sizeof packet));T(muvc_ack(&s,1));T(muvc_take_release(&s,0,0));
     /* Probe/commit caps are never accepted from host unchecked. */
     T(setup(&s,0x81,1,1,26,probe,&n)==1);T(probe[22]==0 && probe[23]==2);
     probe[23]=4;T(setup(&s,1,2,0,26,probe,&n)==0);T(muvc_control_data(&s,probe,26)==-1);

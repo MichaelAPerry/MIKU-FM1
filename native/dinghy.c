@@ -201,8 +201,10 @@ static PerfState performance;
 static MjEncoder video_encoder __attribute__((section(".pool")));
 static uint8_t video_jpeg[MJ_FRAME_CAP] __attribute__((section(".pool"),aligned(32)));
 static PerfState video_scene;
-static uint32_t video_encoding,video_started;
+static MjPerfCache video_cache __attribute__((section(".pool")));
+static uint32_t video_encoding,video_started,video_generation;
 static volatile uint32_t video_step_ticks,video_frame_ticks,video_encoded,video_failed,video_last_bytes;
+static volatile uint32_t video_total_bytes,video_min_bytes,video_max_bytes,video_total_ticks,video_rejected;
 static void video_update(const PerfState *scene){
     uint32_t at,dt;int result;
 #if MIKU_VIDEO_BENCH
@@ -210,13 +212,17 @@ static void video_update(const PerfState *scene){
     if(scene->effect&&scene->effect!=STFX_BEAMS&&scene->now_ms-scene->effect_epoch<480u)return; /* measure the expanded burst, not only launch pixels */
 #else
     if(!video_usb_active()){video_encoding=0;return;}
+    if(video_generation!=video_usb_generation()){
+        video_encoding=0;video_generation=video_usb_generation();
+    }
     if(video_usb_busy())return;
 #endif
     if(!video_encoding){
         volatile uint8_t *to=(volatile uint8_t *)&video_scene;
         const uint8_t *from=(const uint8_t *)scene;uint32_t i;
         for(i=0;i<sizeof video_scene;i++)to[i]=from[i];
-        if(!mj_begin(&video_encoder,MUVC_WIDTH,MUVC_HEIGHT,65,video_jpeg,sizeof video_jpeg,mj_perf_pixel,&video_scene)){video_failed++;return;}
+        mj_perf_cache_init(&video_cache,&video_scene);
+        if(!mj_begin(&video_encoder,MUVC_WIDTH,MUVC_HEIGHT,65,video_jpeg,sizeof video_jpeg,mj_perf_cached_pixel,&video_cache)){video_failed++;return;}
         video_encoding=1;video_started=fm1_ticks();
     }
     at=fm1_ticks();result=mj_step(&video_encoder,1); /* <=one16x16 tile per poll pass */
@@ -225,10 +231,14 @@ static void video_update(const PerfState *scene){
     video_encoding=0;dt=fm1_ticks()-video_started;if(dt>video_frame_ticks)video_frame_ticks=dt;
     if(result<0){video_failed++;return;}
     video_last_bytes=mj_size(&video_encoder);
+    video_total_ticks+=dt;video_total_bytes+=video_last_bytes;
+    if(!video_min_bytes||video_last_bytes<video_min_bytes)video_min_bytes=video_last_bytes;
+    if(video_last_bytes>video_max_bytes)video_max_bytes=video_last_bytes;
 #if MIKU_VIDEO_BENCH
     video_encoded++;
 #else
-    if(video_usb_publish(video_jpeg,mj_size(&video_encoder)))video_encoded++;
+    if(video_usb_publish(video_jpeg,mj_size(&video_encoder),video_generation))video_encoded++;
+    else video_rejected++;
 #endif
 }
 #endif

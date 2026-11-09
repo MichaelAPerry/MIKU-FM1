@@ -73,6 +73,11 @@ int main(void){
     unsigned off=0,ep1=0,ep4=0,ifs=0;
     while(off<control_n){unsigned n=control[off];assert(n>=2&&off+n<=control_n);
         if(control[off+1]==4&&control[off+3]==0)ifs++;
+        if(control[off+1]==36&&control[off+2]==2&&control[off+3]==1&&n>=8&&control[off+4]==1&&control[off+5]==2){
+            /* UVC camera terminal: descriptor length must include bmControls. */
+            assert(n==18&&control[off+14]==3&&n==15u+control[off+14]);
+            assert(!control[off+15]&&!control[off+16]&&!control[off+17]);
+        }
         if(control[off+1]==5){if(control[off+2]==1||control[off+2]==0x81)ep1++;
             if(control[off+2]==0x84){ep4++;assert(control[off+4]==0&&control[off+5]==2);}}
         off+=n;
@@ -148,7 +153,9 @@ int main(void){
         }
         assert(!video_usb_busy()&&bytes==sizeof jpeg&&!memcmp(received,jpeg,sizeof jpeg));
     }
-    assert(video_usb.completed-start_completed==150);
+    assert(video_usb.completed-start_completed==150&&video_usb.session_frames==150);
+    assert(video_usb.session_bytes==150*sizeof jpeg&&video_usb.interval_min_ms==66&&video_usb.interval_max_ms==67);
+    printf("UVC transport simulation: %u frames, %u bytes, frame intervals %u..%u ms\n",video_usb.session_frames,video_usb.session_bytes,video_usb.interval_min_ms,video_usb.interval_max_ms);
     /* Existing MIDI rescue command still works. */
     const uint8_t key[]={0xf0,0x22,0x24,0x35,0x7d,0xf7};for(unsigned i=0;i<6;i++)sysex_byte(key[i]);assert(usb.uboot_req);
     puts("native UVC: descriptors/EP0/probe/commit/alt/payload/ownership/reset/MIDI rescue OK");

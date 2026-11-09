@@ -254,15 +254,17 @@ static const uint8_t npst[NTRK]={1,CH_NPRESET,BS_NPRESET,DR_NPRESET};
 /* Debugger-readable cumulative telemetry. Tick counters wrap modulo 2^32;
  * sample deltas frequently. Drawing includes LCD waits, so audio share explains
  * ISR preemption of a long draw. Reset only with playback stopped. */
-static volatile uint32_t audio_calls,audio_ticks,audio_frames;
+static volatile uint32_t audio_calls,audio_ticks,audio_frames,audio_dx_tracks,audio_playing_frames;
 typedef struct {uint32_t frames,last,interval_min,interval_max,draw_max,draw_ticks;} DrawProfile;
 static volatile DrawProfile stage_profile,dance_profile;
 static uint32_t draw_start(volatile DrawProfile *p){
+    if(!playing)return 0;
     uint32_t t=fm1_ticks(),dt=t-p->last;
     if(p->frames){if(!p->interval_min||dt<p->interval_min)p->interval_min=dt;if(dt>p->interval_max)p->interval_max=dt;}
     p->last=t;return t;
 }
 static void draw_end(volatile DrawProfile *p,uint32_t t){
+    if(!playing)return;
     uint32_t dt=fm1_ticks()-t;p->frames++;p->draw_ticks+=dt;if(dt>p->draw_max)p->draw_max=dt;
 }
 static void app_audio(int32_t *out,uint32_t n){
@@ -271,7 +273,11 @@ static void app_audio(int32_t *out,uint32_t n){
     if(!en.up)en_init(&en,&sg);
     en_render(&en,out,n);
     c=fm1_ticks()-t0;
-    if(ready){audio_calls++;audio_ticks+=c;audio_frames+=n;}
+    if(ready){
+        audio_calls++;audio_ticks+=c;audio_frames+=n;
+        audio_dx_tracks=(en.pre[TR_CHORDS]>=SG_DX7_FIRST?1u:0u)|(en.pre[TR_BASS]>=SG_DX7_FIRST?2u:0u);
+        if(en.pos&0x10000u)audio_playing_frames+=n;
+    }
     if(ready){if(c>audio_hard_peak)audio_hard_peak=c;if(c>BUDGET_TICKS)audio_overruns++;}else audio_init_ticks=c;
     if(c>pk)pk=c;else pk-=pk>>6;
     pub_peak=pk;
@@ -1253,6 +1259,10 @@ static void app_main(void){
         platform_poll();
         now=fm1_ms;
         ppos=en.pos;playing=ppos>>16&1u;
+        if(playing&&!(oldpos&0x10000u)){
+            stage_profile.frames=stage_profile.last=stage_profile.interval_min=stage_profile.interval_max=stage_profile.draw_max=stage_profile.draw_ticks=0;
+            dance_profile.frames=dance_profile.last=dance_profile.interval_min=dance_profile.interval_max=dance_profile.draw_max=dance_profile.draw_ticks=0;
+        }
         b=fm1_input_edges(&released);
         dS=fm1_enc_take(ENC_SELECT);dA=fm1_enc_take(ENC_ALGORITHM);dP=fm1_enc_take(ENC_PRESETS);
         for(i=0;i<4;i++)dK[i]=fm1_enc_take(ENC_KNOB1+i);

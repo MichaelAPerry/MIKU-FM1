@@ -63,6 +63,9 @@ int main(void){
     /* Every descriptor length is self-consistent and advertised packet/frame fit profile. */
     T(muvc_configuration_length==152);T(muvc_configuration_descriptor[2]==152);
     unsigned at=0,eps=0;while(at<muvc_configuration_length){unsigned len=muvc_configuration_descriptor[at];T(len>=2);T(at+len<=muvc_configuration_length);
+        if(muvc_configuration_descriptor[at+1]==36&&muvc_configuration_descriptor[at+2]==2&&muvc_configuration_descriptor[at+3]==1){
+            T(len==18&&muvc_configuration_descriptor[at+14]==3);T(len==15u+muvc_configuration_descriptor[at+14]);
+        }
         if(muvc_configuration_descriptor[at+1]==5){eps++;T(muvc_configuration_descriptor[at+2]==MUVC_EP);T(muvc_configuration_descriptor[at+4]==0 && muvc_configuration_descriptor[at+5]==2);}at+=len;}
     T(at==muvc_configuration_length && eps==1);
     printf("uvc: controls/caps/FID/EOF/ERR/reset/ownership/backpressure/pacing passed; sizeof state=%zu\n",sizeof(Muvc));return 0;

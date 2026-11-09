@@ -14,7 +14,9 @@ static struct {
     volatile uint32_t generation,source_generation;
     uint8_t paused;
     uint8_t pending,wait;
-    uint32_t completed,cancelled,stalls;
+    volatile uint32_t completed,cancelled,stalls,bytes_completed;
+    volatile uint32_t first_frame_ms,last_frame_ms,interval_min_ms,interval_max_ms,session_frames,session_bytes;
+    uint8_t measured;
 } video_usb;
 static __attribute__((unused)) uint32_t video_usb_busy(void){return video_usb.owner!=0;}
 static __attribute__((unused)) uint32_t video_usb_active(void){return video_usb.active&&!usb.suspended;}
@@ -34,7 +36,15 @@ static void video_collect_release(void){
     uint32_t token,reason;
     if(muvc_take_release(&video_class,&token,&reason)){
         (void)token;
-        if(reason==MUVC_RELEASE_SENT)video_usb.completed++;else video_usb.cancelled++;
+        if(reason==MUVC_RELEASE_SENT){
+            uint32_t now=fm1_ms,interval=now-video_usb.last_frame_ms;
+            if(video_usb.measured){
+                if(!video_usb.interval_min_ms||interval<video_usb.interval_min_ms)video_usb.interval_min_ms=interval;
+                if(interval>video_usb.interval_max_ms)video_usb.interval_max_ms=interval;
+            }else{video_usb.first_frame_ms=now;video_usb.measured=1;}
+            video_usb.last_frame_ms=now;video_usb.bytes_completed+=video_usb.length;video_usb.completed++;
+            video_usb.session_frames++;video_usb.session_bytes+=video_usb.length;
+        }else video_usb.cancelled++;
         RING_PUBLISH();video_usb.owner=0;
     }
 }
@@ -53,7 +63,10 @@ static int video_usb_alt(uint32_t alt){
     if(alt>1u || (alt && !video_class.committed))return 0;
     video_usb_stop(0);
     if(!muvc_stream(&video_class,alt))return 0;
-    video_usb.active=(uint8_t)alt;return 1;
+    video_usb.active=(uint8_t)alt;
+    video_usb.measured=0;video_usb.interval_min_ms=video_usb.interval_max_ms=0;
+    video_usb.session_frames=video_usb.session_bytes=0;
+    return 1;
 }
 static void video_usb_abort_control(void){video_class.control_pending=0;}
 static int video_usb_control(const uint8_t *setup,uint16_t length){

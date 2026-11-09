@@ -1,0 +1,10 @@
+{
+  "verified_code_commit": "d2173f7eec23fee6d0fa33b829120638e9cde432",
+  "validation_complete": false,
+  "scope": "Native builds and CPU emulator; physical USB/OS/hardware unverified",
+  "files": [
+    "baseline-build.log",
+    "draft-pr.log",
+    "toolchain-setup.log"
+  ]
+}

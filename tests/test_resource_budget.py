@@ -18,6 +18,12 @@ class BudgetTests(unittest.TestCase):
         self.assertFalse(resources.measure(901,self.symbols(),self.budget)['image']['pass'])
         self.assertFalse(resources.measure(900,self.symbols(901,900),self.budget)['static_ram']['pass'])
         self.assertFalse(resources.measure(900,self.symbols(900,1001),self.budget)['pool']['pass'])
+    def test_zero_flash_reserve_still_rejects_overflow(self):
+        self.budget['image']['minimum_free']=0
+        self.assertTrue(resources.measure(1000,self.symbols(),self.budget)['image']['pass'])
+        self.assertFalse(resources.measure(1001,self.symbols(),self.budget)['image']['pass'])
+        self.assertFalse(resources.measure(1000,self.symbols(1001,900),self.budget)['static_ram']['pass'])
+
     def test_fail_closed(self):
         for symbols in ['', self.symbols()+self.symbols(), self.symbols(-1,900)]:
             with self.assertRaises(ValueError): resources.measure(900,symbols,self.budget)

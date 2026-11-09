@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: GPL-3.0-only
-"""Check linked native usage plus explicit development headroom, never package size."""
+"""Check linked native usage against actual limits and configured RAM margins, never package size."""
 import argparse
 import json
 from pathlib import Path

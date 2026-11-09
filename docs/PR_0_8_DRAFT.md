@@ -1,15 +1,14 @@
-Playback with DX7 patches currently checksums both patches every audio block, and several wardrobe singing poses are larger than idle poses. This draft moves patch checks to the locked edit boundary, reuses decoded DANCE rows, preserves redraw cadence phase, and normalizes upright wardrobe pose heights while keeping the bow distinct.
+DX7 playback in 0.7 recomputes patch checksums in each audio block, and the isolated USB-camera prototype does not recover cleanly from suspend or endpoint stalls. This draft moves patch invalidation to locked edits, reduces sprite decode work, stabilizes upright pose sizing, and completes the MIDI+UVC stream lifecycle without adding heap allocation or floating point to the audio path.
 
-It also fixes BANK/LIBRARY hint layout, adds checked user-bank name editing, and extends CC64 to classic chords/bass and the singer. Native draw/audio telemetry and a deterministic host benchmark support further measurement. MKS2 format and the flash HAL are unchanged.
+USB video now has corrected UVC camera-terminal control-bitmap geometry, immutable session-stamped JPEG publication, suspend/resume and endpoint-timeout recovery, deadline-based packet pacing, bounded decoded-row caching, and transmitted-frame/size/interval counters. It stays a separate 160x120 MJPEG/MIDI profile; USB-audio sharing is excluded because both profiles use EP4.
 
-Validation: 52/52 host CTest checks pass, including 729 text-layout states; generator check and patched native UVC fake-SIE tests pass. A 60-second DX7 host render has identical PCM hash before/after and zero desktop deadline misses (mean callback 21.904 to 19.320 us). These are host results, not physical callback guarantees. Wardrobe accounting is 339850/340000 bytes.
+Also included: BANK/LIBRARY hint layouts, checked user-bank slot naming, and CC64 for classic chords, bass and singer live notes. Song format, both flash IDs and resource limits are retained.
 
-Before/after host UI images and decoded sprite contact sheets: [review evidence](evidence/smooth-and-seen/README.md). They are explicitly not emulator screenshots.
+Validation:
+- 52/52 host CTest checks pass, including 729 layout states and cached/reference JPEG byte equality across the wardrobe/effect fixtures.
+- The real patched USB driver passes a 150-frame fake-controller transport run with 66–67 ms simulated frame intervals, exact reconstruction, FID/EOF checks and suspend/stall/restart cases. This is not OS or hardware enumeration evidence.
+- Native development CI installs the authentic toolchain and pinned SDK, builds default/video/benchmark profiles with resource checks, and runs the pinned CPU emulator. The first UVC implementation commit passed all these steps; the latest run adds full-song baseline/candidate measurements and must be checked before approval.
 
-Still required before completion:
-- Authentic JieLi/AC79 default and --video builds, linked image/static/pool checks, changed-package emulator smoke and emulator page captures. Toolchain download is currently denied by environment outbound policy.
-- Sustained UVC fps/JPEG size/frame-time and macOS/Windows/Linux enumeration evidence. Keep the isolated MIDI+UVC profile; USB-audio coexistence is unproven.
-- Owner listening review before changing CLUB STAB, DIGI GROWL and DIGI PLUCK trims.
-- Claude review before main integration; owner hardware tests occur only after that process. No device has been accessed or flashed. Main and release tags were not pushed.
+[Native validation runs](https://github.com/MichaelAPerry/MIKU-FM1/actions/workflows/native-development.yml) · [validation record](https://github.com/MichaelAPerry/MIKU-FM1/blob/feature/0.8-smooth-and-seen/docs/VALIDATION.md) · [before/after host images and sprites](https://github.com/MichaelAPerry/MIKU-FM1/blob/feature/0.8-smooth-and-seen/docs/evidence/smooth-and-seen/README.md)
 
-Full verified/unverified record: [VALIDATION.md](VALIDATION.md).
+Review gates: native frame/callback measurements and emulator page artifacts; owner-approved listening trims for CLUB STAB/DIGI GROWL/DIGI PLUCK; Claude review before main integration. OS webcam enumeration, sustained physical USB throughput and real-device audio deadlines remain unverified. The owner does not permit experimental firmware on their FM-1 before Claude review and main integration. No main push, release tag, deployment or hardware access is authorized by this PR.

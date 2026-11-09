@@ -7,6 +7,7 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
+  pull-requests: write
 concurrency:
   group: native-development-${{ github.ref }}
   cancel-in-progress: true
@@ -30,6 +31,21 @@ jobs:
           cmake -S . -B build/host -DCMAKE_BUILD_TYPE=Release
           cmake --build build/host --parallel 2
           ctest --test-dir build/host --output-on-failure
+      - name: Ensure the requested draft PR exists
+        if: github.event_name == 'push' && github.ref == 'refs/heads/feature/0.8-smooth-and-seen'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          existing=$(gh pr list --head feature/0.8-smooth-and-seen --base main --state open --json number --jq '.[0].number // empty')
+          if [ -z "$existing" ]; then
+            gh pr create --draft --base main --head feature/0.8-smooth-and-seen --title 'Miku-FM 0.8: smooth and seen' --body-file docs/PR_0_8_DRAFT.md
+          else
+            gh pr view "$existing" --json url --jq .url
+          fi
       - name: Authentic JieLi toolchain and pinned SDK
         shell: bash
         run: |

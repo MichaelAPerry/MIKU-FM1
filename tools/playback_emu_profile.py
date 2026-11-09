@@ -39,7 +39,7 @@ def main():
     if a.page=='dance':events+=['2700:HOME']
     events+=['3100:PLAY']
     env=os.environ.copy()
-    env['FM1_LIST_END']=','.join(f'{addresses[n]:x}:{24 if n.endswith("profile") else 4}' for n in names)
+    env['FM1_LIST_END']=','.join(f'{addresses[n]:x}:{24 if n.endswith("profile") else 4:x}' for n in names)
     command=[str(a.emu.resolve()),'--fwsc',str(a.package.resolve()),'--ms',str(a.ms),'--keys',','.join(events),
              '--snap','5000,7000','--wav','audio.wav']
     with (out/'boot.log').open('w') as log:

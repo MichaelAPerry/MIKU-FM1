@@ -43,6 +43,13 @@ function draw(){
  ctx.strokeStyle='#103040';ctx.lineWidth=1;
  if(bg===1){for(let x=0;x<240;x+=24){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,214);ctx.stroke();}for(let y=142;y<214;y+=18){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(240,y);ctx.stroke();}}
  if(bg===2){ctx.fillStyle='#101830';ctx.fillRect(0,142,240,72);ctx.fillStyle='#28d0c8';ctx.fillRect(0,142,240,2);}
+ if(bg===3){
+ ctx.fillStyle='#1c102c';ctx.fillRect(0,0,240,214);
+ for(let x=0;x<30;x+=6){ctx.fillStyle=(x/6)%2?'#481038':'#280828';ctx.fillRect(x,0,6,164);ctx.fillRect(234-x,0,6,164);}
+ ctx.fillStyle='#183f58';for(const x of [45,194]){ctx.beginPath();ctx.moveTo(x,28);ctx.lineTo(x-32,158);ctx.lineTo(x+32,158);ctx.fill();}
+ for(let y=164;y<214;y+=16)for(let x=0;x<240;x+=24){ctx.fillStyle=((x/24+(y-164)/16)%2)?'#182038':'#282840';ctx.fillRect(x,y,24,16);}
+ ctx.fillStyle='#687088';ctx.fillRect(0,16,240,2);ctx.fillRect(0,23,240,1);ctx.fillStyle='#28d0c8';ctx.fillRect(0,164,240,2);
+ }
  if(fr){ctx.strokeStyle='#28d0c8';if(fr===1)ctx.strokeRect(4,4,231,205);else{ctx.fillStyle='#28d0c8';ctx.fillRect(3,8,2,level*198/127);ctx.fillRect(235,8,2,level*198/127);}}
  const age=(audio.currentTime*1000)%960,phase=Math.floor(age/240),density=Math.min(3,1+Math.floor(Number(intensity.value)/48));
  if(fx&&Number(intensity.value)>0&&e){

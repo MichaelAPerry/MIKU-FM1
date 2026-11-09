@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: GPL-3.0-only */
 static void pg_visuals(uint32_t band){
     static const char *fx[]={"OFF","FIREWORKS","SPARKLES","CONFETTI","SMOKE","BEAMS"};
-    static const char *bg[]={"ORIGINAL","GRID","HORIZON"};
+    static const char *bg[]={"ORIGINAL","GRID","HORIZON","CONCERT"};
     static const char *fr[]={"NONE","CORNERS","RAILS"};
     char s[32];uint32_t y=band*48u;
     if(!band){txt(120,4,&FONT_S,"VISUALS",C_PNK,1);txt(120,26,&FONT_S,"SELECT: OUTFIT",C_WHITE,1);}

@@ -54,10 +54,26 @@ uint16_t perf_pixel(const PerfState *s,uint32_t x,uint32_t y){
         beam=x<24u||x>=216u;
         if(beam&&y<142u&&((x+y)/16u&3u)==((s->beat_q8>>8)&3u))base=s->light>96u?accent:dim;
     }else if(s->background==PERF_BG_HORIZON){
-        if(y>=142u)base=PRGB(16,24,48);
+        uint32_t roof=98u+((x/20u*37u+17u)%57u);
+        base=PRGB(16+y/16u,16,48+y/8u);
+        if(y>=roof&&y<164u){base=PRGB(8,12,28);if(x%20u>4u&&x%20u<8u&&y%12u<3u)base=dim;}
+        if(y>=164u)base=PRGB(16,24,48);
         if(y==142u||y==144u)base=accent;
         if((x==18u||x==221u)&&y>24u&&y<142u)base=s->light>96u?accent:dim;
         if(y>150u&&((x+2u*y)%48u<2u))base=dim;
+    }
+    if(s->background==PERF_BG_CONCERT){
+        uint32_t side=x<120u?x:239u-x;
+        base=PRGB(20+y/24u,12,36+y/12u);
+        if(side<30u)base=(side/6u&1u)?PRGB(72,16,56):PRGB(40,8,40); /* reusable curtains */
+        if(y>=16u&&y<24u)base=(x%24u<3u||y==16u||y==23u)?PRGB(104,112,136):PRGB(24,24,40);
+        if(y>=28u&&y<158u){
+            int32_t dx=(int32_t)x-(x<120u?45:194);
+            if(dx<0)dx=-dx;
+            if((uint32_t)dx<(y-24u)/4u)base=s->light>40u?PRGB(24,64,88):PRGB(20,40,64);
+        }
+        if(y>=164u){base=(((x/24u)+(y-164u)/16u)&1u)?PRGB(24,32,56):PRGB(40,40,64);if(y==164u||y==166u)base=accent;}
+        if(y>=25u&&y<29u&&(x%48u>=18u&&x%48u<30u))base=accent;
     }
     if(s->frame==PERF_FRAME_CORNERS){
         if(((x>=4u&&x<28u)||(x>=212u&&x<236u))&&(y==4u||y==209u))base=accent;

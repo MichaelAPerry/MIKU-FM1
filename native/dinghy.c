@@ -181,6 +181,7 @@ static ScenePrefs pf;   /* settings: 0.3 saved 37 bytes, so its data never loads
 #define PF_MAGIC 0x4D4B5632u
 static volatile uint32_t pub_peak,audio_hard_peak,audio_overruns,audio_init_ticks;
 static Step clip[NSTEP];
+static uint8_t dx_bak[2][128],dx_bak_ok;                    /* one-level copy of an edited DX7 patch, see dx_stash */
 static uint32_t clip_n,clip_t,anchor,arp_c;
 static int32_t oct;
 static uint32_t library_cursor,dx_cursor,dx_page,dx_op;
@@ -354,7 +355,7 @@ static void scene_load(uint32_t slot){
 }
 static void pf_apply(void){uint32_t i;for(i=0;i<NTRK;i++)en.pan[i]=pf.pan[i];}
 static void after_load(void){
-    crow=cstep=top=0;un_init(&un);u_kind=0;modified=0;take=0;
+    crow=cstep=top=0;un_init(&un);u_kind=0;modified=0;take=0;dx_bak_ok=0;
     en_post(&en,EN_PANIC,0,0,0);
     mk(0x3Fu);full=1;
 }
@@ -382,12 +383,14 @@ static uint32_t slot_name(uint32_t s,char *nm){            /* 1 = a valid song i
 static void do_save(uint32_t s){
     uint32_t ok,n,t=fm1_ms;
     if(playing){toast("STOP FIRST",1);return;}
-    en_post(&en,EN_PANIC,0,0,0);
-    while(en.act && fm1_ms-t<800u)platform_poll();      /* erase only when silent */
+    en_post(&en,EN_HUSH,0,0,0);                         /* PANIC plus a fast fade and retirement of the DX7 voices: a few ms, not their release tails */
+    while(en.act && fm1_ms-t<800u)platform_poll();      /* erase only when silent (safety net) */
     if(en.act){toast("TAIL PLAYING - SAVE AGAIN",0);return;}
     n=song_encode(&sg,enc,sizeof enc);ok=n && slot_save(s,enc,n)==0;
-    if(ok){pf.slot=(uint8_t)s;perf_scene_encode(&performance,pf.scene[s]);ok=settings_save(&pf,sizeof pf)==0;}
-    if(ok)modified=0;
+    if(ok){                                             /* the song is on flash from here on: only the look can still fail */
+        modified=0;pf.slot=(uint8_t)s;perf_scene_encode(&performance,pf.scene[s]);
+        if(settings_save(&pf,sizeof pf)!=0){toast("SONG SAVED - LOOK NOT SAVED",1);return;}
+    }
     toast(ok?"SAVED":"SAVE FAILED",!ok);
 }
 static void do_load(uint32_t s){
@@ -410,6 +413,20 @@ static void do_new(void){
     ulk();after_load();toast("NEW SONG",0);
 }
 static void do_demo(void){stop_wait();lk();song_demo(&sg);ulk();after_load();toast("DEMO LOADED",0);}
+/* An edited DX7 patch (preset SG_DX7_CUSTOM) lives only in sg.dx7. Leaving it keeps a one-level copy in dx_bak so the MIXER cycle can
+ * come back to it (CUSTOM is its own stop), and replacing it with a factory patch needs a second press. RAM: 2*128 bytes + 1 flag byte. */
+static void dx_stash(uint32_t t){uint32_t i;for(i=0;i<128u;i++)dx_bak[t-1u][i]=sg.dx7[t-1u][i];dx_bak_ok|=(uint8_t)(1u<<(t-1u));}
+static uint32_t dx_confirm(uint32_t arg){                  /* 1 = pressed twice within 3 s, go ahead */
+    if(pend==7u&&pend_arg==arg&&(int32_t)(fm1_ms-pend_t)<0){pend=0;return 1;}
+    pend=7;pend_arg=arg;pend_t=fm1_ms+3000u;toast("REPLACE EDIT? AGAIN",1);return 0;
+}
+static void dx_factory(uint32_t t,uint32_t bank){          /* load factory patch bank into track t; the caller has confirmed if this drops an edit */
+    if(sg.trk[t].preset==SG_DX7_CUSTOM)dx_stash(t);
+    lk();db_select(&sg,t,bank);ulk();
+}
+static void dx_restore(uint32_t t){                        /* back to the stashed edit */
+    uint32_t i;lk();for(i=0;i<128u;i++)sg.dx7[t-1u][i]=dx_bak[t-1u][i];sg.trk[t].preset=SG_DX7_CUSTOM;ulk();
+}
 static void guarded(uint32_t act,uint32_t arg){            /* actions that drop the current song need a second press when it is unsaved */
     if(modified && !(pend==act && pend_arg==arg && (int32_t)(fm1_ms-pend_t)<0)){pend=act;pend_arg=arg;pend_t=fm1_ms+3000u;toast("UNSAVED! AGAIN",1);return;}
     pend=0;
@@ -1097,13 +1114,13 @@ static void app_main(void){
         }
         if(b&(1u<<BTN_SEQ)){if(page==PG_LIBRARY){page=PG_SONG;full=1;mk(0x1fu);}else stop_play();}
         if(b&(1u<<BTN_GLO)){if(page==PG_SONG||page==PG_PATTERN||page==PG_LYRICS){do_undo();if(page==PG_LYRICS)lyric_load();}else if(page==PG_GEN)gen_drop();}
-        if(b&(1u<<BTN_ARP)){if(page==PG_BANK&&db_toggle(&sg,trk,dx_op,dx_page)){modified=1;mk(0x1fu);}if(page==PG_STAGE||page==PG_DANCE){page=PG_LIBRARY;library_cursor=pf.slot;full=1;mk(0x3fu);}anchor=cstep;arp_c=0;if(page==PG_SONG && sg.nrows && sg.nrows<NROW){u_pushrows();lk();sg_row_dup(&sg,(int)crow);ulk();crow++;modified=1;mk(0x1Fu);}
+        if(b&(1u<<BTN_ARP)){if(page==PG_BANK){uint32_t r;lk();r=db_toggle(&sg,trk,dx_op,dx_page);ulk();if(r){modified=1;mk(0x1fu);}}if(page==PG_STAGE||page==PG_DANCE){page=PG_LIBRARY;library_cursor=pf.slot;full=1;mk(0x3fu);}anchor=cstep;arp_c=0;if(page==PG_SONG && sg.nrows && sg.nrows<NROW){u_pushrows();lk();sg_row_dup(&sg,(int)crow);ulk();crow++;modified=1;mk(0x1Fu);}
             if(page==PG_MIXER){sg.trk[trk].solo^=1u;modified=1;mk(0x1Fu);}
             if(page==PG_GEN)gen_go(1);
             }
         if(b&(1u<<BTN_REC)){
             if(page==PG_MIXER){page=PG_BANK;if(trk!=1&&trk!=2)trk=1;dx_page=0;dx_cursor=db_active(&sg,trk)&&sg.trk[trk].preset<SG_DX7_CUSTOM?sg.trk[trk].preset-SG_DX7_FIRST:0;full=1;mk(0x1fu);}
-            else if(page==PG_BANK){if(!dx_page){lk();db_select(&sg,trk,dx_cursor);ulk();modified=1;toast("DX7 LOADED - KEYS TRY",0);}else dx_page=0;mk(0x1fu);}
+            else if(page==PG_BANK){if(!dx_page){if(sg.trk[trk].preset!=SG_DX7_CUSTOM||dx_confirm(0x80u|(trk<<8)|dx_cursor)){dx_factory(trk,dx_cursor);modified=1;toast("DX7 LOADED - KEYS TRY",0);}}else dx_page=0;mk(0x1fu);}
             else if(page==PG_LIBRARY){
                 char nm[9];if(library_cursor!=pf.slot&&slot_name(library_cursor,nm)&&!(pend==4u&&pend_arg==library_cursor&&(int32_t)(now-pend_t)<0)){pend=4;pend_arg=library_cursor;pend_t=now+3000u;toast("OVERWRITE? REC AGAIN",1);}
                 else{pend=0;do_save(library_cursor);}mk(0x1fu);
@@ -1213,7 +1230,7 @@ static void app_main(void){
                 if(dS||dA){dx_op=(uint32_t)wr((int32_t)dx_op+dS+dA,6);mk(0x1fu);}
                 for(i=0;i<4;i++)if(dK[i]){
                     if(dx_page==9u&&i==1u){pf.pan[trk]=(uint8_t)cl((int32_t)pf.pan[trk]+dK[i]*3,0,127);en.pan[trk]=pf.pan[trk];}
-                    else db_set(&sg,trk,dx_op,dx_page,i,(uint32_t)cl((int32_t)db_value(&sg,trk,dx_op,dx_page,i)+dK[i],0,(int32_t)db_limit(dx_page,i)));
+                    else{lk();db_set(&sg,trk,dx_op,dx_page,i,(uint32_t)cl((int32_t)db_value(&sg,trk,dx_op,dx_page,i)+dK[i],0,(int32_t)db_limit(dx_page,i)));ulk();}
                     modified=1;mk(0x1fu);
                 }
             }
@@ -1242,8 +1259,15 @@ static void app_main(void){
         }else{
             if(dS){trk=(uint32_t)wr((int32_t)trk+dS,NTRK);mk(0x1Fu);}
             if(dA&&trk){
-                if(trk==1u||trk==2u){uint32_t pos=db_active(&sg,trk)?npst[trk]+(sg.trk[trk].preset==SG_DX7_CUSTOM?0:sg.trk[trk].preset-SG_DX7_FIRST):en_pre(trk,sg.trk[trk].preset);
-                    pos=(uint32_t)wr((int32_t)pos+dA,npst[trk]+DX7_BANK_N);if(pos>=npst[trk]){lk();db_select(&sg,trk,pos-npst[trk]);ulk();}else sg.trk[trk].preset=(uint8_t)pos;modified=1;
+                if(trk==1u||trk==2u){
+                    uint32_t cus=sg.trk[trk].preset==SG_DX7_CUSTOM,nc=npst[trk]+DX7_BANK_N,go=1;
+                    uint32_t tot=nc+((cus||(dx_bak_ok>>(trk-1u)&1u))?1u:0u);         /* classic presets, 8 factory DX7, then CUSTOM (only once there is an edit) */
+                    uint32_t pos=db_active(&sg,trk)?(cus?nc:npst[trk]+sg.trk[trk].preset-SG_DX7_FIRST):en_pre(trk,sg.trk[trk].preset);
+                    pos=(uint32_t)wr((int32_t)pos+dA,(int32_t)tot);
+                    if(pos>=nc)dx_restore(trk);
+                    else if(pos>=npst[trk]){if(!cus||dx_confirm((trk<<8)|pos))dx_factory(trk,pos-npst[trk]);else go=0;}
+                    else{if(cus)dx_stash(trk);sg.trk[trk].preset=(uint8_t)pos;}
+                    if(go)modified=1;
                 }else tweak(&sg.trk[trk].preset,dA,0,(int32_t)npst[trk]-1);mk(0x1Fu);
             }
             if(dP){tweak(&sg.bpm,dP,40,240);if(playing)en_post(&en,EN_BPM,sg.bpm,0,0);mk(1u);}

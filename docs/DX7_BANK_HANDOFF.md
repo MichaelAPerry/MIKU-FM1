@@ -24,6 +24,10 @@ Chords use four DX7 voices and bass uses one. The original formant singer,
 synthesized drums and four-track arrangement remain. Existing classic instrument
 IDs are retained, and existing songs keep their source unless explicitly changed.
 MIXER's ALGORITHM encoder can cycle the classic and DX7 families for chords/bass.
+Once a track has an edited patch, CUSTOM is its own last stop in that cycle. Leaving
+CUSTOM keeps a one-level copy (2 x 128 bytes of RAM, dropped on song load/new), so
+cycling back restores it. Moving from CUSTOM into a factory DX7 patch needs a
+second press (REPLACE EDIT? AGAIN); moving into a classic preset does not.
 No factory demo arrangement or approved genre lineup was silently replaced.
 
 ## Review actual firmware and audio
@@ -73,6 +77,8 @@ BANK is appended as page10; the previous nine page indices are unchanged.
   the candidate and separately names the loaded sound. Browsing alone does not
   change a sounding patch or create a note-on.
 - REC in BROWSE loads the displayed DX7 patch. KEYS play the loaded sound.
+  If the track holds an edited patch (CUSTOM), REC shows REPLACE EDIT? AGAIN and
+  needs a second press within 3 s.
   A patch load affects subsequent notes; a held voice keeps its patch snapshot.
 - EDIT advances parameter pages. PRESETS selects pages directly once a DX7 patch
   is loaded. REC from an edit page returns to BROWSE.
@@ -80,9 +86,12 @@ BANK is appended as page10; the previous nine page indices are unchanged.
   labeled fields. OP1 maps to the final operator in standard packed DX7 ordering.
 - ARP on OP FREQUENCY toggles ratio/fixed mode. ARP on MODULATION cycles LFO wave.
 - SAVE while stopped writes the song, actual patch bytes and existing visual
-  preferences. A long release tail must finish before a flash write; if not quiet
-  within800 ms, SAVE defers with TAIL PLAYING - SAVE AGAIN. This avoids erasing
-  flash while an unusually long DX7 tail is still being rendered.
+  preferences. SAVE first hushes the engine (EN_HUSH: panic plus a fast fade and
+  retirement of every DX7 voice, so release tails of seconds or minutes do not
+  matter) and waits for silence before the flash write. Only if the engine is
+  still not quiet within 800 ms does SAVE defer with TAIL PLAYING - SAVE AGAIN.
+  If the song saves but the look preferences do not, the message is SONG SAVED -
+  LOOK NOT SAVED.
 
 | Edit page | K1 | K2 | K3 | K4 |
 |---|---|---|---|---|

@@ -22,7 +22,7 @@ enum { CM_BLOCK, CM_UP, CM_DOWN, CM_UPDOWN, CM_STRUM, CM_UP32, CM_DOWN32, CM_UPD
 enum { D_KICK = 1, D_SNARE = 2, D_CLAP = 4, D_CHAT = 8, D_OHAT = 16, D_PERC = 32 };
 enum { SEC_NONE, SEC_INTRO, SEC_VERSE, SEC_CHORUS, SEC_BRIDGE, SEC_OUTRO, SEC_N };
 #define ROW_OFF 0xFFu                         /* pattern index: track silent in this row */
-typedef struct { uint8_t level, mute, solo, preset, vib, porta, breath, bright; } Trk;  /* level 0..127, preset 0..7 classic, 64..72 DX7 on chords/bass; voice 0..100 */
+typedef struct { uint8_t level, mute, solo, preset, vib, porta, breath, bright; } Trk;  /* level 0..127, preset 0..7 classic, 64..75 DX7 on chords/bass (SG_DX7_*); voice 0..100 */
 typedef struct { uint8_t pat[NTRK]; uint8_t sect; } Row;
 /* The voice's sound (STAGE knobs), 0..100 each unless noted. Defaults (sg_init) give 0.5's sound exactly. */
 enum { VC_DEEP, VC_LOW, VC_MIKU, VC_YOUNG, VC_TINY, VC_N };          /* character: formant size */
@@ -78,7 +78,11 @@ int un_pop(Undo *u, Song *g);                                 /* restore the new
 #define SONG_ENC_V2 (SONG_ENC_V1 + 16)                                                    /* 4492: version 2, still read */
 #define SONG_ENC_V3 (SONG_ENC_V1 + 32)                                                    /* 4508: legacy voice block */
 #define SG_DX7_FIRST 64u
-#define SG_DX7_CUSTOM 72u
+/* Preset IDs on CHORDS/BASS (v5 only): 64..64+DX7_BANK_N-1 factory voices (64+bank index), 74 edited (CUSTOM),
+ * 75 a voice loaded from a future imported user bank (USER). CUSTOM and USER play the embedded 128-byte snapshot. */
+#define SG_DX7_CUSTOM 74u
+#define SG_DX7_USER 75u
+#define SG_DX7_LAST 75u
 #define SONG_ENC_MAX (SONG_ENC_V3 + 256u) /* v5 DX7 snapshots; classic records retain their size */
 #define SONG_ENC_SIZE SONG_ENC_V3                                                        /* 4508: v4, same layout; vocal flag semantics */
 enum { SIO_OK = 0, SIO_SIZE = -1, SIO_MAGIC = -2, SIO_VERSION = -3, SIO_LEN = -4, SIO_CRC = -5, SIO_FIELD = -6 };

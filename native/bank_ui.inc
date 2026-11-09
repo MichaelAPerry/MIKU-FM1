@@ -13,7 +13,7 @@ static void pg_bank(uint32_t band){
     if(!band){head("DX7 BANK",dx_page?dx_pages[dx_page]:"SELECT BROWSE   REC LOAD",C_TEL);if(modified)cv_rect(228,38,5,5,C_PNK);return;}
     ui_panel(8,52,224,86,1);
     s[0]=0;cat(s,dx_page?"ALGO ":"FACTORY ");catn(s,dx_page?(uint32_t)p[110]+1u:dx_cursor+1u);
-    if(!dx_page)cat(s," / 8");else{cat(s," FB ");catn(s,p[111]&7u);}
+    if(!dx_page){cat(s," / ");catn(s,DX7_BANK_N);}else{cat(s," FB ");catn(s,p[111]&7u);}
     txt(16,57,&FONT_S,s,LOOK_MUTED,0);s[0]=0;cat(s,"6 OP");if(dx_page){cat(s," / ");catn(s,dx_op+1u);}txt(224,57,&FONT_S,s,C_TEL,2);
     txt(16,79,&FONT_L,name,C_WHITE,0);
     if(!dx_page){
@@ -25,7 +25,7 @@ static void pg_bank(uint32_t band){
     }
     if(dx_page==2u)txt(16,117,&FONT_S,(p[(5u-dx_op)*17u+15u]&1u)?"ARP MODE: FIXED":"ARP MODE: RATIO",C_PNK,0);
     else if(dx_page==6u){s[0]=0;cat(s,"ARP LFO WAVE ");catn(s,(p[116]>>1)&7u);txt(16,117,&FONT_S,s,C_PNK,0);}
-    else txt(16,117,&FONT_S,sg.trk[trk].preset==SG_DX7_CUSTOM?"EDITED PATCH":"FACTORY PATCH",C_PNK,0);
+    else txt(16,117,&FONT_S,sg.trk[trk].preset==SG_DX7_USER?"USER PATCH":sg.trk[trk].preset==SG_DX7_CUSTOM?"EDITED PATCH":"FACTORY PATCH",C_PNK,0);
     for(i=0;i<4;i++){
         int32_t x=i&1u?122:8,y=i<2?146:176;uint32_t v=dx_page==9u&&i==1u?pf.pan[trk]:db_value(&sg,trk,dx_op,dx_page,i),max=db_limit(dx_page,i);
         ui_panel(x,y,110,26,1);txt(x+6,y+3,&FONT_S,dx_labels[dx_page][i],LOOK_MUTED,0);s[0]=0;

@@ -413,7 +413,7 @@ static void do_new(void){
     ulk();after_load();toast("NEW SONG",0);
 }
 static void do_demo(void){stop_wait();lk();song_demo(&sg);ulk();after_load();toast("DEMO LOADED",0);}
-/* An edited DX7 patch (preset SG_DX7_CUSTOM) lives only in sg.dx7. Leaving it keeps a one-level copy in dx_bak so the MIXER cycle can
+/* An edited or user-bank DX7 patch (preset SG_DX7_CUSTOM / SG_DX7_USER) lives only in sg.dx7. Leaving it keeps a one-level copy in dx_bak so the MIXER cycle can
  * come back to it (CUSTOM is its own stop), and replacing it with a factory patch needs a second press. RAM: 2*128 bytes + 1 flag byte. */
 static void dx_stash(uint32_t t){uint32_t i;for(i=0;i<128u;i++)dx_bak[t-1u][i]=sg.dx7[t-1u][i];dx_bak_ok|=(uint8_t)(1u<<(t-1u));}
 static uint32_t dx_confirm(uint32_t arg){                  /* 1 = pressed twice within 3 s, go ahead */
@@ -421,7 +421,7 @@ static uint32_t dx_confirm(uint32_t arg){                  /* 1 = pressed twice 
     pend=7;pend_arg=arg;pend_t=fm1_ms+3000u;toast("REPLACE EDIT? AGAIN",1);return 0;
 }
 static void dx_factory(uint32_t t,uint32_t bank){          /* load factory patch bank into track t; the caller has confirmed if this drops an edit */
-    if(sg.trk[t].preset==SG_DX7_CUSTOM)dx_stash(t);
+    if(sg.trk[t].preset>=SG_DX7_CUSTOM)dx_stash(t);
     lk();db_select(&sg,t,bank);ulk();
 }
 static void dx_restore(uint32_t t){                        /* back to the stashed edit */
@@ -1120,7 +1120,7 @@ static void app_main(void){
             }
         if(b&(1u<<BTN_REC)){
             if(page==PG_MIXER){page=PG_BANK;if(trk!=1&&trk!=2)trk=1;dx_page=0;dx_cursor=db_active(&sg,trk)&&sg.trk[trk].preset<SG_DX7_CUSTOM?sg.trk[trk].preset-SG_DX7_FIRST:0;full=1;mk(0x1fu);}
-            else if(page==PG_BANK){if(!dx_page){if(sg.trk[trk].preset!=SG_DX7_CUSTOM||dx_confirm(0x80u|(trk<<8)|dx_cursor)){dx_factory(trk,dx_cursor);modified=1;toast("DX7 LOADED - KEYS TRY",0);}}else dx_page=0;mk(0x1fu);}
+            else if(page==PG_BANK){if(!dx_page){if(sg.trk[trk].preset<SG_DX7_CUSTOM||dx_confirm(0x80u|(trk<<8)|dx_cursor)){dx_factory(trk,dx_cursor);modified=1;toast("DX7 LOADED - KEYS TRY",0);}}else dx_page=0;mk(0x1fu);}
             else if(page==PG_LIBRARY){
                 char nm[9];if(library_cursor!=pf.slot&&slot_name(library_cursor,nm)&&!(pend==4u&&pend_arg==library_cursor&&(int32_t)(now-pend_t)<0)){pend=4;pend_arg=library_cursor;pend_t=now+3000u;toast("OVERWRITE? REC AGAIN",1);}
                 else{pend=0;do_save(library_cursor);}mk(0x1fu);
@@ -1260,8 +1260,8 @@ static void app_main(void){
             if(dS){trk=(uint32_t)wr((int32_t)trk+dS,NTRK);mk(0x1Fu);}
             if(dA&&trk){
                 if(trk==1u||trk==2u){
-                    uint32_t cus=sg.trk[trk].preset==SG_DX7_CUSTOM,nc=npst[trk]+DX7_BANK_N,go=1;
-                    uint32_t tot=nc+((cus||(dx_bak_ok>>(trk-1u)&1u))?1u:0u);         /* classic presets, 8 factory DX7, then CUSTOM (only once there is an edit) */
+                    uint32_t cus=sg.trk[trk].preset>=SG_DX7_CUSTOM,nc=npst[trk]+DX7_BANK_N,go=1;
+                    uint32_t tot=nc+((cus||(dx_bak_ok>>(trk-1u)&1u))?1u:0u);         /* classic presets, DX7_BANK_N factory DX7, then CUSTOM (only once there is an edit) */
                     uint32_t pos=db_active(&sg,trk)?(cus?nc:npst[trk]+sg.trk[trk].preset-SG_DX7_FIRST):en_pre(trk,sg.trk[trk].preset);
                     pos=(uint32_t)wr((int32_t)pos+dA,(int32_t)tot);
                     if(pos>=nc)dx_restore(trk);

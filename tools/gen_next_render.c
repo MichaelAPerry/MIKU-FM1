@@ -12,7 +12,7 @@ int main(int argc,char **argv){
     if(argc<4){fprintf(stderr,"usage: gen_next_render PREFIX STYLE SEED [ENERGY COMPLEXITY]\n");return 1;}
     GenNextCfg c={(uint16_t)atoi(argv[3]),(uint8_t)atoi(argv[2]),9,1,0,(uint8_t)(argc>4?atoi(argv[4]):75),(uint8_t)(argc>5?atoi(argv[5]):70)};
     sg_init(&song);if(!gen_next_song(&song,&c))return 2;
-    char path[1024];uint8_t data[SONG_ENC_SIZE];snprintf(path,sizeof path,"%s.mks",argv[1]);
+    char path[1024];uint8_t data[SONG_ENC_MAX];snprintf(path,sizeof path,"%s.mks",argv[1]);
     FILE *f=fopen(path,"wb");if(!f)return 3;fwrite(data,1,song_encode(&song,data,sizeof data),f);fclose(f);
     song.loop=0;en_init(&engine,&song);en_post(&engine,EN_PLAY,0,0,0);
     snprintf(path,sizeof path,"%s.wav",argv[1]);f=fopen(path,"wb");if(!f)return 3;

@@ -14,7 +14,7 @@ static void w32(uint8_t *p,uint32_t v){p[0]=(uint8_t)v;p[1]=(uint8_t)(v>>8);p[2]
 static uint32_t r32(const uint8_t *p){return p[0]|(uint32_t)p[1]<<8|(uint32_t)p[2]<<16|(uint32_t)p[3]<<24;}
 uint32_t song_encode(const Song *g,uint8_t *b,uint32_t cap){
     uint32_t i,t,p,s,k,o=0,dx=0,size;
-    for(t=1;t<=2;t++)if(g->trk[t].preset>=SG_DX7_FIRST&&g->trk[t].preset<=SG_DX7_CUSTOM)dx=1;
+    for(t=1;t<=2;t++)if(g->trk[t].preset>=SG_DX7_FIRST&&g->trk[t].preset<=SG_DX7_LAST)dx=1;
     size=dx?SONG_ENC_MAX:SONG_ENC_SIZE;
     if(cap<size)return 0;
     b[o++]='M';b[o++]='K';b[o++]='S';b[o++]='2';b[o++]=(uint8_t)(dx?5:4);b[o++]=0;
@@ -51,7 +51,7 @@ static int parse(const uint8_t *b,uint32_t ver,Song *d){
     if(q[0]<40||q[0]>240||q[1]>75||q[2]>127||(int8_t)q[3]<-24||(int8_t)q[3]>24||q[4]>1||q[5]>NROW)return SIO_FIELD;
     q+=6;
     for(t=0;t<NTRK;t++,q+=8)
-        if(q[0]>127||q[1]>1||q[2]>1||(q[3]>7&&!(ver==5&&(t==1||t==2)&&q[3]>=SG_DX7_FIRST&&q[3]<=SG_DX7_CUSTOM))||q[4]>100||q[5]>100||q[6]>100||q[7]>100)return SIO_FIELD;
+        if(q[0]>127||q[1]>1||q[2]>1||(q[3]>7&&!(ver==5&&(t==1||t==2)&&q[3]>=SG_DX7_FIRST&&q[3]<=SG_DX7_LAST))||q[4]>100||q[5]>100||q[6]>100||q[7]>100)return SIO_FIELD;
     for(i=0;i<NROW;i++,q+=5){
         for(t=0;t<NTRK;t++)if(q[t]>=NPAT&&q[t]!=ROW_OFF)return SIO_FIELD;
         if(q[4]>=SEC_N)return SIO_FIELD;

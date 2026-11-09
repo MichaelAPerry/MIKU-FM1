@@ -1,27 +1,28 @@
 /* SPDX-License-Identifier: GPL-3.0-only */
 #include "firmware/song/gen_next.h"
 #include "firmware/song/mora.h"
+#include "firmware/song/dx7_edit.h"
 /* No global RNG, libc, allocation or float. Candidate styles are review material, not an approved lineup. */
 typedef struct {
     const char *name;
     char tag[3];
-    uint8_t bpm, pre[3], degree[4], form[8], bars[8];
+    uint8_t bpm, dx[2], drum_pre, degree[4], form[8], bars[8];
     uint16_t kick, clap, hats, bass, vocal, chord;
 } GxStyle;
 static const GxStyle gx_style[GX_N] = {
-    {"HYPERPOP",{'H','Y','P'},164,{5,3,1},{0,5,3,4},
+    {"HYPERPOP",{'H','Y','P'},164,{0,1},1,{0,5,3,4},
      {SEC_INTRO,SEC_VERSE,SEC_BRIDGE,SEC_CHORUS,SEC_BRIDGE,SEC_CHORUS,SEC_OUTRO,0},{1,4,2,4,2,4,1,0},
      0x2941,0x1010,0xD555,0x6951,0x1555,0x4949},
-    {"FUTURE BASS",{'F','U','T'},148,{3,1,0},{5,3,0,4},
+    {"FUTURE BASS",{'F','U','T'},148,{2,3},0,{5,3,0,4},
      {SEC_INTRO,SEC_VERSE,SEC_BRIDGE,SEC_CHORUS,SEC_VERSE,SEC_BRIDGE,SEC_CHORUS,SEC_OUTRO},{2,4,2,4,2,2,4,2},
      0x0481,0x0100,0x5454,0x2491,0x1145,0x2491},
-    {"JERSEY CLUB",{'J','R','S'},140,{4,1,0},{0,0,5,6},
+    {"JERSEY CLUB",{'J','R','S'},140,{4,5},0,{0,0,5,6},
      {SEC_INTRO,SEC_CHORUS,SEC_VERSE,SEC_CHORUS,SEC_BRIDGE,SEC_CHORUS,SEC_OUTRO,0},{1,4,2,4,2,4,1,0},
      0x4949,0x1010,0x4444,0x4949,0x4949,0x0404},
-    {"DIGICORE",{'D','I','G'},172,{2,2,1},{0,6,5,3},
+    {"DIGICORE",{'D','I','G'},172,{6,7},1,{0,6,5,3},
      {SEC_INTRO,SEC_VERSE,SEC_CHORUS,SEC_BRIDGE,SEC_CHORUS,SEC_VERSE,SEC_OUTRO,0},{1,3,4,1,4,3,1,0},
      0x2181,0x1010,0xA955,0xA591,0x2565,0xA449},
-    {"IDOL POP",{'I','D','L'},132,{1,0,0},{0,4,5,3},
+    {"IDOL POP",{'I','D','L'},132,{8,9},0,{0,4,5,3},
      {SEC_INTRO,SEC_VERSE,SEC_BRIDGE,SEC_CHORUS,SEC_VERSE,SEC_BRIDGE,SEC_CHORUS,SEC_OUTRO},{2,4,2,4,4,2,4,2},
      0x1111,0x1010,0x5555,0x5555,0x1555,0x1515}
 };
@@ -185,7 +186,9 @@ int gen_next_song_ws(Song *g,const GenNextCfg *c,GenNextWorkspace *w) {
     }
     for(t=0;t<NTRK;t++)if(!(c->lock>>t&1)) {
         uint32_t seen=0;
-        if(t)g->trk[t].preset=gx_style[c->style].pre[t-1];
+        /* CHORDS/BASS get the style's factory DX7 voice pair. The engine plays the embedded snapshot, so copy it too. */
+        if(t==TR_CHORDS||t==TR_BASS)db_select(g,(uint32_t)t,gx_style[c->style].dx[t-TR_CHORDS]);
+        else if(t)g->trk[t].preset=gx_style[c->style].drum_pre;
         for(i=0;i<NPAT;i++)sg_clear_pat(g,t,i);
         for(r=0;r<g->nrows;r++) {
             i=w->index[t][r];g->row[r].pat[t]=(uint8_t)i;

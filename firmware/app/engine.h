@@ -14,7 +14,7 @@
 #include "firmware/audio/fmband/fmband.h"
 #include "firmware/audio/vfx/vfx.h"
 #include "firmware/audio/dx7/dx7.h"
-enum { EN_PLAY = 1, EN_STOP, EN_BPM, EN_ON, EN_OFF, EN_VOW, EN_PANIC, EN_RATE };   /* PLAY a=row b=loop-one-row; BPM a; ON a=trk b=note c=mora (VOCAL) / unused; OFF a=trk b=note; VOW a=mora; RATE a=ANIMAL speech rate 0..100 (session setting) */
+enum { EN_PLAY = 1, EN_STOP, EN_BPM, EN_ON, EN_OFF, EN_VOW, EN_PANIC, EN_RATE, EN_HUSH };   /* PLAY a=row b=loop-one-row; BPM a; ON a=trk b=note c=mora (VOCAL) / unused; OFF a=trk b=note; VOW a=mora; RATE a=ANIMAL speech rate 0..100 (session setting); HUSH = PANIC plus a fast fade-out of the DX7 tails (SAVE) */
 #define EN_QN 32u
 typedef struct { uint32_t due; uint8_t on, note, mora, vel, flags; uint16_t id; } EnVq;   /* a delayed vocal note event, including VF_SUSTAIN (on-beat) */
 #define EN_VQN 16u

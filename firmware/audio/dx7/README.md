@@ -32,7 +32,14 @@ The caller owns all state. dx_init chooses 1–4 voices, dx_patch validates the 
 and dx_render adds interleaved stereo Q15 to a caller buffer. Arbitrary block sizes
 are supported through per-voice64-frame caches. A note-off reaches a cached block's
 next envelope update within63 samples (~1.43 ms). Released carrier envelopes ramp
-the final block to zero and retire; no indefinitely allocated silent voices remain.
+the final block to zero and retire once every carrier is quiet (gain below 32768, a
+peak of 8 LSB or -72 dBFS at full mix) instead of waiting for the envelope to end; a
+slow release therefore frees its voice well before the envelope floor. A carrier that
+holds an audible L4 after key-off keeps its voice, as on a DX7, until the voice is stolen
+or dx_hush is called. dx_hush (used by SAVE) ramps every sounding voice to zero within two
+blocks and frees it. Stealing a sounding voice fades its next 64 samples out through a
+small per-synth tail buffer (DX_FADE) instead of cutting it. The LFO delay ramp detects
+its 32-bit wrap against the previous state, like MSFA's 64-bit overflow test.
 
 This is DX7-compatible synthesis, not a hardware-bit-exact claim. Original MSFA
 frequency/detune/envelope scaling remains approximate, the sine table differs by
@@ -56,6 +63,8 @@ tests. Reference fixtures are not used to generate device audio.
 Tests also exercise all32 algorithms, algorithm4/6 feedback0 versus7,17-frame versus
 256-frame exact output, A4 pitch by crossings, strict malformed-patch rejection,
 held-patch snapshot isolation, stealing, natural release and oscillator sync.
+tests/test_dx7_fixes.c covers the LFO delay for every value 0-99, quiet retirement, dx_hush,
+the steal fade and L4 sustain.
 Host ASan+UBSan runs use ASAN_OPTIONS=detect_leaks=0 because this environment does
 not support LeakSanitizer tracing. Actual target image/state/timing results belong
 in docs/DX7_BANK_HANDOFF.md; standalone object sizes are not final device budgets.

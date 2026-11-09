@@ -6,6 +6,7 @@
 #define DX_VOICES 4u
 #define DX_BLOCK 64u
 #define DX_PACKED 128u
+#define DX_FADE 64u /* samples over which a stolen voice's tail fades out */
 /* All state belongs to the caller; no heap, runtime table generation or libm. */
 typedef struct {
     uint8_t rates[4],levels[4],stage,down,rising,scale;
@@ -29,7 +30,8 @@ typedef struct {
     uint8_t patch[DX_PACKED],voices,level,pan;
     DxVoice voice[DX_VOICES];
     int32_t bus[2][DX_BLOCK];
-    int32_t gl,gr;uint32_t age,clock;
+    int32_t gl,gr,ghost[DX_FADE];uint32_t age,clock;
+    uint8_t gpos,glen;
 } DxSynth;
 uint32_t dx_patch_valid(const uint8_t packed[DX_PACKED]);
 void dx_init(DxSynth *s,uint32_t voices);
@@ -37,6 +39,8 @@ uint32_t dx_patch(DxSynth *s,const uint8_t packed[DX_PACKED]);
 void dx_note_on(DxSynth *s,uint8_t note,uint8_t velocity);
 void dx_note_off(DxSynth *s,uint8_t note);
 void dx_all_off(DxSynth *s);
+/* Fade every sounding voice to silence within two blocks and free it (SAVE, panic): no hard step. */
+void dx_hush(DxSynth *s);
 void dx_set_mix(DxSynth *s,uint8_t level,uint8_t pan);
 void dx_render(DxSynth *s,int32_t *stereo,uint32_t frames);
 uint32_t dx_active(const DxSynth *s);

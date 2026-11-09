@@ -90,7 +90,10 @@ static void command(Engine *e, uint32_t w) {
         else if (a == TR_BASS) {bs_note_off(&e->bs);dx_all_off(&e->dx[1]);}
         break;
     case EN_VOW: if (mora_vowel(a) < 5u) { e->vh = (uint8_t)mora_vowel(a); fv_set_vowel(&e->fv, e->vh); } break;
-    case EN_PANIC: voff(e); e->vqn = 0; ch_all_off(&e->ch); bs_note_off(&e->bs);dx_all_off(&e->dx[0]);dx_all_off(&e->dx[1]); break;
+    case EN_HUSH:
+    case EN_PANIC: voff(e); e->vqn = 0; ch_all_off(&e->ch); bs_note_off(&e->bs);dx_all_off(&e->dx[0]);dx_all_off(&e->dx[1]);
+        if ((w >> 24) == EN_HUSH) {dx_hush(&e->dx[0]);dx_hush(&e->dx[1]);}
+        break;
     }
 }
 static void vq_push(Engine *e, uint32_t on, uint32_t delay, const SqEvent *v, uint16_t id) {

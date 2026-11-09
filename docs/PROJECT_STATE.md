@@ -1,3 +1,7 @@
+## Current review handoff (2026-11-09)
+
+Read [CLAUDE_HANDOFF.md](../CLAUDE_HANDOFF.md) for current feature readiness and owner constraints. The older snapshots below are historical; optional native UVC code now exists but real camera operation is unverified, and the new wardrobe remains concept-only.
+
 # Feature branch state update (2026-11-08)
 
 The historical state below describes the original firmware. For the current development branch, see [NEXTGEN_DEVELOPMENT.md](NEXTGEN_DEVELOPMENT.md) and [HANDOFF.md](HANDOFF.md). Mandatory live fixes, native bass/drum additions and default visual-state integration are implemented and tested. Voice/lyrics/GEN/visual/pedal/companion experiments are explicitly separated from native-ready features. Final genres, new costumes, live USB and UVC remain unfinished/pending review; no full next-generation completion claim.

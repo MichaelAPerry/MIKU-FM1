@@ -204,11 +204,11 @@ static PerfState video_scene;
 static MjPerfCache video_cache __attribute__((section(".pool")));
 static uint32_t video_encoding,video_started,video_generation;
 static volatile uint32_t video_step_ticks,video_frame_ticks,video_encoded,video_failed,video_last_bytes;
-static volatile uint32_t video_total_bytes,video_min_bytes,video_max_bytes,video_total_ticks,video_rejected;
+static volatile uint32_t video_total_bytes,video_min_bytes,video_max_bytes,video_total_ticks,video_rejected,video_first_ticks,video_last_ticks;
 static void video_update(const PerfState *scene){
     uint32_t at,dt;int result;
 #if MIKU_VIDEO_BENCH
-    if(video_encoded>=3u || !scene->playing || scene->mouth>=5u)return; /* three frames under live vocal+band load */
+    if(video_encoded>=MIKU_VIDEO_BENCH_FRAMES || !scene->playing || scene->mouth>=5u)return; /* bounded frames under live vocal+band load */
     if(scene->effect&&scene->effect!=STFX_BEAMS&&scene->now_ms-scene->effect_epoch<480u)return; /* measure the expanded burst, not only launch pixels */
 #else
     if(!video_usb_active()){video_encoding=0;return;}
@@ -231,6 +231,8 @@ static void video_update(const PerfState *scene){
     video_encoding=0;dt=fm1_ticks()-video_started;if(dt>video_frame_ticks)video_frame_ticks=dt;
     if(result<0){video_failed++;return;}
     video_last_bytes=mj_size(&video_encoder);
+    if(!video_encoded)video_first_ticks=fm1_ticks();
+    video_last_ticks=fm1_ticks();
     video_total_ticks+=dt;video_total_bytes+=video_last_bytes;
     if(!video_min_bytes||video_last_bytes<video_min_bytes)video_min_bytes=video_last_bytes;
     if(video_last_bytes>video_max_bytes)video_max_bytes=video_last_bytes;
@@ -276,7 +278,7 @@ static void app_audio(int32_t *out,uint32_t n){
     if(ready){
         audio_calls++;audio_ticks+=c;audio_frames+=n;
         audio_dx_tracks=(en.pre[TR_CHORDS]>=SG_DX7_FIRST?1u:0u)|(en.pre[TR_BASS]>=SG_DX7_FIRST?2u:0u);
-        if(en.pos&0x10000u)audio_playing_frames+=n;
+        if((en.pos>>16)&1u)audio_playing_frames+=n;
     }
     if(ready){if(c>audio_hard_peak)audio_hard_peak=c;if(c>BUDGET_TICKS)audio_overruns++;}else audio_init_ticks=c;
     if(c>pk)pk=c;else pk-=pk>>6;
@@ -1259,7 +1261,7 @@ static void app_main(void){
         platform_poll();
         now=fm1_ms;
         ppos=en.pos;playing=ppos>>16&1u;
-        if(playing&&!(oldpos&0x10000u)){
+        if(playing&&!((oldpos>>16)&1u)){
             stage_profile.frames=stage_profile.last=stage_profile.interval_min=stage_profile.interval_max=stage_profile.draw_max=stage_profile.draw_ticks=0;
             dance_profile.frames=dance_profile.last=dance_profile.interval_min=dance_profile.interval_max=dance_profile.draw_max=dance_profile.draw_ticks=0;
         }

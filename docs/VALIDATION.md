@@ -38,7 +38,7 @@ on their FM-1. No device was accessed, flashed, or asked to run this branch.
   transmitted-frame/byte/interval counters. The actual patched-driver simulation
   reconstructs 150 consecutive frames, 180,000 bytes, with 66–67 ms frame
   intervals and no altered payload. Cached/reference encoders are byte-exact
-  across 1,152 wardrobe/background/effect/pose combinations. These are host
+  across 720 wardrobe/background/effect/pose combinations. These are host
   protocol/render checks, not OS webcam enumeration.
 - UVC stays a separate MIDI+UVC profile. USB audio and UVC both use EP4;
   combined operation is excluded rather than advertised without a transport

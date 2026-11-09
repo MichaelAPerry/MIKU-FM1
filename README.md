@@ -1,14 +1,5 @@
 # Miku-FM
 
-> Current DX7 milestone: [real six-operator renderer, dedicated BANK/operator editor, embedded patch saving, native video/audio evidence and current measurements](docs/DX7_BANK_HANDOFF.md). This supersedes earlier DX7-plan-only status.
-
-
-Feature-branch development now includes a ten-song library with four editable
-factory songs, paired outfit animation, reusable stage effects and native
-lyric/GEN controls. See [current handoff](CLAUDE_HANDOFF.md) and
-[native integration notes](docs/NEXTGEN_NATIVE_INTEGRATION.md) for validation,
-review images and remaining USB/hardware work. This is not a published release.
-
 **A singing songwriter firmware for the M-VAVE FM-1.** A tiny pixel singer sings your songs in Japanese, consonants and
 all, over FM chords, bass and drums. Shape her voice, write patterns or let her generate a whole song, and watch her dance.
 
@@ -27,15 +18,24 @@ real firmware package; the installer works in Chrome or Edge over USB).
 - **Her voice:** a formant voice synthesised live (no samples): 73 Japanese mora selections with their consonants, five characters
   from DEEP to TINY, languages (Japanese, animal babble, scat, vowels), tension, fry, whisper, a harmony voice, vowels on
   the beat; chorus, delay, reverb, drive, tremolo. Every knob shows a picture of what it does.
-- **The song:** four tracks (vocal, FM chords, bass, drums), 16 patterns per track, 64 rows with sections, mixer, swing,
-  undo, 10 song slots. GEN adds five contemporary candidates alongside POP, BALLAD, DANCE and CHIP, with track locks and new phrases.
-- **The singer:** her face mouths every vowel on STAGE; on DANCE she dances to the song.
-- **Status:** development builds (0.x). Runs on a real FM-1 (installed with the browser installer; songs save and load).
-  Controls: [docs/CONTROLS.md](docs/CONTROLS.md), manual: [docs/MANUAL.md](docs/MANUAL.md), what is measured:
-  [docs/VALIDATION.md](docs/VALIDATION.md).
+- **The song:** four tracks (vocal, chords, bass, drums), 16 patterns per track, 64 rows with sections, mixer, swing,
+  undo. **GEN** writes a whole song in nine styles: HYPERPOP, FUTURE BASS, JERSEY CLUB, DIGICORE and IDOL POP (new in 0.7, each with
+  its own DX7 chords and bass), and POP, BALLAD, DANCE and CHIP, with track locks, new phrases, energy and complexity.
+- **DX7 voices (0.7):** a six-operator FM engine (all 32 algorithms, feedback, envelopes, LFO, pitch bend, sustain, bass glide)
+  with ten original voices, every operator editable on the device and saved inside the song. A 32-voice user bank: import a DX7
+  cartridge or a single voice from Dexed or the website's [DX7 bank tool](https://michaelaperry.github.io/MIKU-FM1/bank.html) over
+  USB, store your own patches, export the bank as a .syx.
+- **MIDI keyboard (0.7):** USB or TRS notes play the current track; sustain pedal and pitch bend work on DX7 voices.
+- **Songs and stage (0.7):** 10 song slots with a LIBRARY page and four Japanese folk songs ready in slots 1 to 4; a LYRICS page to
+  edit the sung syllables; per-song LOOK with 12 outfits, backgrounds, frames and stage effects. Her face mouths every vowel on
+  STAGE; on DANCE she dances to the song. USB video output is not in 0.7.
+- **Guide:** [docs/MANUAL.md](docs/MANUAL.md) (also the website's [guide page](https://michaelaperry.github.io/MIKU-FM1/guide.html)),
+  every control: [docs/CONTROLS.md](docs/CONTROLS.md), what is measured: [docs/VALIDATION.md](docs/VALIDATION.md).
+- **Status:** development builds (0.x). Runs on a real FM-1 (installed with the browser installer; songs save and load). Not yet
+  tried against a real FM-1: DX7 SysEx over USB with Dexed and the bank tool.
 - **Other firmwares' data:** Miku-FM does not read other firmwares' projects or samples (see below). Back up first.
 - **Licence:** code GPL-3.0-only; the singer is Hatsune Miku fan art under Crypton's Piapro Character License (free and
-  non-commercial only): [LICENSING.md](LICENSING.md).
+  non-commercial only): [LICENSING.md](LICENSING.md). The ten DX7 voices are original project data.
 
 ## The older host prototype
 

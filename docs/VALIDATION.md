@@ -25,24 +25,45 @@ on their FM-1. No device was accessed, flashed, or asked to run this branch.
 - `python3 tests/test_native_video.py build/dinghy`: actual patched pinned
   Dinghy USB code passes fake-SIE descriptors/EP0/Probe/Commit/alt/payload/
   ownership/reset/MIDI rescue. This is not OS webcam enumeration.
-- Default and `--video` native build commands were attempted. Both stop because
-  the JieLi toolchain is absent. Downloading it is denied by outbound policy
-  (`pkgman.jieliapp.com`, HTTP CONNECT 403). AC79 SDK is also not installed.
-  Consequently linked image/static/pool budgets, changed-package emulator smoke,
-  and before/after **emulator** screenshots remain **unrun**. No substitute SDK,
-  checksum bypass, budget relaxation, or fabricated firmware was used.
-- UVC remains a separate MIDI+UVC profile with USB audio/CDC disabled. Sustained
-  fps/JPEG sizes/frame times under playback and macOS/Windows/Linux enumeration
-  are **unverified**, so sharing with USB audio has not been approved.
+- Native CI for `22d3a68` completed default, `--video` and `--video-bench`
+  builds using the authentic JieLi toolchain and pinned AC79 SDK, existing image/
+  static/pool limits, default/video emulator smoke, patched-driver integration,
+  and target JPEG benchmark. [Completed run](https://github.com/MichaelAPerry/MIKU-FM1/actions/runs/42713309601).
+  This supersedes the initial local-download blocker; no substitute SDK or
+  verification bypass was used. Later code adds the descriptor correction and
+  complete-song comparisons, so its own native checks remain required.
+- USB-video implementation now includes UVC camera-terminal bitmap geometry,
+  automatic suspend/resume and stalled-endpoint recovery, session-stamped JPEG
+  ownership, phase-based packet pacing, a fixed decoded-row cache, and volatile
+  transmitted-frame/byte/interval counters. The actual patched-driver simulation
+  reconstructs 150 consecutive frames, 180,000 bytes, with 66–67 ms frame
+  intervals and no altered payload. Cached/reference encoders are byte-exact
+  across 1,152 wardrobe/background/effect/pose combinations. These are host
+  protocol/render checks, not OS webcam enumeration.
+- UVC stays a separate MIDI+UVC profile. USB audio and UVC both use EP4;
+  combined operation is excluded rather than advertised without a transport
+  redesign. Physical sustained FPS, JPEG frame timing and macOS/Windows/Linux
+  enumeration remain unverified under the owner's hardware restriction.
+- Development CI now measures one complete generated HYPERPOP arrangement on
+  STAGE/DANCE against an identically instrumented v0.7 source archive, requires
+  both DX7 tracks, checks worst callback and zero candidate overruns, and tests
+  DANCE interval spread against 10 ms (10% of its 100 ms period). Mouth changes
+  on STAGE are event driven, so mouth intervals are not a fixed-rate criterion.
+  Measurements reset on PLAY and stop accumulating draw gaps after STOP.
+  Successful CI retains all 11 BANK pages for both tracks, and LIBRARY stopped/
+  playing views before/after; failed runs retain diagnostic evidence distinctly.
+  See the commit-stamped `native-ci` manifest/gallery when generated. No pending
+  or failed run is proof of acceptance.
 - CLUB STAB / DIGI GROWL / DIGI PLUCK trims are unchanged: owner listening review
   is pending. No subjective listening claim is made. The additional reported
   hardware issue (pose-size jumps) is addressed in the generated wardrobe assets;
   visual review and later hardware confirmation remain required.
 
-See [evidence and reproduction](evidence/smooth-and-seen/README.md). Draft network
-additions were saved for the compiler, SDK and GitHub API hosts; saving the draft
-has not applied them to this running instance. Draft PR creation needs GitHub
-API access in addition to the working HTTPS Git proxy.
+See [evidence and reproduction](evidence/smooth-and-seen/README.md) and
+[development validation runs](https://github.com/MichaelAPerry/MIKU-FM1/actions/workflows/native-development.yml).
+Cloud downloads and GitHub API access are still restricted locally. CI provides
+an authenticated draft-PR creation route and attaches measured evidence to this
+feature branch only; it cannot merge, push main, publish or flash a device.
 
 # Validation
 

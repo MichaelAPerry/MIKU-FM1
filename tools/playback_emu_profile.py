@@ -21,7 +21,7 @@ def main():
     p.add_argument('--symbols',type=Path,required=True)
     p.add_argument('--out',type=Path,required=True)
     p.add_argument('--page',choices=['stage','dance'],required=True)
-    p.add_argument('--ms',type=int,default=65000)
+    p.add_argument('--ms',type=int,default=35000)
     p.add_argument('--allow-overruns',action='store_true',help='retain failing baseline measurements; never use for candidate acceptance')
     a=p.parse_args()
     if a.ms<8000:p.error('measure at least eight seconds')

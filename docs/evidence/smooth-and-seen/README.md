@@ -21,7 +21,9 @@ and USB-send APIs; these images establish text layout only, not timings or USB.
 | BANK browse | ![Before](host-bank-browse-before.png) | ![After](host-bank-browse-after.png) |
 | LIBRARY playing | ![Before](host-library-playing-before.png) | ![After](host-library-playing-after.png) |
 
-Required emulator images for every edit page are pending the real toolchain.
+The [native CI gallery](native-ci/README.md), once generated, contains actual
+emulator images for all edit pages and both tracks, with a manifest identifying
+the exact tested source and package hashes. Failed runs are labeled separately.
 `tests/test_page_text.py` executes real `pg_bank`/`pg_library`, applies pinned
 FONT_S 8x16 and FONT_L 16x32 advances, and rejects text bounds or intersections.
 It covers both tracks, all 11 bank pages, all operators, factory/user sources,
@@ -64,3 +66,22 @@ USER BANK naming: stop playback, browse USER with ARP, select the slot, press
 EDIT; SELECT chooses a letter, K1 changes its printable character, REC saves and
 GLO cancels. Persistence uses the existing checked blob storage and does not
 change MKS2. A loaded song's embedded copy remains independent of its bank slot.
+
+
+USB-video follow-up: the camera terminal now declares its three-byte control
+bitmap consistently with its 18-byte descriptor; suspend and endpoint timeout
+no longer permanently stop the selected stream. A generation attached to every
+immutable JPEG rejects stale publications across alt changes, reset and resume.
+The JPEG sampler uses twelve cached 61-pixel index rows (732 index bytes), with
+no framebuffer or heap. All wardrobe encoder fixtures compare the cached JPEG
+byte-for-byte to the reference. The adapter test sends 150 consecutive frames
+through the real patched driver and reconstructs each frame exactly.
+
+`video_usb.session_frames/session_bytes`, `first_frame_ms/last_frame_ms`, and
+`interval_min_ms/interval_max_ms` measure completed transfers for the current
+stream. Average delivered FPS is `(session_frames-1)*1000/(last_frame_ms-first_frame_ms)`
+when at least two frames complete; encoding counters alone do not establish
+transmission. `video_min_bytes/video_max_bytes/video_total_bytes` describe
+encoder output, and `video_step_ticks/video_frame_ticks/video_total_ticks`
+describe encoding cost. Counters remain diagnostic until measured on an actual
+host after the owner's review/main-integration process.

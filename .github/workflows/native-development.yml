@@ -1,20 +1,22 @@
-# Development validation only: no deployment, release, device install or main push.
+# Development validation only. Never installs a device, deploys, releases, or pushes main.
 name: Native development validation
 on:
   push:
     branches: [feature/0.8-smooth-and-seen]
-  pull_request:
+    paths-ignore: ['docs/**']
   workflow_dispatch:
 permissions:
   contents: read
-  pull-requests: write
 concurrency:
   group: native-development-${{ github.ref }}
   cancel-in-progress: true
 jobs:
-  validate:
+  build:
     runs-on: ubuntu-24.04
-    timeout-minutes: 45
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
@@ -27,6 +29,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          mkdir -p build/evidence/0.8-ci
           python3 -m pip install -r tools/requirements-dev.txt
           cmake -S . -B build/host -DCMAKE_BUILD_TYPE=Release
           cmake --build build/host --parallel 2
@@ -40,17 +43,21 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          exec > >(tee build/evidence/0.8-ci/draft-pr.log) 2>&1
           existing=$(gh pr list --head feature/0.8-smooth-and-seen --base main --state open --json number --jq '.[0].number // empty')
           if [ -z "$existing" ]; then
             gh pr create --draft --base main --head feature/0.8-smooth-and-seen --title 'Miku-FM 0.8: smooth and seen' --body-file docs/PR_0_8_DRAFT.md
           else
             gh pr view "$existing" --json url --jq .url
           fi
+          gh pr list --head feature/0.8-smooth-and-seen --base main --state open --json number,url,isDraft > build/evidence/0.8-ci/draft-pr.json
+          number=$(gh pr list --head feature/0.8-smooth-and-seen --base main --state open --json number --jq '.[0].number // empty')
+          if [ -n "$number" ]; then gh pr view "$number" --json number,url,comments,reviews > build/evidence/0.8-ci/pr-review.json; fi
       - name: Authentic JieLi toolchain and pinned SDK
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p build/tools
+          exec > >(tee build/evidence/0.8-ci/toolchain-setup.log) 2>&1
           git clone https://github.com/zvenson/dinghy.git build/dinghy
           git -C build/dinghy checkout --detach f77bf03283bbb2c05294b01cdad68a30b410f93d
           bash build/dinghy/tools/get_toolchain.sh "$RUNNER_TEMP/jieli"
@@ -66,40 +73,137 @@ jobs:
           git -C build/fm1-emu-src checkout --detach 9de1ef053a3c4bf56f16f05b5f0de193f4608a1d
           rustup toolchain install 1.99.1 --profile minimal
           cargo +1.99.1 build --locked --release --manifest-path build/fm1-emu-src/Cargo.toml -p fm1-emu
-      - name: Instrumented v0.7 playback baseline
+      - name: Instrumented v0.7 build
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p build/baseline-0.7 build/evidence/0.8-ci
+          mkdir -p build/baseline-0.7
           git archive v0.7 | tar -x -C build/baseline-0.7
           python3 tools/instrument_playback_baseline.py build/baseline-0.7
           bash build/baseline-0.7/native/build.sh 2>&1 | tee build/evidence/0.8-ci/baseline-build.log
-          for page in stage dance; do
-            python3 tools/playback_emu_profile.py --emu build/fm1-emu-src/target/release/fm1-emu --package build/baseline-0.7/build/native/miku-fm.fwsc --symbols build/baseline-0.7/build/native/miku-fm-symbols.txt --page "$page" --allow-overruns --out "build/evidence/0.8-ci/$page-baseline"
-          done
-      - name: Native profiles, budgets, USB integration and emulator smoke
+      - name: Candidate builds, resource checks and smoke
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p build/evidence/0.8-ci
           bash native/build.sh 2>&1 | tee build/evidence/0.8-ci/default-build.log
           bash tools/emu_smoke.sh build/native/miku-fm.fwsc build/evidence/0.8-ci/default-smoke "$PWD/build/fm1-emu-src/target/release/fm1-emu"
           bash native/build.sh --video 2>&1 | tee build/evidence/0.8-ci/video-build.log
           bash tools/emu_smoke.sh build/native/miku-fm-video.fwsc build/evidence/0.8-ci/video-smoke "$PWD/build/fm1-emu-src/target/release/fm1-emu"
           python3 tests/test_native_video.py build/dinghy
-          for page in stage dance; do
-            python3 tools/playback_emu_profile.py --emu build/fm1-emu-src/target/release/fm1-emu --package build/native/miku-fm.fwsc --symbols build/native/miku-fm-symbols.txt --page "$page" --out "build/evidence/0.8-ci/$page-default"
-          done
           bash native/build.sh --video-bench 2>&1 | tee build/evidence/0.8-ci/video-bench-build.log
           python3 tools/video_emu_bench.py --emu build/fm1-emu-src/target/release/fm1-emu --out build/evidence/0.8-ci/jpeg-bench
           python3 tools/video_bench_report.py build/evidence/0.8-ci/jpeg-bench
           cp build/native/*resources.json build/evidence/0.8-ci/
-      - name: Retain development packages and evidence
+      - name: Retain native inputs and build evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: native-development-${{ github.sha }}
+          name: native-build-${{ github.sha }}
           path: |
-            build/evidence/0.8-ci/
             build/native/
+            build/baseline-0.7/build/native/
+            build/fm1-emu-src/target/release/fm1-emu
+            build/evidence/0.8-ci/
           if-no-files-found: warn
+  measure:
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { output: stage-baseline, flavor: baseline, page: stage }
+          - { output: dance-baseline, flavor: baseline, page: dance }
+          - { output: stage-default, flavor: candidate, page: stage }
+          - { output: dance-default, flavor: candidate, page: dance }
+          - { output: pages-before, flavor: baseline, page: capture }
+          - { output: pages-after, flavor: candidate, page: capture }
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: native-build-${{ github.sha }}
+          path: build
+      - name: Measure complete song or capture UI pages
+        env:
+          FLAVOR: ${{ matrix.flavor }}
+          PAGE: ${{ matrix.page }}
+          OUTPUT: ${{ matrix.output }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install -r tools/requirements-dev.txt
+          chmod +x build/fm1-emu-src/target/release/fm1-emu
+          prefix=build/native/miku-fm
+          extra=()
+          if [ "$FLAVOR" = baseline ]; then prefix=build/baseline-0.7/build/native/miku-fm; extra=(--allow-overruns); fi
+          if [ "$PAGE" = capture ]; then
+            python3 tools/capture_bank_library_emu.py --emu build/fm1-emu-src/target/release/fm1-emu --package "$prefix.fwsc" --out "build/evidence/0.8-ci/$OUTPUT" 2>&1 | tee "build/evidence/0.8-ci/$OUTPUT-report.log"
+          else
+            python3 tools/playback_emu_profile.py --emu build/fm1-emu-src/target/release/fm1-emu --package "$prefix.fwsc" --symbols "$prefix-symbols.txt" --page "$PAGE" "${extra[@]}" --out "build/evidence/0.8-ci/$OUTPUT" 2>&1 | tee "build/evidence/0.8-ci/$OUTPUT-report.log"
+          fi
+      - name: Stage measurement evidence
+        if: always()
+        env:
+          OUTPUT: ${{ matrix.output }}
+        run: |
+          mkdir -p review-upload
+          if [ -d "build/evidence/0.8-ci/$OUTPUT" ]; then cp -r "build/evidence/0.8-ci/$OUTPUT" review-upload/; fi
+          if [ -f "build/evidence/0.8-ci/$OUTPUT-report.log" ]; then cp "build/evidence/0.8-ci/$OUTPUT-report.log" review-upload/; fi
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: native-measurement-${{ matrix.output }}-${{ github.sha }}
+          path: review-upload/
+          if-no-files-found: warn
+  evidence:
+    needs: [build, measure]
+    if: always() && github.event_name == 'push' && github.ref == 'refs/heads/feature/0.8-smooth-and-seen'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: true
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: native-build-${{ github.sha }}
+          path: build
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        if: needs.build.result == 'success'
+        with:
+          pattern: native-measurement-*-${{ github.sha }}
+          path: build/evidence/0.8-ci
+          merge-multiple: true
+      - name: Check playback acceptance
+        id: performance
+        if: needs.build.result == 'success' && needs.measure.result == 'success'
+        run: python3 tools/compare_playback_profiles.py build/evidence/0.8-ci
+      - name: Attach measured evidence to the review branch
+        if: always()
+        env:
+          VALIDATION_STATUS: ${{ needs.build.result == 'success' && needs.measure.result == 'success' && steps.performance.outcome == 'success' && 'success' || 'failure' }}
+          VERIFIED_SHA: ${{ github.sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          current=$(git ls-remote origin refs/heads/feature/0.8-smooth-and-seen | cut -f1)
+          if [ "$current" != "$VERIFIED_SHA" ]; then
+            echo 'Branch advanced; retain artifacts without overwriting newer work.'
+            exit 0
+          fi
+          destination=docs/evidence/smooth-and-seen/native-ci
+          extra=()
+          if [ "$VALIDATION_STATUS" != success ]; then destination=docs/evidence/smooth-and-seen/native-ci-failure-${VERIFIED_SHA:0:8}; extra=(--incomplete); fi
+          python3 tools/save_native_review_evidence.py build/evidence/0.8-ci "$destination" "$VERIFIED_SHA" "${extra[@]}"
+          git add "$destination"
+          if git diff --cached --quiet; then exit 0; fi
+          git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m 'Attach native 0.8 emulator measurements and page captures'
+          git push origin HEAD:refs/heads/feature/0.8-smooth-and-seen

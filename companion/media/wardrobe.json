@@ -1,0 +1,74 @@
+[
+  {
+    "id": "original",
+    "name": "ORIGINAL",
+    "faces": "original-face.png",
+    "stage": "original-stage.png"
+  },
+  {
+    "id": "encore",
+    "name": "ENCORE",
+    "faces": "encore-face.png",
+    "stage": "encore-stage.png"
+  },
+  {
+    "id": "off-duty",
+    "name": "OFF DUTY",
+    "faces": "off-duty-face.png",
+    "stage": "off-duty-stage.png"
+  },
+  {
+    "id": "retro-wave",
+    "name": "RETRO WAVE",
+    "faces": "retro-wave-face.png",
+    "stage": "retro-wave-stage.png"
+  },
+  {
+    "id": "prism",
+    "name": "PRISM",
+    "faces": "prism-face.png",
+    "stage": "prism-stage.png"
+  },
+  {
+    "id": "neon-punk",
+    "name": "NEON PUNK",
+    "faces": "neon-punk-face.png",
+    "stage": "neon-punk-stage.png"
+  },
+  {
+    "id": "city-beat",
+    "name": "CITY BEAT",
+    "faces": "city-beat-face.png",
+    "stage": "city-beat-stage.png"
+  },
+  {
+    "id": "signal-suit",
+    "name": "SIGNAL SUIT",
+    "faces": "signal-suit-face.png",
+    "stage": "signal-suit-stage.png"
+  },
+  {
+    "id": "summer-beat",
+    "name": "SUMMER BEAT",
+    "faces": "summer-beat-face.png",
+    "stage": "summer-beat-stage.png"
+  },
+  {
+    "id": "snow-glow",
+    "name": "SNOW GLOW",
+    "faces": "snow-glow-face.png",
+    "stage": "snow-glow-stage.png"
+  },
+  {
+    "id": "festival",
+    "name": "FESTIVAL",
+    "faces": "festival-face.png",
+    "stage": "festival-stage.png"
+  },
+  {
+    "id": "moon-circuit",
+    "name": "MOON CIRCUIT",
+    "faces": "moon-circuit-face.png",
+    "stage": "moon-circuit-stage.png"
+  }
+]

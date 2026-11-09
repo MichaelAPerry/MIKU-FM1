@@ -4,15 +4,22 @@
 <title>MIKU firmware performance review</title>
 <style>
 body{margin:0;background:#0c1428;color:#ecf5ff;font:16px system-ui,sans-serif;max-width:900px;margin:auto;padding:24px}h1{font-size:25px}canvas{display:block;width:min(80vw,480px);height:auto;image-rendering:pixelated;margin:24px auto;background:#0c1428;border:1px solid #304364}label{display:block;margin:16px 0}audio{width:100%}#status{min-height:3em;color:#40ded1}small{display:block;color:#a9b9d0;margin-top:20px;line-height:1.6}a{color:#f77bb4}
+.scene-controls{display:flex;flex-wrap:wrap;gap:12px}.scene-controls label{margin:4px 0}.performer{display:flex;justify-content:center;align-items:flex-start;gap:16px}#stage{width:min(55vw,480px)}#face{width:min(22vw,180px);margin-top:24px}select{max-width:180px}
 </style>
 <h1>MIKU firmware performance review</h1>
 <p>Load a matching firmware-state JSON and rendered WAV. This view plays recorded state from the real firmware engine; live USB transport is not connected.</p>
 <label>Firmware state <input id="state" type="file" accept=".json,application/json"></label>
 <label>Matching audio <input id="wave" type="file" accept=".wav,audio/wav"></label>
 <audio id="audio" controls></audio>
-<canvas id="stage" width="240" height="240" aria-label="Original full-body singer and actual firmware mouth state"></canvas>
+<div class="scene-controls"><label>Outfit <select id="outfit"><option value="original">ORIGINAL</option></select></label>
+<label>Background <select id="background"><option>Original</option><option>Grid</option><option>Horizon</option></select></label>
+<label>Frame <select id="frame"><option>None</option><option>Corners</option><option>Rails</option></select></label>
+<label>Stage effect <select id="effect"><option>Off</option><option>Fireworks</option><option>Sparkles</option><option>Confetti</option><option>Smoke</option><option>Beams</option></select></label>
+<label>Effect intensity <input id="intensity" type="range" min="0" max="100" value="80"></label></div>
+<div class="performer"><canvas id="stage" width="240" height="240" aria-label="Selected full-body outfit driven by firmware performance state"></canvas>
+<canvas id="face" width="90" height="90" aria-label="Matching portrait with actual vocal-engine mouth state"></canvas></div>
 <p id="status" role="status">Waiting for firmware state.</p>
-<small>Original outfit only. Background lighting is an engineering review effect, pending creative approval. The mouth indicator reports actual vocal-engine output; full-body mouth compositing and live USB synchronization remain unfinished.</small>
+<small>Twelve paired outfits and compact effects use the exact packed firmware pixels. The portrait follows the actual vocal-engine mouth state. Scene options are review controls; artwork remains pending creative approval. Live USB event transport is not connected here; the separate native UVC build renders its own selected scene.</small>
 <small>This work depicts Crypton Future Media, INC.'s character “Hatsune Miku” under the <a href="https://piapro.jp/license/pcl/summary">Piapro Character License</a>, free and non-commercial only. © Crypton Future Media, INC. www.piapro.net. Unofficial fan project. <a href="../LICENSING.md">Licensing</a>.</small>
 <script src="review.js"></script>
 </html>

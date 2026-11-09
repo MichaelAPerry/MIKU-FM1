@@ -18,6 +18,17 @@ with sync_playwright() as p:
  print(page.locator('#status').inner_text())
  assert page.evaluate("document.querySelector('#stage').getContext('2d').getImageData(0,0,240,240).data.some(x=>x>100)")
  assert page.evaluate('atlas.naturalWidth')==488
+ page.wait_for_function("document.querySelector('#outfit').options.length===12")
+ for index in range(12):
+  page.locator('#outfit').select_option(index=index)
+  page.wait_for_function("atlas.complete&&atlas.naturalWidth===488&&portrait.complete&&portrait.naturalWidth===1080")
+ page.locator('#background').select_option(index=1)
+ page.locator('#frame').select_option(index=1)
+ page.locator('#effect').select_option(index=1)
+ page.evaluate("document.querySelector('#audio').currentTime=2.48")
+ page.wait_for_timeout(150)
+ page.screenshot(path=str(root/'build/evidence/companion-wardrobe-effects.png'))
+ assert page.evaluate("faceContext.getImageData(0,0,90,90).data.some(x=>x>100)")
  page.locator('#state').set_input_files({'name':'invalid.json','mimeType':'application/json','buffer':b'{"format":"wrong"}'})
  page.wait_for_function("document.querySelector('#status').textContent.includes('Unsupported')")
  assert not errors,errors

@@ -61,10 +61,11 @@
   <h2>Your FM-1, in the browser.</h2>
   <p>This is the firmware package itself, emulated by <a href="https://github.com/joakimeriksson/fm1-emu">fm1-emu</a>. Click it, then:</p>
   <ol>
-    <li><b>PLAY</b>: she sings the demo 「おとのはこ」. <b>HOME</b> steps through STAGE, DANCE, SONG, PATTERN, MIXER and GEN.</li>
+    <li><b>PLAY</b>: she sings the demo 「おとのはこ」. <b>HOME</b> steps through STAGE, DANCE, SONG, PATTERN, MIXER, GEN, LYRICS, the LOOK page, the song LIBRARY and the DX7 BANK.</li>
     <li>On SONG, PATTERN, MIXER and GEN, <b>FX · SCL · ENV · LFO</b> pick the track (vocal, chords, bass, drums); the keys play it. On PATTERN a key writes the step.</li>
     <li>On STAGE the knobs shape her voice: <b>FX</b>, <b>ENV</b>, <b>LFO</b> switch the four knobs (effects, envelope, vibrato), and holding one of them, or <b>SEL</b>, opens a deeper layer (source, effect details, articulation, harmony). <b>SELECT</b> turns the syllable dial.</li>
     <li>On GEN: knob 1 the style, 2 the key, 3 major or minor, 4 the seed; <b>REC</b> writes a new song, <b>PLAY</b> plays it.</li>
+    <li>On MIXER, <b>REC</b> opens the DX7 BANK: <b>SELECT</b> browses, <b>REC</b> loads, <b>EDIT</b> opens the operator pages and the knobs edit them.</li>
   </ol>
   <iframe class="emu" src="fm1-emu/" title="Miku-FM in the fm1-emu emulator" loading="lazy" allow="autoplay"></iframe>
   <p class="note"><a href="fm1-emu/">Open the emulator on its own page ↗</a></p>
@@ -96,9 +97,11 @@
   <h2>A whole little studio.</h2>
   <div class="grid">
     <div class="card feat"><span class="num">VOICE</span><h3>She really sings.</h3><p>A formant voice, synthesised live: 70 Japanese morae with their consonants, five characters, whisper, fry, a harmony voice, chorus, delay, reverb, drive. No samples.</p></div>
-    <div class="card feat"><span class="num">SONG</span><h3>Four tracks, one song.</h3><p>Vocal, FM chords (8 sounds), bass (4), drums (2 kits). 16 patterns per track, 64 rows with sections, swing, undo, 8 song slots.</p></div>
-    <div class="card feat"><span class="num">GEN</span><h3>Dream one up.</h3><p>POP, BALLAD, DANCE or CHIP in any key. Lock what you like, regenerate the rest, or ask for a new phrase. Keep it or drop it.</p></div>
-    <div class="card feat"><span class="num">STAGE</span><h3>She is on stage.</h3><p>A pixel face that mouths every vowel, and a full-body dancer that moves to your song.</p></div>
+    <div class="card feat"><span class="num">SONG</span><h3>Four tracks, one song.</h3><p>Vocal, chords, bass and drums. Classic FM sounds or six-operator DX7 voices on chords and bass. 16 patterns per track, 64 rows with sections, swing, undo, 10 song slots with four Japanese folk songs ready to play.</p></div>
+    <div class="card feat"><span class="num">GEN</span><h3>Dream one up.</h3><p>HYPERPOP, FUTURE BASS, JERSEY CLUB, DIGICORE, IDOL POP, or the classic POP, BALLAD, DANCE and CHIP, in any key. Each new style brings its own DX7 chords and bass. Lock what you like, regenerate the rest. Keep it or drop it.</p></div>
+    <div class="card feat"><span class="num">STAGE</span><h3>She is on stage.</h3><p>A pixel face that mouths every vowel and a full-body dancer that moves to your song, in 12 outfits, with backgrounds, frames and stage effects chosen per song.</p></div>
+    <div class="card feat"><span class="num">DX7</span><h3>A real six-operator FM bank.</h3><p>All 32 DX7 algorithms, feedback, envelopes, LFO, pitch bend, sustain and bass glide. Ten original voices, every operator editable on the device, and your edits saved inside the song.</p></div>
+    <div class="card feat"><span class="num">MIDI</span><h3>Bring your cartridges.</h3><p>Send a DX7 bank or single voice from Dexed over USB and keep 32 voices of your own. Play any track from a MIDI keyboard, with sustain pedal and pitch bend.</p></div>
   </div>
 </section>
 
@@ -129,7 +132,8 @@
     whose base comes from <a href="https://github.com/hugelton/Felucca">Felucca</a> by Leo Kuroshita
     (<a href="https://hugelton.com">Hügelton Instruments</a>) with the changes of <a href="https://github.com/isod89/sloop-fm1">SLOOP</a>
     (isod89). This site's installer is Felucca's web installer; releases are built and attested by the Firmware Hub's shared
-    builder. The emulator is <a href="https://github.com/joakimeriksson/fm1-emu">fm1-emu</a> by Joakim Eriksson (MIT).</p>
+    builder. The emulator is <a href="https://github.com/joakimeriksson/fm1-emu">fm1-emu</a> by Joakim Eriksson (MIT).
+    The DX7 voices are rendered by an adaptation of Google's <a href="https://github.com/google/music-synthesizer-for-android">Music Synthesizer for Android</a> (Apache-2.0).</p>
 </section>
 
 <footer>
@@ -140,6 +144,6 @@
   この作品はピアプロ・キャラクター・ライセンスに基づいてクリプトン・フューチャー・メディア株式会社のキャラクター「初音ミク」を描いたものです。
   © Crypton Future Media, INC. www.piapro.net · 「初音ミク」 is a registered trademark of Crypton Future Media, INC.;
   VOCALOID of Yamaha Corporation. Miku-FM uses no Crypton or Yamaha voice data: its voice is its own synthesis.<br>
-  Limits: 8 song slots, 16 patterns per track, 64 rows, 4/4. The browser emulator is not a measure of the FM-1's CPU.
+  Limits: 10 song slots, 16 patterns per track, 64 rows, 4/4. The browser emulator is not a measure of the FM-1's CPU.
 </footer>
 </main></body></html>

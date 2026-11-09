@@ -28,6 +28,46 @@ def source_path(parent, name):
     return path if path.is_absolute() else parent / path
 
 
+def opaque_pixel(pixel):
+    red, green, blue, alpha = pixel
+    magenta = ((red - 255) ** 2 + green ** 2 + (blue - 255) ** 2 < 105 ** 2 or
+               (min(red, blue) - green > 140 and red > 170 and blue > 170 and abs(red - blue) < 60))
+    return alpha >= 128 and not magenta
+
+
+def recover_boxes(path, cols, rows):
+    # Independently inspect full-width/full-height background gutters. The
+    # generated art may have shorter portrait rows than body rows; equal-grid
+    # division alone can silently import a neighboring cell's hair or hat.
+    with Image.open(path) as src:
+        im = src.convert("RGBA")
+    occupied_x, occupied_y = [False] * im.width, [False] * im.height
+    for pos, pixel in enumerate(getattr(im, "get_flattened_data", im.getdata)()):
+        if opaque_pixel(pixel):
+            occupied_x[pos % im.width] = True
+            occupied_y[pos // im.width] = True
+    axes = []
+    for occupied, count, window in [(occupied_x, cols, .15), (occupied_y, rows, .28)]:
+        length, edges = len(occupied), [0]
+        for index in range(1, count):
+            centre = index * length / count
+            lo = max(edges[-1] + 8, round(centre - length / count * window))
+            hi = min(length - 8, round(centre + length / count * window))
+            mids, run = [], []
+            for pos in range(lo, hi + 1):
+                if pos < hi and not occupied[pos]:
+                    run.append(pos)
+                else:
+                    if len(run) >= 2:
+                        mids.append((run[0] + run[-1] + 1) // 2)
+                    run = []
+            edges.append(min(mids, key=lambda v: abs(v - centre)) if mids else round(centre))
+        edges.append(length)
+        axes.append(edges)
+    xx, yy = axes
+    return [(xx[x], yy[y], xx[x + 1], yy[y + 1]) for y in range(rows) for x in range(cols)], axes
+
+
 def sheet(path, cols, rows, boxes=None):
     with Image.open(path) as src:
         im = src.convert("RGBA")
@@ -43,13 +83,7 @@ def sheet(path, cols, rows, boxes=None):
     for index, box in enumerate(boxes):
         cell = im.crop(box)
         cw, ch = cell.size
-        # Same broad magenta-key family as original asset recovery, evaluated
-        # independently here. No crop or compositing changes the source image.
-        foreground = []
-        for red, green, blue, alpha in getattr(cell, "get_flattened_data", cell.getdata)():
-            magenta = ((red - 255) ** 2 + green ** 2 + (blue - 255) ** 2 < 105 ** 2 or
-                       (min(red, blue) - green > 140 and red > 170 and blue > 170 and abs(red - blue) < 60))
-            foreground.append(alpha > 0 and not magenta)
+        foreground = [opaque_pixel(pixel) for pixel in getattr(cell, "get_flattened_data", cell.getdata)()]
         visible = sum(foreground)
         if visible < cw * ch // 100:
             raise ValueError(f"{path}: frame {index} blank/less than1% foreground")
@@ -118,16 +152,18 @@ def main():
         try:
             if paired:
                 path = source_path(args.manifest.parent, paired)
-                with Image.open(path) as im:
-                    width, height = im.size
-                boxes = [(x * width // 4, y * height // 5,
-                          (x + 1) * width // 4, (y + 1) * height // 5)
-                         for y in range(5) for x in range(4)]
+                boxes, axes = recover_boxes(path, 4, 5)
+                row["source_grid_boundaries"] = {"x": axes[0], "y": axes[1]}
                 row["faces"], fs = sheet(path, 4, 3, boxes[:12])
                 row["stage"], ss = sheet(path, 4, 2, boxes[12:])
             else:
-                row["faces"], fs = sheet(source_path(args.manifest.parent, faces), 4, 3)
-                row["stage"], ss = sheet(source_path(args.manifest.parent, stage), 4, 2)
+                face_path = source_path(args.manifest.parent, faces)
+                stage_path = source_path(args.manifest.parent, stage)
+                face_boxes, face_axes = recover_boxes(face_path, 4, 3)
+                stage_boxes, stage_axes = recover_boxes(stage_path, 4, 2)
+                row["source_grid_boundaries"] = {"faces": face_axes, "stage": stage_axes}
+                row["faces"], fs = sheet(face_path, 4, 3, face_boxes)
+                row["stage"], ss = sheet(stage_path, 4, 2, stage_boxes)
             pair = (row["faces"]["sha256"], row["stage"]["sha256"])
             if pair in seen_pairs:
                 report["errors"].append(f"{name}: duplicate complete source pair masquerades as another outfit")
@@ -135,7 +171,7 @@ def main():
             row["ready"] = True
             for kind in ["faces", "stage"]:
                 if not row[kind]["uniform_cell_sizes"]:
-                    report["warnings"].append(f"{name}: {kind} source uses floored grid boundaries differing by one pixel; inspect contact sheet for cross-cell bleed")
+                    report["warnings"].append(f"{name}: {kind} source has unequal grid cells; inspect recovered gutters/contact sheet for cross-cell bleed")
                 if row[kind]["distinct_frames"] == 1:
                     report["warnings"].append(f"{name}: all {kind} frames identical; inspect expressions/choreography")
             # Evidence pairs include every expression and pose, not only one

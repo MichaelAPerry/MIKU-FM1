@@ -1,47 +1,9 @@
 <!doctype html>
 <!-- SPDX-License-Identifier: GPL-3.0-only -->
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Send DX7 cartridge</title>
-<style>body{font:16px system-ui,sans-serif;max-width:34em;margin:2em auto;padding:0 16px}button,select{font:inherit;margin:.3em 0}#log{white-space:pre-wrap;color:#555}</style>
-</head><body>
-<h1>Send a DX7 cartridge to the FM-1</h1>
-<p>Loads a .syx file (a DX7 32-voice bulk dump or a single voice) and sends it to a MIDI output through Web MIDI. Then press REC on the FM-1 within 10 seconds. Needs a browser with Web MIDI (Chrome, Edge) and the FM-1 running MIKU-FM connected over USB.</p>
-<p><input type="file" id="f" accept=".syx,.SYX"></p>
-<p><select id="o"></select> <button id="b" disabled>Send</button></p>
-<p id="log"></p>
-<script>
-"use strict";
-var data=null,out=null,log=document.getElementById("log"),sel=document.getElementById("o"),btn=document.getElementById("b");
-function say(t){log.textContent=t}
-function frames(u8){ // split the file into F0..F7 messages; only Yamaha (43) frames of the two DX7 kinds are sent
-  var r=[],i=0;
-  while(i<u8.length){
-    if(u8[i]!==0xF0){i++;continue}
-    var j=i+1;while(j<u8.length&&u8[j]!==0xF7)j++;
-    if(j>=u8.length)break;
-    var n=j-i-1;
-    if(u8[i+1]===0x43&&((n===4102&&u8[i+3]===9)||(n===161&&u8[i+3]===0)))r.push(u8.slice(i,j+1));
-    i=j+1;
-  }
-  return r;
-}
-document.getElementById("f").onchange=function(e){
-  var f=e.target.files[0];if(!f)return;
-  f.arrayBuffer().then(function(b){
-    data=frames(new Uint8Array(b));
-    say(data.length?data.length+" DX7 message(s) found in "+f.name+".":"No DX7 bulk dump or single voice found in "+f.name+".");
-    btn.disabled=!data.length||!out;
-  });
-};
-btn.onclick=function(){
-  var o=out&&out.outputs.get(sel.value);if(!o||!data)return;
-  data.forEach(function(m,k){setTimeout(function(){o.send(m)},k*300)});
-  say("Sent "+data.length+" message(s) to "+o.name+". Press REC on the FM-1.");
-};
-if(!navigator.requestMIDIAccess){say("Web MIDI is not available in this browser.")}
-else navigator.requestMIDIAccess({sysex:true}).then(function(a){
-  out=a;
-  function fill(){sel.innerHTML="";a.outputs.forEach(function(p){var x=document.createElement("option");x.value=p.id;x.textContent=p.name;sel.appendChild(x)});btn.disabled=!data||!data.length||!sel.options.length}
-  a.onstatechange=fill;fill();
-},function(){say("MIDI access (with SysEx) was refused.")});
-</script></body></html>
+<title>Miku-FM · DX7 bank tool</title>
+<meta http-equiv="refresh" content="0; url=bank.html"><link rel="canonical" href="bank.html">
+</head><body style="font:16px system-ui,sans-serif;background:#0a1230;color:#eef6ff;padding:16px">
+<p>This page has moved: the <a href="bank.html" style="color:#3fe0d0">DX7 bank tool</a>.</p>
+<script>location.replace("bank.html")</script>
+</body></html>

@@ -159,3 +159,10 @@ add_test(NAME playback_edits COMMAND playback_edit_tests)
 if(NOT MSVC)
  add_test(NAME page_text COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tests/test_page_text.py ${CMAKE_SOURCE_DIR} ${CMAKE_C_COMPILER})
 endif()
+# The DX7 bank tool (site/bank.html, site/js/dx7syx.js): the factory .syx is generated from assets/dx7/factory.packed, the page's
+# JS packed <-> VCED conversion is checked against the firmware's C code (needs node for the JS half; skipped without it).
+add_test(NAME dx7_factory_syx COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tools/dx7_factory_syx.py --check)
+add_test(NAME guide_html COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tools/guide_html.py --check)   # site/guide.html is docs/MANUAL.md rendered
+add_executable(dx7_vectors tests/dx7_vectors.c)
+target_link_libraries(dx7_vectors PRIVATE miku_song)
+add_test(NAME bank_tool COMMAND ${Python3_EXECUTABLE} -I ${CMAKE_SOURCE_DIR}/tests/test_bank_tool.py ${CMAKE_SOURCE_DIR} $<TARGET_FILE:dx7_vectors> ${CMAKE_BINARY_DIR}/dx7_vectors.json)

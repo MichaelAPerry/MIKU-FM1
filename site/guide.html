@@ -1,0 +1,132 @@
+<!doctype html>
+<!-- SPDX-License-Identifier: GPL-3.0-only -->
+<!-- Generated from docs/MANUAL.md by tools/guide_html.py: edit the manual, not this file. -->
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Miku-FM · guide</title>
+<meta name="description" content="The Miku-FM 0.7 user guide: every page, the song generator, lyrics, looks, the song library, the DX7 voices, importing a cartridge and MIDI in.">
+<link rel="icon" href="media/favicon-32.png"><link rel="apple-touch-icon" href="media/apple-touch-icon.png">
+<link rel="stylesheet" href="site.css">
+</head>
+<body class="page"><main>
+<div class="top">
+  <div class="brand">Miku<span>-FM</span> · <span style="color:var(--dim);font-weight:500">guide</span></div>
+  <nav><a href="./">Home</a><a href="guide.html" class="here">Guide</a><a href="bank.html">DX7 bank tool</a><a href="install.html">Install</a></nav>
+</div>
+<header>
+  <p class="label">USER GUIDE · M-VAVE FM-1 · MIKU-FM 0.7</p>
+  <h1>Miku<span>-FM</span> guide<i>.</i></h1>
+  <p>Miku-FM is a songwriter for the M-VAVE FM-1 with a singer on its screen. Four tracks (VOCAL, CHORDS, BASS, DRUMS), patterns, an arrangement, a mixer, a song generator, lyrics, DX7 voices you can edit and import, and ten song slots. This guide covers what version 0.7 does <b>today</b>. The same text is on the website's <a href="guide.html">guide page</a>; every control in one table is in <a href="https://github.com/MichaelAPerry/MIKU-FM1/blob/main/docs/CONTROLS.md">CONTROLS</a>.</p>
+  <nav class="card toc" aria-label="Contents"><a href="#getting-started">Getting started</a> <a href="#how-a-song-is-built">How a song is built</a> <a href="#stage">STAGE</a> <a href="#dance">DANCE</a> <a href="#song">SONG</a> <a href="#pattern">PATTERN</a> <a href="#mixer">MIXER</a> <a href="#gen">GEN</a> <a href="#lyrics">LYRICS</a> <a href="#look">LOOK</a> <a href="#library">LIBRARY</a> <a href="#slots-and-saving">Slots and saving</a> <a href="#bank-the-dx7-voices">BANK: the DX7 voices</a> <a href="#importing-a-cartridge-from-dexed-or-the-bank-tool">Importing a cartridge from Dexed or the bank tool</a> <a href="#midi-keyboard-in">MIDI keyboard in</a> <a href="#other-firmwares-limits-and-when-something-goes-wrong">Other firmwares, limits, and when something goes wrong</a> <a href="#more-detail">More detail</a></nav>
+</header>
+<div class="guide">
+<section id="getting-started">
+<h2>Getting started</h2>
+<ul><li><b>Install.</b> Use the <a href="install.html">installer page</a> in Chrome or Edge with a USB data cable. To go back, the same page restores the official firmware. If anything goes wrong, hold <b>OCT-</b> while switching on: the USB rescue, from which a firmware installs again. After two crashes at boot the FM-1 goes there by itself. See <a href="https://github.com/MichaelAPerry/MIKU-FM1/blob/main/docs/INSTALL.md">INSTALL</a>.</li><li><b>First sound.</b> At power-on the FM-1 loads the slot you last used. The first time it is slot 1, the folk song SAKURA SAKURA. Press <b>PLAY</b> and she sings.</li><li><b>Pages.</b> <b>HOME</b> steps through ten pages and back to the first: STAGE, DANCE, SONG, PATTERN, MIXER, GEN, LYRICS, LOOK, LIBRARY and BANK. The page name is at the top of the screen.</li><li><b>Keys.</b> The 27 keys play the current track's instrument on every page. On STAGE, DANCE and LIBRARY that is always the voice. <b>OCT-</b> and <b>OCT+</b> move the keys two octaves either way (not saved).</li><li><b>Tracks.</b> <b>FX / SCL / ENV / LFO</b> pick the current track (VOCAL, CHORDS, BASS, DRUMS) on most pages; the lit button is the track. On STAGE and DANCE they shape the voice instead. On LYRICS, LIBRARY and BANK they do the jobs listed under each page.</li><li><b>Play and stop.</b> <b>PLAY</b> plays the song from the cursor row (on PATTERN and LYRICS: it loops the cursor row). <b>SEQ</b> stops.</li><li><b>Save.</b> A tap on <b>SAVE</b> (stopped) keeps the song and its look in the current slot. Hold it for the slot menu. See <a href="#slots-and-saving">Slots and saving</a>.</li></ul>
+</section>
+<section id="how-a-song-is-built">
+<h2>How a song is built</h2>
+<ul><li>A <b>pattern</b> is one bar of 16 sixteenth steps for one track. Each track has 16 patterns.</li><li>The <b>song</b> is a list of up to 64 <b>rows</b>. A row names one pattern per track (or silence) and carries a section label (INTRO, VERSE, CHORUS, BRIDGE, OUTRO). Rows play one after another; reusing a pattern in several rows is the point.</li><li>The <b>mixer</b> has a level, pan, sound, mute and solo per track, plus swing, tempo and master for the song.</li><li>The vocal sings <b>morae</b> (a, i, u, e, o, ka, ki, ... n): each vocal step carries its mora. The mora gives the consonant and the vowel. The consonant is a short sound at the start of the note (30-70 ms, the same at any pitch or tempo), then the vowel. A live key or a legato note articulates the consonant too, without restarting the note.</li><li>A song also carries its voice settings (STAGE), its DX7 patches (BANK) and, on the device, its look (LOOK).</li></ul>
+</section>
+<section id="stage">
+<h2>STAGE</h2>
+<p>STAGE is the voice's home: the keys always sing here, and every control shapes her voice. Her mouth follows the voice; her face blinks and smiles on PLAY.</p>
+<ul><li><b>SELECT</b> turns the syllable dial under her face: the pink syllable under the pointer is the one the keys sing (and the one PATTERN writes). Selection is silent, including while holding a key.</li><li><b>SCL</b> (a short press) switches the language: JAPANESE sings the syllables as written; ANIMAL turns every held note into random babble with little pitch jumps, like an animal-game voice; SCAT sings da, ba, bi, do on eighth notes while a note is held; VOWELS drops the consonants. In ANIMAL, hold <b>SCL</b> and turn <b>PRESETS</b> for the speech rate (0 slow, 100 fast, 50 default; not saved).</li><li><b>ALGORITHM</b> sets her character, the size of the voice: DEEP, LOW, MIKU (the default), YOUNG, TINY. <b>PRESETS</b> is the tempo.</li><li><b>ARP</b> opens the song LIBRARY.</li><li>The four knobs work in banks. VOICE (the default): breath, brightness, glide, level. <b>FX</b>: chorus, delay (a dotted eighth at the song tempo), reverb, drive. <b>ENV</b>: attack, release, scoop (sliding up into each note), human (small drifts that make her sound alive). <b>LFO</b>: vibrato depth, rate and delay, tremolo. Press the bank's button again to go back to VOICE. Turning a knob shows a ring gauge and a picture of what it does.</li><li><b>Hold</b> a button (0.4 s) for a deeper layer; its button blinks, and holding it again goes back to VOICE. <b>Hold SCL</b> (SEL): tension, fry (a growl an octave down), whisper, formant. <b>Hold FX</b>: reverb size, delay time, feedback, chorus rate. <b>Hold ENV</b>: consonant length, consonant level, vowel speed, and ON BEAT (the vowel lands on the beat). <b>Hold LFO</b>: a harmony voice at an interval (off, an octave down, a third, a fourth, a fifth, an octave up) with its own mix, detune and character.</li></ul>
+<p>All of this is saved with the song. The CPU figure on STAGE shows what it costs: harmony and the effects together roughly double the audio load.</p>
+</section>
+<section id="dance">
+<h2>DANCE</h2>
+<p>The singer full-body, dancing: she sways on the beat, sings while the vocal sounds, throws her arms up in the chorus and bows when the song stops. The knobs, SELECT, SCL and ALGORITHM do what they do on STAGE. <b>EDIT</b> opens LOOK.</p>
+</section>
+<section id="song">
+<h2>SONG</h2>
+<p>The arrangement: row number, section, and the four pattern numbers (-- = that track is silent in the row). The playing row has a yellow bar.</p>
+<ul><li><b>SELECT</b> picks the row. <b>FX / SCL / ENV / LFO</b> pick the column (the track). <b>PRESETS</b> sets the pattern of that cell (-- = silent). <b>ALGORITHM</b> labels the section.</li><li><b>EDIT</b> inserts a blank row before the cursor, <b>ARP</b> duplicates the row, <b>REC</b> deletes it, <b>GLO</b> undoes (eight steps).</li><li><b>KNOB 1</b> loops the song (right = on). <b>KNOB 2</b> tempo. <b>KNOB 3</b> transposes VOCAL, CHORDS and BASS by up to 24 semitones. <b>KNOB 4</b> master level.</li></ul>
+</section>
+<section id="pattern">
+<h2>PATTERN</h2>
+<p>The current track's pattern in the cursor row: a piano roll for VOCAL, CHORDS and BASS, a six-line grid for DRUMS. A yellow bar marks the playing step.</p>
+<ul><li><b>SELECT</b> picks the step; a key writes it. VOCAL: the key is the note, <b>ALGORITHM</b> the mora, <b>KNOB 1</b> the length. CHORDS: the key is the root, <b>ALGORITHM</b> the quality (MAJ, MIN, 7, MAJ7, MIN7, SUS4, SUS2, DIM, AUG, ADD9), <b>KNOB 2</b> how it plays (block, arps, strum). BASS: the key is the note, <b>ALGORITHM</b> adds accent or slide. DRUMS: keys 1-6 switch kick, snare, clap, closed hat, open hat and perc on and off at the step, keys 7-12 their accents.</li><li><b>KNOB 2</b> is the velocity for VOCAL and BASS. <b>KNOB 3</b> transposes the whole pattern. <b>KNOB 4</b> moves the cursor row. <b>PRESETS</b> picks the pattern for this track in this row.</li><li><b>REC</b> clears the step. <b>EDIT</b> duplicates the pattern into a free one so you can vary it. <b>ARP</b> copies (tap: this step; hold ARP and turn SELECT: a range); <b>ARP + EDIT</b> pastes. <b>GLO</b> undoes.</li></ul>
+<p>Edits while the song plays are allowed: single steps change at once; changes to the row list or undo pause the sequencer for a few milliseconds.</p>
+</section>
+<section id="mixer">
+<h2>MIXER</h2>
+<p>Four tracks: name, sound, level, pan, mute and solo. <b>SELECT</b> picks the track. <b>ALGORITHM</b> picks its sound: CHORDS bells, E.piano, chip arp, pad, organ, pluck, marimba, clav; BASS FM, sub, chip square, acid, sub drop, hard acid; DRUMS 808, chip, punch, digital. On CHORDS and BASS it goes on past those into the ten DX7 voices. <b>KNOB 1</b> level, <b>KNOB 2</b> pan (a device setting), <b>KNOB 3</b> swing, <b>KNOB 4</b> master, <b>PRESETS</b> tempo, <b>EDIT</b> mute, <b>ARP</b> solo. <b>REC</b> opens the DX7 BANK.</p>
+</section>
+<section id="gen">
+<h2>GEN</h2>
+<p>The generator writes a song for you, as ordinary patterns and rows: everything it makes can be edited on the other pages.</p>
+<ol><li><b>KNOB 1</b> picks the style. Nine of them: HYPERPOP, FUTURE BASS, JERSEY CLUB, DIGICORE, IDOL POP, then POP, BALLAD, DANCE and CHIP. <b>KNOB 2</b> is the key and <b>KNOB 3</b> major or minor. <b>KNOB 4</b> is the seed (<b>ALGORITHM</b> moves it by 100): the same settings always give the same song. <b>PRESETS</b> is the tempo.</li><li><b>REC</b> writes a whole song: sections, chords, bass, a sung melody with lyrics, drums. The five newer styles bring their own tempo and their own DX7 chords and bass. The song you had is replaced (it comes back with <b>GLO</b>).</li><li>Hold <b>EDIT</b> and turn <b>KNOB 2</b> (ENERGY) or <b>KNOB 3</b> (COMPLEXITY) to shape the five newer styles: how open or busy the drums are and how many fills and hat rolls there are.</li><li><b>Lock</b> a track to keep it: press its button (FX / SCL / ENV / LFO) a second time on GEN. With a track locked, REC keeps the rows and the locked track and rewrites the rest to fit: lock CHORDS and press REC for a new melody, bass and drums over the same chords (also over chords you wrote).</li><li><b>ARP</b> writes a new <b>phrase</b>: the pattern of the current track in the cursor row (<b>SELECT</b> picks the row), a different one each press.</li><li>Each REC or ARP is a <b>take</b>: <b>EDIT</b> keeps it, <b>GLO</b> drops it and brings back the song as it was. Leaving the page keeps it.</li></ol>
+<p>The melody stays in the key and ends each section on the chord's root; the lyrics are random morae (sing-able, not words). GEN settings and locks are not saved.</p>
+</section>
+<section id="lyrics">
+<h2>LYRICS</h2>
+<p>LYRICS edits the sung syllables of the vocal pattern in the cursor row, four at a time, without touching the piano roll. Each line shows the syllable (or REST or HOLD), its length in steps, its note, and its marks.</p>
+<ul><li><b>SELECT</b> picks the syllable. <b>ALGORITHM</b> changes it: REST, HOLD (the previous vowel carried on to a new note) and the morae. A key sets that syllable's note and sings it.</li><li><b>KNOB 1</b> is the length (1-16 steps), <b>KNOB 2</b> the note by semitones, <b>KNOB 3</b> the vocal pattern of the row, <b>KNOB 4</b> the row, <b>PRESETS</b> the tempo.</li><li><b>FX / SCL / ENV / LFO</b> toggle the marks on the syllable: WORD (the end of a word), PHRASE (the end of a phrase), SEP (a new onset instead of LEGATO) and HOLD.</li><li><b>EDIT</b> inserts a syllable, <b>REC</b> deletes it, <b>ARP</b> (tap) copies the whole phrase and <b>ARP + EDIT</b> pastes it over another pattern, so one lyric can sing a different melody. <b>GLO</b> undoes.</li></ul>
+<p>A phrase has to fit in one bar of 16 steps. If a pattern has long or overlapping notes, LYRICS asks you to fix their lengths on PATTERN first.</p>
+</section>
+<section id="look">
+<h2>LOOK</h2>
+<p>LOOK is the singer's stage for the song you have loaded. <b>SELECT</b> picks one of 12 outfits (a portrait, a dancing body, a set of stage colours). Then change what you like:</p>
+<ul><li><b>KNOB 1</b>: the background (ORIGINAL, GRID, HORIZON, CONCERT, LED WALL).</li><li><b>KNOB 2</b>: the frame (NONE, CORNERS, RAILS).</li><li><b>KNOB 3</b> or <b>ALGORITHM</b>: the stage effect (OFF, FIREWORKS, SPARKLES, CONFETTI, SMOKE, BEAMS). <b>REC</b> fires it once.</li><li><b>KNOB 4</b>: the effect's intensity. <b>PRESETS</b>: STYLE or WARM colouring.</li><li><b>EDIT</b> goes back to DANCE. Stop the song and press <b>SAVE</b> to keep the look; a mark on the page shows unsaved changes.</li></ul>
+<p>The look belongs to the <b>slot</b> on the device: each of the ten slots keeps its own. It is not part of an exported song file.</p>
+</section>
+<section id="library">
+<h2>LIBRARY</h2>
+<p>LIBRARY lists the ten slots, four at a time, with the name of each song. Slots 1 to 4 start as four Japanese folk songs, written as ordinary songs you can edit: SAKURA SAKURA, TORYANSE, FURUSATO and KOJO NO TSUKI. Slots 5 to 10 start empty. <b>STAGE or DANCE: ARP</b> opens it; <b>HOME</b> gets there too.</p>
+<ul><li><b>SELECT</b> or <b>PRESETS</b> moves the cursor. <b>PLAY</b> loads the song under the cursor and plays it. <b>SEQ</b> goes back to SONG.</li><li><b>FX</b> or <b>EDIT</b> loads it (an empty slot says EMPTY SLOT; EDIT starts a new song there). <b>SCL</b> starts a new song in the slot. <b>ENV</b> restores a factory song to how it was shipped (slots 1 to 4). <b>LFO</b> opens its LOOK.</li><li><b>REC</b> saves the current song into the slot under the cursor. If another song is there, REC asks a second time: OVERWRITE? REC AGAIN.</li><li>Anything that would drop unsaved changes asks first: UNSAVED! AGAIN. Press the same control again within 3 seconds.</li></ul>
+</section>
+<section id="slots-and-saving">
+<h2>Slots and saving</h2>
+<p>The FM-1 keeps 10 songs. At power-on it loads the slot you last saved or opened. <b>SAVE</b> (tap, stopped) writes the song and its look to the current slot (SAVED, or SAVE FAILED). Saving erases flash, so it only happens while stopped; the sound drops out for a moment.</p>
+<p>Hold <b>SAVE</b> (about a third of a second, or turn SELECT while holding it) for the slot menu: <b>SELECT</b> picks the slot, then, still holding SAVE, press <b>FX</b> to load it, <b>SCL</b> for a new empty song or <b>ENV</b> for the demo 「おとのはこ」. Release SAVE: if you pressed none of those, the song is saved into the slot shown.</p>
+<p>A song is 4,508 bytes and CRC-checked: a damaged slot is refused, never half-loaded. Songs carry their own copy of the DX7 voices they use, so they play the same whatever is in your user bank.</p>
+</section>
+<section id="bank-the-dx7-voices">
+<h2>BANK: the DX7 voices</h2>
+<p>BANK is the six-operator FM engine. Chords and bass can each use a DX7 voice instead of the classic sounds. The engine has all 32 DX7 algorithms, feedback, envelopes, LFO, pitch bend, sustain and bass glide. Ten original voices come with Miku-FM: HYPER GLAS and HYPER 808, FUTURE SAW and FUTURE SUB, CLUB STAB and CLUB BOUNC, DIGI PLUCK and DIGI GROWL, IDOL KEYS and IDOL BASS.</p>
+<p><b>Open it</b> with <b>HOME</b>, or press <b>REC</b> on MIXER. <b>SCL</b> picks CHORDS and <b>ENV</b> picks BASS (the BANK page works on those two).</p>
+<h3 id="browse-and-load">Browse and load</h3>
+<p>BROWSE is the first page. It shows FACTORY n / 10 or USER n / 32 with the voice name, and the level of each operator.</p>
+<ul><li><b>SELECT</b> browses silently. <b>ARP</b> switches between FACTORY (the ten originals) and USER (your 32, once you have imported a bank).</li><li><b>REC</b> loads the voice you see into the track. The keys play it. If the track holds an edited patch, REC asks a second time (REPLACE EDIT? AGAIN) so you do not lose it.</li><li>You can also load voices from MIXER: <b>ALGORITHM</b> on CHORDS or BASS goes through the classic sounds, the ten DX7 voices and, once you have edited, a CUSTOM entry that is your edit.</li></ul>
+<h3 id="edit">Edit</h3>
+<p>With a DX7 voice loaded, <b>PRESETS</b> or <b>EDIT</b> steps through the edit pages, and <b>SELECT</b> or <b>ALGORITHM</b> chooses operator OP1 to OP6. The four knobs edit the four fields named on the screen. The voice becomes CUSTOM, and the song keeps it.</p>
+<div class="tablewrap"><table><thead><tr><th>Page</th><th>KNOB 1</th><th>KNOB 2</th><th>KNOB 3</th><th>KNOB 4</th></tr></thead><tbody><tr><td>GLOBAL</td><td>ALG (algorithm 1-32)</td><td>FB (feedback)</td><td>LFO (speed)</td><td>LVL (track level)</td></tr><tr><td>OP FREQUENCY</td><td>OUT (output level)</td><td>CRS (coarse)</td><td>FINE</td><td>DET (detune)</td></tr><tr><td>OP ENV RATES</td><td>R1</td><td>R2</td><td>R3</td><td>R4</td></tr><tr><td>OP ENV LEVELS</td><td>L1</td><td>L2</td><td>L3</td><td>L4</td></tr><tr><td>KEYBOARD SCALE</td><td>BREAK (break point)</td><td>LEFT (depth)</td><td>RIGHT (depth)</td><td>RATE (scaling)</td></tr><tr><td>MODULATION</td><td>DELAY (LFO delay)</td><td>PMD</td><td>AMD</td><td>PMS</td></tr><tr><td>PITCH RATES</td><td>R1</td><td>R2</td><td>R3</td><td>R4</td></tr><tr><td>PITCH LEVELS</td><td>L1</td><td>L2</td><td>L3</td><td>L4</td></tr><tr><td>MIX / TUNING</td><td>LVL (track level)</td><td>PAN</td><td>TRANS (transpose)</td><td>SYNC (oscillator sync)</td></tr><tr><td>CURVES / TOUCH</td><td>LEFT (curve)</td><td>RIGHT (curve)</td><td>VEL (velocity sensitivity)</td><td>AMS</td></tr></tbody></table></div>
+<p><b>ARP</b> on OP FREQUENCY switches the operator between RATIO and FIXED frequency; on MODULATION it steps the LFO waveform. The keys play the voice while you edit. <b>REC</b> goes back to BROWSE. Stop the song and <b>SAVE</b> to keep the patch in the song.</p>
+<h3 id="the-user-bank">The user bank</h3>
+<p>The user bank is 32 voices of your own, kept on the FM-1 (not in the songs) until you replace them. It starts empty. You fill it by <a href="#importing-a-cartridge-from-dexed-or-the-bank-tool">importing a cartridge</a> or by storing your own patches:</p>
+<ul><li>On any edit page, press <b>GLO</b>: the page shows REC STORE USER n and GLO NEXT. <b>GLO</b> again picks the next slot; <b>REC</b> stores the current patch there, with its name. Storing into a slot replaces what was in it. You have 8 seconds to press REC.</li><li>With no bank yet, the first store creates one and fills the other 31 slots with INIT VOICE.</li><li>Voice names come with the patch (10 characters); there is no name editing on the device yet.</li><li>Stores need the song stopped.</li></ul>
+<h3 id="export">Export</h3>
+<p>In BROWSE press <b>GLO</b>: the FM-1 sends its user bank over USB as a standard DX7 32-voice dump (it says USER BANK SENT, or NO USER BANK TO SEND). Receive it with the <a href="bank.html">bank tool</a> or with Dexed or any MIDI librarian that can record a SysEx dump from a port, and keep it as a .syx file.</p>
+</section>
+<section id="importing-a-cartridge-from-dexed-or-the-bank-tool">
+<h2>Importing a cartridge from Dexed or the bank tool</h2>
+<p>The FM-1 accepts DX7 SysEx over <b>USB MIDI</b> (version 0.7 or newer): a <b>32-voice bulk dump</b> (a .syx cartridge) or a <b>single voice</b>. The TRS MIDI jack is for notes only.</p>
+<ol><li>Connect the FM-1 by USB. Stop any song.</li><li>Send the dump. From the <a href="bank.html">bank tool</a>: open the .syx, press Connect, choose the FM-1 and press Send. From Dexed: send the cartridge (or the current voice) to the FM-1's USB MIDI port.</li><li>The FM-1 checks the dump and shows what it would do: IMPORT 32 VOICES? REC, VOICE TO USER n? REC, or VOICE TO EDIT? REC. Nothing has changed yet.</li><li>Press <b>REC</b> within 10 seconds, on any page, to accept. Let it lapse to refuse.</li></ol>
+<p>What each does: a bulk dump replaces the whole user bank and selects USER 1. A single voice goes into the edit buffer of the open BANK edit page (VOICE TO EDIT, the patch becomes CUSTOM), and anywhere else into the user slot chosen in BROWSE (VOICE TO USER n; with no bank yet the other 31 are INIT VOICE).</p>
+<p>If something is wrong the FM-1 says so and ignores it: BAD CHECKSUM, BAD DX7 LENGTH or INVALID VOICE n (a cartridge with one bad voice is refused whole). Imports need the song stopped (STOP FIRST). The bank tool has a factory file with the ten Miku-FM voices that loads in Dexed too.</p>
+</section>
+<section id="midi-keyboard-in">
+<h2>MIDI keyboard in</h2>
+<p>A MIDI keyboard on USB or the TRS jack plays the current track exactly like the keys: the singer on STAGE, DANCE and LIBRARY, otherwise the selected track (drums use the note modulo 12). When CHORDS or BASS plays a DX7 voice, the <b>sustain pedal</b> (CC 64) holds its notes and the <b>pitch bend wheel</b> bends them; the classic sounds ignore both. CC 120 and 123 release every held note. MIDI does not write pattern steps, and MIDI clock is ignored.</p>
+</section>
+<section id="other-firmwares-limits-and-when-something-goes-wrong">
+<h2>Other firmwares, limits, and when something goes wrong</h2>
+<p>Songs live in Dinghy's 10 slots of the FM-1's flash; the current slot, the pan settings, the looks and the user bank live in Dinghy's settings sector and blobs. Miku-FM does not read other firmwares' projects or samples, and saving replaces the settings other Felucca-family firmwares keep: back up before installing (see <a href="https://github.com/MichaelAPerry/MIKU-FM1/blob/main/docs/INSTALL.md">INSTALL</a>).</p>
+<p>Limits of this version: no song or voice renaming on the device (a new song is NEW SONG, a generated one is named after its style and seed); 4/4 only; one bar of 16 steps per pattern; pan is a device setting, not part of the song file; looks are per slot, not in exported songs. USB video output is not in 0.7. MIDI clock sync and WAV export from the device are not there yet (see <a href="https://github.com/MichaelAPerry/MIKU-FM1/blob/main/docs/ROADMAP.md">ROADMAP</a>).</p>
+<p>If the firmware misbehaves, hold <b>OCT-</b> while switching on for the USB rescue (no sound, only the updater).</p>
+</section>
+<section id="more-detail">
+<h2>More detail</h2>
+<p><a href="https://github.com/MichaelAPerry/MIKU-FM1/blob/main/docs/CONTROLS.md">CONTROLS</a> · <a href="https://github.com/MichaelAPerry/MIKU-FM1/blob/main/docs/DX7_BANK_HANDOFF.md">DX7 bank engineering notes</a> · <a href="https://github.com/MichaelAPerry/MIKU-FM1/blob/main/docs/SONG_FORMAT.md">Song format</a> · <a href="https://github.com/MichaelAPerry/MIKU-FM1/blob/main/docs/INSTALL.md">Install and recovery</a> · <a href="https://github.com/MichaelAPerry/MIKU-FM1/blob/main/docs/VALIDATION.md">What has been measured</a></p>
+</section>
+</div>
+<footer>
+  Miku-FM · an unofficial, free, non-commercial fan firmware for the M-VAVE FM-1, not associated with or endorsed by Crypton
+  Future Media, Yamaha or M-VAVE. This page is generated from <a href="https://github.com/MichaelAPerry/MIKU-FM1/blob/main/docs/MANUAL.md">docs/MANUAL.md</a>;
+  every control in one table is in <a href="https://github.com/MichaelAPerry/MIKU-FM1/blob/main/docs/CONTROLS.md">CONTROLS</a>.
+  <a href="https://github.com/MichaelAPerry/MIKU-FM1">Source</a>.
+</footer>
+</main></body>
+</html>

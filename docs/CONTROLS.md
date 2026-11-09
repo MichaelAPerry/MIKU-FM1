@@ -1,34 +1,8 @@
 # Controls
 
-## DX7 BANK
+Every control on every page, version 0.7. How to use them is in the [guide](MANUAL.md).
 
-MIXER **REC** opens the DX7 bank (also page10 via HOME). **SCL/ENV** choose chords/bass.
-**SELECT** browses eight candidates silently; **REC** loads; keys play the loaded
-patch. **EDIT/PRESETS** choose parameter pages; SELECT/ALGORITHM select OP1–OP6
-while editing. K1–K4 edit the labeled actual DX7 fields. ARP changes ratio/fixed
-mode on OP FREQUENCY or LFO waveform on MODULATION. REC returns from editing to
-BROWSE. Stop then SAVE embeds the actual patch in the song. Long release tails
-may require waiting before saving. [Full page map and recordings](DX7_BANK_HANDOFF.md).
-
-
-> Current policy and UI: [fixed 64 KiB flash reserve removed at owner request; neon console UI implemented; eight-voice DX7 audition bank prepared offline](NEON_UI_AND_DX7_BANK.md). Earlier fixed-flash-reserve instructions are superseded.
-
-
-> Current device-wide visual pass: [pink/blue borders and gradients across all nine musical pages, popups and SAVE window, with native recordings and current measurements](evidence/device-theme/README.md). This supersedes the earlier menu-only UI scope and resource figures.
-
-
-> Latest UI pass: [visual wardrobe and song-library menus, native walkthrough and current build measurements](evidence/menu-redesign/README.md).
-
-
-> Current device UI follow-up: [selectable per-song LOOK controls, electronic scenes, recordings and resource measurements](DEVICE_LOOK_HANDOFF.md). This supersedes earlier global-look settings and pre-follow-up audio/resource figures below.
-
-
-The feature branch adds SONG LIBRARY, LYRICS and VISUALS pages and ten save
-slots. Their current bindings, factory songs and compatibility limits are in
-[NEXTGEN_NATIVE_INTEGRATION.md](NEXTGEN_NATIVE_INTEGRATION.md). The original
-page controls below remain available.
-
-Miku-FM is a four-track songwriter with a singer. **HOME** cycles the pages: STAGE, DANCE, SONG, PATTERN, MIXER, GEN (the page name is on
+Miku-FM is a four-track songwriter with a singer. **HOME** cycles the ten pages: STAGE, DANCE, SONG, PATTERN, MIXER, GEN, LYRICS, LOOK, LIBRARY, BANK (the page name is on
 the screen). One control map holds everywhere; the tables below list what each control does on each page.
 
 Everywhere:
@@ -43,9 +17,9 @@ Everywhere:
 | **HOME** | Next page |
 | **SAVE** (tap) | Save the song to the current slot (only while stopped): "SAVED" or "SAVE FAILED" |
 | **SAVE** (hold) | Slot menu, see below |
-| **GLO** | Undo (SONG, PATTERN): up to 8 steps back. GEN: drop the take |
+| **GLO** | Undo (SONG, PATTERN, LYRICS): up to 8 steps back. GEN: drop the take. BANK: send the user bank (BROWSE) / store the patch (edit pages) |
 
-Keys sound the current track on every page. On PATTERN they also write the cursor step.
+Keys sound the current track on every page (on STAGE, DANCE and LIBRARY always the voice). On PATTERN they also write the cursor step; on LYRICS they set the note of the cursor syllable.
 
 ## STAGE
 
@@ -71,13 +45,14 @@ delay follow a squared curve: fine steps at the low end, big moves at the top.
 | Hold again / short press | Hold the same button again: back to VOICE. A short press goes to that button's normal bank (or, SEL, the next language) |
 | ALGORITHM | Character (formant size): DEEP, LOW, MIKU, YOUNG, TINY |
 | PRESETS | Tempo, 40-240 BPM. In ANIMAL, hold SCL (SEL) + turn PRESETS: speech rate 0–100 (50 default; session only) |
+| ARP | Open the song LIBRARY |
 | Key | Sings the selected syllable |
 
 ## DANCE
 
 The singer full-body (3x), dancing to the song: one move per beat while playing, singing while the vocal sounds, arms up in
 CHORUS rows, a bow when the song stops, a slow sway when stopped. Below her: row and section, the syllable, BPM.
-The controls are those of STAGE (syllable, language, knob banks, character).
+The controls are those of STAGE (syllable, language, knob banks, character), except ARP (song LIBRARY) and **EDIT**, which opens LOOK.
 
 ## SONG
 
@@ -146,7 +121,7 @@ the four tracks (dark = locked; the white frame is the current track).
 
 | Control | What it does |
 |---|---|
-| KNOB 1 | Style: POP, BALLAD, DANCE, CHIP |
+| KNOB 1 | Style: HYPERPOP, FUTURE BASS, JERSEY CLUB, DIGICORE, IDOL POP, POP, BALLAD, DANCE, CHIP |
 | KNOB 2 | Key, C to B |
 | KNOB 3 | Major / minor |
 | KNOB 4 | Seed, by 1 (ALGORITHM: by 100) |
@@ -155,15 +130,14 @@ the four tracks (dark = locked; the white frame is the current track).
 | FX / SCL / ENV / LFO | Pick the track; pressing the current track's button again locks / unlocks it |
 | REC | Generate the song: all unlocked tracks (nothing locked: also new rows, name, tempo, sounds). Starts again from row 1 if playing |
 | ARP | New phrase: the current track's pattern in the cursor row (another variation each press) |
-| EDIT | Keep the take |
+| EDIT | Keep the take. **Hold EDIT** + KNOB 2 / KNOB 3: ENERGY / COMPLEXITY of the five newer styles (0-100) |
 | GLO | Drop the take: back to the song before the last REC / ARP |
 
 ## Songs and slots
 
 The device keeps 10 songs (slots 1–10). At power-on it loads the last saved slot.
-Empty slots 1–4 reconstruct the selected factory song; the historical demo remains
-the fallback for empty user slots. The new SONG LIBRARY provides explicit selected-slot
-REC saving and EDIT loading/new-song creation. See the integration notes above.
+Empty slots 1–4 reconstruct the factory song of that slot (SAKURA SAKURA, TORYANSE, FURUSATO, KOJO NO TSUKI); the demo is the fallback
+for other empty slots. The LIBRARY page below loads and saves slots.
 
 Hold **SAVE** (about a third of a second, or turn SELECT while holding it) for the slot menu: **SELECT** picks the slot
 (its song name is shown), then, still holding SAVE, press **FX** to load that slot, **SCL** for a new empty song (one row,
@@ -179,11 +153,84 @@ and the same press again within 3 seconds goes through.
 
 If the firmware crashes twice at boot, the FM-1 goes to the USB rescue by itself.
 
-### BANK: user voices, SysEx, MIDI in
+## LYRICS
 
-BROWSE: **ARP** switches FACTORY (10) / USER (32, once imported). **SELECT** browses silently, **REC** loads into the
-track (second press if it holds an edit). **GLO** sends the user bank as a DX7 dump. Edit pages: **GLO** picks a user slot
-(again: next), **REC** stores the patch (with its name) there. A DX7 bulk dump or single voice sent over USB (Dexed, any
-librarian) shows IMPORT 32 VOICES? REC / VOICE TO USER n? REC / VOICE TO EDIT? REC: press **REC** within 10 s on any page.
-Imports and stores need the song stopped. MIDI notes (USB or TRS) play the current track like the keys; CC64 sustains and the
-wheel bends chords/bass. [Details](DX7_BANK_HANDOFF.md).
+The sung syllables of the vocal pattern in the cursor row, four lines at a time (syllable, LEN, note, marks). The track is VOCAL.
+
+| Control | What it does |
+|---|---|
+| SELECT | Cursor syllable |
+| ALGORITHM | The syllable: REST, HOLD (carry the previous vowel to a new note), then the morae |
+| Key | Set the note of the cursor syllable (and sing it) |
+| KNOB 1 | Length, 1-16 steps |
+| KNOB 2 | Note, by semitones |
+| KNOB 3 | Vocal pattern of the cursor row |
+| KNOB 4 | Cursor row |
+| PRESETS | Tempo |
+| FX / SCL / ENV / LFO | Toggle the marks: WORD end, PHRASE end, SEP (separate onset; off = LEGATO), HOLD |
+| EDIT | Insert a one-step syllable at the cursor |
+| REC | Delete the syllable |
+| ARP | Copy the whole phrase (tap) |
+| ARP + EDIT | Paste the copied phrase over this pattern |
+| GLO | Undo |
+
+## LOOK
+
+The singer's stage for the loaded song: outfit, background, frame, stage effect. Kept per slot with SAVE.
+
+| Control | What it does |
+|---|---|
+| SELECT | Outfit, 1-12 |
+| PRESETS | Colouring: STYLE / WARM |
+| KNOB 1 | Background: ORIGINAL, GRID, HORIZON, CONCERT, LED WALL |
+| KNOB 2 | Frame: NONE, CORNERS, RAILS |
+| KNOB 3, ALGORITHM | Effect: OFF, FIREWORKS, SPARKLES, CONFETTI, SMOKE, BEAMS |
+| KNOB 4 | Effect intensity, 0-100 % |
+| REC | Fire the effect |
+| EDIT | Back to DANCE |
+| SAVE | Keep the song and its look (stopped) |
+
+## LIBRARY
+
+The ten slots, four at a time, with the song name under each. Opened with HOME or ARP on STAGE / DANCE.
+
+| Control | What it does |
+|---|---|
+| SELECT, PRESETS | Cursor slot |
+| PLAY | Load the song under the cursor and play it |
+| SEQ | Back to SONG |
+| FX | Load the slot (factory song for an empty slot 1-4) |
+| EDIT | Load the slot, or start a new song in an empty one |
+| SCL | New song in the slot |
+| ENV | Restore the factory song (slots 1-4) |
+| LFO | Open the slot's LOOK |
+| REC | Save the current song into the slot (a second REC when another song is there: OVERWRITE? REC AGAIN) |
+
+Actions that drop unsaved changes say UNSAVED! AGAIN: repeat within 3 seconds.
+
+## BANK
+
+The DX7 voices of CHORDS and BASS. Opened with HOME or REC on MIXER. SCL and ENV pick CHORDS and BASS (FX and LFO do nothing here).
+**BROWSE** is the first page; PRESETS or EDIT steps through the ten edit pages when a DX7 voice is loaded.
+
+| Control | BROWSE | Edit pages |
+|---|---|---|
+| SELECT | Browse silently (FACTORY 10 or USER 32) | Operator OP1-OP6 |
+| ALGORITHM | | Operator OP1-OP6 |
+| PRESETS | Step to the edit pages | Page |
+| EDIT | Step to the edit pages | Next page |
+| KNOB 1-4 | | The four fields named on the screen |
+| ARP | Switch FACTORY / USER | OP FREQUENCY: RATIO / FIXED. MODULATION: LFO waveform |
+| REC | Load the voice into the track (second press if it holds an edit) | Back to BROWSE |
+| GLO | Send the user bank as a DX7 dump (USB) | Pick a user slot to store into (again: the next); REC then stores the patch |
+| Key | Play the loaded voice | Try the voice |
+
+Edit pages: GLOBAL, OP FREQUENCY, OP ENV RATES, OP ENV LEVELS, KEYBOARD SCALE, MODULATION, PITCH RATES, PITCH LEVELS, MIX / TUNING,
+CURVES / TOUCH; the fields are listed in the [guide](MANUAL.md#edit).
+
+**SysEx in.** A DX7 bulk dump or single voice sent over USB (Dexed, any librarian, the website's bank tool) shows IMPORT 32 VOICES? REC,
+VOICE TO USER n? REC or VOICE TO EDIT? REC: press **REC** within 10 s on any page. Bad data: BAD CHECKSUM, BAD DX7 LENGTH, INVALID VOICE n.
+Imports and stores need the song stopped.
+
+**MIDI in.** Notes (USB or TRS) play the current track like the keys. On a DX7 voice on CHORDS or BASS, CC64 sustains and the wheel bends.
+[Details](DX7_BANK_HANDOFF.md).

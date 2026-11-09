@@ -27,9 +27,9 @@ def main():
     addresses={name:int(re.search(r'^([0-9a-f]+) .*\s'+name+r'$',symbols,re.M).group(1),16) for name in names}
     (out/'symbols.json').write_text(json.dumps(addresses,indent=2)+'\n')
     package=a.package.resolve();manifest={'package':str(package),'sha256':hashlib.sha256(package.read_bytes()).hexdigest(),
-        'expected_frames':a.frames,'scope':'emulator-only offline JPEG benchmark, not USB camera throughput'}
+        'expected_frames':a.frames,'lcd_spi_timing':True,'scope':'emulator-only offline JPEG benchmark, not USB camera throughput'}
     (out/'manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
-    env=os.environ.copy();env['FM1_LIST_END']=','.join(f'{addresses[n]:x}:4' for n in names if n!='video_jpeg')
+    env=os.environ.copy();env['FM1_LCD_TIMED']='1';env['FM1_LIST_END']=','.join(f'{addresses[n]:x}:4' for n in names if n!='video_jpeg')
     cmd=[str(a.emu.resolve()),'--fwsc',str(package),'--ms',str(a.ms),'--keys',a.keys,'--snap','1200','--wav','audio.wav',
          '--dump',f'{addresses["video_jpeg"]:x}','2048']
     with (out/'boot.log').open('w') as f: subprocess.run(cmd,cwd=out,env=env,stdout=f,stderr=subprocess.STDOUT,check=True)

@@ -38,7 +38,7 @@ def main():
     events+=['1200:REC','1500:EDIT']+[f'{1700+200*i}:HOME' for i in range(5)]
     if a.page=='dance':events+=['2700:HOME']
     events+=['3100:PLAY']
-    env=os.environ.copy()
+    env=os.environ.copy();env['FM1_LCD_TIMED']='1'
     env['FM1_LIST_END']=','.join(f'{addresses[n]:x}:{24 if n.endswith("profile") else 4:x}' for n in names)
     command=[str(a.emu.resolve()),'--fwsc',str(a.package.resolve()),'--ms',str(a.ms),'--keys',','.join(events),
              '--snap','5000,7000','--wav','audio.wav']
@@ -53,7 +53,7 @@ def main():
         frames=w.getnframes();samples=array.array('h',w.readframes(frames))
     elapsed=a.ms*1000
     report={'scope':'CPU emulator; generated full-band DX7; not USB or hardware qualification','page':a.page,
-        'package_sha256':hashlib.sha256(a.package.read_bytes()).hexdigest(),'run_ms':a.ms,
+        'package_sha256':hashlib.sha256(a.package.read_bytes()).hexdigest(),'run_ms':a.ms,'lcd_spi_timing':True,
         'audio':counters,'draw':profile,'audio_peak':max(map(abs,samples),default=0),'wav_frames':frames,
         'audio_worst_us':counters['audio_hard_peak']/24,
         'audio_isr_share_percent':float(re.search(r'cpu0: ([0-9.]+)% in an ISR',log)[1]),

@@ -1,0 +1,18 @@
+{
+  "verified_code_commit": "1e4d88a572fa0fadaafed00ef9d11288aa6881f4",
+  "validation_complete": false,
+  "scope": "Native builds and CPU emulator; physical USB/OS/hardware unverified",
+  "files": [
+    "baseline-build.log",
+    "default-build.log",
+    "default-smoke/boot.log",
+    "draft-pr.log",
+    "jpeg-bench/boot.log",
+    "jpeg-bench/manifest.json",
+    "jpeg-bench/symbols.json",
+    "toolchain-setup.log",
+    "video-bench-build.log",
+    "video-build.log",
+    "video-smoke/boot.log"
+  ]
+}

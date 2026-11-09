@@ -1,5 +1,11 @@
 # Miku-FM
 
+Feature-branch development now includes a ten-song library with four editable
+factory songs, paired outfit animation, reusable stage effects and native
+lyric/GEN controls. See [current handoff](CLAUDE_HANDOFF.md) and
+[native integration notes](docs/NEXTGEN_NATIVE_INTEGRATION.md) for validation,
+review images and remaining USB/hardware work. This is not a published release.
+
 **A singing songwriter firmware for the M-VAVE FM-1.** A tiny pixel singer sings your songs in Japanese, consonants and
 all, over FM chords, bass and drums. Shape her voice, write patterns or let her generate a whole song, and watch her dance.
 
@@ -15,11 +21,11 @@ all, over FM chords, bass and drums. Shape her voice, write patterns or let her 
 **Try it in your browser, watch the trailer, install it:** https://michaelaperry.github.io/MIKU-FM1/ (the emulator runs the
 real firmware package; the installer works in Chrome or Edge over USB).
 
-- **Her voice:** a formant voice synthesised live (no samples): 70 Japanese morae with their consonants, five characters
+- **Her voice:** a formant voice synthesised live (no samples): 73 Japanese mora selections with their consonants, five characters
   from DEEP to TINY, languages (Japanese, animal babble, scat, vowels), tension, fry, whisper, a harmony voice, vowels on
   the beat; chorus, delay, reverb, drive, tremolo. Every knob shows a picture of what it does.
 - **The song:** four tracks (vocal, FM chords, bass, drums), 16 patterns per track, 64 rows with sections, mixer, swing,
-  undo, 8 song slots. GEN writes a whole song in POP, BALLAD, DANCE or CHIP, with track locks and new phrases.
+  undo, 10 song slots. GEN adds five contemporary candidates alongside POP, BALLAD, DANCE and CHIP, with track locks and new phrases.
 - **The singer:** her face mouths every vowel on STAGE; on DANCE she dances to the song.
 - **Status:** development builds (0.x). Runs on a real FM-1 (installed with the browser installer; songs save and load).
   Controls: [docs/CONTROLS.md](docs/CONTROLS.md), manual: [docs/MANUAL.md](docs/MANUAL.md), what is measured:
@@ -63,7 +69,7 @@ Host-engine code is MIT licensed; the firmware package is GPL-3.0-only (see Lice
 
 ## Other firmwares' data
 
-Miku-FM does not read other firmwares' projects or samples. It stores its songs in Dinghy's 8 slots (FM-1 flash 0x97000...) and a small settings struct in the settings sector (0xFC000), which other Felucca-family firmwares also use, so saving there replaces their data. Back up first.
+Miku-FM does not read other firmwares' projects or samples. It stores its songs in Dinghy's 10 slots (FM-1 flash 0x97000...) and a small settings struct in the settings sector (0xFC000), which other Felucca-family firmwares also use, so saving there replaces their data. Back up first.
 
 ## Licence
 

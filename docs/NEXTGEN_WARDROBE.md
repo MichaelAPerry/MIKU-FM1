@@ -1,5 +1,9 @@
 # Wardrobe concept review — 2026-11-08
 
+Current integration status: [NEXTGEN_NATIVE_INTEGRATION.md](NEXTGEN_NATIVE_INTEGRATION.md)
+and [CLAUDE_HANDOFF.md](../CLAUDE_HANDOFF.md) supersede earlier original-only,
+host-only, provisional source-grid and memory figures in this milestone document.
+
 The owner requested at least ten outfits, maintaining the existing singer identity. All three references were visually inspected before generation: `reference.webp`, `stage.webp` and `faces.webp`. The portrait sheet is a required part of every outfit, not an optional follow-up. The original assets remain intact.
 
 [Current concept sheet, revision3](../assets/singer/wardrobe/concepts-v3.png) contains eleven proposed outfits, each with a full-body view and coordinated portrait inset:

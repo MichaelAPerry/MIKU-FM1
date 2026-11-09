@@ -1,0 +1,34 @@
+[
+  {
+    "song": "FURUSATO",
+    "seconds": 45.00027210884354,
+    "peak": 28622,
+    "rms": 5100.34257752318,
+    "full_scale_samples": 0,
+    "sha256": "59c89dd40cacb5797e5e7a5aeb0738b5477d3e1865a161696f52e67414dfaef7"
+  },
+  {
+    "song": "KOJO",
+    "seconds": 52.08816326530612,
+    "peak": 27668,
+    "rms": 5531.385489744157,
+    "full_scale_samples": 0,
+    "sha256": "235d7cb001969cc7cc909bf1eca2ca7458faecd9c2173e19c64cabb379ef775d"
+  },
+  {
+    "song": "SAKURA",
+    "seconds": 46.63727891156463,
+    "peak": 28220,
+    "rms": 5692.987425237832,
+    "full_scale_samples": 0,
+    "sha256": "afef71368aca3e2090b11c883ae6a51f67b0bfcedfe9aeff4a8d9bfaf8ca24e4"
+  },
+  {
+    "song": "TORYANSE",
+    "seconds": 46.99718820861678,
+    "peak": 27136,
+    "rms": 4892.8778678868675,
+    "full_scale_samples": 0,
+    "sha256": "cefef9e9b0e8afaa625032348f932f7b9211e7d4e58f52907a4b312a04b39e13"
+  }
+]

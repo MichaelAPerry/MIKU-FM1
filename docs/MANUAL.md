@@ -1,7 +1,12 @@
 # Manual
 
+The feature branch adds SONG LIBRARY, LYRICS and VISUALS pages and ten save
+slots. Their current bindings, factory songs and compatibility limits are in
+[NEXTGEN_NATIVE_INTEGRATION.md](NEXTGEN_NATIVE_INTEGRATION.md). The original
+page controls below remain available.
+
 Miku-FM is a songwriter for the M-VAVE FM-1 with a singer on its screen: four tracks (VOCAL, CHORDS, BASS, DRUMS),
-patterns, an arrangement, a mixer and 8 song slots. This manual covers what the firmware does **today**; every control
+patterns, an arrangement, a mixer and 10 song slots. This manual covers what the firmware does **today**; every control
 is in [CONTROLS](CONTROLS.md).
 
 ## How a song is built
@@ -102,7 +107,7 @@ bows when the song stops. The knobs, SELECT, SCL and ALGORITHM do what they do o
 
 ## Saving and other firmwares
 
-Songs live in Dinghy's 8 slots of the FM-1's flash (one song is 4,476 bytes, CRC-checked: a damaged slot is refused,
+Songs live in Dinghy's 10 slots of the FM-1's flash (one song is 4,508 bytes, CRC-checked: a damaged slot is refused,
 never half-loaded); the current slot number and the pan settings live in Dinghy's settings sector. Miku-FM does not read other
 firmwares' projects or samples. See the README for what saving does to other firmwares' data, and back up before
 installing. Saving erases flash, so it only happens while stopped and silent.

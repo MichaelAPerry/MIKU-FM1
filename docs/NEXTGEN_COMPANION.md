@@ -1,5 +1,9 @@
 # Performance events and computer review prototype (2026-11-08)
 
+Current integration status: [NEXTGEN_NATIVE_INTEGRATION.md](NEXTGEN_NATIVE_INTEGRATION.md)
+and [CLAUDE_HANDOFF.md](../CLAUDE_HANDOFF.md) supersede earlier original-only,
+host-only, provisional source-grid and memory figures in this milestone document.
+
 This implements a transport-independent event codec and a recorded-performance computer view. It does **not** implement
 live USB MIDI sending, USB audio, UVC, a new synthesizer, or a USB stack rewrite. Dinghy and the native firmware remain
 unchanged. The visual view has no JavaScript synthesis: its WAV and all vocal/mouth/performance states come from the actual

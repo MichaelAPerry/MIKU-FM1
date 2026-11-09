@@ -1,5 +1,9 @@
 # Performance visuals foundation
 
+Current integration status: [NEXTGEN_NATIVE_INTEGRATION.md](NEXTGEN_NATIVE_INTEGRATION.md)
+and [CLAUDE_HANDOFF.md](../CLAUDE_HANDOFF.md) supersede earlier original-only,
+host-only, provisional source-grid and memory figures in this milestone document.
+
 The new `firmware/ui/performance.c,h` module separates scene geometry, original outfit metadata, and animation state from LCD writes. It is usable by the native renderer or a computer companion using the same C module. It does not create an independent synthesizer or duplicate character pixels.
 
 Only `ORIGINAL` is registered: atlas ID 0 references the existing 61×71, eight-frame `SINGER_STAGE` atlas at 3×, position (28,0). All source art and the packed header remain intact. The atlas retains its Piapro Character License requirements; see [LICENSING.md](../LICENSING.md). Additional outfit IDs require separate owner-approved art and renderer support. Invalid selections return failure without changing the state.

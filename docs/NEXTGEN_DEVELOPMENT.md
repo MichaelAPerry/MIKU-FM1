@@ -93,3 +93,33 @@ Publishing status: compact-sprite/native-video follow-up commits are local on th
 ## Owner-authorized publication and Claude review (2026-11-09)
 
 The owner explicitly authorized pushing these features to the development branch and requested a verbose handoff for Claude before main integration. The earlier publication block is resolved by that instruction. Added root `CLAUDE_HANDOFF.md`, replaced the stacked current handoff with an index, preserved historical handoffs in `docs/archive/`, and committed a durable JSON evidence snapshot. No merge/main push, release, deployment or physical-device flash is authorized. Host26/26 and generated/real-driver checks rerun sequentially; source generators remain unchanged.
+
+## Native integration, complete factory-song library and reusable stage sheets
+
+Implemented native workspace GEN, lyric-unit editing and delayed-queue
+articulation, twelve paired outfits, five reusable stage-effect modes, visual
+preferences, and the owner-confirmed ten-slot song library. The four selected
+first-verse factory songs reconstruct normal editable four-track projects;
+existing saved records always take precedence. Slot 10 was saved at 0xBB000
+with a valid 4508-byte CRC record, restored on a fresh emulator boot and played.
+
+The final contact sheet caught black source-grid separators and unequal outer
+extents that caused cropped/shrunken actors. Those were fixed using separator
+recovery and explicit reviewed source bounds; source originals were not edited.
+A neighboring-row compression option recovered 4304 bytes without changing
+pixels or adding decoder depth. Final additional wardrobe accounting is 335463
+bytes. All twelve options fit; no outfit, song or effect was dropped.
+
+Final native default: image504416/static35728/pool255624 bytes. MIDI+UVC:
+510900/33924/266080 bytes; image free70664, including the unchanged64 KiB reserve.
+The expanded-firework target benchmark encodes3 frames without failures:
+39.593 ms maximum frame wall time,1.419 ms maximum tile step,7.2% emulated ISR
+share,759.125 µs audio-render moving peak, zero full-scale samples. These are
+emulator figures, not physical timing or USB throughput.
+
+Host38/38, original generated checks, independent11-pair source audit, all144
+outfit/effect/pose JPEG combinations, browser costume/mouth validation, native
+screens and slot save/reboot evidence are documented in CLAUDE_HANDOFF.md.
+Complete first-verse listening copies and .mks files are committed in
+`docs/evidence/native-integration/songs/` with WAV measurements. Creative
+approval and native UAC/pedal/live-telemetry/physical-device work remain open.

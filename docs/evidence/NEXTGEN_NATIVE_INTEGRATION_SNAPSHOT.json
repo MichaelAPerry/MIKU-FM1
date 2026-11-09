@@ -1,0 +1,206 @@
+{
+  "branch": "feature/miku-nextgen-performance",
+  "implementation_commit": "a3865aefb2e4e8088b5ed6682fee768ba22175bc",
+  "main_base": "88b0ef3e568cf615eb5dfaa42d170d8c0f75d431",
+  "scope": "native integration milestone; PR21 remains draft; no physical hardware or live USB throughput claim",
+  "host_ctest": {
+    "passed": 38,
+    "failed": 0
+  },
+  "resources": {
+    "default": {
+      "image": {
+        "used": 504416,
+        "limit": 581564,
+        "free": 77148,
+        "minimum_free": 65536,
+        "margin_above_reserve": 11612,
+        "pass": true
+      },
+      "static_ram": {
+        "used": 35728,
+        "limit": 98304,
+        "free": 62576,
+        "minimum_free": 16384,
+        "margin_above_reserve": 46192,
+        "pass": true
+      },
+      "pool": {
+        "used": 255624,
+        "limit": 344064,
+        "free": 88440,
+        "minimum_free": 32768,
+        "margin_above_reserve": 55672,
+        "pass": true
+      }
+    },
+    "video": {
+      "image": {
+        "used": 510900,
+        "limit": 581564,
+        "free": 70664,
+        "minimum_free": 65536,
+        "margin_above_reserve": 5128,
+        "pass": true
+      },
+      "static_ram": {
+        "used": 33924,
+        "limit": 98304,
+        "free": 64380,
+        "minimum_free": 16384,
+        "margin_above_reserve": 47996,
+        "pass": true
+      },
+      "pool": {
+        "used": 266080,
+        "limit": 344064,
+        "free": 77984,
+        "minimum_free": 32768,
+        "margin_above_reserve": 45216,
+        "pass": true
+      }
+    },
+    "video_bench": {
+      "image": {
+        "used": 510820,
+        "limit": 581564,
+        "free": 70744,
+        "minimum_free": 65536,
+        "margin_above_reserve": 5208,
+        "pass": true
+      },
+      "static_ram": {
+        "used": 33924,
+        "limit": 98304,
+        "free": 64380,
+        "minimum_free": 16384,
+        "margin_above_reserve": 47996,
+        "pass": true
+      },
+      "pool": {
+        "used": 266080,
+        "limit": 344064,
+        "free": 77984,
+        "minimum_free": 32768,
+        "margin_above_reserve": 45216,
+        "pass": true
+      }
+    }
+  },
+  "video_target_emulator": {
+    "encoded_frames": 3,
+    "encoder_failures": 0,
+    "jpeg_bytes": 4400,
+    "max_tile_us_emulator": 1419.125,
+    "max_frame_wall_us_emulator": 39592.708333333336,
+    "audio_frames": 137984,
+    "audio_peak": 8231,
+    "full_scale_samples": 0,
+    "isr_percent_emulator": 7.2,
+    "scope": "three JPEG frames during real native vocal+band playback; not real USB throughput or hardware timing",
+    "audio_render_moving_peak_us_emulator": 759.125,
+    "audio_callback_deadline_us": 5804.988662131519
+  },
+  "wardrobe_additional_bytes": 335463,
+  "wardrobe_count": 12,
+  "slot_count": 10,
+  "factory_songs": 4,
+  "stage_effect_frames": 16,
+  "stage_effect_atlas_bytes": 2441,
+  "jpeg_host_combinations": 144,
+  "jpeg_host_max_bytes": 5128,
+  "artifacts": {
+    "docs/evidence/native-integration/README.md": {
+      "bytes": 2621,
+      "sha256": "9f2fe747d24bec1b19a6e71fc0814a4f1971829458347240c811f17f6ae00a25"
+    },
+    "docs/evidence/native-integration/companion-wardrobe-effects.png": {
+      "bytes": 102570,
+      "sha256": "123451bdf4e53ba4d9810c7a823539a1794124b1b0ef6edcf25228d1d29b440f"
+    },
+    "docs/evidence/native-integration/native-fireworks.png": {
+      "bytes": 6305,
+      "sha256": "e6757d3d6d28a5a680eee16a4326ff9a4b0a097328031b8c1049c8e9a5a1d3fa"
+    },
+    "docs/evidence/native-integration/native-gen.png": {
+      "bytes": 3172,
+      "sha256": "d68f6105391e1b1e0143bc9e1cd6841c8358433a0035d63a4f2ab68d85697ef5"
+    },
+    "docs/evidence/native-integration/native-lyrics.png": {
+      "bytes": 2362,
+      "sha256": "224079cbfb932118b62b14b58afa24219e78ec04205e627be7c1ca5134bc1f95"
+    },
+    "docs/evidence/native-integration/native-witch-portrait.png": {
+      "bytes": 7295,
+      "sha256": "7568d41e49c547f120b3176d7019af69c2c061a41438a51f52853e321f606d50"
+    },
+    "docs/evidence/native-integration/paired-outfit-review.png": {
+      "bytes": 117001,
+      "sha256": "12c489a358c1625f8a8247af4e683ca2992829ae98b7ab68cc5d005e8dbeb4d1"
+    },
+    "docs/evidence/native-integration/slot-ten-reboot.png": {
+      "bytes": 1805,
+      "sha256": "325f5a46511c6eea7dc4eb20c736af4bacb092d82731287fef90d7b9a145fe72"
+    },
+    "docs/evidence/native-integration/slot-ten-save.json": {
+      "bytes": 115,
+      "sha256": "2fbf27d5c40d9417ca2d9c7f9bc781a666a3738bcccc49c46a76a8d23ce18f26"
+    },
+    "docs/evidence/native-integration/song-library.png": {
+      "bytes": 2302,
+      "sha256": "eefc41d0572a621ed4d1d529df6f59f07f3b54389744d128a5b9d4474541891f"
+    },
+    "docs/evidence/native-integration/song-measurements.json": {
+      "bytes": 901,
+      "sha256": "c6708fb1600d2200404e1d7b92970576752a22c0a7ab994407ef5d6cc95ba7c1"
+    },
+    "docs/evidence/native-integration/songs/FURUSATO.mks": {
+      "bytes": 4508,
+      "sha256": "f1c4c69383e27f748e51b7efe99c697febfe992516f01d237f963d070c7c9f0a"
+    },
+    "docs/evidence/native-integration/songs/FURUSATO.mp3": {
+      "bytes": 593203,
+      "sha256": "d6bb228b579dd26757fbf0a71bf3f517e5b430202aead0456f5804e4d2cf0608"
+    },
+    "docs/evidence/native-integration/songs/KOJO.mks": {
+      "bytes": 4508,
+      "sha256": "ad80b598dab7dfa9a001da2cfbf560ea6b302e2726d5bd1d1b18cfb8ebd6ff7a"
+    },
+    "docs/evidence/native-integration/songs/KOJO.mp3": {
+      "bytes": 709516,
+      "sha256": "9e89c20a8dc6c5311f8043d16bb6b74dd79fd992eccfec9100e837b2b0d17e05"
+    },
+    "docs/evidence/native-integration/songs/SAKURA.mks": {
+      "bytes": 4508,
+      "sha256": "158ad81d43501c06b6d222e0492998a96a04530d1ef2f011e6394b26e3e8a27d"
+    },
+    "docs/evidence/native-integration/songs/SAKURA.mp3": {
+      "bytes": 638705,
+      "sha256": "8bd8121c9b518c3f3ccbf15dad0233b97c01126067cf1e2797dbf79f811ace57"
+    },
+    "docs/evidence/native-integration/songs/TORYANSE.mks": {
+      "bytes": 4508,
+      "sha256": "97df3015e27c90bd160baf90c40f1f21f5ac86a682edd14994e864c37c42da48"
+    },
+    "docs/evidence/native-integration/songs/TORYANSE.mp3": {
+      "bytes": 657994,
+      "sha256": "32a87e3447d85b7985aba49fc0e2f238cfbf405f432aaed2a2d8a80791849454"
+    },
+    "docs/evidence/native-integration/stage-effects-review.gif": {
+      "bytes": 42035,
+      "sha256": "e628063d201c1204fc21c84e0140a52c28af10c4527b27f0f311a6423c5162c2"
+    },
+    "docs/evidence/native-integration/stage-effects-review.png": {
+      "bytes": 14996,
+      "sha256": "e6dafe2aeda1e5390c088ab20747204c3b23f4674c681d440e3609aa9fc2b8b9"
+    },
+    "docs/evidence/native-integration/video-measurements.json": {
+      "bytes": 484,
+      "sha256": "c1009aa90c6fbc7e6f758f4be3ce96564154f5613753acf4e43d414b65eb557c"
+    },
+    "docs/evidence/native-integration/wardrobe-measurements.json": {
+      "bytes": 33785,
+      "sha256": "5147dfe757be2589d9328f2aaf67b9e45db0258f56205f92191bacc95e55dc8a"
+    }
+  }
+}

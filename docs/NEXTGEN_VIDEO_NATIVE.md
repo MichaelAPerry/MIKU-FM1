@@ -1,5 +1,9 @@
 # Optional native UVC integration prototype
 
+Current integration status: [NEXTGEN_NATIVE_INTEGRATION.md](NEXTGEN_NATIVE_INTEGRATION.md)
+and [CLAUDE_HANDOFF.md](../CLAUDE_HANDOFF.md) supersede earlier original-only,
+host-only, provisional source-grid and memory figures in this milestone document.
+
 This is an isolated Dinghy development profile, selected explicitly with `native/build.sh --video`.
 It retains the existing MIDI interface and updater SysEx on EP1 and adds UVC1.0 MJPEG on EP4 IN.
 It does not add USB audio or CDC, and does not establish physical host enumeration, camera-app compatibility,

@@ -1,5 +1,18 @@
 # Wardrobe and USB-video headroom (2026-11-08)
 
+## Current integrated build
+
+All twelve outfits, native lyrics/GEN, ten slots, four factory songs and effects
+are linked. Actual image/static/pool usage: default **504416/35728/255624** bytes;
+MIDI+UVC **510900/33924/266080** bytes. The video profile retains **70664** image
+bytes, **64380** static bytes and **77984** pool bytes free. The unchanged floors
+remain 65536/16384/32768 free. No item was dropped. Additional wardrobe packing
+is335463 bytes; nearby-row deltas saved4304 bytes without changing pixels or
+adding decoder depth. See [current snapshot](evidence/NEXTGEN_NATIVE_INTEGRATION_SNAPSHOT.json)
+and [native integration notes](NEXTGEN_NATIVE_INTEGRATION.md).
+
+The following figures describe the earlier original-only compression baseline.
+
 The owner authorized compact wardrobe work and adjustable outfit counts while retaining overhead for USB video. These are actual linked native measurements, not sums of host object sizes.
 
 | Build | Image /581564 B | Static RAM /98304 B | Pool /344064 B |

@@ -1,14 +1,22 @@
-# Current MIKU-FM1 handoff — 2026-11-09
+# Current MIKU-FM1 handoff
 
-The complete, current engineering/review handoff is **[CLAUDE_HANDOFF.md](../CLAUDE_HANDOFF.md)**. Start there. It covers owner authorization, feature readiness, file map, native/host distinctions, exact tests/builds, memory headroom, evidence reproduction, known limitations and the pre-main review checklist.
+Start with **[CLAUDE_HANDOFF.md](../CLAUDE_HANDOFF.md)**. The detailed current
+implementation is [NEXTGEN_NATIVE_INTEGRATION.md](NEXTGEN_NATIVE_INTEGRATION.md).
 
-- Branch: `feature/miku-nextgen-performance`; [PR21](https://github.com/MichaelAPerry/MIKU-FM1/pull/21) remains a draft.
-- Owner authorized the feature-branch push on2026-11-09 and will have Claude review before main integration. No merge/main push, release, website deployment or hardware flash is authorized by that instruction.
-- Default native features: silent SELECT, slower session-adjustable ANIMAL, added bass/drum presets, shared default dance state, lossless compact portrait/dance drawing.
-- Optional native development profile: MIDI+UVC160×120 MJPEG with incremental integer JPEG. Real camera enumeration/delivery is unverified; UAC/CDC disabled in this profile.
-- Host prototypes: voice-compensation audition, word compiler, contemporary GEN, pedal DSP and recorded-state companion. Only original outfit is runtime-registered; eleven new wardrobe concepts are not production skins.
-- Current host suite:26/26 passed. Generated checks and separate real patched-driver fake-SIE test passed. Native default/video and emulator milestones are detailed in the main handoff and `VALIDATION.md`.
-- Actual default image/static/pool:152696/35540/254784B. Optional video:159080/33732/265216B. Reserves enforce64KiB image,16KiB static,32KiB pool free. See [memory report](NEXTGEN_MEMORY.md).
-- Fresh GitHub clones do not contain ignored WAV/log/package evidence. The main handoff includes regeneration commands; [durable snapshot](evidence/NEXTGEN_REVIEW_SNAPSHOT.json) preserves measurements and hashes.
+- Branch `feature/miku-nextgen-performance`; PR21 remains a draft for review.
+- Native integration includes LYRICS/GEN, twelve paired outfits, bounded stage
+  effects and a ten-slot song library with four editable factory songs.
+- 38 host checks, actual native builds, emulator library/save/reboot, companion
+  browser checks and target offline JPEG/audio evidence are recorded there.
+- Final default image/static/pool: 504416/35728/255624 bytes. MIDI+UVC:
+  510900/33924/266080 bytes, retaining 70664 image bytes free and passing the
+  unchanged 64 KiB image /16 KiB static /32 KiB pool free floors.
+- Owner authorized pushing the feature branch. No main merge/push, release,
+  live-site deployment or physical-device flash is authorized or performed.
+- Creative approval, physical USB testing, native pedal input transport,
+  live telemetry and full-body mouth compositing remain outstanding.
 
-Earlier stacked handoffs were preserved in [the historical archive](archive/HANDOFF_BEFORE_CLAUDE_REVIEW.md). Their old workflow/automatic-merge instructions and superseded figures are historical only. Current owner instructions take precedence.
+[Durable review evidence](evidence/native-integration/README.md) contains actual
+screenshots, packed-art contact sheets, listening copies, editable factory
+songs and measurements. Earlier handoffs are archived and do not override the
+owner's current instructions.

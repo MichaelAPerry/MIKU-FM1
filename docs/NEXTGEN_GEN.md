@@ -1,5 +1,9 @@
 # Experimental contemporary GEN candidates (2026-11-08)
 
+Current integration status: [NEXTGEN_NATIVE_INTEGRATION.md](NEXTGEN_NATIVE_INTEGRATION.md)
+and [CLAUDE_HANDOFF.md](../CLAUDE_HANDOFF.md) supersede earlier original-only,
+host-only, provisional source-grid and memory figures in this milestone document.
+
 The POP/BALLAD/DANCE/CHIP engine remains available as the legacy baseline. `gen_next.c/h` implements a separate,
 integer-only composition engine for native GEN and host review. Native selection/controls are integrated separately in
 `native/dinghy.c`; the five modern directions remain candidates, not a finalized musical lineup.

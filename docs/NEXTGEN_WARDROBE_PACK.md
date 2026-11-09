@@ -1,5 +1,9 @@
 # Paired wardrobe sprite pipeline
 
+Current integration status: [NEXTGEN_NATIVE_INTEGRATION.md](NEXTGEN_NATIVE_INTEGRATION.md)
+and [CLAUDE_HANDOFF.md](../CLAUDE_HANDOFF.md) supersede earlier original-only,
+host-only, provisional source-grid and memory figures in this milestone document.
+
 `tools/wardrobe_pack.py` packs actual outfit-specific source artwork into the native portrait and dance paths. It does not recolor the original outfit to stand in for a new design, fabricate poses from one image, or overwrite existing character assets. Both original atlases remain entry 0. New source artwork and normalized packed pixels remain Hatsune Miku fan art under the Piapro Character License; see [LICENSING.md](../LICENSING.md).
 
 ## Source manifest and frame contract

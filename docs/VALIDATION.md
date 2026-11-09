@@ -1,5 +1,24 @@
 # Validation
 
+## Current native integration validation
+
+Host Release: **38/38** checks pass. Default, MIDI+UVC and offline video-benchmark
+profiles build with the unchanged resource floors. Default/video emulator smoke
+runs each captured124928 audio frames with RMS2606 and23 screen colours.
+Actual slot10 save/CRC and fresh-emulator-boot playback pass. Native GEN/LYRICS,
+paired portrait/body/effects screens and all twelve companion costumes were
+exercised. The target expanded-fireworks benchmark produced3 JPEGs with no
+failures and no full-scale audio samples; maximum tile1.419ms, maximum frame
+39.593ms in the emulator. This is not physical USB enumeration or throughput.
+
+See [current handoff](../CLAUDE_HANDOFF.md),
+[durable snapshot](evidence/NEXTGEN_NATIVE_INTEGRATION_SNAPSHOT.json), and
+[actual screenshots/listening examples](evidence/native-integration/README.md).
+Fresh host tooling requires `python3 -m pip install -r tools/requirements-dev.txt`
+(or an equivalent virtualenv); CI installs those dependencies explicitly.
+
+The historical milestones below remain useful for baseline comparisons.
+
 Levels, never interchangeable: **built** (compiled), **host tests**, **emulator** (fm1-emu running the real package),
 **hardware** (a physical FM-1).
 

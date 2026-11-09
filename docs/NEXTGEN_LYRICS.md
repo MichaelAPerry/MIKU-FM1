@@ -1,5 +1,9 @@
 # Reusable lyric phrases and native pattern adapter (2026-11-09)
 
+Current integration status: [NEXTGEN_NATIVE_INTEGRATION.md](NEXTGEN_NATIVE_INTEGRATION.md)
+and [CLAUDE_HANDOFF.md](../CLAUDE_HANDOFF.md) supersede earlier original-only,
+host-only, provisional source-grid and memory figures in this milestone document.
+
 `firmware/song/lyrics.c,h` adds a freestanding text compiler over the existing mora table. It produces caller-owned,
 editable `LyUnit` arrays, not a new synthesizer or a replacement song format. A word contains multiple morae;
 spaces mark word boundaries; explicit rests and phrase boundaries carry durations. A caller maps units to its own

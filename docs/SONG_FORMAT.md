@@ -4,6 +4,25 @@ Miku-FM songs are pattern based, like a tracker. The model lives in `firmware/so
 `firmware/song/song_io.c`. Everything has a fixed capacity (no heap): `sizeof(Song)` is 4494 bytes, an encoded song
 4508 bytes (version 3; one Dinghy slot holds 16384), the undo ring 2594 bytes.
 
+## Current feature-branch format: MKS2 v4
+
+The encoded size remains **4508 bytes**. Native save slots now number ten,
+with the original eight addresses and 16 KiB strides preserved. See
+[NEXTGEN_NATIVE_INTEGRATION.md](NEXTGEN_NATIVE_INTEGRATION.md) for the storage map.
+
+Vocal flag bits now mean low nibble velocity, `0x10` outgoing legato,
+`0x20` incoming sustained vowel, `0x40` word boundary and `0x80` phrase boundary.
+A phrase boundary suppresses outgoing legato. Explicit lyric rests have note 0,
+a positive duration and a word/phrase boundary flag; ordinary legacy empty cells
+remain empty. Sustain suppresses the incoming consonant and follows the actual
+preceding gated vowel when available. The appended mora IDs 70–72 are sha, ja
+and the existing R→A approximation of rya; IDs 0–69 are unchanged.
+
+Versions 1, 2 and 3 remain readable. Their previously ignored high vocal bits
+are cleared on import so old songs keep their previous sound. Older firmware
+does not understand version 4. The historical layout tables below still describe
+the same byte offsets; their high-bits-reserved wording applies to v1–v3 only.
+
 ## Model
 
 - 4 tracks: VOCAL 0, CHORDS 1, BASS 2, DRUMS 3. Each has a bank of **16 patterns** (`NPAT`); a pattern is **one 4/4 bar of

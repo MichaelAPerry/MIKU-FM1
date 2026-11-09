@@ -1,5 +1,15 @@
 ## Current review handoff (2026-11-09)
 
+## Latest native integration milestone
+
+Native lyrics and contemporary GEN are integrated. Twelve paired outfits,
+fireworks/sparkles/confetti/smoke/beams, a ten-slot song library, and four
+editable first-verse factory songs are implemented on the feature branch.
+The current authoritative status is [CLAUDE_HANDOFF.md](../CLAUDE_HANDOFF.md),
+with implementation details in [NEXTGEN_NATIVE_INTEGRATION.md](NEXTGEN_NATIVE_INTEGRATION.md).
+Earlier host-only/original-outfit-only status statements below are superseded
+for these features. Physical USB and pedal transport remain unfinished.
+
 Read [CLAUDE_HANDOFF.md](../CLAUDE_HANDOFF.md) for current feature readiness and owner constraints. The older snapshots below are historical; optional native UVC code now exists but real camera operation is unverified, and the new wardrobe remains concept-only.
 
 # Feature branch state update (2026-11-08)

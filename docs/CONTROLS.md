@@ -1,5 +1,10 @@
 # Controls
 
+The feature branch adds SONG LIBRARY, LYRICS and VISUALS pages and ten save
+slots. Their current bindings, factory songs and compatibility limits are in
+[NEXTGEN_NATIVE_INTEGRATION.md](NEXTGEN_NATIVE_INTEGRATION.md). The original
+page controls below remain available.
+
 Miku-FM is a four-track songwriter with a singer. **HOME** cycles the pages: STAGE, DANCE, SONG, PATTERN, MIXER, GEN (the page name is on
 the screen). One control map holds everywhere; the tables below list what each control does on each page.
 
@@ -132,8 +137,10 @@ the four tracks (dark = locked; the white frame is the current track).
 
 ## Songs and slots
 
-The device keeps 8 songs (slots 1-8). At power-on it loads the slot you last saved to or loaded; if that is empty or
-damaged it plays the demo 「おとのはこ」.
+The device keeps 10 songs (slots 1–10). At power-on it loads the last saved slot.
+Empty slots 1–4 reconstruct the selected factory song; the historical demo remains
+the fallback for empty user slots. The new SONG LIBRARY provides explicit selected-slot
+REC saving and EDIT loading/new-song creation. See the integration notes above.
 
 Hold **SAVE** (about a third of a second, or turn SELECT while holding it) for the slot menu: **SELECT** picks the slot
 (its song name is shown), then, still holding SAVE, press **FX** to load that slot, **SCL** for a new empty song (one row,

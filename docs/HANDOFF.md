@@ -1,37 +1,16 @@
 # Current MIKU-FM1 handoff
 
-> Current DX7 milestone: [real six-operator renderer, dedicated BANK/operator editor, embedded patch saving, native video/audio evidence and current measurements](DX7_BANK_HANDOFF.md). This supersedes earlier DX7-plan-only status.
+Start with **[CLAUDE_CODE_REVIEW.md](../CLAUDE_CODE_REVIEW.md)** for the independent
+review of draft PR21 on `feature/miku-nextgen-performance`.
+[CLAUDE_HANDOFF.md](../CLAUDE_HANDOFF.md) is the concise current index.
 
+The actual six-operator DX7 renderer, BANK/operator editor, eight source patches
+and embedded v5 project snapshots are implemented. Current commands, limitations,
+listening examples and native proof are in [DX7_BANK_HANDOFF.md](DX7_BANK_HANDOFF.md).
+Earlier plan-only status and the64 KiB flash-reserve requirement are superseded.
 
-> Current policy and UI: [fixed 64 KiB flash reserve removed at owner request; neon console UI implemented; eight-voice DX7 audition bank prepared offline](NEON_UI_AND_DX7_BANK.md). Earlier fixed-flash-reserve instructions are superseded.
-
-
-> Hardware/DX7 review: [both known FM-1 flash variants pass emulator persistence checks; DX7 engine reuse is evaluated but not integrated](HARDWARE_AND_DX7_REVIEW.md).
-
-
-> Current device-wide visual pass: [pink/blue borders and gradients across all nine musical pages, popups and SAVE window, with native recordings and current measurements](evidence/device-theme/README.md). This supersedes the earlier menu-only UI scope and resource figures.
-
-
-> Current device UI follow-up: [selectable per-song LOOK controls, electronic scenes, recordings and resource measurements](DEVICE_LOOK_HANDOFF.md). This supersedes earlier global-look settings and pre-follow-up audio/resource figures below.
-
-
-Start with **[CLAUDE_HANDOFF.md](../CLAUDE_HANDOFF.md)**. The detailed current
-implementation is [NEXTGEN_NATIVE_INTEGRATION.md](NEXTGEN_NATIVE_INTEGRATION.md).
-
-- Branch `feature/miku-nextgen-performance`; PR21 remains a draft for review.
-- Native integration includes LYRICS/GEN, twelve paired outfits, bounded stage
-  effects and a ten-slot song library with four editable factory songs.
-- 38 host checks, actual native builds, emulator library/save/reboot, companion
-  browser checks and target offline JPEG/audio evidence are recorded there.
-- Final default image/static/pool: 504416/35728/255624 bytes. MIDI+UVC:
-  510900/33924/266080 bytes, retaining 70664 image bytes free and passing the
-  unchanged 64 KiB image /16 KiB static /32 KiB pool free floors.
-- Owner authorized pushing the feature branch. No main merge/push, release,
-  live-site deployment or physical-device flash is authorized or performed.
-- Creative approval, physical USB testing, native pedal input transport,
-  live telemetry and full-body mouth compositing remain outstanding.
-
-[Durable review evidence](evidence/native-integration/README.md) contains actual
-screenshots, packed-art contact sheets, listening copies, editable factory
-songs and measurements. Earlier handoffs are archived and do not override the
-owner's current instructions.
+Current validation baseline:46 local host tests pass; default/video/benchmark
+native builds and default/video emulator smoke pass. Video image538444 bytes,
+43120 free; static40720; pool266080. Physical testing and sustained USB throughput
+remain outstanding. No main merge, release, website deployment or physical flash
+is authorized by this handoff. The original broader assignment remains unfinished.

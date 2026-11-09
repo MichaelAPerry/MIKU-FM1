@@ -60,9 +60,10 @@ void en_unlock(Engine *e, uint32_t (*wait)(void)) {
     while (e->ack && wait()) {}
 }
 typedef char en_cons_chk[((int)MC_NONE == (int)FC_NONE && (int)MC_K == (int)FC_K && (int)MC_NN == (int)FC_NN && (int)MC_P == (int)FC_P && (int)MC_Y == (int)FC_Y) ? 1 : -1];
-static void sing(Engine *e, uint32_t note, uint32_t mora, uint32_t vel) {   /* consonant + vowel; moraic n is a hum (vowel ignored) */
-    uint32_t v = mora_vowel(mora);
-    uint32_t lang = e->g->vx.lang, cons = lang == VL_VOWEL ? FC_NONE : mora_cons(mora);
+static void sing(Engine *e, uint32_t note, uint32_t mora, uint32_t vel, uint32_t flags) {   /* consonant + vowel; moraic n is a hum (vowel ignored) */
+    if(flags & SQ_VOCAL_REATTACK)voff(e);
+    uint32_t v = (flags & VF_SUSTAIN) && e->fv.gated ? e->vh : mora_vowel(mora);
+    uint32_t lang = e->g->vx.lang, cons = lang == VL_VOWEL || (flags & VF_SUSTAIN) ? FC_NONE : mora_cons(mora);
     if (v < 5u) e->vh = (uint8_t)v;
     fv_note_on_mora(&e->fv, (uint8_t)note, (uint8_t)cons, v < 5u ? (uint8_t)v : e->vh, (uint8_t)vel);
     hnote(e, (int32_t)note, cons, v < 5u ? v : e->vh, vel);
@@ -77,7 +78,7 @@ static void command(Engine *e, uint32_t w) {
     case EN_BPM: sq_set_bpm(&e->sq, a); break;
     case EN_RATE: e->arate = (uint8_t)(a > 100u ? 100u : a); break;   /* next interval only; never retrigger a held note */
     case EN_ON:
-        if (a == TR_VOCAL) { sing(e, b, c, 110); e->vcur = ++e->vid; }
+        if (a == TR_VOCAL) { sing(e, b, c, 110, 0); e->vcur = ++e->vid; }
         else if (a == TR_CHORDS) ch_note_on(&e->ch, (uint8_t)b, 100);
         else if (a == TR_BASS) bs_note_on(&e->bs, (uint8_t)b, 100, 0, 0);
         else if (b < DR_N) dr_trig(&e->dr, (uint8_t)b, 110);
@@ -93,22 +94,22 @@ static void command(Engine *e, uint32_t w) {
 }
 static void vq_push(Engine *e, uint32_t on, uint32_t delay, const SqEvent *v, uint16_t id) {
     EnVq *q = &e->vq[e->vqn++];
-    q->due = e->clk + delay; q->on = (uint8_t)on; q->note = v->note; q->mora = v->mora; q->vel = v->vel; q->id = id;
+    q->due = e->clk + delay; q->on = (uint8_t)on; q->note = v->note; q->mora = v->mora; q->vel = v->vel; q->flags = (uint8_t)(v->aux & (VF_SUSTAIN|SQ_VOCAL_REATTACK)); q->id = id;
 }
 static void vq_apply(Engine *e, const EnVq *q) {
-    if (q->on) { sing(e, q->note, q->mora, q->vel); e->vcur = q->id; }
+    if (q->on) { sing(e, q->note, q->mora, q->vel, q->flags); e->vcur = q->id; }
     else if (q->id == e->vcur) voff(e);
 }
 static void vocal_event(Engine *e, const SqEvent *v, uint32_t on) {   /* a sequenced vocal note: now, or queued (on-beat) */
     const Voice *x = &e->g->vx;
     uint32_t d = obd(x);
     if ((!d && !e->vqn) || e->vqn >= EN_VQN) {
-        if (on) { sing(e, v->note, v->mora, v->vel); e->vcur = ++e->vid; }
+        if (on) { sing(e, v->note, v->mora, v->vel, v->aux); e->vcur = ++e->vid; }
         else voff(e);
         return;
     }
     if (on) {
-        uint32_t c = x->lang == VL_VOWEL ? 0u : fv_cons_ms((uint8_t)mora_cons(v->mora)) * 441u / 10u * csc(x) / 100u * x->obeat / 100u;
+        uint32_t c = x->lang == VL_VOWEL || (v->aux & VF_SUSTAIN) ? 0u : fv_cons_ms((uint8_t)mora_cons(v->mora)) * 441u / 10u * csc(x) / 100u * x->obeat / 100u;
         vq_push(e, 1, d > c ? d - c : 0, v, ++e->vid);
     } else vq_push(e, 0, d, v, e->vid);
 }

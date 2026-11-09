@@ -115,7 +115,7 @@ def normalize(frames, width, height, feet=False):
     x0, x1, y0, y1 = int(xs.min()), int(xs.max()) + 1, int(ys.min()), int(ys.max()) + 1
     # Preserve the source aspect ratio. Use one common target transform so idle
     # motion and tilted faces retain their generated relative positions.
-    scale = min(width / (x1 - x0), height / (y1 - y0))
+    scale = min((width - 4) / (x1 - x0), (height - 4) / (y1 - y0))
     nw, nh = max(1, round((x1 - x0) * scale)), max(1, round((y1 - y0) * scale))
     dx, dy = (width - nw) // 2, height - nh if feet else (height - nh) // 2
     out_rgb, out_mask = [], []

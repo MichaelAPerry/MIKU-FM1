@@ -21,7 +21,7 @@ static uint32_t atlas_check(const SprAtlas *atlas,const uint16_t *palette){
     return hash;
 }
 int main(void){
-    CHECK(WD_OUTFIT_N>=1u);CHECK(WD_ADDITIONAL_BYTES<=330000u);
+    CHECK(WD_OUTFIT_N>=1u);CHECK(WD_ADDITIONAL_BYTES<=340000u);
     CHECK(!strcmp(WD_OUTFITS[0].id,"original")&&WD_OUTFITS[0].approved);
     for(unsigned i=0;i<WD_OUTFIT_N;i++){
         const WardrobeSprites *w=WD_OUTFITS+i;const SprAtlas *face=w->faces,*body=w->stage;

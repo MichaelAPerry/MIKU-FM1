@@ -1,0 +1,94 @@
+{
+  "version": 1,
+  "outfits": [
+    {
+      "id": "encore",
+      "name": "ENCORE",
+      "status": "prototype",
+      "sheet": "encore/sheet.png",
+      "layout": "paired4x5",
+      "margin": 4
+    },
+    {
+      "id": "off-duty",
+      "name": "OFF DUTY",
+      "status": "prototype",
+      "sheet": "off-duty/sheet.png",
+      "layout": "paired4x5",
+      "margin": 4
+    },
+    {
+      "id": "retro-wave",
+      "name": "RETRO WAVE",
+      "status": "prototype",
+      "sheet": "retro-wave/sheet.png",
+      "layout": "paired4x5",
+      "margin": 4
+    },
+    {
+      "id": "prism",
+      "name": "PRISM",
+      "status": "prototype",
+      "sheet": "prism/sheet.png",
+      "layout": "paired4x5",
+      "margin": 4
+    },
+    {
+      "id": "neon-punk",
+      "name": "NEON PUNK",
+      "status": "prototype",
+      "sheet": "neon-punk/sheet.png",
+      "layout": "paired4x5",
+      "margin": 4
+    },
+    {
+      "id": "city-beat",
+      "name": "CITY BEAT",
+      "status": "prototype",
+      "sheet": "city-beat/sheet.png",
+      "layout": "paired4x5",
+      "margin": 4
+    },
+    {
+      "id": "signal-suit",
+      "name": "SIGNAL SUIT",
+      "status": "prototype",
+      "sheet": "signal-suit/sheet.png",
+      "layout": "paired4x5",
+      "margin": 4
+    },
+    {
+      "id": "summer-beat",
+      "name": "SUMMER BEAT",
+      "status": "prototype",
+      "sheet": "summer-beat/sheet.png",
+      "layout": "paired4x5",
+      "margin": 4
+    },
+    {
+      "id": "snow-glow",
+      "name": "SNOW GLOW",
+      "status": "prototype",
+      "sheet": "snow-glow/sheet.png",
+      "layout": "paired4x5",
+      "margin": 4
+    },
+    {
+      "id": "festival",
+      "name": "FESTIVAL",
+      "status": "prototype",
+      "sheet": "festival/sheet.png",
+      "layout": "paired4x5",
+      "margin": 4
+    },
+    {
+      "id": "moon-circuit",
+      "name": "MOON CIRCUIT",
+      "status": "prototype",
+      "sheet": "moon-circuit/sheet.png",
+      "layout": "paired4x5",
+      "margin": 4
+    }
+  ],
+  "budget_bytes": 340000
+}

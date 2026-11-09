@@ -68,13 +68,14 @@ def recover_boxes(path, cols, rows):
     return [(xx[x], yy[y], xx[x + 1], yy[y + 1]) for y in range(rows) for x in range(cols)], axes
 
 
-def sheet(path, cols, rows, boxes=None):
+def sheet(path, cols, rows, boxes=None, margin=0):
     with Image.open(path) as src:
         im = src.convert("RGBA")
     if boxes is None:
         boxes = [(x * im.width // cols, y * im.height // rows,
                   (x + 1) * im.width // cols, (y + 1) * im.height // rows)
                  for y in range(rows) for x in range(cols)]
+    boxes=[(a+margin,b+margin,c-margin,d-margin) for a,b,c,d in boxes]
     w = min(box[2] - box[0] for box in boxes)
     h = min(box[3] - box[1] for box in boxes)
     if min(w, h) < 16:
@@ -146,24 +147,25 @@ def main():
             if not args.allow_pending:
                 report["errors"].append(f"{name}: no matched production portrait/dance source pair")
             continue
-        if layout not in ["uniform", "paired4x5"] or outfit.get("margin", 0) != 0:
-            report["errors"].append(f"{name}: validator requires uniform or paired4x5 grids without margins")
+        margin=outfit.get("margin",0)
+        if layout not in ["uniform", "paired4x5"] or not isinstance(margin,int) or margin<0:
+            report["errors"].append(f"{name}: validator requires uniform or paired4x5 grids and a nonnegative integer margin")
             continue
         try:
             if paired:
                 path = source_path(args.manifest.parent, paired)
                 boxes, axes = recover_boxes(path, 4, 5)
                 row["source_grid_boundaries"] = {"x": axes[0], "y": axes[1]}
-                row["faces"], fs = sheet(path, 4, 3, boxes[:12])
-                row["stage"], ss = sheet(path, 4, 2, boxes[12:])
+                row["faces"], fs = sheet(path, 4, 3, boxes[:12],margin)
+                row["stage"], ss = sheet(path, 4, 2, boxes[12:],margin)
             else:
                 face_path = source_path(args.manifest.parent, faces)
                 stage_path = source_path(args.manifest.parent, stage)
                 face_boxes, face_axes = recover_boxes(face_path, 4, 3)
                 stage_boxes, stage_axes = recover_boxes(stage_path, 4, 2)
                 row["source_grid_boundaries"] = {"faces": face_axes, "stage": stage_axes}
-                row["faces"], fs = sheet(face_path, 4, 3, face_boxes)
-                row["stage"], ss = sheet(stage_path, 4, 2, stage_boxes)
+                row["faces"], fs = sheet(face_path, 4, 3, face_boxes,margin)
+                row["stage"], ss = sheet(stage_path, 4, 2, stage_boxes,margin)
             pair = (row["faces"]["sha256"], row["stage"]["sha256"])
             if pair in seen_pairs:
                 report["errors"].append(f"{name}: duplicate complete source pair masquerades as another outfit")

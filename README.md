@@ -12,8 +12,19 @@ all, over FM chords, bass and drums. Shape her voice, write patterns or let her 
 <img src="site/media/screens/gen.png" width="200" alt="GEN: the song generator">
 </p>
 
+**Current release: [Miku-FM 0.7](https://github.com/MichaelAPerry/MIKU-FM1/releases/tag/v0.7)**: a six-operator DX7 engine with ten
+original voices, DX7 cartridge import, MIDI keyboard input, a 10-song library, lyrics editing and 12 stage outfits.
+
 **Try it in your browser, watch the trailer, install it:** https://michaelaperry.github.io/MIKU-FM1/ (the emulator runs the
 real firmware package; the installer works in Chrome or Edge over USB).
+
+### Quick start
+
+1. Open the [website](https://michaelaperry.github.io/MIKU-FM1/), connect the FM-1 by USB and press **Install 0.7** (Chrome or Edge).
+2. Press **PLAY**: she sings. **HOME** steps through STAGE, DANCE, SONG, PATTERN, MIXER, GEN, LYRICS, LOOK, LIBRARY and DX7 BANK.
+3. Load your own DX7 sounds: open the [DX7 bank tool](https://michaelaperry.github.io/MIKU-FM1/bank.html), pick a `.syx`, send it,
+   and press **REC** on the FM-1 within 10 seconds. Sending a cartridge from Dexed over USB works too.
+4. The [guide](https://michaelaperry.github.io/MIKU-FM1/guide.html) explains every page and control.
 
 - **Her voice:** a formant voice synthesised live (no samples): 73 Japanese mora selections with their consonants, five characters
   from DEEP to TINY, languages (Japanese, animal babble, scat, vowels), tension, fry, whisper, a harmony voice, vowels on
@@ -31,44 +42,29 @@ real firmware package; the installer works in Chrome or Edge over USB).
   STAGE; on DANCE she dances to the song. USB video output is not in 0.7.
 - **Guide:** [docs/MANUAL.md](docs/MANUAL.md) (also the website's [guide page](https://michaelaperry.github.io/MIKU-FM1/guide.html)),
   every control: [docs/CONTROLS.md](docs/CONTROLS.md), what is measured: [docs/VALIDATION.md](docs/VALIDATION.md).
-- **Status:** development builds (0.x). Runs on a real FM-1 (installed with the browser installer; songs save and load). Not yet
-  tried against a real FM-1: DX7 SysEx over USB with Dexed and the bank tool.
+- **Status:** 0.7 is a release built and attested on GitHub and booted in the fm1-emu emulator. Earlier versions run on real
+  FM-1s. Not yet tried on a real FM-1: DX7 SysEx over USB with Dexed and the bank tool, and MIDI keyboard input.
 - **Other firmwares' data:** Miku-FM does not read other firmwares' projects or samples (see below). Back up first.
 - **Licence:** code GPL-3.0-only; the singer is Hatsune Miku fan art under Crypton's Piapro Character License (free and
   non-commercial only): [LICENSING.md](LICENSING.md). The ten DX7 voices are original project data.
 
-## The older host prototype
+## Building
 
-### Build and render an editable eight-bar song
+The firmware is `native/dinghy.c` on [Dinghy](https://github.com/zvenson/dinghy), with the modules in `firmware/`: the song model
+and MKS2 format (`firmware/song/`), the voice (`firmware/audio/fvoice/`), the classic FM band (`firmware/audio/fmband/`), the DX7
+renderer (`firmware/audio/dx7/`) and the engine that runs in the audio interrupt (`firmware/app/engine.c`).
 
-Requires a C11 compiler and CMake 3.16+.
+Host build and tests (C11, CMake 3.16+, Python 3 with `tools/requirements-dev.txt`):
 
 ```sh
-cmake -S . -B build
-cmake --build build
-ctest --test-dir build --output-on-failure
-./build/miku_demo demo.wav demo.mik
+cmake -S . -B build/host -DCMAKE_BUILD_TYPE=Release
+cmake --build build/host --parallel
+ctest --test-dir build/host --output-on-failure
 ```
 
-The demo composes four patterns in C: vowel-melody, three-note FM-like chords, FM bass, and kick/snare/hat rhythm. It serializes the song to versioned CRC-checked `MIK1` bytes, decodes back to editable notes, and **renders from the decoded song** into 16-bit mono 22,050 Hz WAV.
-
-`demo.mik` is a structured editable event file, **not** rendered audio. The demo is fixed eight bars (120 BPM); the UI, arrangement chaining, Japanese consonants, lyrics editing, and physical instrument support remain future work.
-
-## Architecture
-
-- `shared/song.h` — editable fixed-capacity 4-track event model
-- `shared/song_io.c` — versioned little-endian binary codec and CRC32
-- `firmware/sequencer/` — precomputed sorted sample-time event queues
-- `firmware/audio/vocal/` — independently written five-vowel formant synthesizer
-- `firmware/audio/band/` — original polyphonic chord FM, monophonic FM bass, electronic drums
-- `tools/demo.c` — independent host harness rendering an eight-bar song
-
-The 0.5 firmware (`native/dinghy.c`) is built from newer modules: `firmware/song/` (song model, MKS2 file format, sequencer, mora table, demo song), `firmware/audio/fmband/` (FM chords, bass, drums, mixer), `firmware/audio/fvoice/` (the voice) and `firmware/app/engine.c` (the dispatch that runs in the audio interrupt). `tools/song_render.c` renders the demo through the same engine on the host: `./build/firmware/app/song_render otonohako.wav`.
-- `tests/` — unit, serialization, and host-demo smoke tests
-
-The current instruments use simplified synthesis and no effects, and there is no claim of measured audio or CPU quality on FM-1 hardware. See `docs/RESEARCH.md`, `docs/SONG_FORMAT.md`.
-
-Host-engine code is MIT licensed; the firmware package is GPL-3.0-only (see Licence). Miku-FM is an unofficial fan project and has no relationship to Crypton, Yamaha or VOCALOID (see LICENSING.md). No voicebanks or proprietary assets are included.
+Firmware package: the JieLi toolchain and AC79 SDK (see Dinghy's README), then `bash native/build.sh`. Releases are built,
+tested, attested and booted in the emulator by GitHub Actions when a `vX.Y` release is published.
+Song format: [docs/SONG_FORMAT.md](docs/SONG_FORMAT.md). Measurements and test levels: [docs/VALIDATION.md](docs/VALIDATION.md).
 
 ## Other firmwares' data
 

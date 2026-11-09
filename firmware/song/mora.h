@@ -5,7 +5,7 @@
 #ifndef MORA_H
 #define MORA_H
 #include <stdint.h>
-#define MORA_N 70
+#define MORA_N 73
 enum { MV_A, MV_I, MV_U, MV_E, MV_O, MV_N };
 enum { MC_NONE, MC_K, MC_S, MC_SH, MC_T, MC_CH, MC_TS, MC_N, MC_H, MC_F, MC_M, MC_Y, MC_R, MC_W, MC_G, MC_Z, MC_J, MC_D, MC_B, MC_P, MC_NN };
 const char *mora_str(uint32_t i);       /* romaji, lower case; "" for 0 or out of range */

@@ -63,6 +63,34 @@ class WardrobeTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'collision'):
             pack.generate(m, ROOT)
 
+    def test_shared_head_and_real_tilts(self):
+        with tempfile.TemporaryDirectory() as temp:
+            image = Path(temp) / 'sheet.png'
+            fixture(image)
+            with Image.open(image) as im:
+                frames = pack.cells(im, 4, 5)[:12]
+            frames, pal, _ = pack.normalize(frames, 90, 90)
+            result, info = pack.compose_portraits(frames, pal)
+            mask = pack.np.ones((90, 90), bool)
+            x, y, w, h = info['expression_box']
+            mask[y:y + h, x:x + w] = False
+            for i in range(1, 10):
+                self.assertTrue(pack.np.array_equal(result[i][mask], result[0][mask]))
+            self.assertTrue(pack.np.array_equal(result[10], frames[10]))
+            self.assertTrue(pack.np.array_equal(result[11], frames[11]))
+
+    def test_recover_real_gutter_before_body(self):
+        im = Image.new('RGB', (128, 160), (255, 0, 255))
+        draw = ImageDraw.Draw(im)
+        boundaries = [0, 30, 60, 90, 125, 160]
+        for y in range(5):
+            for x in range(4):
+                draw.rectangle((x * 32 + 8, boundaries[y] + 2,
+                                x * 32 + 23, boundaries[y + 1] - 3), fill=(20, 180, 180))
+        _, rows = pack.grid_boundaries(im, 4, 5)
+        self.assertLess(rows[3], 94)  # equal96 would admit next tile's hair
+        self.assertGreater(rows[3], 86)
+
     def test_blank_art_rejected(self):
         with tempfile.TemporaryDirectory() as temp:
             base = Path(temp)

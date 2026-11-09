@@ -31,16 +31,51 @@ source = module('sprite_pack')
 compact = module('sprite_compact')
 
 
+def grid_boundaries(image, columns, rows):
+    """Snap near-equal divisions to genuine magenta/alpha gutters when present.
+    Image generation can place a cell seam a few percent away from the nominal
+    fraction; do not admit a neighboring body's hair into a portrait tile.
+    Portrait/body row heights can differ: search28% vertically and15%
+    horizontally; no genuine gutter means exact equal division.
+    """
+    im = np.asarray(image.convert('RGBA'))
+    alpha = im[..., 3]
+    opaque = alpha >= 128 if np.any(alpha < 128) else ~source.is_magenta(im[..., :3])
+    result = []
+    for axis, count, length in ((0, columns, im.shape[1]), (1, rows, im.shape[0])):
+        profile = opaque.any(axis=axis)
+        points = [0]
+        pitch = length / count
+        for i in range(1, count):
+            nominal = i * pitch
+            window = .15 if axis == 0 else .28
+            lo, hi = max(points[-1] + 8, round(nominal - pitch * window)), min(length - 8, round(nominal + pitch * window))
+            runs, begin = [], None
+            for j in range(lo, hi + 1):
+                blank = j < hi and not profile[j]
+                if blank and begin is None:
+                    begin = j
+                if not blank and begin is not None:
+                    if j - begin >= 2:
+                        runs.append((begin + j) // 2)
+                    begin = None
+            points.append(min(runs, key=lambda x: abs(x - nominal)) if runs else round(nominal))
+        points.append(length)
+        result.append(points)
+    return result
+
+
 def cells(image, columns, rows, margin=0):
     im = np.asarray(image.convert('RGBA'))
     h, w = im.shape[:2]
     if w < columns * 8 or h < rows * 8 or margin < 0:
         raise ValueError('sheet dimensions or margin invalid')
+    xb, yb = grid_boundaries(image, columns, rows)
     result = []
     for y in range(rows):
         for x in range(columns):
-            x0, x1 = x * w // columns + margin, (x + 1) * w // columns - margin
-            y0, y1 = y * h // rows + margin, (y + 1) * h // rows - margin
+            x0, x1 = xb[x] + margin, xb[x + 1] - margin
+            y0, y1 = yb[y] + margin, yb[y + 1] - margin
             if x1 <= x0 or y1 <= y0:
                 raise ValueError('margin consumes a cell')
             result.append(im[y0:y1, x0:x1].copy())
@@ -107,6 +142,33 @@ def normalize(frames, width, height, feet=False):
                               'opaque_pixels': [int(m.sum()) for m in out_mask],
                               'distinct_frames': len({a.tobytes() for a in indexed}),
                               'quantization_rgb_rmse': errors, 'palette_opaque_count': len(pal)}
+
+
+def compose_portraits(frames, palette, box=(25, 28, 42, 39)):
+    """Same stable head/garment contract as original build_faces: generated
+    eye/mouth region for states1..9; actual whole-frame tilts10/11 retained.
+    """
+    x, y, w, h = box
+    if x < 0 or y < 0 or w <= 0 or h <= 0 or x + w > 90 or y + h > 90:
+        raise ValueError('invalid normalized portrait expression box')
+    rgb_palette = np.array([source.from565(p) for p in palette], np.uint8)
+    base = frames[0]
+    mask = np.ones(base.shape, bool)
+    mask[y:y + h, x:x + w] = False
+    result, shifts = [base], [(0, 0)]
+    for i in range(1, 12):
+        if i >= 10:
+            result.append(frames[i])
+            shifts.append((0, 0))
+            continue
+        dx, dy, _ = source.best_shift(rgb_palette[base], rgb_palette[frames[i]], mask, rng=3)
+        aligned = source.shift_img(frames[i], dx, dy, 0)
+        combined = base.copy()
+        combined[y:y + h, x:x + w] = aligned[y:y + h, x:x + w]
+        result.append(combined)
+        shifts.append((int(dx), int(dy)))
+    return result, {'expression_box': list(box), 'alignment_shifts': shifts,
+                    'stable_head_composite_frames': list(range(1, 10))}
 
 
 def atlas_text(name, frames):
@@ -207,6 +269,9 @@ typedef struct {
             continue
         ff, sf, hashes = load_entry(entry, base)
         faces, fp, fi = normalize(ff, 90, 90)
+        faces, composite = compose_portraits(faces, fp, tuple(entry.get('face_expression_box', [25, 28, 42, 39])))
+        fi.update(composite)
+        fi['distinct_frames'] = len({a.tobytes() for a in faces})
         stage, sp, si = normalize(sf, 61, 71, feet=True)
         if fi['distinct_frames'] < 2 or si['distinct_frames'] < 2:
             raise ValueError('outfit has no actual portrait or dance animation: ' + slug)

@@ -1,0 +1,233 @@
+<!doctype html>
+<!-- SPDX-License-Identifier: GPL-3.0-only -->
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Miku-FM · DX7 bank tool</title>
+<meta name="description" content="Open a DX7 cartridge (.syx), send it to your FM-1 over USB, send a single voice, or save the FM-1's user bank. Runs in Chrome or Edge with Web MIDI; nothing leaves your computer.">
+<link rel="icon" href="media/favicon-32.png"><link rel="apple-touch-icon" href="media/apple-touch-icon.png">
+<link rel="stylesheet" href="site.css">
+</head>
+<body class="page"><main>
+<div class="top">
+  <div class="brand">Miku<span>-FM</span> · <span style="color:var(--dim);font-weight:500">DX7 bank tool</span></div>
+  <nav><a href="./">Home</a><a href="guide.html">Guide</a><a href="bank.html" class="here">DX7 bank tool</a><a href="install.html">Install</a></nav>
+</div>
+
+<header>
+  <p class="label">DX7 CARTRIDGES · M-VAVE FM-1 · MIKU-FM 0.7</p>
+  <h1>DX7 bank tool<i>.</i></h1>
+  <p class="lead">Open a DX7 cartridge, see what is in it, send it to your FM-1 over USB, or save the FM-1's own user bank. Everything happens in your browser; no file is uploaded.</p>
+  <p class="note">Needs Chrome or Edge (Web MIDI with SysEx), the FM-1 connected by USB, and Miku-FM 0.7 or newer on it.</p>
+  <p class="note msg warn" id="nomidi" hidden>This browser has no Web MIDI, so sending and receiving are off. Opening a file and saving the factory bank still work. Use Chrome or Edge to send.</p>
+</header>
+
+<section class="card" id="open">
+  <p class="label"><b>1</b> / OPEN</p>
+  <h2>Open a bank.</h2>
+  <p class="note">A DX7 32-voice dump or a single voice (.syx), or a raw packed bank (.bin, 128 bytes a voice). Checksums and every voice are checked the way the FM-1 checks them.</p>
+  <div class="drop" id="drop">
+    <input type="file" id="file" accept=".syx,.SYX,.bin,.BIN,application/octet-stream" aria-label="Open a .syx or .bin file">
+  </div>
+  <div class="row">
+    <a class="btn alt" href="media/dx7/miku-fm-factory.syx" download="miku-fm-factory.syx">Download the Miku-FM factory bank (.syx) ↓</a>
+    <button class="btn alt" id="usefactory" type="button">Open the factory bank here</button>
+  </div>
+  <p class="note">The ten original Miku-FM voices, then INIT VOICE up to 32. A standard DX7 file: load it in Dexed or on any DX7 librarian.</p>
+  <p class="msg" id="fmsg" role="status"></p>
+  <div id="listbox" hidden>
+    <div class="vwrap"><table class="vtable" id="vt"><thead><tr><th>#</th><th>Name</th><th style="text-align:right">Algorithm</th></tr></thead><tbody id="vb"></tbody></table></div>
+    <div class="row"><button class="btn alt" id="save" type="button">Save as .syx ↓</button><span class="note" id="selnote"></span></div>
+  </div>
+</section>
+
+<section class="card" id="send">
+  <p class="label"><b>2</b> / SEND</p>
+  <h2>Send to your FM-1.</h2>
+  <ol class="steps">
+    <li>Connect the FM-1 by USB and switch Miku-FM on. Stop any song that is playing.</li>
+    <li>Press <b>Connect</b> and allow MIDI with SysEx when the browser asks.</li>
+    <li>Pick the FM-1 as the output, then send a bank or one voice.</li>
+    <li>The FM-1 shows a prompt: press <kbd>REC</kbd> within 10 seconds to accept it, or let it lapse to refuse.</li>
+  </ol>
+  <div class="row"><button class="btn" id="connect" type="button">Connect MIDI</button><span class="note" id="cmsg" role="status"></span></div>
+  <div class="row"><label for="out">Output</label><select id="out" disabled></select></div>
+  <div class="row">
+    <button class="btn pink" id="sendbank" type="button" disabled>Send the whole bank</button>
+    <button class="btn alt" id="sendone" type="button" disabled>Send the selected voice</button>
+  </div>
+  <p class="msg" id="smsg" role="status"></p>
+  <p class="note">The whole bank shows <b>IMPORT 32 VOICES? REC</b> and replaces your user bank (32 voices, kept on the FM-1 until you import again). A single voice shows <b>VOICE TO USER n? REC</b> and goes into the user slot chosen on the BANK page, or <b>VOICE TO EDIT? REC</b> into the patch you have open for editing. Nothing changes until you press REC. The song must be stopped.</p>
+  <p class="note">If the FM-1 says <b>BAD CHECKSUM</b>, <b>BAD DX7 LENGTH</b> or <b>INVALID VOICE n</b>, the dump was damaged on the way: try again, and use USB, not a MIDI cable.</p>
+</section>
+
+<section class="card" id="receive">
+  <p class="label"><b>3</b> / RECEIVE</p>
+  <h2>Save your FM-1's user bank.</h2>
+  <ol class="steps">
+    <li>Connect as above and pick the FM-1 as the input.</li>
+    <li>On the FM-1 open the <b>BANK</b> page (<kbd>HOME</kbd> until DX7 BANK, or <kbd>REC</kbd> on MIXER) and stay on BROWSE, not an edit page.</li>
+    <li>Press <kbd>GLO</kbd>: the FM-1 sends its user bank (it says USER BANK SENT). It appears here in the list.</li>
+    <li>Press <b>Save as .syx</b> in step 1.</li>
+  </ol>
+  <div class="row"><label for="inp">Input</label><select id="inp" disabled></select></div>
+  <p class="msg" id="rmsg" role="status">Not listening yet: connect first.</p>
+  <p class="note">There has to be a user bank to send: import one first, or store a patch from an edit page (<kbd>GLO</kbd>, then <kbd>REC</kbd>). Any DX7 dump that arrives is shown, including one sent from Dexed.</p>
+</section>
+
+<section class="card" id="dexed">
+  <p class="label">OR / WITHOUT THIS PAGE</p>
+  <h2>Send from Dexed directly.</h2>
+  <p>The FM-1 takes a normal DX7 dump on its USB MIDI port from anything that can send one. In <a href="https://asb2m10.github.io/dexed/">Dexed</a>, route its MIDI output to the FM-1's USB MIDI port (in a DAW or a MIDI router), then use the <b>Cart</b> menu's option that sends the whole cartridge to the DX7; the matching <b>Parm</b> option sends the current voice alone (the wording differs a little between versions). The FM-1 answers with the same REC prompt. Use the cartridge from step 1 above to start from the Miku-FM voices.</p>
+  <p class="note">Requires <b>Miku-FM 0.7 or newer over USB</b>. The TRS MIDI jack is not for this: it runs at the classic 31.25 kbaud, so a 4 KB cartridge needs about 1.3 seconds to arrive, and the FM-1 only reads dumps that come in over USB. A MIDI keyboard on either one plays the FM-1's sounds.</p>
+  <p class="note">All of this is described in the <a href="guide.html#bank">guide</a>. Not tested against a real FM-1 yet: if a send fails, please <a href="https://github.com/MichaelAPerry/MIKU-FM1/issues">tell us</a> what the FM-1 said.</p>
+</section>
+
+<footer>
+  Miku-FM · an unofficial, free, non-commercial fan firmware for the M-VAVE FM-1, not associated with or endorsed by Crypton
+  Future Media, Yamaha or M-VAVE. DX7 is a trademark of Yamaha. The factory bank is ten original voices made for this project
+  (GPL-3.0-only). <a href="https://github.com/MichaelAPerry/MIKU-FM1">Source</a>.
+</footer>
+</main>
+<script src="js/dx7syx.js"></script>
+<script>
+"use strict";
+(function () {
+  var D = window.DX7SYX, $ = function (id) { return document.getElementById(id); };
+  var voices = null, sel = 0, kind = null, midi = null, outId = null, inId = null, timer = null;
+
+  function say(el, text, cls) { el.className = "msg" + (cls ? " " + cls : ""); el.textContent = text; }
+  function sayList(el, head, items, cls) {
+    el.className = "msg" + (cls ? " " + cls : ""); el.textContent = head;
+    if (items.length) { var ul = document.createElement("ul"); items.forEach(function (t) { var li = document.createElement("li"); li.textContent = t; ul.appendChild(li); }); el.appendChild(ul); }
+  }
+  function render() {
+    var vb = $("vb"); vb.textContent = "";
+    $("listbox").hidden = !voices;
+    if (!voices) return;
+    voices.forEach(function (p, i) {
+      var tr = document.createElement("tr"), nm = D.voiceName(p);
+      tr.className = "v" + (i === sel ? " sel" : "") + (nm === "INIT VOICE" ? " init" : "");
+      tr.tabIndex = 0; tr.setAttribute("aria-selected", i === sel ? "true" : "false");
+      [["n", i + 1], ["nm", nm || "(no name)"], ["a", D.algorithm(p)]].forEach(function (c) {
+        var td = document.createElement("td"); td.className = c[0] === "nm" ? "" : c[0];
+        if (c[0] === "nm") { var s = document.createElement("span"); s.className = "nm"; s.textContent = c[1]; td.appendChild(s); } else td.textContent = c[1];
+        tr.appendChild(td);
+      });
+      tr.onclick = function () { pick(i); };
+      tr.onkeydown = function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); pick(i); } };
+      vb.appendChild(tr);
+    });
+    buttons();
+  }
+  function pick(i) {
+    sel = i;
+    Array.prototype.forEach.call($("vb").children, function (tr, k) { tr.classList.toggle("sel", k === i); tr.setAttribute("aria-selected", k === i ? "true" : "false"); });
+    buttons();
+  }
+  function buttons() {
+    var ready = !!(midi && outId && voices);
+    $("sendbank").disabled = !(ready && voices.length === D.BANK_N);
+    $("sendone").disabled = !ready;
+    $("selnote").textContent = voices ? (voices.length === D.BANK_N ? "Selected for “Send the selected voice”: " : "Voice to send: ") + (sel + 1) + " " + (D.voiceName(voices[sel]) || "(no name)") : "";
+  }
+  function load(res, label) {
+    if (!res.ok) { voices = null; render(); sayList($("fmsg"), label + ": this file cannot be used.", res.errors, "err"); return; }
+    voices = res.voices; sel = 0; kind = res.kind; render();
+    var head = label + ": " + (res.kind === "bulk" ? (res.source === "bin" ? "packed bank, " : "DX7 32-voice dump, checksum OK, ") + voices.length + " valid voices" : (voices.length === 1 ? "single voice, checksum OK" : voices.length + " single voices, checksums OK")) + (res.source === "syx" ? " (MIDI channel " + (res.channel + 1) + ")." : ".");
+    sayList($("fmsg"), head, res.notes.concat(res.kind === "bulk" && res.errors.length ? res.errors : []), res.notes.length || res.errors.length ? "warn" : "ok");
+  }
+  function openBytes(u8, label) { load(D.parseFile(u8), label); }
+  function readFile(f) {
+    if (!f) return;
+    var rd = f.arrayBuffer ? f.arrayBuffer() : new Promise(function (ok, no) { var r = new FileReader(); r.onload = function () { ok(r.result); }; r.onerror = no; r.readAsArrayBuffer(f); });
+    rd.then(function (b) { openBytes(new Uint8Array(b), f.name); }, function () { say($("fmsg"), "Could not read " + f.name + ".", "err"); });
+  }
+  $("file").onchange = function (e) { readFile(e.target.files[0]); };
+  var drop = $("drop");
+  ["dragenter", "dragover"].forEach(function (n) { drop.addEventListener(n, function (e) { e.preventDefault(); drop.classList.add("over"); }); });
+  ["dragleave", "drop"].forEach(function (n) { drop.addEventListener(n, function (e) { e.preventDefault(); drop.classList.remove("over"); }); });
+  drop.addEventListener("drop", function (e) { var f = e.dataTransfer && e.dataTransfer.files[0]; if (f) readFile(f); });
+  $("usefactory").onclick = function () {
+    fetch("media/dx7/miku-fm-factory.syx").then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.arrayBuffer(); })
+      .then(function (b) { openBytes(new Uint8Array(b), "miku-fm-factory.syx"); },
+        function () { say($("fmsg"), "Could not fetch the factory bank here: use the download link and open the file.", "err"); });
+  };
+
+  function download(bytes, name) {
+    var a = document.createElement("a"), url = URL.createObjectURL(new Blob([bytes], { type: "application/octet-stream" }));
+    a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
+  }
+  $("save").onclick = function () {
+    if (!voices) return;
+    if (voices.length === D.BANK_N) download(D.buildBulk(D.packBank(voices), 0), "dx7-bank.syx");
+    else download(D.buildSingle(voices[sel], 0), (D.voiceName(voices[sel]) || "voice").replace(/\s+/g, "-").toLowerCase() + ".syx");
+  };
+
+  // ---- Web MIDI
+  function countdown(el, text) {
+    clearInterval(timer); var left = 10;
+    function tick() { if (left <= 0) { clearInterval(timer); say(el, text + " The 10 seconds are over: send again if you still want it.", "warn"); return; } say(el, text + " Press REC on the FM-1 now: " + left + " s left.", "ok"); left--; }
+    tick(); timer = setInterval(tick, 1000);
+  }
+  function fillPorts() {
+    var o = $("out"), i = $("inp"), pick = function (sel, ports, keep) {
+      var best = null; sel.textContent = "";
+      ports.forEach(function (p) { var x = document.createElement("option"); x.value = p.id; x.textContent = p.name || p.id; sel.appendChild(x); if (!best && /fm-?1|miku/i.test(p.name || "")) best = p.id; });
+      if (keep && ports.some(function (p) { return p.id === keep; })) best = keep;
+      if (best) sel.value = best;
+      sel.disabled = !ports.length; return sel.value || null;
+    };
+    var outs = [], ins = [];
+    midi.outputs.forEach(function (p) { outs.push(p); }); midi.inputs.forEach(function (p) { ins.push(p); });
+    outId = pick(o, outs, outId); var prev = inId; inId = pick(i, ins, inId);
+    listen(prev !== inId);
+    say($("cmsg"), outs.length ? "Connected. " + outs.length + " output(s), " + ins.length + " input(s)." : "Connected, but no MIDI port found. Connect the FM-1 by USB.", outs.length ? "ok" : "warn");
+    buttons();
+  }
+  var rx = null, rxBuf = [];
+  function listen(changed) {
+    if (!midi) return;
+    midi.inputs.forEach(function (p) { p.onmidimessage = p.id === inId ? onMsg : null; });
+    if (changed) rx = null;
+    say($("rmsg"), inId ? "Listening on " + midi.inputs.get(inId).name + ". Waiting for a DX7 dump from the FM-1 (BANK page, BROWSE, GLO)." : "No MIDI input found: connect the FM-1 by USB.", inId ? "ok" : "warn");
+  }
+  function onMsg(e) {
+    var d = e.data, i;
+    if (!d || !d.length) return;
+    if (d[0] === 0xF0) rxBuf = [];
+    if (!rxBuf) return;
+    if (d[0] !== 0xF0 && rxBuf.length === 0) return;                     // not inside a SysEx message
+    for (i = 0; i < d.length; i++) rxBuf.push(d[i]);
+    if (d[d.length - 1] !== 0xF7) { if (rxBuf.length > 20000) rxBuf = []; return; }
+    var u8 = Uint8Array.from(rxBuf); rxBuf = [];
+    var r = D.parseFile(u8);
+    if (!r.ok && !r.errors.length) return;
+    if (!r.ok) { sayList($("rmsg"), "Received a DX7 message but it is not usable.", r.errors, "err"); return; }
+    load(r, "received from the FM-1");
+    say($("rmsg"), "Received " + (r.kind === "bulk" ? "a 32-voice bank" : "a single voice") + " (" + u8.length + " bytes). It is in the list in step 1: press Save as .syx there.", "ok");
+    $("open").scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+  function send(bytes, what) {
+    var o = midi && outId && midi.outputs.get(outId);
+    if (!o) { say($("smsg"), "No MIDI output chosen.", "err"); return; }
+    try { o.send(bytes); } catch (e) { say($("smsg"), "The browser refused to send: " + (e && e.message || e), "err"); return; }
+    countdown($("smsg"), "Sent " + what + " (" + bytes.length + " bytes) to " + o.name + ".");
+  }
+  $("sendbank").onclick = function () { if (voices && voices.length === D.BANK_N) send(D.buildBulk(D.packBank(voices), 0), "the 32-voice bank"); };
+  $("sendone").onclick = function () { if (voices) send(D.buildSingle(voices[sel], 0), "voice " + (sel + 1) + " " + (D.voiceName(voices[sel]) || "")); };
+  $("out").onchange = function () { outId = $("out").value; buttons(); };
+  $("inp").onchange = function () { var p = inId; inId = $("inp").value; listen(p !== inId); };
+  $("connect").onclick = function () {
+    if (!navigator.requestMIDIAccess) { say($("cmsg"), "This browser has no Web MIDI: use Chrome or Edge.", "err"); return; }
+    say($("cmsg"), "Waiting for the browser's MIDI permission…");
+    navigator.requestMIDIAccess({ sysex: true }).then(function (a) {
+      midi = a; a.onstatechange = fillPorts; fillPorts(); $("connect").textContent = "Connected";
+    }, function () { midi = null; say($("cmsg"), "MIDI access with SysEx was refused. Allow it for this site (the lock icon in the address bar) and try again.", "err"); });
+  };
+  if (!navigator.requestMIDIAccess) { $("nomidi").hidden = false; $("connect").disabled = true; }
+})();
+</script>
+</body>
+</html>

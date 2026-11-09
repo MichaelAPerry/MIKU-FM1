@@ -683,6 +683,10 @@ static void face_update(void){
     static uint32_t lip_until;
     uint32_t now=fm1_ms,m=en.mouth,w;
     if(m==5u && en.level>=6u)lip_until=now+70u;              /* lips shut while sounding (m b p closure, the n hum): hold so a 40 ms face update sees it */
+    /* Sample lips on the fixed clock even when the sprite stays unchanged.
+       Short consonant closures above are still latched between presentation ticks. */
+    if(now-face_ms<40u)return;
+    face_ms=now-(now-face_ms)%40u;
     if((int32_t)(now-happy_until)<0)w=SF_HAPPY;
     else if((int32_t)(now-lip_until)<0)w=SF_N;
     else if(m<5u)w=en.level>=100u?vf[m]:SF_N;
@@ -690,7 +694,7 @@ static void face_update(void){
     else if((int32_t)(now-next_blink)>=0){
         blink_until=now+120u;next_blink=now+2500u+(rng()>>16)%2500u;w=SF_BLINK;
     }else w=SF_NEUTRAL;
-    if(w!=face_cur && (uint32_t)(now-face_ms)>=40u){face_ms=now-(now-face_ms)%40u;face_set(w);}
+    if(w!=face_cur)face_set(w);
 }
 static void stage_init(void){
     uint32_t i,v,h;

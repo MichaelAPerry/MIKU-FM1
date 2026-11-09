@@ -166,3 +166,7 @@ add_test(NAME guide_html COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tools
 add_executable(dx7_vectors tests/dx7_vectors.c)
 target_link_libraries(dx7_vectors PRIVATE miku_song)
 add_test(NAME bank_tool COMMAND ${Python3_EXECUTABLE} -I ${CMAKE_SOURCE_DIR}/tests/test_bank_tool.py ${CMAKE_SOURCE_DIR} $<TARGET_FILE:dx7_vectors> ${CMAKE_BINARY_DIR}/dx7_vectors.json)
+
+if(NOT MSVC)
+ add_test(NAME face_clock COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tests/test_face_clock.py ${CMAKE_SOURCE_DIR} ${CMAKE_C_COMPILER})
+endif()

@@ -7,11 +7,11 @@ static int fails;
 #define CHECK(c) do{if(!(c)){fprintf(stderr,"FAIL line%d: %s\n",__LINE__,#c);fails++;}}while(0)
 int main(void){
     PerfState s,ref;PerfInput in={0};const PerfOutfit *o=perf_outfit(0);
-    perf_init(&s);CHECK(o&&o->width==SINGER_STAGE_W&&o->height==SINGER_STAGE_H&&o->frames==ST_COUNT);CHECK(!perf_outfit(1));
+    perf_init(&s);CHECK(o&&o->width==SINGER_STAGE_W&&o->height==SINGER_STAGE_H&&o->frames==ST_COUNT);CHECK(!perf_outfit(PERF_OUTFIT_N));
     CHECK(!perf_update(0,&in));CHECK(!perf_update(&s,0));
     for(unsigned y=0;y<PERF_SCENE_H;y++)for(unsigned x=0;x<PERF_W;x++)CHECK(perf_pixel(&s,x,y)==0x08a5u);
     CHECK(!perf_pixel(&s,240,0)&&!perf_pixel(&s,0,214));
-    ref=s;CHECK(!perf_select(&s,1,0,0,0));CHECK(!memcmp(&s,&ref,sizeof s));
+    ref=s;CHECK(!perf_select(&s,PERF_OUTFIT_N,0,0,0));CHECK(!memcmp(&s,&ref,sizeof s));
     CHECK(!perf_select(&s,0,PERF_BG_N,0,0));CHECK(!memcmp(&s,&ref,sizeof s));
     CHECK(perf_update(&s,&in)==15u);CHECK(s.sprite==ST_IDLE0&&s.mouth==5);CHECK(!perf_update(&s,&in));
     in.playing=1;in.section=3;in.beat_q8=256;in.mouth=2;in.vocal_level=80;in.audio_level=255;in.transient=255;
@@ -35,5 +35,9 @@ int main(void){
         for(unsigned y=0;y<PERF_SCENE_H;y++)for(unsigned x=0;x<PERF_W;x++)changed+=perf_pixel(&s,x,y)!=0x08a5u;
         CHECK(bg||fr?changed>0:changed==0);CHECK(!perf_pixel(&s,10,230));
     }
+    /* Effects start on the musical event, then advance in absolute milliseconds. */
+    perf_init(&s);s.effect=1;in.playing=1;in.now_ms=1000;in.beat_q8=0;perf_update(&s,&in);CHECK(s.effect_epoch==1000);
+    in.now_ms=1240;in.beat_q8=64;perf_update(&s,&in);CHECK(s.effect_epoch==1000);
+    in.now_ms=2000;in.beat_q8=1024;perf_update(&s,&in);CHECK(s.effect_epoch==2000);
     printf("performance: %s (state %zu bytes)\n",fails?"FAILED":"ok",sizeof s);return fails!=0;
 }

@@ -1,7 +1,8 @@
 /* SPDX-License-Identifier: GPL-3.0-only */
 #include "firmware/app/performance_wire.h"
+#include "firmware/song/mora.h"
 static uint32_t pw_valid(const PwState *s){
-    return s&&s->sequence<16384u&&s->mouth<6u&&s->vocal_level<128u&&s->mora<70u&&
+    return s&&s->sequence<16384u&&s->mouth<6u&&s->vocal_level<128u&&s->mora<MORA_N&&
         s->section<6u&&s->row<64u&&s->step<16u&&s->playing<2u&&s->sprite<8u&&
         s->outfit<128u&&s->background<128u&&s->frame<128u&&s->palette<128u&&
         s->audio_level<128u&&s->transient<128u;

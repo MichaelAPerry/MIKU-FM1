@@ -1,11 +1,13 @@
 /* SPDX-License-Identifier: GPL-3.0-only */
 #include "firmware/ui/performance.h"
+#include "stagefx.h"
 #define PRGB(r,g,b) ((uint16_t)((((r)>>3)<<11)|(((g)>>2)<<5)|((b)>>3)))
-static const PerfOutfit outfits[PERF_OUTFIT_N]={{"ORIGINAL",0,0,8,61,71,3,28,0}};
+static const PerfOutfit outfits[PERF_OUTFIT_N]=PERF_OUTFIT_ROWS;
 const PerfOutfit *perf_outfit(uint32_t id){return id<PERF_OUTFIT_N?&outfits[id]:0;}
 void perf_init(PerfState *s){
     if(!s)return;
-    s->now_ms=s->bow_until=s->beat_q8=0;
+    s->now_ms=s->bow_until=s->beat_q8=s->effect_epoch=0;
+    s->effect=0;s->intensity=80;
     s->outfit=s->background=s->frame=s->palette=0;
     s->sprite=s->light=s->section=s->playing=s->initialized=s->bow_active=0;s->mouth=5;
 }
@@ -18,6 +20,7 @@ uint32_t perf_update(PerfState *s,const PerfInput *in){
     if(!s||!in)return 0;
     if(s->initialized&&s->playing&&!in->playing){s->bow_until=in->now_ms+1500u;s->bow_active=1;}
     if(s->bow_active&&(int32_t)(in->now_ms-s->bow_until)>=0)s->bow_active=0;
+    if(s->effect&&in->playing&&(!s->playing||(in->beat_q8>>10)!=(s->beat_q8>>10)))s->effect_epoch=in->now_ms;
     beat=in->beat_q8>>8;
     if(in->playing){
         if(in->section==3u&&(beat&1u))f=6; /* existing SEC_CHORUS/ST_ARMS */
@@ -63,5 +66,8 @@ uint16_t perf_pixel(const PerfState *s,uint32_t x,uint32_t y){
         if((x==3u||x==236u)&&y>=8u&&y<206u)base=dim;
         if(((x>=2u&&x<=4u)||(x>=235u&&x<=237u))&&y>=8u&&y<8u+s->light*198u/255u)base=accent;
     }
+    {uint32_t age=s->now_ms-s->effect_epoch;uint16_t fx;
+     if(s->playing&&s->effect==STFX_BEAMS)age%=960u;
+     fx=stagefx_pixel(s->effect,age,s->intensity,x,y);if(fx)base=fx;}
     return base;
 }

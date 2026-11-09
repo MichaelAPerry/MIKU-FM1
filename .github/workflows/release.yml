@@ -70,7 +70,9 @@ jobs:
         fi
       test: |
         set -euo pipefail
-        cmake -S . -B build/host -DCMAKE_BUILD_TYPE=Release
+        python3 -m venv build/validation-venv
+        build/validation-venv/bin/python -m pip install -r tools/requirements-dev.txt
+        cmake -S . -B build/host -DCMAKE_BUILD_TYPE=Release -DPython3_EXECUTABLE="$PWD/build/validation-venv/bin/python"
         cmake --build build/host --parallel
         ctest --test-dir build/host --output-on-failure
       packages: build/release-assets/*

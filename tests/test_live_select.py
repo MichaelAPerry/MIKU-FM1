@@ -67,8 +67,8 @@ int main(void){
         assert(!memcmp(reference,changed,sizeof reference));
     }
     memset(&en,0,sizeof en);sg_init(&g);en_init(&en,&g);
-    ed_mora=69;select_mora(1);assert(ed_mora==0);
-    select_mora(-1);assert(ed_mora==69);
+    ed_mora=MORA_N-1;select_mora(1);assert(ed_mora==0);
+    select_mora(-1);assert(ed_mora==MORA_N-1);
     ed_mora=1;select_mora(1);
     assert(en_post(&en,EN_ON,TR_VOCAL,64,ed_mora));
     memset(changed,0,sizeof changed);en_render(&en,changed,256);

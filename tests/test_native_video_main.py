@@ -17,6 +17,7 @@ harness=r'''
 #include "firmware/usb/jpeg/mjpeg.h"
 #include "firmware/usb/jpeg/performance_frame.h"
 #include "firmware/usb/video/uvc.h"
+#include "firmware/ui/stagefx.h"
 static uint32_t active,busy,ticks,published;
 static uint32_t fm1_ticks(void){ticks+=100;return ticks;}
 static uint32_t video_usb_active(void){return active;}
@@ -56,14 +57,16 @@ with tempfile.TemporaryDirectory() as td:
     p=pathlib.Path(td);(p/'main.c').write_text(harness)
     subprocess.run([cc,'-std=c11','-O2','-Wall','-Wextra','-DMIKU_COMPACT_SPRITES=1','-I'+str(root),str(p/'main.c'),
         str(root/'firmware/usb/jpeg/mjpeg.c'),str(root/'firmware/usb/jpeg/performance_frame.c'),
-        str(root/'firmware/ui/performance.c'),str(root/'firmware/ui/sprite_codec.c'),'-o',str(p/'main')],check=True)
+        str(root/'firmware/ui/performance.c'),str(root/'firmware/ui/stagefx.c'),str(root/'firmware/ui/sprite_codec.c'),'-o',str(p/'main')],check=True)
     subprocess.run([str(p/'main')],check=True)
     bench=harness[:harness.index('int main(void)')]+r'''
 int main(void){
     PerfState scene;perf_init(&scene);
     for(unsigned i=0;i<100;i++)video_update(&scene);
     assert(!video_encoded);
-    scene.playing=1;scene.mouth=0;scene.sprite=4;
+    scene.playing=1;scene.mouth=0;scene.sprite=4;scene.effect=STFX_FIREWORKS;scene.now_ms=479;
+    for(unsigned i=0;i<10;i++)video_update(&scene);
+    assert(!video_encoded);scene.now_ms=480;
     for(unsigned i=0;i<240;i++)video_update(&scene);
     assert(video_encoded==3&&!video_failed&&video_last_bytes>0&&!busy);
     uint32_t n=video_last_bytes;memcpy(prior,video_jpeg,n);
@@ -76,5 +79,5 @@ int main(void){
     subprocess.run([cc,'-std=c11','-O2','-Wall','-Wextra','-Wno-unused-function','-Wno-unused-variable',
         '-DMIKU_VIDEO_BENCH=1','-DMIKU_COMPACT_SPRITES=1','-I'+str(root),str(p/'main.c'),
         str(root/'firmware/usb/jpeg/mjpeg.c'),str(root/'firmware/usb/jpeg/performance_frame.c'),
-        str(root/'firmware/ui/performance.c'),str(root/'firmware/ui/sprite_codec.c'),'-o',str(p/'bench')],check=True)
+        str(root/'firmware/ui/performance.c'),str(root/'firmware/ui/stagefx.c'),str(root/'firmware/ui/sprite_codec.c'),'-o',str(p/'bench')],check=True)
     subprocess.run([str(p/'bench')],check=True)

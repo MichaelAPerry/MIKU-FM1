@@ -14,15 +14,15 @@ typedef struct {
     uint8_t atlas, first_frame, frames, width, height, scale;
     int16_t x, y;
 } PerfOutfit;
-#define PERF_OUTFIT_N 1u
+#include "wardrobe_meta.h"
 const PerfOutfit *perf_outfit(uint32_t id); /* NULL for unregistered IDs */
 typedef struct {
     uint32_t now_ms, beat_q8; /* absolute beat position including fractional part; no redraw-derived time */
     uint8_t playing, section, mouth, vocal_level, audio_level, transient;
 } PerfInput;
 typedef struct {
-    uint32_t now_ms, bow_until, beat_q8;
-    uint8_t outfit, background, frame, palette;
+    uint32_t now_ms, bow_until, beat_q8, effect_epoch;
+    uint8_t outfit, background, frame, palette, effect, intensity;
     uint8_t sprite, mouth, light, section, playing, initialized, bow_active;
 } PerfState;
 void perf_init(PerfState *s);

@@ -55,6 +55,9 @@ def main():
             'full_scale_samples':sum(x in (-32768,32767) for x in samples),
             'isr_percent_emulator':float(re.search(r'cpu0: ([0-9.]+)% in an ISR',log)[1]),
             'scope':'three JPEG frames during real native vocal+band playback; not real USB throughput or hardware timing'}
+    if 'pub_peak' in symbols:
+        report['audio_render_moving_peak_us_emulator']=word('pub_peak')/24
+        report['audio_callback_deadline_us']=256/44100*1000000
     (out/'measurements.json').write_text(json.dumps(report,indent=2)+'\n')
     print(json.dumps(report,indent=2))
 

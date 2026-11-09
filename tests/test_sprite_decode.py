@@ -19,7 +19,10 @@ source=r'''
 #include <string.h>
 #include <stdio.h>
 #include "firmware/ui/singer_sprites.h"
-#include "firmware/ui/singer_compact.h"
+#include "firmware/ui/wardrobe_sprites.h"
+#include "firmware/ui/performance.h"
+static PerfState performance;
+static uint16_t swap16(uint16_t p){return (uint16_t)((p>>8)|(p<<8));}
 #define CV_MAX 8192u
 #define FX 30u
 #define FY 2u
@@ -54,7 +57,7 @@ int main(void){
     for(unsigned f=0;f<ST_COUNT;f++){
         memset(screen,0,sizeof screen);dance_draw(f);
         for(unsigned y=0;y<71;y++)for(unsigned x=0;x<61;x++){
-            unsigned i=idx(SINGER_STAGE[f],61,x,y);uint16_t want=i?dpw[i]:c_bg;
+            unsigned i=idx(SINGER_STAGE[f],61,x,y);uint16_t want=swap16(i?SC_STAGE_PAL[i]:perf_pixel(&performance,DX+3*x,3*y));
             for(unsigned dy=0;dy<3;dy++)for(unsigned dx=0;dx<3;dx++)assert(screen[(3*y+dy)*240+DX+3*x+dx]==want);
         }
     }
@@ -63,5 +66,5 @@ int main(void){
 '''.replace('FACE\n',function('face_draw')+'\n').replace('DANCE\n',function('dance_draw')+'\n')
 with tempfile.TemporaryDirectory() as td:
     path=pathlib.Path(td);(path/'sprite.c').write_text(source)
-    subprocess.run([cc,'-std=c11','-O2','-Wall','-Wextra','-I'+str(root),str(path/'sprite.c'),str(root/'firmware/ui/sprite_codec.c'),'-o',str(path/'sprite')],check=True)
+    subprocess.run([cc,'-std=c11','-O2','-Wall','-Wextra','-I'+str(root),str(path/'sprite.c'),str(root/'firmware/ui/sprite_codec.c'),str(root/'firmware/ui/performance.c'),str(root/'firmware/ui/stagefx.c'),'-o',str(path/'sprite')],check=True)
     subprocess.run([str(path/'sprite')],check=True)

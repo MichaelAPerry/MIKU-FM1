@@ -1,5 +1,6 @@
 /* SPDX-License-Identifier: GPL-3.0-only */
 #include "firmware/app/performance_wire.h"
+#include "firmware/song/mora.h"
 #ifdef NDEBUG
 #undef NDEBUG
 #endif
@@ -20,8 +21,9 @@ int main(void){
         uint8_t x=bytes[i];bytes[i]^=1;assert(!pw_decode(&t,bytes,sizeof bytes));assert(!memcmp(&prior,&t,sizeof t));bytes[i]=x;
     }
     assert(!pw_decode(&t,bytes,PW_SIZE-1));assert(!pw_decode(&t,0,PW_SIZE));
-    memcpy(before,bytes,sizeof bytes);s.mora=70;
+    memcpy(before,bytes,sizeof bytes);s.mora=MORA_N;
     assert(!pw_encode(bytes,sizeof bytes,&s));assert(!memcmp(bytes,before,sizeof bytes));
     s.mora=0;assert(!pw_encode(bytes,PW_SIZE-1,&s));assert(!memcmp(bytes,before,sizeof bytes));
+    for(unsigned i=0;i<MORA_N;i++){s.mora=(uint8_t)i;assert(pw_encode(bytes,sizeof bytes,&s)==PW_SIZE);assert(pw_decode(&t,bytes,sizeof bytes)==PW_SIZE&&t.mora==i);}
     puts("performance wire: bounds, 7-bit encoding, checksum, roundtrip, transactionality OK");return 0;
 }

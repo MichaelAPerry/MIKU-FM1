@@ -25,7 +25,10 @@
 #include "firmware/audio/fvoice/fvoice.c"
 #include "firmware/ui/singer_sprites.h"
 #include "firmware/ui/sprite_codec.c"
-#include "firmware/ui/singer_compact.h"
+#include "firmware/ui/wardrobe_sprites.h"
+#include "firmware/ui/performance.h"
+_Static_assert(WD_OUTFIT_N==PERF_OUTFIT_N,"wardrobe metadata mismatch");
+#include "firmware/ui/stagefx.c"
 #include "firmware/ui/performance.c"
 #if MIKU_UVC
 #define MIKU_COMPACT_SPRITES 1
@@ -92,6 +95,10 @@
 #include "firmware/song/song_io.c"
 #include "firmware/song/mora.c"
 #include "firmware/song/gen.c"
+#define GEN_NEXT_NO_STACK_WRAPPER
+#include "firmware/song/gen_next.c"
+#include "firmware/song/lyric_edit.c"
+#include "firmware/song/factory.c"
 #define VX_POOL __attribute__((section(".pool")))
 #define sat vx_sat
 #define clr vx_clr
@@ -102,12 +109,18 @@
 #define BUDGET_TICKS (5805u*FM1_TICKS_PER_US)       /* 256 frames at 44.1 kHz */
 #define BG RGB(7,17,34)
 #define FACE_Y 184u
-enum { PG_STAGE, PG_DANCE, PG_SONG, PG_PATTERN, PG_MIXER, PG_GEN, PG_N };
+enum { PG_STAGE, PG_DANCE, PG_SONG, PG_PATTERN, PG_MIXER, PG_GEN, PG_LYRICS, PG_VISUALS, PG_LIBRARY, PG_N };
 static Engine en;
 static Song sg;
 static Undo un;
 static Song gbak;                                   /* GEN: the song before the last take (GLO drops the take) */
 static GenCfg gcf={GS_POP,0,GK_MAJOR,0,1};
+static GenNextWorkspace gen_work __attribute__((section(".pool")));
+static uint32_t gen_style_id,gen_energy=70,gen_complexity=60,gen_edit;
+#define GEN_CHOICES (GX_N+GS_N)
+static const char *native_gen_style(void){return gen_style_id<GX_N?gen_next_style(gen_style_id):gen_style(gen_style_id-GX_N);}
+static GenNextCfg native_gen_cfg(void){GenNextCfg c;c.seed=gcf.seed;c.style=(uint8_t)gen_style_id;c.key=gcf.key;c.minor=gcf.scale;c.lock=gcf.lock;c.energy=(uint8_t)gen_energy;c.complexity=(uint8_t)gen_complexity;return c;}
+
 /* STAGE / DANCE: the voice's home. FX / ENV / LFO pick what the four knobs do (press again: back to VOICE), SEL the language,
    SELECT the syllable, ALGORITHM the character. Every value lives in the song (sg.trk[0], sg.vx), so it is saved with it. */
 enum { BK_VOICE, BK_FX, BK_ENV, BK_LFO, BK_SRC, BK_FXD, BK_ART, BK_HAR, BK_N };   /* the last four: hold SEL / FX / ENV / LFO */
@@ -159,8 +172,9 @@ static volatile uint32_t pub_peak;
 static Step clip[NSTEP];
 static uint32_t clip_n,clip_t,anchor,arp_c;
 static int32_t oct;
+static uint32_t library_cursor;
 static uint32_t page,trk,crow,cstep,top,playing,ppos,prev_keys,dirty,full,cpu_ms,cpu_pct,last_act,
-    pend,pend_t,menu,menu_slot,sv_t,sv_c,sv_on,toast_until,toast_err,pv_off,u_kind,u_trk,u_pat,u_ms,lk_t0,
+    pend,pend_t,pend_arg,menu,menu_slot,sv_t,sv_c,sv_on,toast_until,toast_err,pv_off,u_kind,u_trk,u_pat,u_ms,lk_t0,
     face_cur,face_ms,blink_until,next_blink,happy_until;
 static const char *toast_s;
 static uint32_t ed_len[3]={2,8,2},ed_vel=12,ed_mora,ed_q,ed_mode,ed_bf;
@@ -180,6 +194,7 @@ static void video_update(const PerfState *scene){
     uint32_t at,dt;int result;
 #if MIKU_VIDEO_BENCH
     if(video_encoded>=3u || !scene->playing || scene->mouth>=5u)return; /* three frames under live vocal+band load */
+    if(scene->effect&&scene->effect!=STFX_BEAMS&&scene->now_ms-scene->effect_epoch<480u)return; /* measure the expanded burst, not only launch pixels */
 #else
     if(!video_usb_active()){video_encoding=0;return;}
     if(video_usb_busy())return;
@@ -322,7 +337,7 @@ static void do_undo(void){
 static void pf_defaults(void){
     static const uint8_t pn[NTRK]={64,44,64,64};
     uint32_t i;
-    pf.magic=PF_MAGIC;pf.ver=1;pf.slot=0;
+    pf.magic=PF_MAGIC;pf.ver=2;pf.slot=0;pf.pad[0]=0xc0u;pf.pad[1]=0;
     for(i=0;i<NTRK;i++)pf.pan[i]=pn[i];
 }
 static void pf_apply(void){uint32_t i;for(i=0;i<NTRK;i++)en.pan[i]=pf.pan[i];}
@@ -341,7 +356,12 @@ static void stop_wait(void){if(playing){en_post(&en,EN_STOP,0,0,0);wait_ms(15);}
 static uint32_t slot_name(uint32_t s,char *nm){            /* 1 = a valid song is in the slot */
     uint32_t i;
     nm[0]=0;
-    if(!sload(s)||enc[0]!='M'||enc[1]!='K'||enc[2]!='S'||enc[3]!='2')return 0;
+    if(!sload(s)){
+        const char *name=sf_name(s);if(!name)return 0;
+        for(i=0;i<8u&&name[i];i++)nm[i]=name[i];
+        nm[i]=0;return 1;
+    }
+    if(enc[0]!='M'||enc[1]!='K'||enc[2]!='S'||enc[3]!='2')return 0;
     for(i=0;i<8u;i++)nm[i]=(char)enc[10+i];
     nm[8]=0;
     return 1;
@@ -352,14 +372,18 @@ static void do_save(uint32_t s){
     en_post(&en,EN_PANIC,0,0,0);
     while(en.act && fm1_ms-t<800u)platform_poll();      /* erase only when silent */
     ok=song_encode(&sg,enc,sizeof enc)==SONG_ENC_SIZE && slot_save(s,enc,SONG_ENC_SIZE)==0;
-    if(ok){pf.slot=(uint8_t)s;ok=settings_save(&pf,sizeof pf)==0;}
+    if(ok){pf.slot=(uint8_t)s;pf.pad[0]=(uint8_t)(performance.outfit|(((performance.intensity*15u+50u)/100u)<<4));pf.pad[1]=(uint8_t)(performance.background|(performance.frame<<2)|(performance.effect<<4));ok=settings_save(&pf,sizeof pf)==0;}
     if(ok)modified=0;
     toast(ok?"SAVED":"SAVE FAILED",!ok);
 }
 static void do_load(uint32_t s){
     stop_wait();
     uint32_t n=sload(s);
-    if(!n){toast("EMPTY SLOT",1);return;}
+    if(!n){
+        if(s<SF_COUNT){lk();sf_load(&sg,s);ulk();pf.slot=(uint8_t)s;after_load();toast("FACTORY SONG",0);}
+        else toast("EMPTY SLOT - EDIT NEW",1);
+        return;
+    }
     lk();
     {int r=song_decode(&sg,enc,n);ulk();
      if(r!=SIO_OK){toast("LOAD FAILED",1);return;}}
@@ -373,9 +397,12 @@ static void do_new(void){
 }
 static void do_demo(void){stop_wait();lk();song_demo(&sg);ulk();after_load();toast("DEMO LOADED",0);}
 static void guarded(uint32_t act,uint32_t arg){            /* actions that drop the current song need a second press when it is unsaved */
-    if(modified && !(pend==act && (int32_t)(fm1_ms-pend_t)<0)){pend=act;pend_t=fm1_ms+3000u;toast("UNSAVED! AGAIN",1);return;}
+    if(modified && !(pend==act && pend_arg==arg && (int32_t)(fm1_ms-pend_t)<0)){pend=act;pend_arg=arg;pend_t=fm1_ms+3000u;toast("UNSAVED! AGAIN",1);return;}
     pend=0;
-    if(act==1)do_load(arg);else if(act==2)do_new();else do_demo();
+    if(act==1)do_load(arg);else if(act==2)do_new();
+    else if(act==5){stop_wait();lk();sf_load(&sg,arg);ulk();pf.slot=(uint8_t)arg;after_load();modified=1;toast("FACTORY RESTORED",0);}
+    else if(act==6){do_new();pf.slot=(uint8_t)arg;modified=1;}
+    else do_demo();
 }
 /* ---- face: 4bpp sprite rows, 2x, into the canvas buffer, blitted (the panel wants bytes swapped: swap16) */
 #define FX 30u
@@ -390,7 +417,7 @@ static void face_draw(uint32_t f,uint32_t sx,uint32_t sy,uint32_t w,uint32_t h){
         for(r=0;r<nr;r++){
             uint16_t *o=cv_px+r*2u*2u*w;
             int32_t hh=hw[2u*(r0+r)];
-            if(!spr_decode_row(&SC_FACE_ATLAS,f,r0+r,row,sizeof row))return;
+            if(!spr_decode_row(WD_OUTFITS[performance.outfit].faces,f,r0+r,row,sizeof row))return;
             for(c=0;c<w;c++){
                 uint32_t x=sx+c,i=row[x];
                 int32_t dx=(int32_t)(2u*x)-89;
@@ -404,7 +431,7 @@ static void face_draw(uint32_t f,uint32_t sx,uint32_t sy,uint32_t w,uint32_t h){
 }
 static void face_set(uint32_t f){
     uint32_t a=face_cur,x0,y0,x1,y1;
-    const uint8_t *p=SC_FACE_DIRTY+4u*a,*q=SC_FACE_DIRTY+4u*f;
+    const uint8_t *p=WD_OUTFITS[performance.outfit].face_dirty+4u*a,*q=WD_OUTFITS[performance.outfit].face_dirty+4u*f;
     if(f==a)return;
     face_cur=f;
     if(page)return;
@@ -432,7 +459,7 @@ static void face_update(void){
 }
 static void stage_init(void){
     uint32_t i,v,h;
-    for(i=0;i<16;i++){pw[i]=swap16(SC_FACE_PAL[i]);dpw[i]=swap16(SC_STAGE_PAL[i]);}
+    for(i=0;i<16;i++){pw[i]=swap16(WD_OUTFITS[performance.outfit].face_palette[i]);dpw[i]=swap16(WD_OUTFITS[performance.outfit].stage_palette[i]);}
     c_bg=swap16(RGB(12,20,40));c_disc=swap16(RGB(40,66,120));
     for(i=0;i<2u*SINGER_FACE_H;i++){        /* half-width of a disc (r=90) behind the head, per output row */
         int32_t dy=(int32_t)i-90;
@@ -446,28 +473,24 @@ static void stage_init(void){
    song stops; a slow sway when stopped. A frame is redrawn only when it changes. */
 #define DX 28u
 static void dance_draw(uint32_t f){
-    uint8_t row[SINGER_STAGE_W];
-    uint32_t w=SINGER_STAGE_W,h=SINGER_STAGE_H,cr=CV_MAX/(9u*w),r0,r,c,k;
+    uint8_t row[SINGER_STAGE_W];uint32_t y,x,k,r,n;
     cv_oy=0;
-    for(r0=0;r0<h;r0+=cr){
-        uint32_t nr=h-r0<cr?h-r0:cr;
-        lcd_sync();
-        for(r=0;r<nr;r++){
-            uint16_t *o=cv_px+r*9u*w;
-            if(!spr_decode_row(&SC_STAGE_ATLAS,f,r0+r,row,sizeof row))return;
-            for(c=0;c<w;c++){
-                uint32_t i=row[c];
-                uint16_t p=i?dpw[i]:c_bg;
-                o[3u*c]=o[3u*c+1u]=o[3u*c+2u]=p;
+    for(y=0;y<214u;y+=4u){
+        n=214u-y<4u?214u-y:4u;lcd_sync();
+        for(r=0;r<n;r++){
+            if(y+r<213u && !spr_decode_row(WD_OUTFITS[performance.outfit].stage,f,(y+r)/3u,row,sizeof row))return;
+            for(x=0;x<240u;x++){
+                uint16_t p=perf_pixel(&performance,x,y+r);
+                if(y+r<213u&&x>=DX&&x<DX+183u){k=row[(x-DX)/3u];if(k)p=WD_OUTFITS[performance.outfit].stage_palette[k];}
+                cv_px[r*240u+x]=swap16(p);
             }
-            for(k=0;k<3u*w;k++)o[3u*w+k]=o[6u*w+k]=o[k];
         }
-        lcd_blit(DX,3u*r0,3u*w,3u*nr,cv_px);
+        lcd_blit(0,y,240,n,cv_px);
     }
 }
 static void dance_update(void){
     uint32_t now=fm1_ms,f=performance.sprite;
-    if(f!=dance_cur && (dance_cur==99u || now-dance_ms>=60u)){dance_ms=now;dance_cur=f;dance_draw(f);}
+    if((f!=dance_cur || performance.effect || performance.background || performance.frame) && (dance_cur==99u || now-dance_ms>=100u)){dance_ms=now;dance_cur=f;dance_draw(f);}
 }
 /* ---- pages. The screen below the face is drawn in bands of 48 lines (bit n of `dirty` = band n; bit 5 = the STAGE strip) */
 static uint32_t shown_row(void){return playing?(ppos>>8&255u):crow;}
@@ -798,10 +821,17 @@ static void gen_go(uint32_t phrase){
     if(!phrase)stop_wait();
     gbak=sg;take_mod=modified;take=1;un_init(&un);u_kind=0;
     lk();
-    if(phrase)r=(uint32_t)gen_phrase(&sg,&gcf,(int)crow,(int)trk,++gvar);
-    else{gen_song(&sg,&gcf);gvar=0;}
+    if(gen_style_id<GX_N){
+        GenNextCfg c=native_gen_cfg();
+        r=phrase?(uint32_t)gen_next_phrase(&sg,&c,(int)crow,(int)trk,++gvar):(uint32_t)gen_next_song_ws(&sg,&c,&gen_work);
+        if(!phrase)gvar=0;
+    }else{
+        gcf.style=(uint8_t)(gen_style_id-GX_N);
+        if(phrase)r=(uint32_t)gen_phrase(&sg,&gcf,(int)crow,(int)trk,++gvar);
+        else{gen_song(&sg,&gcf);gvar=0;}
+    }
     ulk();
-    if(!r){take=0;toast("NO FREE PATTERN",1);return;}
+    if(!r){take=0;toast(phrase?"NO EDITABLE PHRASE":"GEN CONTEXT LIMIT",1);return;}
     modified=1;
     if(!phrase){crow=top=0;if(pl)en_post(&en,EN_PLAY,0,0,0);}
     if(crow>=sg.nrows)crow=sg.nrows?sg.nrows-1u:0;
@@ -828,13 +858,13 @@ static void pg_gen(uint32_t b){
     }
     if(b==1u){
         txt(4,52,&FONT_S,"STYLE  K1",RGB(100,110,140),0);
-        txt(4,66,&FONT_L,gen_style(gcf.style),RGB(64,222,209),0);
+        txt(4,66,&FONT_L,native_gen_style(),RGB(64,222,209),0);
         txt(236,52,&FONT_S,"KEY K2  K3",RGB(100,110,140),2);
         s[0]=0;cat(s,kn12[gcf.key%12u]);cat(s,gcf.scale?" MIN":" MAJ");
         txt(236,66,&FONT_L,s,RGB(249,207,94),2);
     }else if(b==2u){
-        txt(4,100,&FONT_S,"SEED  K4  ALG x100",RGB(100,110,140),0);
-        s[0]=0;catn(s,gcf.seed);txt(4,114,&FONT_L,s,C_WHITE,0);
+        txt(4,100,&FONT_S,gen_edit?"EDIT+K2 ENERGY K3 COMPLEX":"SEED K4   EDIT+K2/K3 SHAPE",RGB(100,110,140),0);
+        s[0]=0;if(gen_edit){cat(s,"E");catn(s,gen_energy);cat(s," C");catn(s,gen_complexity);}else catn(s,gcf.seed);txt(4,114,&FONT_L,s,C_WHITE,0);
         s[0]=0;cat(s,"BPM ");catn(s,sg.bpm);txt(236,124,&FONT_S,s,RGB(249,207,94),2);
     }else if(b==3u){
         txt(4,146,&FONT_S,"PRESS TRACK AGAIN: LOCK",RGB(100,110,140),0);
@@ -870,6 +900,10 @@ static void pg_dance(void){
     }
     cv_blit(0,214);
 }
+#include "lyrics_ui.inc"
+#include "visuals_ui.inc"
+#include "library_ui.inc"
+
 static void redraw(void){
     uint32_t b;
     if(full){
@@ -884,7 +918,8 @@ static void redraw(void){
     for(b=0;b<5u;b++)if(dirty&(1u<<b)){
         dirty&=~(1u<<b);
         band_begin(b);
-        if(page==PG_SONG)pg_song(b);else if(page==PG_PATTERN)pg_pattern(b);else if(page==PG_GEN)pg_gen(b);else pg_mixer(b);
+        if(page==PG_SONG)pg_song(b);else if(page==PG_PATTERN)pg_pattern(b);else if(page==PG_GEN)pg_gen(b);else if(page==PG_LYRICS)pg_lyrics(b);else if(page==PG_VISUALS)pg_visuals(b);else if(page==PG_LIBRARY)pg_library(b);else pg_mixer(b);
+        if(!b&&(page==PG_LIBRARY||page==PG_LYRICS||page==PG_VISUALS)&&toast_s&&(int32_t)(fm1_ms-toast_until)<0){cv_rect(0,0,240,24,BG);txt(120,4,&FONT_S,toast_s,toast_err?RGB(255,110,110):RGB(249,207,94),1);}
         band_end(b);
         return;                                            /* one band per pass: the main loop polls between */
     }
@@ -896,7 +931,7 @@ static void do_play(void){
     if(playing){stop_play();return;}
     if(!sg.nrows){toast("NO ROWS",1);return;}
     if(crow>=sg.nrows)crow=sg.nrows-1u;
-    en_post(&en,EN_PLAY,crow,page==PG_PATTERN,0);
+    en_post(&en,EN_PLAY,crow,page==PG_PATTERN||page==PG_LYRICS,0);
     happy_until=fm1_ms+500u;
 }
 static void menu_draw(void){
@@ -916,14 +951,18 @@ static void menu_draw(void){
 static void app_main(void){
     uint32_t i;
     pf_defaults();
-    {uint32_t k;if(settings_load(&pf,sizeof pf)!=0 || pf.magic!=PF_MAGIC || pf.ver!=1 || pf.slot>=NSLOT)pf_defaults();
+    {uint32_t k;if(settings_load(&pf,sizeof pf)!=0 || pf.magic!=PF_MAGIC || (pf.ver!=1 && pf.ver!=2) || pf.slot>=NSLOT)pf_defaults();
+     if(pf.ver==1){pf.ver=2;pf.pad[0]=0xc0u;pf.pad[1]=0;}
      for(k=0;k<NTRK;k++)if(pf.pan[k]>127)pf.pan[k]=64;}
-    song_demo(&sg);
+    if(pf.slot<SF_COUNT)sf_load(&sg,pf.slot);else song_demo(&sg);
     {uint32_t n=sload(pf.slot);if(n)song_decode(&sg,enc,n);}   /* untouched (= the demo) when it fails */
     un_init(&un);
     while(!en.up)platform_poll();
     pf_apply();
-    stage_init();perf_init(&performance);
+    perf_init(&performance);
+    {uint32_t o=pf.pad[0]&15u,bg=pf.pad[1]&3u,fr=(pf.pad[1]>>2)&3u,fx=pf.pad[1]>>4;
+     if(o<WD_OUTFIT_N&&bg<PERF_BG_N&&fr<PERF_FRAME_N&&fx<STFX_N){perf_select(&performance,o,bg,fr,0);performance.effect=(uint8_t)fx;performance.intensity=(uint8_t)cl((pf.pad[0]>>4)*100/15,0,100);}}
+    stage_init();
     next_blink=fm1_ms+3000u;full=1;
     bank_leds();
     for(;;){
@@ -957,7 +996,7 @@ static void app_main(void){
             prev_keys=keys;
             continue;
         }
-        if(b&(1u<<BTN_HOME)){if(page==PG_GEN)take=0;page=page+1u<PG_N?page+1u:0;full=1;mk(0x3Fu);bank_leds();}
+        if(b&(1u<<BTN_HOME)){if(page==PG_GEN){take=0;gen_edit=0;}page=page+1u<PG_N?page+1u:0;if(page==PG_LYRICS){trk=TR_VOCAL;lyric_load();}if(page==PG_LIBRARY)library_cursor=pf.slot;full=1;mk(0x3Fu);bank_leds();}
         for(tb=0;tb<4u;tb++){
             uint32_t bit=1u<<(BTN_FX+tb),held=(fm1_in.buttons&bit)!=0;
             if(page<=PG_DANCE){
@@ -974,22 +1013,38 @@ static void app_main(void){
                     for(i=0;i<4u;i++){cat(popbuf," ");cat(popbuf,ksh[bank][i]);}
                     toast(popbuf,0);vis_kind=VS_NONE;mk(0x20u);
                 }
-            }else if(b&bit){lp_on[tb]=0;if(page==PG_GEN && tb==trk)gcf.lock^=(uint8_t)(1u<<tb);trk=tb;mk(0x3Fu);}
+            }else if(page==PG_LYRICS && (b&bit)){lyric_flag(tb);}
+            else if(page==PG_LIBRARY && (b&bit)){
+                if(tb==0)guarded(1,library_cursor);
+                else if(tb==1)guarded(6,library_cursor);
+                else if(tb==2 && library_cursor<SF_COUNT)guarded(5,library_cursor);
+                mk(0x1fu);
+            }
+            else if(b&bit){lp_on[tb]=0;if(page==PG_GEN && tb==trk)gcf.lock^=(uint8_t)(1u<<tb);trk=tb;mk(0x3Fu);}
         }
         bank_leds();
         if(b&(1u<<BTN_OCT_UP) && oct<2){oct++;mk(0x21u);}
         if(b&(1u<<BTN_OCT_DOWN) && oct>-2){oct--;mk(0x21u);}
-        if(b&(1u<<BTN_PLAY))do_play();
-        if(b&(1u<<BTN_SEQ)){stop_play();}
-        if(b&(1u<<BTN_GLO)){if(page==PG_SONG||page==PG_PATTERN)do_undo();else if(page==PG_GEN)gen_drop();}
+        if(b&(1u<<BTN_PLAY)){
+            if(page==PG_LIBRARY&&library_cursor!=pf.slot){guarded(1,library_cursor);if(pf.slot==library_cursor&&!modified){playing=0;do_play();}}
+            else do_play();
+        }
+        if(b&(1u<<BTN_SEQ)){if(page==PG_LIBRARY){page=PG_SONG;full=1;mk(0x1fu);}else stop_play();}
+        if(b&(1u<<BTN_GLO)){if(page==PG_SONG||page==PG_PATTERN||page==PG_LYRICS){do_undo();if(page==PG_LYRICS)lyric_load();}else if(page==PG_GEN)gen_drop();}
         if(b&(1u<<BTN_ARP)){anchor=cstep;arp_c=0;if(page==PG_SONG && sg.nrows && sg.nrows<NROW){u_pushrows();lk();sg_row_dup(&sg,(int)crow);ulk();crow++;modified=1;mk(0x1Fu);}
             if(page==PG_MIXER){sg.trk[trk].solo^=1u;modified=1;mk(0x1Fu);}
-            if(page==PG_GEN)gen_go(1);}
+            if(page==PG_GEN)gen_go(1);
+            }
         if(b&(1u<<BTN_REC)){
-            if(page==PG_PATTERN){
+            if(page==PG_LIBRARY){
+                char nm[9];if(library_cursor!=pf.slot&&slot_name(library_cursor,nm)&&!(pend==4u&&pend_arg==library_cursor&&(int32_t)(now-pend_t)<0)){pend=4;pend_arg=library_cursor;pend_t=now+3000u;toast("OVERWRITE? REC AGAIN",1);}
+                else{pend=0;do_save(library_cursor);}mk(0x1fu);
+            }else if(page==PG_VISUALS){performance.effect_epoch=now;toast("EFFECT TRIGGERED",0);}
+            else if(page==PG_PATTERN){
                 uint32_t p=pat_of();Step z={{0,0,0,0}};
                 if(p!=ROW_OFF){u_pushpat(trk,p);st_put(trk,p,cstep,&z);mk(0x1Eu);}
             }else if(page==PG_GEN)gen_go(0);
+            else if(page==PG_LYRICS)lyric_delete();
             else if(page==PG_SONG && sg.nrows){u_pushrows();lk();sg_row_delete(&sg,(int)crow);ulk();modified=1;if(crow && crow>=sg.nrows)crow=sg.nrows-1u;mk(0x1Fu);}
         }
         if(b&(1u<<BTN_EDIT)){
@@ -1009,13 +1064,24 @@ static void app_main(void){
                 int d=p==ROW_OFF?-1:sg_dup_pat(&sg,(int)trk,(int)p);
                 if(d<0)toast("NO FREE PATTERN",1);
                 else{u_pushrows();sg_row_set(&sg,(int)crow,(int)trk,d);modified=1;toast("DUPLICATED",0);mk(0x1Fu);}
+            }else if(page==PG_LIBRARY){char nm[9];guarded(slot_name(library_cursor,nm)?1u:6u,library_cursor);}
+            else if(page==PG_LYRICS){
+                if(fm1_in.buttons&(1u<<BTN_ARP)){
+                    uint32_t k;arp_c=1;if(!lyric_clip_count)toast("NO COPIED LYRICS",1);
+                    else{lyric_count=lyric_clip_count;for(k=0;k<lyric_count;k++)lyric_units[k]=lyric_clip[k];lyric_cursor=0;lyric_commit(1);}
+                }else lyric_insert();
             }else if(page==PG_MIXER){sg.trk[trk].mute^=1u;modified=1;mk(0x1Fu);}
-            else if(page==PG_GEN && take){take=0;toast("KEPT",0);}
+            else if(page==PG_GEN){gen_edit=1;mk(4u);}
+        }
+        if(page==PG_GEN && (released&(1u<<BTN_EDIT))){
+            if(gen_edit==1u && take){take=0;toast("KEPT",0);}
+            gen_edit=0;mk(4u);
         }
         if((released&(1u<<BTN_ARP)) && !arp_c && page==PG_PATTERN){
             uint32_t p=pat_of(),lo=anchor<cstep?anchor:cstep,hi=anchor<cstep?cstep:anchor;
             if(p!=ROW_OFF && sg_copy(&sg,(int)trk,(int)p,(int)lo,(int)(hi-lo+1u),clip)){clip_n=hi-lo+1u;clip_t=trk;toast("COPIED",0);}
         }
+        if((released&(1u<<BTN_ARP)) && !arp_c && page==PG_LYRICS){uint32_t k;lyric_clip_count=lyric_count;for(k=0;k<lyric_count;k++)lyric_clip[k]=lyric_units[k];toast("LYRICS COPIED",0);}
         /* encoders, per page */
         if(page==PG_STAGE||page==PG_DANCE){
             if(dS){
@@ -1061,12 +1127,34 @@ static void app_main(void){
                 if(p!=ROW_OFF){u_pushpat(trk,p);lk();i=(uint32_t)sg_transpose(&sg,(int)trk,(int)p,dK[2]>0?1:-1);ulk();modified|=i;mk(0x1Eu);if(!i)toast("OUT OF RANGE",1);}
             }
             if(dK[3]&&sg.nrows){crow=(uint32_t)cl((int32_t)crow+dK[3],0,(int32_t)sg.nrows-1);mk(0x1Fu);}
+        }else if(page==PG_LYRICS){
+            if(dS&&lyric_count){lyric_cursor=(uint32_t)wr((int32_t)lyric_cursor+dS,(int32_t)lyric_count);if(!(lyric_units[lyric_cursor].flags&LY_REST))ed_mora=lyric_units[lyric_cursor].mora;mk(0x1Eu);}
+            if(dA)lyric_token(dA);
+            if(dK[0]&&lyric_count){lyric_units[lyric_cursor].ticks=(uint16_t)cl((int32_t)lyric_units[lyric_cursor].ticks+dK[0],1,NSTEP);lyric_commit(0);}
+            if(dK[1]&&lyric_count&&!(lyric_units[lyric_cursor].flags&LY_REST)){lyric_notes[lyric_cursor]=(uint8_t)cl((int32_t)lyric_notes[lyric_cursor]+dK[1],1,127);lyric_commit(0);}
+            if(dK[2]&&crow<sg.nrows){uint32_t p=lyric_pattern();int32_t n=p==ROW_OFF?0:(int32_t)p;n=cl(n+dK[2],0,NPAT-1);u_pushrows();sg_row_set(&sg,(int)crow,TR_VOCAL,n);modified=1;lyric_load();}
+            if(dK[3]&&sg.nrows){crow=(uint32_t)cl((int32_t)crow+dK[3],0,(int32_t)sg.nrows-1);lyric_load();}
+            if(dP){tweak(&sg.bpm,dP,40,240);if(playing)en_post(&en,EN_BPM,sg.bpm,0,0);mk(1u);}
+        }else if(page==PG_LIBRARY){
+            if(dS||dP){library_cursor=(uint32_t)wr((int32_t)library_cursor+dS+dP,NSLOT);mk(0x1fu);}
+        }else if(page==PG_VISUALS){
+            if(dS){performance.outfit=(uint8_t)wr((int32_t)performance.outfit+dS,WD_OUTFIT_N);stage_init();face_cur=SF_NEUTRAL;dance_cur=99;}
+            if(dK[0])performance.background=(uint8_t)wr((int32_t)performance.background+dK[0],PERF_BG_N);
+            if(dK[1])performance.frame=(uint8_t)wr((int32_t)performance.frame+dK[1],PERF_FRAME_N);
+            if(dK[2]||dA){performance.effect=(uint8_t)wr((int32_t)performance.effect+dK[2]+dA,STFX_N);performance.effect_epoch=now;}
+            if(dK[3])performance.intensity=(uint8_t)cl((int32_t)performance.intensity+dK[3]*4,0,100);
+            if(dS||dA||dK[0]||dK[1]||dK[2]||dK[3])mk(0x1fu);
         }else if(page==PG_GEN){
             if(dS&&sg.nrows){crow=(uint32_t)cl((int32_t)crow+dS,0,(int32_t)sg.nrows-1);mk(1u);}
             if(dP){tweak(&sg.bpm,dP,40,240);if(playing)en_post(&en,EN_BPM,sg.bpm,0,0);mk(4u);}
-            if(dK[0]){gcf.style=(uint8_t)wr(gcf.style+dK[0],GS_N);mk(2u);}
-            if(dK[1]){gcf.key=(uint8_t)wr(gcf.key+dK[1],12);mk(2u);}
-            if(dK[2]){gcf.scale^=1u;mk(2u);}
+            if(dK[0]){gen_style_id=(uint32_t)wr((int32_t)gen_style_id+dK[0],GEN_CHOICES);mk(2u);}
+            if(gen_edit){
+                if(dK[1]){gen_energy=(uint32_t)cl((int32_t)gen_energy+dK[1]*2,0,100);gen_edit=2;mk(4u);}
+                if(dK[2]){gen_complexity=(uint32_t)cl((int32_t)gen_complexity+dK[2]*2,0,100);gen_edit=2;mk(4u);}
+            }else{
+                if(dK[1]){gcf.key=(uint8_t)wr(gcf.key+dK[1],12);mk(2u);}
+                if(dK[2]){gcf.scale^=1u;mk(2u);}
+            }
             if(dA||dK[3]){gcf.seed=(uint16_t)(gcf.seed+dK[3]+dA*100);mk(4u);}
         }else{
             if(dS){trk=(uint32_t)wr((int32_t)trk+dS,NTRK);mk(0x1Fu);}
@@ -1078,7 +1166,7 @@ static void app_main(void){
             if(dK[3]){tweak(&sg.master,dK[3]*2,0,127);mk(1u);}
         }
         /* keys: always sound the current track's instrument; on PATTERN they also write the cursor step */
-        kt=page<=PG_DANCE?TR_VOCAL:trk;                    /* the voice's home: keys sing */
+        kt=page<=PG_DANCE||page==PG_LIBRARY?TR_VOCAL:trk;                    /* the voice's home: keys sing */
         if(down){
             uint32_t k;
             for(k=0;k<27u;k++)if(down&(1u<<k)){
@@ -1086,7 +1174,7 @@ static void app_main(void){
                 kn[k]=(uint8_t)n;
                 if(kt==TR_DRUMS){if(k<6u)en_post(&en,EN_ON,kt,k,0);else if(k<12u)en_post(&en,EN_ON,kt,k-6u,0);}
                 else en_post(&en,EN_ON,kt,(uint32_t)n,ed_mora);
-                if(page==PG_PATTERN)kwrite(k,(uint32_t)n);
+                if(page==PG_PATTERN)kwrite(k,(uint32_t)n);else if(page==PG_LYRICS)lyric_key((uint32_t)n);
             }
             pv_off=0;
         }
@@ -1100,6 +1188,7 @@ static void app_main(void){
         /* what the engine tells us */
         if(ppos!=oldpos||playing!=(oldpos>>16&1u)){
             if(page==PG_STAGE||page==PG_DANCE)mk(0x20u);
+            else if(page==PG_LIBRARY)mk(1u);
             else if(page==PG_SONG)mk(0x1Eu);
             else if(page==PG_PATTERN && (ppos>>8&255u)==crow)mk(0x0Eu);
             else if(page==PG_PATTERN)mk(1u);

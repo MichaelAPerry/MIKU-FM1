@@ -49,6 +49,8 @@ if [ "$VIDEO" -eq 1 ]; then
     cp "$ROOT/native/video_usb.inc" firmware/src/
     python3 "$ROOT/tools/patch_dinghy_video.py" "$ROOT/build/dinghy"
 fi
+# after the video patch, which hashes the pristine usb.c (both of its branches then get the larger SysEx buffer)
+python3 "$ROOT/tools/patch_dinghy_sysex.py" "$ROOT/build/dinghy"
 python3 - <<'PY'
 from pathlib import Path
 p=Path('tools/build.py')

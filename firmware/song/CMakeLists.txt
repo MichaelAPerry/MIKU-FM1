@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-only
 # Step 2a: song model, MKS2 file format, sequencer, mora table, demo song. Self-contained (no libc on device).
-add_library(miku_song STATIC dx7_edit.c song.c song_io.c seq.c mora.c demo.c factory.c gen.c lyrics.c lyric_edit.c gen_next.c)
+add_library(miku_song STATIC dx7_edit.c dx7_sysex.c song.c song_io.c seq.c mora.c demo.c factory.c gen.c lyrics.c lyric_edit.c gen_next.c)
 target_link_libraries(miku_song PUBLIC miku_dx7)
 target_include_directories(miku_song PUBLIC ${CMAKE_SOURCE_DIR})
 if(NOT MSVC)

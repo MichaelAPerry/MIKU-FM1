@@ -7,6 +7,10 @@
 #include "dx7_tables.h"
 #include "dx7_constants.h"
 #include "firmware/audio/fmband/fmband.h" /* existing quadratic gain/equal-power pan */
+/* Carrier gain below which a released voice is finished: the renderer divides every sample by 4096 * carriers, so 32768
+ * is a peak of 8 LSB (-72 dBFS) at full mix. The 1120 mixing threshold is too low for this (a slow release only reaches
+ * it when its envelope ends, minutes later), while a deliberate sustain via L4 stays well above 32768. */
+#define DX_QUIET 32768
 static void dx_zero(void *p,uint32_t n){uint8_t *b=p;while(n--)*b++=0;}
 static int32_t dx_min(int32_t a,int32_t b){return a<b?a:b;}
 static int32_t dx_max(int32_t a,int32_t b){return a>b?a:b;}
@@ -87,7 +91,7 @@ static int32_t dx_lfo_sample(DxLfo *l){
 }
 static int32_t dx_lfo_delay(DxLfo *l){
     uint32_t delta=l->delay<0x80000000u?l->delayinc:l->delayinc2,d=l->delay+delta;
-    if(d<l->delayinc)return 1<<24;
+    if(d<l->delay)return 1<<24; /* 32-bit wrap of the ramp, same as MSFA's 64-bit d > ~0u */
     l->delay=d;
     return d<0x80000000u?0:(int32_t)((d>>7)&0xffffffu);
 }
@@ -116,13 +120,31 @@ uint32_t dx_patch(DxSynth *s,const uint8_t patch[128]){
     for(i=0;i<128;i++)s->patch[i]=patch[i];
     return 1;
 }
+static void dx_voice_block(DxSynth *s,DxVoice *v);
+/* Stealing must not hard-cut a sounding tail: take what the voice would play next (its buffered rest, then one more
+ * block), fade it linearly over DX_FADE samples and add it to the synth's outgoing-tail buffer. */
+static void dx_ghost_add(DxSynth *s,DxVoice *v){
+    int32_t t[DX_FADE];uint32_t i,n=v->left,rem=(uint32_t)s->glen-s->gpos;int32_t div;
+    if(!v->active||(v->active==2&&!v->left))return;
+    div=(int32_t)(4096u*(v->carriers?v->carriers:1u));
+    for(i=0;i<DX_FADE;i++)t[i]=0;
+    if(n>DX_FADE)n=DX_FADE;
+    for(i=0;i<n;i++)t[i]=v->audio[DX_BLOCK-v->left+i]/div;
+    if(n<DX_FADE&&v->active!=2){dx_voice_block(s,v);for(i=n;i<DX_FADE;i++)t[i]=v->audio[i-n]/div;}
+    for(i=0;i<DX_FADE;i++){
+        int32_t old=i<rem?s->ghost[s->gpos+i]:0;
+        s->ghost[i]=old+(int32_t)(((int64_t)t[i]*(int32_t)(DX_FADE-i))/(int32_t)DX_FADE);
+    }
+    s->gpos=0;s->glen=DX_FADE;
+}
 void dx_note_on(DxSynth *s,uint8_t note,uint8_t velocity){
     uint32_t i,o,k=s->voices;DxVoice *v;int32_t midinote,offset,out,rate;const uint8_t *p=s->patch;
     if(!velocity){dx_note_off(s,note);return;}
     for(i=0;i<s->voices;i++)if(!s->voice[i].active){k=i;break;}
     if(k==s->voices){for(i=0;i<s->voices;i++)if(!s->voice[i].gated&&(k==s->voices||s->voice[i].age<s->voice[k].age))k=i;}
     if(k==s->voices){k=0;for(i=1;i<s->voices;i++)if(s->voice[i].age<s->voice[k].age)k=i;}
-    v=s->voice+k;dx_zero(v,sizeof *v);v->active=v->gated=1;v->note=note;v->age=++s->age;
+    v=s->voice+k;if(v->active)dx_ghost_add(s,v);
+    dx_zero(v,sizeof *v);v->active=v->gated=1;v->note=note;v->age=++s->age;
     v->algorithm=p[110];v->fbshift=(uint8_t)((p[111]&7u)?8u-(p[111]&7u):16u);
     v->pmd=(uint8_t)((p[114]*165u)>>6);v->pms=dx_pitchmodsenstab[p[116]>>4];v->amd=p[115];
     midinote=dx_min(127,dx_max(0,(int32_t)note+(int32_t)p[117]-24));
@@ -150,6 +172,9 @@ void dx_note_off(DxSynth *s,uint8_t note){
     }}
 }
 void dx_all_off(DxSynth *s){uint32_t i;for(i=0;i<s->voices;i++)if(s->voice[i].active)dx_note_off(s,s->voice[i].note);}
+void dx_hush(DxSynth *s){
+    uint32_t i;for(i=0;i<s->voices;i++){DxVoice *v=s->voice+i;if(v->active==1){v->gated=0;v->active=3;}}
+}
 uint32_t dx_active(const DxSynth *s){uint32_t i,n=0;for(i=0;i<s->voices;i++)n+=s->voice[i].active!=0;return n;}
 /* Algorithms 4 and 6 feed a later operator back into an earlier one.
  * They require sample-major evaluation; the original MSFA block-major path
@@ -185,12 +210,15 @@ static void dx_voice_block(DxSynth *s,DxVoice *v){
     for(o=0;o<6;o++){
         uint32_t flags=dx_algorithms[v->algorithm][o],in=(flags>>4)&3u,out=flags&3u,add=(flags&4u)!=0;
         int32_t *dst=out?s->bus[out-1]:v->audio;const int32_t *src=in?s->bus[in-1]:0;
-        int32_t level=dx_env_sample(v->env+o),g1=v->gain[o],g2,dg,gain,fb0=v->feedback[0],fb1=v->feedback[1];
+        int32_t level=dx_env_sample(v->env+o),level0=level,g1=v->gain[o],g2,dg,gain,fb0=v->feedback[0],fb1=v->feedback[1];
         uint32_t phase=v->phase[o],frequency=(uint32_t)dx_freq(v->base[o]+pitch);
         /* DX7 AMS levels approximate 0 / 1.5 / 3 / 6 dB modulation at full depth. */
         if(v->ams[o])level-=(int32_t)(((int64_t)(v->ams[o]==1?1:v->ams[o]==2?2:4)*amp*(0xffffff-lfo))>>9);
         g2=dx_exp(level-14*(1<<24));
-        if((flags&7u)==4u&&v->env[o].stage<4u)done=0;
+        /* A released voice retires once every carrier is below DX_QUIET (the unmodulated level bounds the gain; a carrier
+         * still rising towards an audible L4 keeps it alive). A carrier that settles audibly at L4 never retires. */
+        if(!v->gated&&(flags&7u)==4u){const DxEnv *e=v->env+o;
+            if(dx_exp(level0-14*(1<<24))>=DX_QUIET||(e->stage<4u&&e->rising&&dx_exp(e->target-14*(1<<24))>=DX_QUIET))done=0;}
         if(!v->gated&&v->active==3)g2=0;
         v->gain[o]=g2;dg=(g2-g1+32)>>6;gain=g1;
         if(special){frequencies[o]=frequency;starts[o]=g1;deltas[o]=dg;audible[o]=(uint8_t)(g1>=1120||g2>=1120);continue;}
@@ -210,11 +238,16 @@ static void dx_voice_block(DxSynth *s,DxVoice *v){
         v->phase[o]+=frequency*DX_BLOCK;
     }
     if(special)dx_multi_feedback(v,frequencies,starts,deltas,audible);
-    if(!v->gated&&done)v->active=(uint8_t)(v->active==3?2:3);
+    if(!v->gated&&(done||v->active==3))v->active=(uint8_t)(v->active==3?2:3);
     v->left=DX_BLOCK;
 }
 void dx_render(DxSynth *s,int32_t *stereo,uint32_t frames){
-    uint32_t v,n,i,at;for(v=0;v<s->voices;v++){DxVoice *voice=s->voice+v;if(!voice->active)continue;
+    uint32_t v,n,i,at;
+    for(i=0;i<frames&&s->gpos<s->glen;i++,s->gpos++){
+        int32_t x=s->ghost[s->gpos];stereo[2u*i]+=(x*s->gl)>>15;stereo[2u*i+1u]+=(x*s->gr)>>15;
+    }
+    if(s->gpos>=s->glen)s->gpos=s->glen=0;
+    for(v=0;v<s->voices;v++){DxVoice *voice=s->voice+v;if(!voice->active)continue;
         at=0;while(at<frames){
             if(!voice->left){if(voice->active==2){voice->active=0;break;}dx_voice_block(s,voice);}
             n=frames-at;if(n>voice->left)n=voice->left;
@@ -223,6 +256,7 @@ void dx_render(DxSynth *s,int32_t *stereo,uint32_t frames){
                 stereo[2u*(at+i)]+=(x*s->gl)>>15;stereo[2u*(at+i)+1u]+=(x*s->gr)>>15;
             }
             voice->left=(uint8_t)(voice->left-n);at+=n;
+            if(!voice->left&&voice->active==2){voice->active=0;break;}
         }
     }
     s->clock+=frames;

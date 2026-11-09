@@ -1,6 +1,7 @@
 /* SPDX-License-Identifier: GPL-3.0-only */
 /* Engine: renders two bars of the demo from row 2 (the first vocal bar) and checks the mix. */
 #include "firmware/app/engine.h"
+#include "firmware/audio/dx7/bank.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -304,5 +305,20 @@ int main(void) {
     t_layers();
     t_animal();
     printf(fails ? "engine: %d FAILED\n" : "engine: all ok\n", fails);
+    /* HUSH (SAVE): PANIC plus a fast fade of the DX7 tails; en.act must drop within two blocks */
+    {
+        int32_t o[2 * 256]; int k;
+        for (k = 0; k < 2; k++) {
+            memcpy(g.dx7[0], dx7_bank[0], 128); g.trk[TR_CHORDS].preset = SG_DX7_FIRST; g.trk[TR_CHORDS].level = 100;
+            en_init(&en, &g); memset((void *)en.pan, 64, NTRK);
+            en_post(&en, EN_ON, TR_CHORDS, 60, 0); en_post(&en, EN_ON, TR_CHORDS, 64, 0);
+            for (int i = 0; i < 40; i++) { memset(o, 0, sizeof o); en_render(&en, o, 256); }
+            CHECK(en.act & 2u, "DX7 chord not active");
+            en_post(&en, k ? EN_HUSH : EN_PANIC, 0, 0, 0);
+            for (int i = 0; i < 2; i++) { memset(o, 0, sizeof o); en_render(&en, o, 256); }
+            if (k) CHECK(!(en.act & 2u), "HUSH left the DX7 active");
+            else CHECK(en.act & 2u, "PANIC alone is a normal release (still active)");
+        }
+    }
     return fails != 0;
 }

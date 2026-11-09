@@ -1,6 +1,6 @@
 {
   "branch": "feature/miku-nextgen-performance",
-  "implementation_commit": "71035d9",
+  "implementation_commit": "d880f21",
   "main_base": "88b0ef3e568cf615eb5dfaa42d170d8c0f75d431",
   "scope": "native integration milestone; PR21 remains draft; no physical hardware or live USB throughput claim",
   "host_ctest": {
@@ -10,11 +10,11 @@
   "resources": {
     "default": {
       "image": {
-        "used": 506540,
+        "used": 506700,
         "limit": 581564,
-        "free": 75024,
+        "free": 74864,
         "minimum_free": 65536,
-        "margin_above_reserve": 9488,
+        "margin_above_reserve": 9328,
         "pass": true
       },
       "static_ram": {
@@ -36,11 +36,11 @@
     },
     "video": {
       "image": {
-        "used": 513180,
+        "used": 513340,
         "limit": 581564,
-        "free": 68384,
+        "free": 68224,
         "minimum_free": 65536,
-        "margin_above_reserve": 2848,
+        "margin_above_reserve": 2688,
         "pass": true
       },
       "static_ram": {
@@ -237,8 +237,38 @@
     "docs/evidence/device-scenes/emulator-inputs.txt": {
       "bytes": 394,
       "sha256": "42181e1166d1c0702ab33896c07a8e1cf25c448a6d70de767bf98e7b4f8d3052"
+    },
+    "docs/evidence/menu-redesign/menu-walkthrough.mp4": {
+      "bytes": 1083501,
+      "sha256": "5c2b390d709af268d6632a86b0c99409ce17b6b737f9390cda7da7065742e3e6"
+    },
+    "docs/evidence/menu-redesign/captions.srt": {
+      "bytes": 599,
+      "sha256": "5a7b42562d8988275bb05114350fdbec2a35868701c557b229a2be964a232f30"
+    },
+    "docs/evidence/menu-redesign/README.md": {
+      "bytes": 2970,
+      "sha256": "8d629581866b7d0f3b242d64d21bfb353651be3046df0a399d2a1f7ff49bd1c6"
+    },
+    "docs/evidence/menu-redesign/song-library.png": {
+      "bytes": 2515,
+      "sha256": "7591c6260bb03503c25b8015273cf8da170d58bbbcaef5bde3fb692c28e2defb"
+    },
+    "docs/evidence/menu-redesign/restored-look.png": {
+      "bytes": 9299,
+      "sha256": "7a21c8048495ad5add3b469fd4b55eaa5ddc75e84ef4070deb5e513ca618e214"
+    },
+    "docs/evidence/menu-redesign/menus.png": {
+      "bytes": 17637,
+      "sha256": "c3f10bce54c673b5ce8b6068c916fa63d45f028179703e42bc602380b1bd4f2f"
+    },
+    "docs/evidence/menu-redesign/wardrobe.png": {
+      "bytes": 8340,
+      "sha256": "a0ce9917a5b4bd71046a863d11a30fedf59d973a1191d449e429b2c8154124c7"
     }
   },
   "scene_prefs_bytes": 44,
-  "scene_prefs_version": 3
+  "scene_prefs_version": 3,
+  "video_benchmark_implementation_commit": "71035d9",
+  "menu_redesign_image_delta": 160
 }

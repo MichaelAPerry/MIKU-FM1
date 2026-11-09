@@ -1,5 +1,8 @@
 # Device LOOK controls and electronic stage follow-up
 
+> Latest UI pass: [visual wardrobe and song-library menus, native walkthrough and current build measurements](evidence/menu-redesign/README.md).
+
+
 This is the current follow-up to the original native integration milestone.
 Implementation commit: `71035d9`. PR21 stays draft on
 `feature/miku-nextgen-performance`; no merge, deployment, release or physical

@@ -68,9 +68,14 @@ jobs:
           bash native/build.sh
           cp build/native/miku-fm.fwsc build/native/miku-fm-app.bin build/release-assets/
         fi
+        # license texts travel with the binaries (Apache-2.0 section 4(a) for the DX7 renderer)
+        cp LICENSE LICENSING.md build/release-assets/
+        cp firmware/audio/dx7/LICENSE build/release-assets/LICENSE-MSFA-Apache-2.0.txt
       test: |
         set -euo pipefail
-        cmake -S . -B build/host -DCMAKE_BUILD_TYPE=Release
+        python3 -m venv build/validation-venv
+        build/validation-venv/bin/python -m pip install -r tools/requirements-dev.txt
+        cmake -S . -B build/host -DCMAKE_BUILD_TYPE=Release -DPython3_EXECUTABLE="$PWD/build/validation-venv/bin/python"
         cmake --build build/host --parallel
         ctest --test-dir build/host --output-on-failure
       packages: build/release-assets/*

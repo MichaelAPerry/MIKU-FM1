@@ -1,0 +1,7 @@
+{
+  "slot": 10,
+  "address": "0xbb000",
+  "length": 4508,
+  "payload_magic": "MKS2",
+  "outer_crc_matches": true
+}

@@ -295,7 +295,37 @@ static void t_cost(void) {
     for (int i = 0; i < blocks; i++) { memset(b, 0, sizeof b); fv_render(&v, b, 256); if (i == blocks / 2) fv_set_vowel(&v, FV_I); }
     printf("  cost: %.1f us per 256-frame block (host)\n", (double)(clock() - c0) * 1e6 / CLOCKS_PER_SEC / blocks);
 }
+/* The opt-in compensation must preserve pitch/phase, consonants and low-register baseline. */
+static void t_comp(void) {
+    int newclips = 0;
+    for (int n = 48; n <= 96; n++) for (int w = 0; w < 5; w++) {
+        FvVoice a, b; setup(&a); b = a; b.level_comp = 100;
+        fv_note_on(&a, (uint8_t)n, (uint8_t)w, 127); fv_note_on(&b, (uint8_t)n, (uint8_t)w, 127);
+        double ea = 0, eb = 0, cross = 0;
+        for (int i = 0; i < 100; i++) {
+            int32_t x[512] = {0}, y[512] = {0}; fv_render(&a, x, 256); fv_render(&b, y, 256);
+            CHECK(a.ph == b.ph && a.inc == b.inc, "comp pitch note%d vowel%d", n,w);
+            if (n <= 72) CHECK(!memcmp(x,y,sizeof x), "comp low baseline note%d vowel%d",n,w);
+            if (i >= 80) for (int j = 0; j < 256; j++) {
+                ea += (double)x[j*2]*x[j*2]; eb += (double)y[j*2]*y[j*2]; cross += (double)x[j*2]*y[j*2];
+                newclips += abs(y[j*2]) == 32767 && abs(x[j*2]) != 32767;
+            }
+        }
+        CHECK(eb >= ea * .998 && eb <= ea * 4.01, "comp gain note%d vowel%d",n,w);
+        CHECK(1-cross*cross/(ea*eb) < .00001, "comp waveform/spectrum note%d vowel%d",n,w);
+    }
+    CHECK(!newclips,"comp created %d new clipped samples",newclips);
+    for(int c=FC_K;c<=FC_NN;c++) {
+        FvVoice a,b;setup(&a);b=a;b.level_comp=100;
+        fv_note_on_mora(&a,96,(uint8_t)c,FV_A,127);fv_note_on_mora(&b,96,(uint8_t)c,FV_A,127);
+        for(int i=0;i<1000 && fv_cons(&a);i++) {
+            int32_t x[32]={0},y[32]={0};fv_render(&a,x,16);fv_render(&b,y,16);
+            if(fv_cons(&a))CHECK(!memcmp(x,y,sizeof x),"comp changed consonant%d block%d",c,i);
+        }
+    }
+}
 int main(void) {
+    t_comp();
     printf("f0\n"); t_f0(); printf("formants\n"); t_formants(); printf("vibrato\n"); t_vibrato();
     printf("porta\n"); t_porta(); printf("env\n"); t_env(); printf("robust\n"); t_robust();
     printf("scoop\n"); t_scoop(); printf("human\n"); t_human(); printf("transpose\n"); t_transpose(); printf("centroid\n"); t_centroid();

@@ -1,0 +1,49 @@
+{
+  "implementation_commit": "2414571281b179cc4a6133e291cd1e1d025450e2",
+  "host_tests": {
+    "passed": 40,
+    "failed": 0
+  },
+  "audio_capture": {
+    "frames": 1338112,
+    "rate": 44100,
+    "peak": 12152,
+    "full_scale_samples": 0
+  },
+  "resources": {
+    "default": {
+      "image": {
+        "used": 507396,
+        "free": 74168,
+        "reserve": 65536
+      },
+      "static_ram": {
+        "used": 35760,
+        "free": 62544,
+        "reserve": 16384
+      },
+      "pool": {
+        "used": 255624,
+        "free": 88440,
+        "reserve": 32768
+      }
+    },
+    "video": {
+      "image": {
+        "used": 514044,
+        "free": 67520,
+        "reserve": 65536
+      },
+      "static_ram": {
+        "used": 33984,
+        "free": 64320,
+        "reserve": 16384
+      },
+      "pool": {
+        "used": 266080,
+        "free": 77984,
+        "reserve": 32768
+      }
+    }
+  }
+}

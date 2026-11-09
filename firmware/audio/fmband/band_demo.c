@@ -35,8 +35,11 @@ static void band_init(Band *w) {
 int main(int argc, char **argv) {
     const char *dir = argc > 1 ? argv[1] : ".";
     static Band w;
-    /* ---- 4-bar song ---- */
+    /* ---- Same score through baseline and two opt-in modern bands: a direct A/B. ---- */
+    for (int variant = 0; variant < 3; variant++) {
+    npcm = 0;
     band_init(&w); ch_set_preset(&w.c, 0); bs_set_preset(&w.b, 0);
+    if (variant) { ch_set_modern(&w.c,(uint8_t)(variant-1)); bs_set_preset(&w.b,(uint8_t)(variant+3)); dr_set_preset(&w.d,(uint8_t)(variant+1)); }
     static const uint8_t chord[4][4] = { { 60, 64, 67, 72 }, { 60, 65, 69, 72 }, { 60, 64, 69, 72 }, { 59, 62, 67, 71 } };
     static const uint8_t root[4] = { 36, 41, 33, 43 };
     static const uint8_t ud[16] = { 0, 1, 2, 3, 2, 1, 0, 1, 2, 3, 2, 1, 0, 1, 2, 1 };   /* up-down sixteenths */
@@ -57,13 +60,19 @@ int main(int argc, char **argv) {
         if (s < 64) { ch_note_off(&w.c, chord[bar][ud[st]]); if (st & 1) bs_note_off(&w.b); }
         if (s >= 64 + 8) break;
     }
-    if (!save(dir, "band_demo.wav")) return 1;
+    if (!save(dir, variant == 0 ? "band_demo.wav" : variant == 1 ? "band_subdrop.wav" : "band_hardacid.wav")) return 1;
+    }
     /* ---- preset tour ---- */
     npcm = 0; band_init(&w);
     for (int p = 0; p < CH_NPRESET; p++) {
         ch_set_preset(&w.c, (uint8_t)p);
         ch_note_on(&w.c, 60, 100); ch_note_on(&w.c, 64, 100); ch_note_on(&w.c, 67, 100);
         run(&w, FS); ch_all_off(&w.c); run(&w, FS * 6 / 10);
+    }
+    for (int p = 0; p < 2; p++) {
+        ch_set_modern(&w.c,(uint8_t)p);
+        ch_note_on(&w.c,60,100); ch_note_on(&w.c,64,100); ch_note_on(&w.c,67,100);
+        run(&w,FS);ch_all_off(&w.c);run(&w,FS);
     }
     for (int p = 0; p < BS_NPRESET; p++) {
         bs_set_preset(&w.b, (uint8_t)p);

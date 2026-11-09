@@ -29,6 +29,7 @@ typedef struct {
     uint8_t cscale, vscale;     /* 25..175 % (100): consonant phase lengths, vowel/formant morph speed */
     uint16_t clevel;            /* 0..200 % (100): consonant noise and aspiration level */
     int16_t tune;               /* pitch offset, 4096 units per octave (detune) */
+    uint8_t level_comp;         /* EXPERIMENTAL 0..100: bounded pitch/vowel lift; 0 preserves baseline. MIKU character only. */
     /* state */
     uint32_t ph, inc, lfo, noise, rng;
     int32_t pcur, ptgt;         /* pitch, 4096 units/octave above MIDI 0 */

@@ -25,7 +25,7 @@ The singer's pictures are fan art of **Hatsune Miku**, a character of Crypton Fu
 
 **These files are the character art.** They are **not** GPL or MIT, and nobody can relicense them:
 
-- `assets/singer/` (the source art), `firmware/ui/singer_sprites.h` (that art as pixel data in the firmware),
+- `assets/singer/` (including the paired outfit source sheets), `firmware/ui/singer_sprites.h` , `firmware/ui/singer_compact.h` and `firmware/ui/wardrobe_sprites.h` (that art as pixel data in the firmware),
 - `site/media/` pictures and video (banner, icons, `dancer.png`, `screens/`, `trailer.*`), `docs/card*.png`, `docs/screens/`.
 
 **What the PCL means for Miku-FM** (from the PCL text, articles 3 and 4, and the guidelines):
@@ -54,3 +54,35 @@ or software from Crypton or Yamaha: the voice is synthesised by its own code.
 
 「おとのはこ」 (`assets/songs/`): original lyrics written for Miku-FM with ChatGPT, provided by Michael Perry; melody original
 to Miku-FM. Free to use with the firmware.
+
+### Additional generated presentation assets
+
+`companion/media/*-face.png` and `companion/media/*-stage.png` are exports of the
+same packed character pixels. They retain the PCL notice and noncommercial
+restrictions above. The companion displays the attribution beside the artwork. Character review
+screenshots and sprite contact sheets in `docs/evidence/native-integration/`
+retain the same PCL notice; see that directory's README.
+`assets/stage/effects.png`, `firmware/ui/stagefx_sprites.h` and
+`companion/media/effects.png` are the separately generated generic effects art
+listed in `assets/stage/README.md` and `assets/NOTICE.md`; the code licence does
+not relicense their pixels. Factory-song provenance is documented in
+`assets/songs/factory/README.md`; no third-party recording or modern
+accompaniment is bundled.
+
+## Embedded DX7 engine and factory patches
+
+`firmware/audio/dx7/dx7.c,h`, constants, generated lookup tables and reference
+fixtures adapt Google MSFA (Copyright2012–2013 Google Inc.) under Apache-2.0.
+The complete license is in `firmware/audio/dx7/LICENSE`; source revision and
+changes are in its README. The combined application remains GPL-3.0-only.
+
+`assets/dx7/factory.packed` and generated `firmware/audio/dx7/bank.h` hold ten
+**original** DX7 voices authored for this project in `tools/dx7_candidates.py`. They
+contain no third-party patch data and are GPL-3.0-only project data like the rest of
+the application. (An earlier eight-voice bank taken from Dexed's bundled cartridges had
+no clear redistribution licence and was removed; it appears only in historical
+documents.) Users may load other DX7 voices themselves; MIKU does not redistribute them.
+The MSFA engine's Apache-2.0 licence is separate and unchanged. The regression
+fixtures in `firmware/audio/dx7/reference_vectors.h` are raw outputs of unmodified MSFA
+for these original voices (Apache-2.0 header retained). Engine and patch licenses do not
+change the character art's PCL terms. DX7 is a Yamaha product name; this remains unofficial software.

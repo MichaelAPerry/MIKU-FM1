@@ -1,0 +1,74 @@
+{
+  "classic-8": {
+    "frames": 240545,
+    "peak": 6693,
+    "rms": 899.0678262658973,
+    "full_scale_samples": 0
+  },
+  "dx7-0": {
+    "frames": 240545,
+    "peak": 3168,
+    "rms": 469.03596128578056,
+    "full_scale_samples": 0
+  },
+  "dx7-1": {
+    "frames": 240545,
+    "peak": 8356,
+    "rms": 1859.6579736629221,
+    "full_scale_samples": 0
+  },
+  "dx7-2": {
+    "frames": 240545,
+    "peak": 6690,
+    "rms": 1547.087410188972,
+    "full_scale_samples": 0
+  },
+  "dx7-3": {
+    "frames": 240545,
+    "peak": 12518,
+    "rms": 3555.6243191357744,
+    "full_scale_samples": 0
+  },
+  "dx7-4": {
+    "frames": 240545,
+    "peak": 6220,
+    "rms": 1817.6156752238442,
+    "full_scale_samples": 0
+  },
+  "dx7-5": {
+    "frames": 240545,
+    "peak": 9297,
+    "rms": 2676.3995812024436,
+    "full_scale_samples": 0
+  },
+  "dx7-6": {
+    "frames": 240545,
+    "peak": 4953,
+    "rms": 1005.683777368178,
+    "full_scale_samples": 0
+  },
+  "dx7-7": {
+    "frames": 240545,
+    "peak": 4105,
+    "rms": 857.2288386433006,
+    "full_scale_samples": 0
+  },
+  "edited": {
+    "frames": 721636,
+    "peak": 9924,
+    "rms": 1373.0302135064649,
+    "full_scale_samples": 0
+  },
+  "full-band": {
+    "frames": 721636,
+    "peak": 29273,
+    "rms": 6722.096735683031,
+    "full_scale_samples": 0
+  },
+  "listening_level_match": {
+    "reference": "classic-8",
+    "comparison": "dx7-1",
+    "linear_gain_applied_to_comparison_only": 0.483458699932346,
+    "scope": "listening copy only; raw files and device parameters unchanged"
+  }
+}

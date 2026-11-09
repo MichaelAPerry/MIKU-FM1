@@ -1,0 +1,11 @@
+{
+  "audio": {
+    "frames": 1338112,
+    "peak": 12152,
+    "full_scale_samples": 0
+  },
+  "host_tests": {
+    "passed": 41,
+    "failed": 0
+  }
+}

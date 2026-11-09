@@ -1,7 +1,24 @@
 # Manual
 
+> Current DX7 milestone: [real six-operator renderer, dedicated BANK/operator editor, embedded patch saving, native video/audio evidence and current measurements](DX7_BANK_HANDOFF.md). This supersedes earlier DX7-plan-only status.
+
+
+> Current policy and UI: [fixed 64 KiB flash reserve removed at owner request; neon console UI implemented; eight-voice DX7 audition bank prepared offline](NEON_UI_AND_DX7_BANK.md). Earlier fixed-flash-reserve instructions are superseded.
+
+
+> Current device-wide visual pass: [pink/blue borders and gradients across all nine musical pages, popups and SAVE window, with native recordings and current measurements](evidence/device-theme/README.md). This supersedes the earlier menu-only UI scope and resource figures.
+
+
+> Current device UI follow-up: [selectable per-song LOOK controls, electronic scenes, recordings and resource measurements](DEVICE_LOOK_HANDOFF.md). This supersedes earlier global-look settings and pre-follow-up audio/resource figures below.
+
+
+The feature branch adds SONG LIBRARY, LYRICS and VISUALS pages and ten save
+slots. Their current bindings, factory songs and compatibility limits are in
+[NEXTGEN_NATIVE_INTEGRATION.md](NEXTGEN_NATIVE_INTEGRATION.md). The original
+page controls below remain available.
+
 Miku-FM is a songwriter for the M-VAVE FM-1 with a singer on its screen: four tracks (VOCAL, CHORDS, BASS, DRUMS),
-patterns, an arrangement, a mixer and 8 song slots. This manual covers what the firmware does **today**; every control
+patterns, an arrangement, a mixer and 10 song slots. This manual covers what the firmware does **today**; every control
 is in [CONTROLS](CONTROLS.md).
 
 ## How a song is built
@@ -69,10 +86,11 @@ STAGE is the voice's home: the keys always sing here, and every control shapes h
 voice; her face blinks and smiles on PLAY.
 
 - **SELECT** turns the syllable dial under her face: the pink syllable under the pointer is the one the keys sing (and the
-  one PATTERN writes). While stopped you hear each syllable as you turn.
-- **SCL** switches the language: JAPANESE sings the syllables as written; ANIMAL turns every held note into fast random
-  babble with little pitch jumps, like the voices of animal games; SCAT sings da, ba, bi, do on eighth notes while a note is
+  one PATTERN writes). Selection is silent, including while holding a key; the next key uses the new syllable.
+- **SCL** switches the language: JAPANESE sings the syllables as written; ANIMAL turns every held note into random
+  babble at a default 140–220 ms per syllable with little pitch jumps, like the voices of animal games; SCAT sings da, ba, bi, do on eighth notes while a note is
   held; VOWELS drops the consonants.
+- In ANIMAL, **hold SCL (SEL) and turn PRESETS** to set speech rate (0 slow, 100 fast; 50 default). It changes the next syllable interval without retriggering. This session control is not saved; tempo stays unchanged. Default timing is provisional pending listening review.
 - **ALGORITHM** sets her character, the size of the voice: DEEP, LOW, MIKU (the default), YOUNG, TINY.
 - The four knobs work in banks. VOICE (the default): breath, brightness, glide, level. **FX**: chorus, delay (a dotted eighth
   at the song tempo, echoes left and right), reverb, drive. **ENV**: attack, release, scoop (sliding up into each note),
@@ -99,9 +117,22 @@ The STAGE CPU figure shows what it costs: harmony and the effects together rough
 The singer full-body, dancing: she sways on the beat, sings while the vocal sounds, throws her arms up in the chorus and
 bows when the song stops. The knobs, SELECT, SCL and ALGORITHM do what they do on STAGE.
 
+## DX7 voices from your computer, and a MIDI keyboard
+
+Send a DX7 32-voice cartridge (a .syx from Dexed or any librarian, MIDI channel any) to the FM-1's USB MIDI port. The screen
+asks IMPORT 32 VOICES? REC: press REC within 10 seconds (the song must be stopped) and the user bank is replaced and saved.
+A single voice asks VOICE TO USER n? REC (or VOICE TO EDIT? REC while a DX7 edit page is open). Bad data is refused with a
+message: BAD CHECKSUM, INVALID VOICE 12 (a whole cartridge with one bad voice is refused). In BANK, ARP in BROWSE switches
+between FACTORY (10) and USER (32); SELECT browses without sound, REC loads the voice into CHORDS or BASS. In an edit page,
+GLO then REC stores the current patch (its name included) in a user slot; GLO again picks the next slot. GLO in BROWSE sends the user bank back to the computer.
+User voices are device data: songs keep their own copy of the patch they use. There is no name editing yet.
+
+A MIDI keyboard on USB or the TRS jack plays the current track exactly like the keys (singer on the stage pages, otherwise
+the selected track; drums use the note modulo 12), with sustain pedal and pitch bend on CHORDS/BASS. It does not record into patterns.
+
 ## Saving and other firmwares
 
-Songs live in Dinghy's 8 slots of the FM-1's flash (one song is 4,476 bytes, CRC-checked: a damaged slot is refused,
+Songs live in Dinghy's 10 slots of the FM-1's flash (one song is 4,508 bytes, CRC-checked: a damaged slot is refused,
 never half-loaded); the current slot number and the pan settings live in Dinghy's settings sector. Miku-FM does not read other
 firmwares' projects or samples. See the README for what saving does to other firmwares' data, and back up before
 installing. Saving erases flash, so it only happens while stopped and silent.
@@ -109,7 +140,7 @@ installing. Saving erases flash, so it only happens while stopped and silent.
 ## Limits of this version
 
 No song renaming on the device (a new song is "NEW SONG", a generated one is named after its style and seed, e.g. "POP 0001"). Pan is a device setting, not part of the song file. Lyrics, other
-vocal consonants, MIDI sync and WAV export from the device are not there yet (see [ROADMAP](ROADMAP.md)).
+vocal consonants, MIDI clock sync and WAV export from the device are not there yet (see [ROADMAP](ROADMAP.md)).
 
 ## When something goes wrong
 

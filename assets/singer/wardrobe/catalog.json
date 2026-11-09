@@ -1,0 +1,90 @@
+{
+  "version": 3,
+  "status": "concept-review-only",
+  "source_references": [
+    "assets/singer/reference.webp",
+    "assets/singer/stage.webp",
+    "assets/singer/faces.webp"
+  ],
+  "concept_sheet": "concepts-v3.png",
+  "outfits": [
+    {
+      "concept": 1,
+      "name": "Encore",
+      "approved": false,
+      "portrait_atlas": null,
+      "dance_atlas": null
+    },
+    {
+      "concept": 2,
+      "name": "Off Duty",
+      "approved": false,
+      "portrait_atlas": null,
+      "dance_atlas": null
+    },
+    {
+      "concept": 3,
+      "name": "Retro Wave",
+      "approved": false,
+      "portrait_atlas": null,
+      "dance_atlas": null
+    },
+    {
+      "concept": 4,
+      "name": "Prism",
+      "approved": false,
+      "portrait_atlas": null,
+      "dance_atlas": null
+    },
+    {
+      "concept": 5,
+      "name": "Neon Punk",
+      "approved": false,
+      "portrait_atlas": null,
+      "dance_atlas": null
+    },
+    {
+      "concept": 6,
+      "name": "City Beat",
+      "approved": false,
+      "portrait_atlas": null,
+      "dance_atlas": null
+    },
+    {
+      "concept": 7,
+      "name": "Signal Suit",
+      "approved": false,
+      "portrait_atlas": null,
+      "dance_atlas": null
+    },
+    {
+      "concept": 8,
+      "name": "Summer Beat",
+      "approved": false,
+      "portrait_atlas": null,
+      "dance_atlas": null
+    },
+    {
+      "concept": 9,
+      "name": "Snow Glow",
+      "approved": false,
+      "portrait_atlas": null,
+      "dance_atlas": null
+    },
+    {
+      "concept": 10,
+      "name": "Festival",
+      "approved": false,
+      "portrait_atlas": null,
+      "dance_atlas": null
+    },
+    {
+      "concept": 11,
+      "name": "Moon Circuit",
+      "approved": false,
+      "portrait_atlas": null,
+      "dance_atlas": null
+    }
+  ],
+  "revision_note": "Owner corrected07 to a sci-fi technical bodysuit, retained08 bikini, requested witch; counts may adjust to preserve USB video headroom."
+}

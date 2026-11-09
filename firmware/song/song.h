@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-3.0-only */
 /* Miku-FM song model: 4 tracks x 16 patterns x 16 sixteenth steps, a 64-row arrangement. Fixed capacity, no heap.
- * sizeof(Song) = 4462 bytes, sizeof(Undo) = 2596 (8 entries x 324 + ring state). */
+ * sizeof(Song) = 4718 bytes, sizeof(Undo) = 2596 (8 entries x 324 + ring state). */
 #ifndef SONG_H
 #define SONG_H
 #include <stdint.h>
@@ -11,7 +11,8 @@
 enum { TR_VOCAL, TR_CHORDS, TR_BASS, TR_DRUMS };
 /* A step is 4 bytes, meaning per track (index constants below). 0 in the note/root/mask byte = nothing. */
 typedef struct { uint8_t v[4]; } Step;
-enum { SV_NOTE, SV_LEN, SV_MORA, SV_FLAG };   /* VOCAL: MIDI 1..127, len 1..64 steps (may cross the bar), mora index, flags: velocity 0..15 low nibble, high bits reserved */
+enum { SV_NOTE, SV_LEN, SV_MORA, SV_FLAG };   /* VOCAL: MIDI 1..127, len 1..64 steps (may cross the bar), mora index, flags: velocity 0..15 low nibble, high bits VF_* (MKS2 v4) */
+enum { VF_LEGATO=16, VF_SUSTAIN=32, VF_WORD_END=64, VF_PHRASE_END=128 }; /* outgoing hold; incoming no consonant; lyric boundaries */
 enum { SC_ROOT, SC_TYPE, SC_LEN, SC_VEL };    /* CHORDS: root MIDI, type = mode<<4 | quality, len 1..64, vel 0..15 */
 enum { SB_NOTE, SB_LEN, SB_FLAG, SB_VEL };    /* BASS: note, len, flags BF_*, vel 0..15 */
 enum { SD_MASK, SD_ACC };                     /* DRUMS: instrument mask, accent mask (bits D_*), 0, 0 */
@@ -21,7 +22,7 @@ enum { CM_BLOCK, CM_UP, CM_DOWN, CM_UPDOWN, CM_STRUM, CM_UP32, CM_DOWN32, CM_UPD
 enum { D_KICK = 1, D_SNARE = 2, D_CLAP = 4, D_CHAT = 8, D_OHAT = 16, D_PERC = 32 };
 enum { SEC_NONE, SEC_INTRO, SEC_VERSE, SEC_CHORUS, SEC_BRIDGE, SEC_OUTRO, SEC_N };
 #define ROW_OFF 0xFFu                         /* pattern index: track silent in this row */
-typedef struct { uint8_t level, mute, solo, preset, vib, porta, breath, bright; } Trk;  /* level 0..127, preset 0..7, voice 0..100 */
+typedef struct { uint8_t level, mute, solo, preset, vib, porta, breath, bright; } Trk;  /* level 0..127, preset 0..7 classic, 64..75 DX7 on chords/bass (SG_DX7_*); voice 0..100 */
 typedef struct { uint8_t pat[NTRK]; uint8_t sect; } Row;
 /* The voice's sound (STAGE knobs), 0..100 each unless noted. Defaults (sg_init) give 0.5's sound exactly. */
 enum { VC_DEEP, VC_LOW, VC_MIKU, VC_YOUNG, VC_TINY, VC_N };          /* character: formant size */
@@ -43,6 +44,7 @@ typedef struct {
     uint8_t bpm, swing, master, loop, nrows;  /* 40..240, 0..75 (% of a sixteenth that odd sixteenths are delayed), 0..127, 0/1, 0..NROW */
     int8_t transpose;                         /* -24..24 semitones on VOCAL/CHORDS/BASS */
     Trk trk[NTRK];
+    uint8_t dx7[2][128];                     /* v5 embedded chord/bass DX7 snapshots; ignored for classic presets */
     Voice vx;                                 /* the voice's sound (MKS2 version 2; version 1 files get the defaults) */
     Row row[NROW];
     Step pat[NTRK][NPAT][NSTEP];
@@ -74,11 +76,19 @@ int un_pop(Undo *u, Song *g);                                 /* restore the new
 /* MKS2 binary format (song_io.c) */
 #define SONG_ENC_V1 (10 + 8 + 6 + NTRK * 8 + NROW * 5 + NTRK * NPAT * NSTEP * 4 + 4)   /* 4476: version 1, still read */
 #define SONG_ENC_V2 (SONG_ENC_V1 + 16)                                                    /* 4492: version 2, still read */
-#define SONG_ENC_SIZE (SONG_ENC_V1 + 32)                                                  /* 4508: version 3, written */
+#define SONG_ENC_V3 (SONG_ENC_V1 + 32)                                                    /* 4508: legacy voice block */
+#define SG_DX7_FIRST 64u
+/* Preset IDs on CHORDS/BASS (v5 only): 64..64+DX7_BANK_N-1 factory voices (64+bank index), 74 edited (CUSTOM),
+ * 75 a voice loaded from a future imported user bank (USER). CUSTOM and USER play the embedded 128-byte snapshot. */
+#define SG_DX7_CUSTOM 74u
+#define SG_DX7_USER 75u
+#define SG_DX7_LAST 75u
+#define SONG_ENC_MAX (SONG_ENC_V3 + 256u) /* v5 DX7 snapshots; classic records retain their size */
+#define SONG_ENC_SIZE SONG_ENC_V3                                                        /* 4508: v4, same layout; vocal flag semantics */
 enum { SIO_OK = 0, SIO_SIZE = -1, SIO_MAGIC = -2, SIO_VERSION = -3, SIO_LEN = -4, SIO_CRC = -5, SIO_FIELD = -6 };
 uint32_t sg_crc32(const uint8_t *p, uint32_t n);
 uint32_t song_encode(const Song *g, uint8_t *buf, uint32_t cap);   /* bytes written, 0 if cap too small */
-int song_decode(Song *g, const uint8_t *buf, uint32_t len);        /* SIO_OK or an error; g untouched on error. len: SONG_ENC_SIZE (v3), SONG_ENC_V2 or SONG_ENC_V1 */
+int song_decode(Song *g, const uint8_t *buf, uint32_t len);        /* SIO_OK or an error; g untouched on error. len: SONG_ENC_MAX (DX7 v5), SONG_ENC_SIZE (v4/v3), SONG_ENC_V2 or SONG_ENC_V1 */
 void sg_voice_default(Voice *v);
 void song_demo(Song *g);
 #endif

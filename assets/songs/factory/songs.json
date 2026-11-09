@@ -1,0 +1,1413 @@
+{
+  "version": 1,
+  "songs": [
+    {
+      "id": "sakura",
+      "name": "SAKURA",
+      "title": "Sakura Sakura",
+      "bpm": 44,
+      "source_meter": 4,
+      "quarter_ticks": 2,
+      "events": [
+        {
+          "note": "A4",
+          "ticks": 2,
+          "lyric": "sa"
+        },
+        {
+          "note": "A4",
+          "ticks": 2,
+          "lyric": "ku"
+        },
+        {
+          "note": "B4",
+          "ticks": 4,
+          "lyric": "ra"
+        },
+        {
+          "note": "A4",
+          "ticks": 2,
+          "lyric": "sa"
+        },
+        {
+          "note": "A4",
+          "ticks": 2,
+          "lyric": "ku"
+        },
+        {
+          "note": "B4",
+          "ticks": 4,
+          "lyric": "ra"
+        },
+        {
+          "note": "A4",
+          "ticks": 2,
+          "lyric": "ya"
+        },
+        {
+          "note": "B4",
+          "ticks": 2,
+          "lyric": "yo"
+        },
+        {
+          "note": "C5",
+          "ticks": 2,
+          "lyric": "i"
+        },
+        {
+          "note": "B4",
+          "ticks": 2,
+          "lyric": "no"
+        },
+        {
+          "note": "A4",
+          "ticks": 2,
+          "lyric": "so"
+        },
+        {
+          "note": "B4",
+          "ticks": 1,
+          "lyric": "ra"
+        },
+        {
+          "note": "A4",
+          "ticks": 1,
+          "lyric": "_"
+        },
+        {
+          "note": "F4",
+          "ticks": 4,
+          "lyric": "wa"
+        },
+        {
+          "note": "E4",
+          "ticks": 2,
+          "lyric": "mi"
+        },
+        {
+          "note": "C4",
+          "ticks": 2,
+          "lyric": "wa"
+        },
+        {
+          "note": "E4",
+          "ticks": 2,
+          "lyric": "ta"
+        },
+        {
+          "note": "F4",
+          "ticks": 2,
+          "lyric": "su"
+        },
+        {
+          "note": "E4",
+          "ticks": 2,
+          "lyric": "ka"
+        },
+        {
+          "note": "E4",
+          "ticks": 1,
+          "lyric": "gi"
+        },
+        {
+          "note": "C4",
+          "ticks": 1,
+          "lyric": "_"
+        },
+        {
+          "note": "B3",
+          "ticks": 4,
+          "lyric": "ri"
+        },
+        {
+          "note": "A4",
+          "ticks": 2,
+          "lyric": "ka"
+        },
+        {
+          "note": "B4",
+          "ticks": 2,
+          "lyric": "su"
+        },
+        {
+          "note": "C5",
+          "ticks": 2,
+          "lyric": "mi"
+        },
+        {
+          "note": "B4",
+          "ticks": 2,
+          "lyric": "ka"
+        },
+        {
+          "note": "A4",
+          "ticks": 2,
+          "lyric": "ku"
+        },
+        {
+          "note": "B4",
+          "ticks": 1,
+          "lyric": "mo"
+        },
+        {
+          "note": "A4",
+          "ticks": 1,
+          "lyric": "_"
+        },
+        {
+          "note": "F4",
+          "ticks": 4,
+          "lyric": "ka"
+        },
+        {
+          "note": "E4",
+          "ticks": 2,
+          "lyric": "ni"
+        },
+        {
+          "note": "C4",
+          "ticks": 2,
+          "lyric": "o"
+        },
+        {
+          "note": "E4",
+          "ticks": 2,
+          "lyric": "i"
+        },
+        {
+          "note": "F4",
+          "ticks": 2,
+          "lyric": "zo"
+        },
+        {
+          "note": "E4",
+          "ticks": 2,
+          "lyric": "i"
+        },
+        {
+          "note": "E4",
+          "ticks": 1,
+          "lyric": "zu"
+        },
+        {
+          "note": "C4",
+          "ticks": 1,
+          "lyric": "_"
+        },
+        {
+          "note": "B3",
+          "ticks": 4,
+          "lyric": "ru"
+        },
+        {
+          "note": "A4",
+          "ticks": 2,
+          "lyric": "i"
+        },
+        {
+          "note": "A4",
+          "ticks": 2,
+          "lyric": "za"
+        },
+        {
+          "note": "B4",
+          "ticks": 4,
+          "lyric": "ya"
+        },
+        {
+          "note": "A4",
+          "ticks": 2,
+          "lyric": "i"
+        },
+        {
+          "note": "A4",
+          "ticks": 2,
+          "lyric": "za"
+        },
+        {
+          "note": "B4",
+          "ticks": 4,
+          "lyric": "ya"
+        },
+        {
+          "note": "E4",
+          "ticks": 2,
+          "lyric": "mi"
+        },
+        {
+          "note": "F4",
+          "ticks": 2,
+          "lyric": "ni"
+        },
+        {
+          "note": "B4",
+          "ticks": 1,
+          "lyric": "yu"
+        },
+        {
+          "note": "A4",
+          "ticks": 1,
+          "lyric": "ka"
+        },
+        {
+          "note": "F4",
+          "ticks": 2,
+          "lyric": "n"
+        },
+        {
+          "note": "E4",
+          "ticks": 8,
+          "lyric": "_"
+        }
+      ],
+      "roots": [
+        45,
+        41,
+        40,
+        41,
+        45,
+        40,
+        40
+      ],
+      "verse_ticks": 112
+    },
+    {
+      "id": "toryanse",
+      "name": "TORYANSE",
+      "title": "Toryanse",
+      "bpm": 60,
+      "source_meter": 4,
+      "quarter_ticks": 2,
+      "events": [
+        {
+          "note": "A4",
+          "ticks": 4,
+          "lyric": "to+_"
+        },
+        {
+          "note": "A4",
+          "ticks": 2,
+          "lyric": "rya+n"
+        },
+        {
+          "note": "G4",
+          "ticks": 2,
+          "lyric": "se"
+        },
+        {
+          "note": "A4",
+          "ticks": 2,
+          "lyric": "to+_"
+        },
+        {
+          "note": "A4",
+          "ticks": 1,
+          "lyric": "rya"
+        },
+        {
+          "note": "G4",
+          "ticks": 1,
+          "lyric": "n"
+        },
+        {
+          "note": "E4",
+          "ticks": 2,
+          "lyric": "se"
+        },
+        {
+          "note": "R",
+          "ticks": 2,
+          "lyric": "/"
+        },
+        {
+          "note": "Bb4",
+          "ticks": 2,
+          "lyric": "ko"
+        },
+        {
+          "note": "Bb4",
+          "ticks": 1,
+          "lyric": "ko"
+        },
+        {
+          "note": "Bb4",
+          "ticks": 1,
+          "lyric": "wa"
+        },
+        {
+          "note": "D5",
+          "ticks": 2,
+          "lyric": "do"
+        },
+        {
+          "note": "Bb4",
+          "ticks": 1,
+          "lyric": "ko"
+        },
+        {
+          "note": "A4",
+          "ticks": 1,
+          "lyric": "no"
+        },
+        {
+          "note": "Bb4",
+          "ticks": 1,
+          "lyric": "ho"
+        },
+        {
+          "note": "A4",
+          "ticks": 1,
+          "lyric": "so"
+        },
+        {
+          "note": "G4",
+          "ticks": 1,
+          "lyric": "mi"
+        },
+        {
+          "note": "G4",
+          "ticks": 1,
+          "lyric": "chi"
+        },
+        {
+          "note": "A4",
+          "ticks": 2,
+          "lyric": "ja"
+        },
+        {
+          "note": "R",
+          "ticks": 2,
+          "lyric": "/"
+        },
+        {
+          "note": "Bb4",
+          "ticks": 2,
+          "lyric": "te+n"
+        },
+        {
+          "note": "Bb4",
+          "ticks": 3,
+          "lyric": "ji+n+_"
+        },
+        {
+          "note": "D5",
+          "ticks": 1,
+          "lyric": "sa"
+        },
+        {
+          "note": "Bb4",
+          "ticks": 1,
+          "lyric": "ma"
+        },
+        {
+          "note": "A4",
+          "ticks": 1,
+          "lyric": "no"
+        },
+        {
+          "note": "Bb4",
+          "ticks": 1,
+          "lyric": "ho"
+        },
+        {
+          "note": "A4",
+          "ticks": 1,
+          "lyric": "so"
+        },
+        {
+          "note": "G4",
+          "ticks": 1,
+          "lyric": "mi"
+        },
+        {
+          "note": "G4",
+          "ticks": 1,
+          "lyric": "chi"
+        },
+        {
+          "note": "A4",
+          "ticks": 2,
+          "lyric": "ja"
+        },
+        {
+          "note": "R",
+          "ticks": 2,
+          "lyric": "/"
+        },
+        {
+          "note": "F4",
+          "ticks": 3,
+          "lyric": "chi"
+        },
+        {
+          "note": "F4",
+          "ticks": 1,
+          "lyric": "to"
+        },
+        {
+          "note": "A4",
+          "ticks": 2,
+          "lyric": "to+_"
+        },
+        {
+          "note": "F4",
+          "ticks": 1,
+          "lyric": "shi"
+        },
+        {
+          "note": "E4",
+          "ticks": 1,
+          "lyric": "te"
+        },
+        {
+          "note": "F4",
+          "ticks": 1,
+          "lyric": "ku"
+        },
+        {
+          "note": "E4",
+          "ticks": 1,
+          "lyric": "da"
+        },
+        {
+          "note": "D4",
+          "ticks": 1,
+          "lyric": "sha"
+        },
+        {
+          "note": "D4",
+          "ticks": 1,
+          "lyric": "n"
+        },
+        {
+          "note": "E4",
+          "ticks": 2,
+          "lyric": "se"
+        },
+        {
+          "note": "R",
+          "ticks": 2,
+          "lyric": "/"
+        },
+        {
+          "note": "F4",
+          "ticks": 1,
+          "lyric": "go"
+        },
+        {
+          "note": "F4",
+          "ticks": 2,
+          "lyric": "yo+_"
+        },
+        {
+          "note": "F4",
+          "ticks": 1,
+          "lyric": "no"
+        },
+        {
+          "note": "A4",
+          "ticks": 1,
+          "lyric": "na"
+        },
+        {
+          "note": "A4",
+          "ticks": 1,
+          "lyric": "i"
+        },
+        {
+          "note": "F4",
+          "ticks": 1,
+          "lyric": "mo"
+        },
+        {
+          "note": "E4",
+          "ticks": 1,
+          "lyric": "no"
+        },
+        {
+          "note": "F4",
+          "ticks": 1,
+          "lyric": "to"
+        },
+        {
+          "note": "E4",
+          "ticks": 1,
+          "lyric": "_"
+        },
+        {
+          "note": "D4",
+          "ticks": 1,
+          "lyric": "sha"
+        },
+        {
+          "note": "D4",
+          "ticks": 1,
+          "lyric": "se"
+        },
+        {
+          "note": "E4",
+          "ticks": 2,
+          "lyric": "nu"
+        },
+        {
+          "note": "R",
+          "ticks": 2,
+          "lyric": "/"
+        },
+        {
+          "note": "Bb4",
+          "ticks": 1,
+          "lyric": "ko"
+        },
+        {
+          "note": "Bb4",
+          "ticks": 1,
+          "lyric": "no"
+        },
+        {
+          "note": "Bb4",
+          "ticks": 1,
+          "lyric": "ko"
+        },
+        {
+          "note": "Bb4",
+          "ticks": 1,
+          "lyric": "no"
+        },
+        {
+          "note": "D5",
+          "ticks": 1,
+          "lyric": "na"
+        },
+        {
+          "note": "D5",
+          "ticks": 1,
+          "lyric": "na"
+        },
+        {
+          "note": "Bb4",
+          "ticks": 1,
+          "lyric": "tsu"
+        },
+        {
+          "note": "A4",
+          "ticks": 1,
+          "lyric": "no"
+        },
+        {
+          "note": "Bb4",
+          "ticks": 1,
+          "lyric": "o"
+        },
+        {
+          "note": "A4",
+          "ticks": 1,
+          "lyric": "i"
+        },
+        {
+          "note": "G4",
+          "ticks": 1,
+          "lyric": "wa"
+        },
+        {
+          "note": "G4",
+          "ticks": 1,
+          "lyric": "i"
+        },
+        {
+          "note": "A4",
+          "ticks": 3,
+          "lyric": "ni"
+        },
+        {
+          "note": "R",
+          "ticks": 1,
+          "lyric": "/"
+        },
+        {
+          "note": "F4",
+          "ticks": 1,
+          "lyric": "o"
+        },
+        {
+          "note": "F4",
+          "ticks": 1,
+          "lyric": "fu"
+        },
+        {
+          "note": "F4",
+          "ticks": 1,
+          "lyric": "da"
+        },
+        {
+          "note": "F4",
+          "ticks": 1,
+          "lyric": "o"
+        },
+        {
+          "note": "F4",
+          "ticks": 1,
+          "lyric": "o"
+        },
+        {
+          "note": "A4",
+          "ticks": 1,
+          "lyric": "sa"
+        },
+        {
+          "note": "F4",
+          "ticks": 1,
+          "lyric": "me"
+        },
+        {
+          "note": "E4",
+          "ticks": 1,
+          "lyric": "ni"
+        },
+        {
+          "note": "F4",
+          "ticks": 1,
+          "lyric": "ma"
+        },
+        {
+          "note": "E4",
+          "ticks": 1,
+          "lyric": "i"
+        },
+        {
+          "note": "D4",
+          "ticks": 1,
+          "lyric": "ri"
+        },
+        {
+          "note": "D4",
+          "ticks": 1,
+          "lyric": "ma"
+        },
+        {
+          "note": "E4",
+          "ticks": 4,
+          "lyric": "su"
+        },
+        {
+          "note": "R",
+          "ticks": 1,
+          "lyric": "/"
+        },
+        {
+          "note": "A4",
+          "ticks": 1,
+          "lyric": "i"
+        },
+        {
+          "note": "A4",
+          "ticks": 1,
+          "lyric": "ki"
+        },
+        {
+          "note": "A4",
+          "ticks": 1,
+          "lyric": "wa"
+        },
+        {
+          "note": "A4",
+          "ticks": 1,
+          "lyric": "yo"
+        },
+        {
+          "note": "A4",
+          "ticks": 1,
+          "lyric": "i"
+        },
+        {
+          "note": "A4",
+          "ticks": 1,
+          "lyric": "yo"
+        },
+        {
+          "note": "G4",
+          "ticks": 1,
+          "lyric": "i"
+        },
+        {
+          "note": "A4",
+          "ticks": 1,
+          "lyric": "ka"
+        },
+        {
+          "note": "A4",
+          "ticks": 1,
+          "lyric": "e"
+        },
+        {
+          "note": "A4",
+          "ticks": 1,
+          "lyric": "ri"
+        },
+        {
+          "note": "G4",
+          "ticks": 1,
+          "lyric": "wa"
+        },
+        {
+          "note": "D4",
+          "ticks": 1,
+          "lyric": "ko"
+        },
+        {
+          "note": "D4",
+          "ticks": 1,
+          "lyric": "wa"
+        },
+        {
+          "note": "E4",
+          "ticks": 2,
+          "lyric": "i"
+        },
+        {
+          "note": "R",
+          "ticks": 1,
+          "lyric": "/"
+        },
+        {
+          "note": "D4",
+          "ticks": 1,
+          "lyric": "ko"
+        },
+        {
+          "note": "E4",
+          "ticks": 1,
+          "lyric": "wa"
+        },
+        {
+          "note": "F4",
+          "ticks": 1,
+          "lyric": "i"
+        },
+        {
+          "note": "G4",
+          "ticks": 1,
+          "lyric": "na"
+        },
+        {
+          "note": "A4",
+          "ticks": 1,
+          "lyric": "ga"
+        },
+        {
+          "note": "Bb4",
+          "ticks": 1,
+          "lyric": "ra"
+        },
+        {
+          "note": "A4",
+          "ticks": 1,
+          "lyric": "mo"
+        },
+        {
+          "note": "Bb4",
+          "ticks": 2,
+          "lyric": "to"
+        },
+        {
+          "note": "D5",
+          "ticks": 2,
+          "lyric": "_"
+        },
+        {
+          "note": "E5",
+          "ticks": 1,
+          "lyric": "rya"
+        },
+        {
+          "note": "D5",
+          "ticks": 1,
+          "lyric": "n"
+        },
+        {
+          "note": "Bb4",
+          "ticks": 2,
+          "lyric": "se"
+        },
+        {
+          "note": "A4",
+          "ticks": 2,
+          "lyric": "to+_"
+        },
+        {
+          "note": "A4",
+          "ticks": 1,
+          "lyric": "rya"
+        },
+        {
+          "note": "G4",
+          "ticks": 1,
+          "lyric": "n"
+        },
+        {
+          "note": "A4",
+          "ticks": 4,
+          "lyric": "se"
+        }
+      ],
+      "roots": [
+        50,
+        46,
+        50,
+        45,
+        50,
+        46,
+        50,
+        45,
+        50,
+        45
+      ],
+      "verse_ticks": 152
+    },
+    {
+      "id": "furusato",
+      "name": "FURUSATO",
+      "title": "Furusato",
+      "bpm": 40,
+      "source_meter": 3,
+      "quarter_ticks": 2,
+      "events": [
+        {
+          "note": "G4",
+          "ticks": 2,
+          "lyric": "u"
+        },
+        {
+          "note": "G4",
+          "ticks": 2,
+          "lyric": "sa"
+        },
+        {
+          "note": "G4",
+          "ticks": 2,
+          "lyric": "gi"
+        },
+        {
+          "note": "A4",
+          "ticks": 3,
+          "lyric": "o"
+        },
+        {
+          "note": "B4",
+          "ticks": 1,
+          "lyric": "i"
+        },
+        {
+          "note": "A4",
+          "ticks": 2,
+          "lyric": "shi"
+        },
+        {
+          "note": "B4",
+          "ticks": 2,
+          "lyric": "ka"
+        },
+        {
+          "note": "B4",
+          "ticks": 2,
+          "lyric": "no"
+        },
+        {
+          "note": "C5",
+          "ticks": 2,
+          "lyric": "ya"
+        },
+        {
+          "note": "D5",
+          "ticks": 4,
+          "lyric": "ma"
+        },
+        {
+          "note": "R",
+          "ticks": 2,
+          "lyric": "/"
+        },
+        {
+          "note": "C5",
+          "ticks": 2,
+          "lyric": "ko"
+        },
+        {
+          "note": "D5",
+          "ticks": 2,
+          "lyric": "bu"
+        },
+        {
+          "note": "E5",
+          "ticks": 2,
+          "lyric": "na"
+        },
+        {
+          "note": "B4",
+          "ticks": 3,
+          "lyric": "tsu"
+        },
+        {
+          "note": "C5",
+          "ticks": 1,
+          "lyric": "ri"
+        },
+        {
+          "note": "B4",
+          "ticks": 2,
+          "lyric": "shi"
+        },
+        {
+          "note": "A4",
+          "ticks": 2,
+          "lyric": "ka"
+        },
+        {
+          "note": "A4",
+          "ticks": 2,
+          "lyric": "no"
+        },
+        {
+          "note": "F#4",
+          "ticks": 2,
+          "lyric": "ka"
+        },
+        {
+          "note": "G4",
+          "ticks": 4,
+          "lyric": "wa"
+        },
+        {
+          "note": "R",
+          "ticks": 2,
+          "lyric": "/"
+        },
+        {
+          "note": "A4",
+          "ticks": 1,
+          "lyric": "yu"
+        },
+        {
+          "note": "G4",
+          "ticks": 1,
+          "lyric": "_"
+        },
+        {
+          "note": "A4",
+          "ticks": 2,
+          "lyric": "me"
+        },
+        {
+          "note": "D4",
+          "ticks": 2,
+          "lyric": "wa"
+        },
+        {
+          "note": "G4",
+          "ticks": 1,
+          "lyric": "i"
+        },
+        {
+          "note": "A4",
+          "ticks": 1,
+          "lyric": "_"
+        },
+        {
+          "note": "B4",
+          "ticks": 2,
+          "lyric": "ma"
+        },
+        {
+          "note": "B4",
+          "ticks": 2,
+          "lyric": "mo"
+        },
+        {
+          "note": "C5",
+          "ticks": 1,
+          "lyric": "me"
+        },
+        {
+          "note": "B4",
+          "ticks": 1,
+          "lyric": "_"
+        },
+        {
+          "note": "C5",
+          "ticks": 3,
+          "lyric": "gu"
+        },
+        {
+          "note": "D5",
+          "ticks": 1,
+          "lyric": "_"
+        },
+        {
+          "note": "C5",
+          "ticks": 1,
+          "lyric": "ri"
+        },
+        {
+          "note": "B4",
+          "ticks": 1,
+          "lyric": "_"
+        },
+        {
+          "note": "A4",
+          "ticks": 2,
+          "lyric": "te"
+        },
+        {
+          "note": "R",
+          "ticks": 2,
+          "lyric": "/"
+        },
+        {
+          "note": "D5",
+          "ticks": 2,
+          "lyric": "wa"
+        },
+        {
+          "note": "D5",
+          "ticks": 2,
+          "lyric": "su"
+        },
+        {
+          "note": "D5",
+          "ticks": 2,
+          "lyric": "re"
+        },
+        {
+          "note": "G4",
+          "ticks": 3,
+          "lyric": "ga"
+        },
+        {
+          "note": "A4",
+          "ticks": 1,
+          "lyric": "ta"
+        },
+        {
+          "note": "B4",
+          "ticks": 2,
+          "lyric": "ki"
+        },
+        {
+          "note": "C5",
+          "ticks": 2,
+          "lyric": "fu"
+        },
+        {
+          "note": "C5",
+          "ticks": 2,
+          "lyric": "ru"
+        },
+        {
+          "note": "A4",
+          "ticks": 2,
+          "lyric": "sa"
+        },
+        {
+          "note": "G4",
+          "ticks": 4,
+          "lyric": "to"
+        },
+        {
+          "note": "R",
+          "ticks": 2,
+          "lyric": "/"
+        }
+      ],
+      "roots": [
+        43,
+        48,
+        43,
+        50,
+        43,
+        43
+      ],
+      "verse_ticks": 96
+    },
+    {
+      "id": "kojo",
+      "name": "KOJO",
+      "title": "Kojo no Tsuki",
+      "bpm": 44,
+      "source_meter": 4,
+      "quarter_ticks": 2,
+      "events": [
+        {
+          "note": "A4",
+          "ticks": 2,
+          "lyric": "ha"
+        },
+        {
+          "note": "A4",
+          "ticks": 2,
+          "lyric": "ru"
+        },
+        {
+          "note": "D5",
+          "ticks": 2,
+          "lyric": "ko"
+        },
+        {
+          "note": "E5",
+          "ticks": 2,
+          "lyric": "_"
+        },
+        {
+          "note": "F5",
+          "ticks": 2,
+          "lyric": "ro"
+        },
+        {
+          "note": "E5",
+          "ticks": 2,
+          "lyric": "_"
+        },
+        {
+          "note": "D5",
+          "ticks": 4,
+          "lyric": "no"
+        },
+        {
+          "note": "Bb4",
+          "ticks": 2,
+          "lyric": "ha"
+        },
+        {
+          "note": "Bb4",
+          "ticks": 2,
+          "lyric": "na"
+        },
+        {
+          "note": "A4",
+          "ticks": 2,
+          "lyric": "no"
+        },
+        {
+          "note": "G#4",
+          "ticks": 2,
+          "lyric": "e"
+        },
+        {
+          "note": "A4",
+          "ticks": 6,
+          "lyric": "n"
+        },
+        {
+          "note": "R",
+          "ticks": 2,
+          "lyric": "/"
+        },
+        {
+          "note": "A4",
+          "ticks": 2,
+          "lyric": "me"
+        },
+        {
+          "note": "A4",
+          "ticks": 2,
+          "lyric": "gu"
+        },
+        {
+          "note": "D5",
+          "ticks": 2,
+          "lyric": "ru"
+        },
+        {
+          "note": "E5",
+          "ticks": 2,
+          "lyric": "sa"
+        },
+        {
+          "note": "F5",
+          "ticks": 2,
+          "lyric": "ka"
+        },
+        {
+          "note": "E5",
+          "ticks": 2,
+          "lyric": "zu"
+        },
+        {
+          "note": "D5",
+          "ticks": 4,
+          "lyric": "ki"
+        },
+        {
+          "note": "Bb4",
+          "ticks": 2,
+          "lyric": "ka"
+        },
+        {
+          "note": "G4",
+          "ticks": 2,
+          "lyric": "ge"
+        },
+        {
+          "note": "A4",
+          "ticks": 3,
+          "lyric": "sa"
+        },
+        {
+          "note": "A4",
+          "ticks": 1,
+          "lyric": "shi"
+        },
+        {
+          "note": "D4",
+          "ticks": 6,
+          "lyric": "te"
+        },
+        {
+          "note": "R",
+          "ticks": 2,
+          "lyric": "/"
+        },
+        {
+          "note": "F4",
+          "ticks": 3,
+          "lyric": "chi"
+        },
+        {
+          "note": "F4",
+          "ticks": 1,
+          "lyric": "yo"
+        },
+        {
+          "note": "E4",
+          "ticks": 2,
+          "lyric": "no"
+        },
+        {
+          "note": "D4",
+          "ticks": 2,
+          "lyric": "ma"
+        },
+        {
+          "note": "Bb4",
+          "ticks": 2,
+          "lyric": "tsu"
+        },
+        {
+          "note": "Bb4",
+          "ticks": 2,
+          "lyric": "ga"
+        },
+        {
+          "note": "A4",
+          "ticks": 4,
+          "lyric": "e"
+        },
+        {
+          "note": "G4",
+          "ticks": 2,
+          "lyric": "wa"
+        },
+        {
+          "note": "A4",
+          "ticks": 2,
+          "lyric": "ke"
+        },
+        {
+          "note": "Bb4",
+          "ticks": 3,
+          "lyric": "i"
+        },
+        {
+          "note": "Bb4",
+          "ticks": 1,
+          "lyric": "de"
+        },
+        {
+          "note": "A4",
+          "ticks": 6,
+          "lyric": "shi"
+        },
+        {
+          "note": "R",
+          "ticks": 2,
+          "lyric": "/"
+        },
+        {
+          "note": "A4",
+          "ticks": 2,
+          "lyric": "mu"
+        },
+        {
+          "note": "A4",
+          "ticks": 2,
+          "lyric": "ka"
+        },
+        {
+          "note": "D5",
+          "ticks": 2,
+          "lyric": "shi"
+        },
+        {
+          "note": "E5",
+          "ticks": 2,
+          "lyric": "no"
+        },
+        {
+          "note": "F5",
+          "ticks": 2,
+          "lyric": "hi"
+        },
+        {
+          "note": "E5",
+          "ticks": 2,
+          "lyric": "ka"
+        },
+        {
+          "note": "D5",
+          "ticks": 4,
+          "lyric": "ri"
+        },
+        {
+          "note": "Bb4",
+          "ticks": 2,
+          "lyric": "i"
+        },
+        {
+          "note": "G4",
+          "ticks": 2,
+          "lyric": "ma"
+        },
+        {
+          "note": "A4",
+          "ticks": 3,
+          "lyric": "i"
+        },
+        {
+          "note": "A4",
+          "ticks": 1,
+          "lyric": "zu"
+        },
+        {
+          "note": "D4",
+          "ticks": 6,
+          "lyric": "ko"
+        },
+        {
+          "note": "R",
+          "ticks": 2,
+          "lyric": "/"
+        }
+      ],
+      "roots": [
+        50,
+        46,
+        50,
+        45,
+        46,
+        43,
+        50,
+        50
+      ],
+      "verse_ticks": 128
+    }
+  ]
+}

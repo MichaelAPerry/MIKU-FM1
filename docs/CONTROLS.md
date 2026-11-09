@@ -1,5 +1,33 @@
 # Controls
 
+## DX7 BANK
+
+MIXER **REC** opens the DX7 bank (also page10 via HOME). **SCL/ENV** choose chords/bass.
+**SELECT** browses eight candidates silently; **REC** loads; keys play the loaded
+patch. **EDIT/PRESETS** choose parameter pages; SELECT/ALGORITHM select OP1–OP6
+while editing. K1–K4 edit the labeled actual DX7 fields. ARP changes ratio/fixed
+mode on OP FREQUENCY or LFO waveform on MODULATION. REC returns from editing to
+BROWSE. Stop then SAVE embeds the actual patch in the song. Long release tails
+may require waiting before saving. [Full page map and recordings](DX7_BANK_HANDOFF.md).
+
+
+> Current policy and UI: [fixed 64 KiB flash reserve removed at owner request; neon console UI implemented; eight-voice DX7 audition bank prepared offline](NEON_UI_AND_DX7_BANK.md). Earlier fixed-flash-reserve instructions are superseded.
+
+
+> Current device-wide visual pass: [pink/blue borders and gradients across all nine musical pages, popups and SAVE window, with native recordings and current measurements](evidence/device-theme/README.md). This supersedes the earlier menu-only UI scope and resource figures.
+
+
+> Latest UI pass: [visual wardrobe and song-library menus, native walkthrough and current build measurements](evidence/menu-redesign/README.md).
+
+
+> Current device UI follow-up: [selectable per-song LOOK controls, electronic scenes, recordings and resource measurements](DEVICE_LOOK_HANDOFF.md). This supersedes earlier global-look settings and pre-follow-up audio/resource figures below.
+
+
+The feature branch adds SONG LIBRARY, LYRICS and VISUALS pages and ten save
+slots. Their current bindings, factory songs and compatibility limits are in
+[NEXTGEN_NATIVE_INTEGRATION.md](NEXTGEN_NATIVE_INTEGRATION.md). The original
+page controls below remain available.
+
 Miku-FM is a four-track songwriter with a singer. **HOME** cycles the pages: STAGE, DANCE, SONG, PATTERN, MIXER, GEN (the page name is on
 the screen). One control map holds everywhere; the tables below list what each control does on each page.
 
@@ -30,8 +58,8 @@ delay follow a squared curve: fine steps at the low end, big moves at the top.
 
 | Control | What it does |
 |---|---|
-| SELECT | The syllable the keys sing (a, i, u, ... n, ga ... po); stopped, you hear each one as you turn. PATTERN writes the same one |
-| SCL (SEL) | Language: JAPANESE (the syllables as written), ANIMAL (fast random babble with little pitch jumps, like an animal-game voice), SCAT (da ba bi do ... on eighth notes while a note is held), VOWELS (no consonants) |
+| SELECT | The syllable the keys sing (a, i, u, ... n, ga ... po); selection is silent, including while holding a key. PATTERN writes the same one |
+| SCL (SEL) | Language: JAPANESE (the syllables as written), ANIMAL (random babble at a default 140–220 ms per syllable with little pitch jumps, like an animal-game voice), SCAT (da ba bi do ... on eighth notes while a note is held), VOWELS (no consonants) |
 | FX | The knobs become CHORUS, DELAY (dotted eighth at the song tempo), REVERB, DRIVE. Press again: back to VOICE |
 | ENV | The knobs become ATTACK, RELEASE, SCOOP (slide up into a note), HUMAN (drift, jitter, shimmer). Press again: VOICE |
 | LFO | The knobs become VIBRATO (depth), VIB RATE (3-8 Hz), VIB DELAY, TREMOLO. Press again: VOICE |
@@ -42,7 +70,7 @@ delay follow a squared curve: fine steps at the low end, big moves at the top.
 | **Hold** LFO | HARMONY: INTERVAL (OFF, -12, +3, +4, +5, +7, +12; one step per click), HARM MIX, DETUNE (0-30 cents), HARM VOICE (its character) |
 | Hold again / short press | Hold the same button again: back to VOICE. A short press goes to that button's normal bank (or, SEL, the next language) |
 | ALGORITHM | Character (formant size): DEEP, LOW, MIKU, YOUNG, TINY |
-| PRESETS | Tempo, 40-240 BPM |
+| PRESETS | Tempo, 40-240 BPM. In ANIMAL, hold SCL (SEL) + turn PRESETS: speech rate 0–100 (50 default; session only) |
 | Key | Sings the selected syllable |
 
 ## DANCE
@@ -102,7 +130,7 @@ Four tracks: name, preset, level bar, pan marker, M (mute) and S (solo). The cur
 | Control | What it does |
 |---|---|
 | SELECT | Current track |
-| ALGORITHM | Preset of the track: CHORDS bells, E.piano, chip arp, pad, organ, pluck, marimba, clav; BASS FM, sub, chip square, acid; DRUMS 808, chip |
+| ALGORITHM | Preset of the track: CHORDS bells, E.piano, chip arp, pad, organ, pluck, marimba, clav; BASS FM, sub, chip square, acid, sub drop, hard acid; DRUMS 808, chip, punch, digital |
 | KNOB 1 | Level |
 | KNOB 2 | Pan (a device setting, kept with SAVE; the song file has no pan) |
 | KNOB 3 | Swing, 0-75 % |
@@ -132,8 +160,10 @@ the four tracks (dark = locked; the white frame is the current track).
 
 ## Songs and slots
 
-The device keeps 8 songs (slots 1-8). At power-on it loads the slot you last saved to or loaded; if that is empty or
-damaged it plays the demo 「おとのはこ」.
+The device keeps 10 songs (slots 1–10). At power-on it loads the last saved slot.
+Empty slots 1–4 reconstruct the selected factory song; the historical demo remains
+the fallback for empty user slots. The new SONG LIBRARY provides explicit selected-slot
+REC saving and EDIT loading/new-song creation. See the integration notes above.
 
 Hold **SAVE** (about a third of a second, or turn SELECT while holding it) for the slot menu: **SELECT** picks the slot
 (its song name is shown), then, still holding SAVE, press **FX** to load that slot, **SCL** for a new empty song (one row,
@@ -148,3 +178,12 @@ and the same press again within 3 seconds goes through.
 | **OCT−** | USB rescue: no sound, only the updater, so another firmware can be installed |
 
 If the firmware crashes twice at boot, the FM-1 goes to the USB rescue by itself.
+
+### BANK: user voices, SysEx, MIDI in
+
+BROWSE: **ARP** switches FACTORY (10) / USER (32, once imported). **SELECT** browses silently, **REC** loads into the
+track (second press if it holds an edit). **GLO** sends the user bank as a DX7 dump. Edit pages: **GLO** picks a user slot
+(again: next), **REC** stores the patch (with its name) there. A DX7 bulk dump or single voice sent over USB (Dexed, any
+librarian) shows IMPORT 32 VOICES? REC / VOICE TO USER n? REC / VOICE TO EDIT? REC: press **REC** within 10 s on any page.
+Imports and stores need the song stopped. MIDI notes (USB or TRS) play the current track like the keys; CC64 sustains and the
+wheel bends chords/bass. [Details](DX7_BANK_HANDOFF.md).

@@ -1,8 +1,51 @@
 # Song model and the MKS2 file format
 
+## DX7 extension: MKS2 v5
+
+Projects using DX7 on chords/bass use4764-byte v5 records. The v4 prefix is
+unchanged; two128-byte standard packed DX7 snapshots append after the32-byte
+voice block and before the final CRC. Chord/bass preset IDs (v5 only):
+
+| ID | Meaning |
+|---:|---|
+| 0..7 | classic presets (unchanged) |
+| 64..73 | factory DX7 voice, 64 + bank index (`SG_DX7_FIRST`, 10 original voices, `DX7_BANK_N`) |
+| 74 | `SG_DX7_CUSTOM`: an edited patch |
+| 75 | `SG_DX7_USER`: a voice loaded from a future imported user bank (reserved; accepted and played exactly like CUSTOM) |
+
+`SG_DX7_LAST` (75) bounds the valid range. Playback always uses the embedded
+snapshot, never a factory-bank lookup. **Pre-release note:** v5 was never released
+(the first factory bank used IDs 64..71 and CUSTOM = 72). A pre-release v5 file
+with ID 72 now reads as factory index 8's origin label, but it still plays its
+embedded snapshot, so it sounds as saved. Classic projects still write 4508-byte v4. Readers continue
+to accept v1–v4; old firmware rejects v5. Ten16 KiB slot strides/addresses are
+unchanged. CRC and all active patch fields validate before mutating a song.
+See [DX7 implementation and compatibility](DX7_BANK_HANDOFF.md). The v4 tables
+below describe the unchanged classic prefix.
+
+
 Miku-FM songs are pattern based, like a tracker. The model lives in `firmware/song/song.h`; the file format is
 `firmware/song/song_io.c`. Everything has a fixed capacity (no heap): `sizeof(Song)` is 4494 bytes, an encoded song
 4508 bytes (version 3; one Dinghy slot holds 16384), the undo ring 2594 bytes.
+
+## Current feature-branch format: MKS2 v4
+
+The encoded size remains **4508 bytes**. Native save slots now number ten,
+with the original eight addresses and 16 KiB strides preserved. See
+[NEXTGEN_NATIVE_INTEGRATION.md](NEXTGEN_NATIVE_INTEGRATION.md) for the storage map.
+
+Vocal flag bits now mean low nibble velocity, `0x10` outgoing legato,
+`0x20` incoming sustained vowel, `0x40` word boundary and `0x80` phrase boundary.
+A phrase boundary suppresses outgoing legato. Explicit lyric rests have note 0,
+a positive duration and a word/phrase boundary flag; ordinary legacy empty cells
+remain empty. Sustain suppresses the incoming consonant and follows the actual
+preceding gated vowel when available. The appended mora IDs 70–72 are sha, ja
+and the existing R→A approximation of rya; IDs 0–69 are unchanged.
+
+Versions 1, 2 and 3 remain readable. Their previously ignored high vocal bits
+are cleared on import so old songs keep their previous sound. Older firmware
+does not understand version 4. The historical layout tables below still describe
+the same byte offsets; their high-bits-reserved wording applies to v1–v3 only.
 
 ## Model
 

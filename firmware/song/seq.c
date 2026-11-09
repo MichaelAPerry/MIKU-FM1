@@ -121,14 +121,18 @@ static void chord_start(C *c,const Step *st,uint32_t step){
 static void vocal_start(C *c,const Step *st,uint32_t step){
     Seq *s=c->s;const Song *g=c->g;
     int n=(int)st->v[SV_NOTE]+g->transpose;
-    uint32_t mo=st->v[SV_MORA];
+    uint32_t mo=st->v[SV_MORA],fl=st->v[SV_FLAG],authored=fl&240u,aux,i;
+    int32_t d=dur(s,g,step,st->v[SV_LEN]);
     if(n<1||n>127)return;
     if(mo>=MORA_N)mo=0;
-    if(s->vn)em(c,SQ_NOTE_OFF,TR_VOCAL,s->vn,0,0,0);
+    if(!authored){const Step *pat=st-step;for(i=0;i<NSTEP;i++)authored|=pat[i].v[SV_FLAG]&240u;}
+    aux=mora_vowel(mo)|(fl&VF_SUSTAIN);
+    if(authored&&!s->vsl)aux|=SQ_VOCAL_REATTACK;
+    if(s->vn&&!s->vsl)em(c,SQ_NOTE_OFF,TR_VOCAL,s->vn,0,0,0);
     tm_cancel(s,K_VOFF);
-    em(c,SQ_NOTE_ON,TR_VOCAL,(uint8_t)n,vmap(st->v[SV_FLAG]&15u),(uint8_t)mora_vowel(mo),(uint8_t)mo);
-    s->vn=(uint8_t)n;
-    tm_add(s,K_VOFF,dur(s,g,step,st->v[SV_LEN])*85/100,0,0);
+    em(c,SQ_NOTE_ON,TR_VOCAL,(uint8_t)n,vmap(fl&15u),(uint8_t)aux,(uint8_t)mo);
+    s->vn=(uint8_t)n;s->vsl=(fl&VF_LEGATO)&&!(fl&VF_PHRASE_END);
+    tm_add(s,K_VOFF,s->vsl?d+2:d*85/100,0,0);
 }
 static void bass_start(C *c,const Step *st,uint32_t step){
     Seq *s=c->s;const Song *g=c->g;
@@ -148,12 +152,12 @@ static void voices_off(C *c){
     Seq *s=c->s;
     if(s->vn)em(c,SQ_NOTE_OFF,TR_VOCAL,s->vn,0,0,0);
     if(s->bn)em(c,SQ_NOTE_OFF,TR_BASS,s->bn,0,0,0);
-    s->vn=s->bn=s->bsl=0;
+    s->vn=s->bn=s->bsl=s->vsl=0;
     chord_kill(c);
     tm_cancel(s,K_VOFF);tm_cancel(s,K_BOFF);
 }
 static void process_step(C *c,uint32_t row,uint32_t step){
-    const Song *g=c->g;
+    Seq *s=c->s;const Song *g=c->g;
     const Row *r;
     uint32_t t;
     em(c,SQ_STEP,0,(uint8_t)row,0,(uint8_t)step,0);
@@ -163,7 +167,14 @@ static void process_step(C *c,uint32_t row,uint32_t step){
         uint32_t p=r->pat[t];
         const Step *st=p<NPAT?&g->pat[t][p][step]:0;
         if(!aud(g,(int)t))continue;
-        if(t==TR_VOCAL){if(st&&st->v[SV_NOTE])vocal_start(c,st,step);}
+        if(t==TR_VOCAL){
+            if(st&&st->v[SV_NOTE])vocal_start(c,st,step);
+            else if(st&&st->v[SV_LEN]&&(st->v[SV_FLAG]&(VF_WORD_END|VF_PHRASE_END))){
+                /* Explicit v4 lyric pause; legacy empty-step metadata is not a release command. */
+                if(s->vn)em(c,SQ_NOTE_OFF,TR_VOCAL,s->vn,0,0,0);
+                s->vn=s->vsl=0;tm_cancel(s,K_VOFF);
+            }
+        }
         else if(t==TR_CHORDS){if(st&&st->v[SC_ROOT])chord_start(c,st,step);else arp_go(c);}
         else if(t==TR_BASS){if(st&&st->v[SB_NOTE])bass_start(c,st,step);}
         else if(st){
@@ -196,7 +207,7 @@ static void grid_fire(C *c){
 static void fire(C *c,SqTm t){
     Seq *s=c->s;
     switch(t.kind){
-    case K_VOFF: if(s->vn)em(c,SQ_NOTE_OFF,TR_VOCAL,s->vn,0,0,0);s->vn=0;break;
+    case K_VOFF: if(s->vn)em(c,SQ_NOTE_OFF,TR_VOCAL,s->vn,0,0,0);s->vn=s->vsl=0;break;
     case K_BOFF: if(s->bn)em(c,SQ_NOTE_OFF,TR_BASS,s->bn,0,0,0);s->bn=s->bsl=0;break;
     case K_COFF: chord_kill(c);break;
     case K_STEP: process_step(c,t.a,t.b);break;
@@ -217,7 +228,7 @@ static void pass(C *c,uint8_t k0,uint8_t k1){
 void sq_init(Seq *s){
     uint32_t i;
     s->state=ST_STOP;s->rowloop=0;s->row=0;s->step=0;s->fl=0;s->bpm=120;s->ap_left=0;s->rem=0;s->slen=0;s->to_grid=0;
-    s->vn=s->bn=s->bsl=s->ncs=s->ncn=s->npv=s->cvel=s->ap_on=s->ap_mode=s->ap_i=s->ap_fast=s->sm_i=0;
+    s->vn=s->bn=s->bsl=s->vsl=s->ncs=s->ncn=s->npv=s->cvel=s->ap_on=s->ap_mode=s->ap_i=s->ap_fast=s->sm_i=0;
     for(i=0;i<8;i++)s->cs[i]=s->cn[i]=s->pv[i]=0;
     for(i=0;i<SQ_NTM;i++)s->tm[i].kind=K_NONE;
 }
@@ -254,7 +265,7 @@ uint32_t sq_block(Seq *s,const Song *g,uint32_t frames,SqEvent *ev,uint32_t max)
     if(s->state!=ST_PLAY||!frames)return c.n;
     if(s->fl){voices_off(&c);s->fl=0;}
     for(t=0;t<NTRK;t++)if(!aud(g,(int)t)){
-        if(t==TR_VOCAL&&s->vn){em(&c,SQ_NOTE_OFF,0,s->vn,0,0,0);s->vn=0;tm_cancel(s,K_VOFF);}
+        if(t==TR_VOCAL&&s->vn){em(&c,SQ_NOTE_OFF,0,s->vn,0,0,0);s->vn=s->vsl=0;tm_cancel(s,K_VOFF);}
         if(t==TR_BASS&&s->bn){em(&c,SQ_NOTE_OFF,2,s->bn,0,0,0);s->bn=s->bsl=0;tm_cancel(s,K_BOFF);}
         if(t==TR_CHORDS)chord_kill(&c);
     }

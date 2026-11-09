@@ -1,0 +1,10 @@
+0 HYPER GLAS chord peak   6434 rms    736 last-audible 7.13s
+1 HYPER 808  bass  peak   1934 rms   1107 last-audible 7.68s
+2 FUTURE SAW chord peak   7283 rms   1171 last-audible 6.90s
+3 FUTURE SUB bass  peak   1843 rms    928 last-audible 7.04s
+4 CLUB STAB  chord peak   5174 rms    272 last-audible 6.10s
+5 CLUB BOUNC bass  peak   1921 rms    484 last-audible 6.84s
+6 DIGI PLUCK chord peak   7513 rms    447 last-audible 6.31s
+7 DIGI GROWL bass  peak    873 rms    356 last-audible 6.92s
+8 IDOL KEYS  chord peak   6404 rms   1076 last-audible 6.91s
+9 IDOL BASS  bass  peak   1445 rms    697 last-audible 6.93s

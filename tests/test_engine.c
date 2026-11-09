@@ -1,6 +1,7 @@
 /* SPDX-License-Identifier: GPL-3.0-only */
 /* Engine: renders two bars of the demo from row 2 (the first vocal bar) and checks the mix. */
 #include "firmware/app/engine.h"
+#include "firmware/audio/dx7/bank.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -150,6 +151,50 @@ static void t_layers(void) {
       CHECK(!en.fv.gated && !en.fv2.gated && en.vqn == 0, "a note is stuck after stop");
       song_demo(&g); }
 }
+/* Measure actual scheduler boundaries one sample at a time, including repeated random morae. */
+static void t_animal(void) {
+    static const uint32_t rate[3] = { 0, 50, 100 };
+    for (uint32_t k = 0; k < 3; k++) {
+        uint32_t last = 0, count = 0, min = 999999, max = 0, lo = (180u - rate[k] * 4u / 5u) * 441u / 10u;
+        int32_t o[2];
+        song_demo(&g); g.vx.lang = VL_ANIMAL;
+        en_init(&en, &g); memset((void *)en.pan, 64, NTRK);
+        CHECK(en.arate == 50, "animal default rate");
+        en_post(&en, EN_RATE, rate[k], 0, 0);
+        en_post(&en, EN_ON, TR_VOCAL, 64, 7);
+        for (uint32_t t = 0; t < 88200; t++) {
+            uint32_t before = en.bt;
+            o[0] = o[1] = 0; en_render(&en, o, 1);
+            if (!t) CHECK(en.bt + 1 >= lo && en.bt + 1 <= lo + 3528, "first animal interval out of range");
+            if (t && en.bt > before) {
+                uint32_t span = t + 1 - last;
+                CHECK(span >= lo && span <= lo + 3528, "animal rate %u interval %u frames", rate[k], span);
+                if (span < min) min = span;
+                if (span > max) max = span;
+                CHECK(en.vnote == 64 && en.fv.gated, "babble changed base note or released the key");
+                last = t + 1; count++;
+            }
+        }
+        printf("  animal rate %u: %u boundaries in 2 s, %.2f..%.2f ms\n", rate[k], count, min / 44.1, max / 44.1);
+        CHECK(count >= 7 && count <= 20 && min < max, "animal rate/variation");
+        /* Rate changes neither restart the timer nor force a release. Out-of-range command clamps. */
+        { uint32_t before = en.bt, id = en.vcur;
+          en_post(&en, EN_RATE, 255, 0, 0); o[0] = o[1] = 0; en_render(&en, o, 1);
+          CHECK(en.arate == 100 && en.bt == before - 1 && en.vcur == id && en.fv.gated, "rate change retriggered the voice"); }
+        /* Release immediately before a scheduled babble must win; no new mora may begin in the release tail. */
+        while (en.bt > 1) { o[0] = o[1] = 0; en_render(&en, o, 1); }
+        { uint32_t mora = en.mora; en_post(&en, EN_OFF, TR_VOCAL, 0, 0); render(44100);
+          CHECK(!en.fv.gated && en.mora == mora, "animal retriggered after note-off");
+          CHECK(peak(buf + 2 * 40000, 2 * 4100) == 0, "animal release did not die"); free(buf); }
+    }
+    /* A fast ANIMAL setting must not change the other language schedulers. */
+    for (uint32_t lang = VL_JP; lang < VL_N; lang++) if (lang != VL_ANIMAL) {
+        song_demo(&g); g.vx.lang = (uint8_t)lang; g.bpm = 120;
+        en_init(&en, &g); en_post(&en, EN_RATE, 100, 0, 0); en_post(&en, EN_ON, TR_VOCAL, 64, 7);
+        { int32_t o[2] = {0, 0}; en_render(&en, o, 1);
+          CHECK(en.bt == (lang == VL_SCAT ? 11024u : 0u), "rate leaked into language %u", lang); }
+    }
+}
 int main(void) {
     int32_t pk; uint32_t i, steps = 0;
     song_demo(&g);
@@ -251,13 +296,29 @@ int main(void) {
             en_post(&en, EN_ON, TR_VOCAL, 64, 7);          /* "ki" */
             for (i = 0; i < 344; i++) { memset(o, 0, sizeof o); en_render(&en, o, 256); if (en.mora != last) { ch++; last = en.mora; } cons |= fv_cons(&en.fv) != 0; }
             printf("  language %d: %u syllables in 2 s, consonants %s\n", l, (unsigned)ch, cons ? "yes" : "no");
-            CHECK(l == VL_ANIMAL ? ch > 15 : l == VL_SCAT ? ch > 5 && ch < 15 : ch == 1, "language %d: %u syllables", l, (unsigned)ch);
+            CHECK(l == VL_ANIMAL ? ch >= 8 && ch <= 15 : l == VL_SCAT ? ch > 5 && ch < 15 : ch == 1, "language %d: %u syllables", l, (unsigned)ch);
             CHECK(l == VL_VOWEL ? !cons : cons, "language %d consonants", l);
         }
         g.vx.lang = VL_JP;
         free(ref);
     }
     t_layers();
+    t_animal();
     printf(fails ? "engine: %d FAILED\n" : "engine: all ok\n", fails);
+    /* HUSH (SAVE): PANIC plus a fast fade of the DX7 tails; en.act must drop within two blocks */
+    {
+        int32_t o[2 * 256]; int k;
+        for (k = 0; k < 2; k++) {
+            memcpy(g.dx7[0], dx7_bank[0], 128); g.trk[TR_CHORDS].preset = SG_DX7_FIRST; g.trk[TR_CHORDS].level = 100;
+            en_init(&en, &g); memset((void *)en.pan, 64, NTRK);
+            en_post(&en, EN_ON, TR_CHORDS, 60, 0); en_post(&en, EN_ON, TR_CHORDS, 64, 0);
+            for (int i = 0; i < 40; i++) { memset(o, 0, sizeof o); en_render(&en, o, 256); }
+            CHECK(en.act & 2u, "DX7 chord not active");
+            en_post(&en, k ? EN_HUSH : EN_PANIC, 0, 0, 0);
+            for (int i = 0; i < 2; i++) { memset(o, 0, sizeof o); en_render(&en, o, 256); }
+            if (k) CHECK(!(en.act & 2u), "HUSH left the DX7 active");
+            else CHECK(en.act & 2u, "PANIC alone is a normal release (still active)");
+        }
+    }
     return fails != 0;
 }

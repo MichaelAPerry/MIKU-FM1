@@ -1,3 +1,35 @@
+## Current review handoff (2026-11-09)
+
+> Current DX7 milestone: [real six-operator renderer, dedicated BANK/operator editor, embedded patch saving, native video/audio evidence and current measurements](DX7_BANK_HANDOFF.md). This supersedes earlier DX7-plan-only status.
+
+
+> Current policy and UI: [fixed 64 KiB flash reserve removed at owner request; neon console UI implemented; eight-voice DX7 audition bank prepared offline](NEON_UI_AND_DX7_BANK.md). Earlier fixed-flash-reserve instructions are superseded.
+
+
+> Current device-wide visual pass: [pink/blue borders and gradients across all nine musical pages, popups and SAVE window, with native recordings and current measurements](evidence/device-theme/README.md). This supersedes the earlier menu-only UI scope and resource figures.
+
+
+> Current device UI follow-up: [selectable per-song LOOK controls, electronic scenes, recordings and resource measurements](DEVICE_LOOK_HANDOFF.md). This supersedes earlier global-look settings and pre-follow-up audio/resource figures below.
+
+
+## Latest native integration milestone
+
+Native lyrics and contemporary GEN are integrated. Twelve paired outfits,
+fireworks/sparkles/confetti/smoke/beams, a ten-slot song library, and four
+editable first-verse factory songs are implemented on the feature branch.
+The current authoritative status is [CLAUDE_HANDOFF.md](../CLAUDE_HANDOFF.md),
+with implementation details in [NEXTGEN_NATIVE_INTEGRATION.md](NEXTGEN_NATIVE_INTEGRATION.md).
+Earlier host-only/original-outfit-only status statements below are superseded
+for these features. Physical USB and pedal transport remain unfinished.
+
+Read [CLAUDE_HANDOFF.md](../CLAUDE_HANDOFF.md) for current feature readiness and owner constraints. The older snapshots below are historical; optional native UVC code now exists but real camera operation is unverified, and the new wardrobe remains concept-only.
+
+# Feature branch state update (2026-11-08)
+
+The historical state below describes the original firmware. For the current development branch, see [NEXTGEN_DEVELOPMENT.md](NEXTGEN_DEVELOPMENT.md) and [HANDOFF.md](HANDOFF.md). Mandatory live fixes, native bass/drum additions and default visual-state integration are implemented and tested. Voice/lyrics/GEN/visual/pedal/companion experiments are explicitly separated from native-ready features. Final genres, new costumes, live USB and UVC remain unfinished/pending review; no full next-generation completion claim.
+
+---
+
 # Project state: what exists, what is unused, what is missing (2026-11-03, after Step 4)
 
 Companion to [HANDOFF.md](HANDOFF.md) (state, recipe, workflow). This file is the product picture: every asset and

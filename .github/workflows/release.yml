@@ -68,6 +68,9 @@ jobs:
           bash native/build.sh
           cp build/native/miku-fm.fwsc build/native/miku-fm-app.bin build/release-assets/
         fi
+        # license texts travel with the binaries (Apache-2.0 section 4(a) for the DX7 renderer)
+        cp LICENSE LICENSING.md build/release-assets/
+        cp firmware/audio/dx7/LICENSE build/release-assets/LICENSE-MSFA-Apache-2.0.txt
       test: |
         set -euo pipefail
         python3 -m venv build/validation-venv

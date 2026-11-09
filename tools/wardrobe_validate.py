@@ -28,36 +28,39 @@ def source_path(parent, name):
     return path if path.is_absolute() else parent / path
 
 
-def sheet(path, cols, rows, region=None):
+def sheet(path, cols, rows, boxes=None):
     with Image.open(path) as src:
         im = src.convert("RGBA")
-    if region is not None:
-        im = im.crop(region)
-    if im.width % cols or im.height % rows:
-        raise ValueError(f"{path}: {im.size} is not an exact {cols}x{rows} grid")
-    w, h = im.width // cols, im.height // rows
+    if boxes is None:
+        boxes = [(x * im.width // cols, y * im.height // rows,
+                  (x + 1) * im.width // cols, (y + 1) * im.height // rows)
+                 for y in range(rows) for x in range(cols)]
+    w = min(box[2] - box[0] for box in boxes)
+    h = min(box[3] - box[1] for box in boxes)
     if min(w, h) < 16:
         raise ValueError(f"{path}: cells {w}x{h} too small for a production source")
     frames, stats = [], []
-    for index in range(cols * rows):
-        x, y = index % cols * w, index // cols * h
-        cell = im.crop((x, y, x + w, y + h))
+    for index, box in enumerate(boxes):
+        cell = im.crop(box)
+        cw, ch = cell.size
         # Same broad magenta-key family as original asset recovery, evaluated
         # independently here. No crop or compositing changes the source image.
         foreground = []
-        for red, green, blue, alpha in cell.getdata():
+        for red, green, blue, alpha in getattr(cell, "get_flattened_data", cell.getdata)():
             magenta = ((red - 255) ** 2 + green ** 2 + (blue - 255) ** 2 < 105 ** 2 or
                        (min(red, blue) - green > 140 and red > 170 and blue > 170 and abs(red - blue) < 60))
             foreground.append(alpha > 0 and not magenta)
         visible = sum(foreground)
-        if visible < w * h // 100:
+        if visible < cw * ch // 100:
             raise ValueError(f"{path}: frame {index} blank/less than1% foreground")
-        stats.append({"frame": index, "foreground_fraction": round(visible / (w * h), 4),
+        stats.append({"frame": index, "source_box": list(box), "cell_size": [cw, ch],
+                      "foreground_fraction": round(visible / (cw * ch), 4),
                       "rgba_sha256": sha(cell.tobytes())})
         frames.append(cell)
     unique = len({s["rgba_sha256"] for s in stats})
     return {"path": str(path), "sha256": sha(path.read_bytes()), "size": list(im.size),
-            "cell": [w, h], "source_region": list(region) if region else None,
+            "minimum_cell": [w, h],
+            "uniform_cell_sizes": len({tuple(x["cell_size"]) for x in stats}) == 1,
             "frames": len(frames), "distinct_frames": unique,
             "frame_metrics": stats}, frames
 
@@ -117,11 +120,11 @@ def main():
                 path = source_path(args.manifest.parent, paired)
                 with Image.open(path) as im:
                     width, height = im.size
-                if width % 4 or height % 5:
-                    raise ValueError(f"{path}: {width}x{height} is not exact paired4x5 grid")
-                split = height // 5 * 3
-                row["faces"], fs = sheet(path, 4, 3, (0, 0, width, split))
-                row["stage"], ss = sheet(path, 4, 2, (0, split, width, height))
+                boxes = [(x * width // 4, y * height // 5,
+                          (x + 1) * width // 4, (y + 1) * height // 5)
+                         for y in range(5) for x in range(4)]
+                row["faces"], fs = sheet(path, 4, 3, boxes[:12])
+                row["stage"], ss = sheet(path, 4, 2, boxes[12:])
             else:
                 row["faces"], fs = sheet(source_path(args.manifest.parent, faces), 4, 3)
                 row["stage"], ss = sheet(source_path(args.manifest.parent, stage), 4, 2)
@@ -131,6 +134,8 @@ def main():
             seen_pairs.add(pair)
             row["ready"] = True
             for kind in ["faces", "stage"]:
+                if not row[kind]["uniform_cell_sizes"]:
+                    report["warnings"].append(f"{name}: {kind} source uses floored grid boundaries differing by one pixel; inspect contact sheet for cross-cell bleed")
                 if row[kind]["distinct_frames"] == 1:
                     report["warnings"].append(f"{name}: all {kind} frames identical; inspect expressions/choreography")
             # Evidence pairs include every expression and pose, not only one

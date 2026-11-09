@@ -28,9 +28,11 @@ python3 tools/wardrobe_validate.py assets/singer/outfits/manifest.json \
   --expected-ready 11 --out build/evidence/wardrobe-validation
 ```
 
-The tool reads manifest-relative `faces` and `stage` paths with exact uniform4x3
+The tool reads manifest-relative `faces` and `stage` paths with uniform4x3
 portrait and4x2dance grids, or a `sheet` path with `layout:"paired4x5"` whose first
-three rows are portraits and last two rows are dance poses. It preserves hashes, detects blank cells and duplicate complete
+three rows are portraits and last two rows are dance poses. Grid edges use the
+packer's integer floor coordinates, recording every cell box and warning when
+non-divisible source sizes produce one-pixel cell differences. It preserves hashes, detects blank cells and duplicate complete
 source pairs, checks that original reference assets remain untouched, and creates
 one20-state contact sheet per outfit. It rejects missing production pairs by
 default. The example count11is the full production candidate set; choose the accepted

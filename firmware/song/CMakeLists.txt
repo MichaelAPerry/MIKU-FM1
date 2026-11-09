@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-only
 # Step 2a: song model, MKS2 file format, sequencer, mora table, demo song. Self-contained (no libc on device).
-add_library(miku_song STATIC song.c song_io.c seq.c mora.c demo.c gen.c lyrics.c gen_next.c)
+add_library(miku_song STATIC song.c song_io.c seq.c mora.c demo.c gen.c lyrics.c lyric_edit.c gen_next.c)
 target_include_directories(miku_song PUBLIC ${CMAKE_SOURCE_DIR})
 if(NOT MSVC)
   target_compile_options(miku_song PRIVATE -Wall -Wextra -Wpedantic)
@@ -36,3 +36,15 @@ if(NOT MSVC)
   target_compile_options(miku_gen_next_tests PRIVATE -Wall -Wextra -Wpedantic)
 endif()
 add_test(NAME gen_next COMMAND miku_gen_next_tests)
+
+add_executable(miku_lyric_edit_tests ${CMAKE_SOURCE_DIR}/tests/test_lyric_edit.c)
+target_link_libraries(miku_lyric_edit_tests PRIVATE miku_song)
+if(NOT MSVC)
+  target_compile_options(miku_lyric_edit_tests PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+add_test(NAME lyric_edit COMMAND miku_lyric_edit_tests)
+add_executable(lyric_song_render ${CMAKE_SOURCE_DIR}/tools/lyric_song_render.c)
+target_link_libraries(lyric_song_render PRIVATE miku_engine m)
+if(NOT MSVC)
+  target_compile_options(lyric_song_render PRIVATE -Wall -Wextra -Wpedantic)
+endif()

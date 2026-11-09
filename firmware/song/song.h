@@ -11,7 +11,8 @@
 enum { TR_VOCAL, TR_CHORDS, TR_BASS, TR_DRUMS };
 /* A step is 4 bytes, meaning per track (index constants below). 0 in the note/root/mask byte = nothing. */
 typedef struct { uint8_t v[4]; } Step;
-enum { SV_NOTE, SV_LEN, SV_MORA, SV_FLAG };   /* VOCAL: MIDI 1..127, len 1..64 steps (may cross the bar), mora index, flags: velocity 0..15 low nibble, high bits reserved */
+enum { SV_NOTE, SV_LEN, SV_MORA, SV_FLAG };   /* VOCAL: MIDI 1..127, len 1..64 steps (may cross the bar), mora index, flags: velocity 0..15 low nibble, high bits VF_* (MKS2 v4) */
+enum { VF_LEGATO=16, VF_SUSTAIN=32, VF_WORD_END=64, VF_PHRASE_END=128 }; /* outgoing hold; incoming no consonant; lyric boundaries */
 enum { SC_ROOT, SC_TYPE, SC_LEN, SC_VEL };    /* CHORDS: root MIDI, type = mode<<4 | quality, len 1..64, vel 0..15 */
 enum { SB_NOTE, SB_LEN, SB_FLAG, SB_VEL };    /* BASS: note, len, flags BF_*, vel 0..15 */
 enum { SD_MASK, SD_ACC };                     /* DRUMS: instrument mask, accent mask (bits D_*), 0, 0 */
@@ -74,11 +75,12 @@ int un_pop(Undo *u, Song *g);                                 /* restore the new
 /* MKS2 binary format (song_io.c) */
 #define SONG_ENC_V1 (10 + 8 + 6 + NTRK * 8 + NROW * 5 + NTRK * NPAT * NSTEP * 4 + 4)   /* 4476: version 1, still read */
 #define SONG_ENC_V2 (SONG_ENC_V1 + 16)                                                    /* 4492: version 2, still read */
-#define SONG_ENC_SIZE (SONG_ENC_V1 + 32)                                                  /* 4508: version 3, written */
+#define SONG_ENC_V3 (SONG_ENC_V1 + 32)                                                    /* 4508: legacy voice block */
+#define SONG_ENC_SIZE SONG_ENC_V3                                                        /* 4508: v4, same layout; vocal flag semantics */
 enum { SIO_OK = 0, SIO_SIZE = -1, SIO_MAGIC = -2, SIO_VERSION = -3, SIO_LEN = -4, SIO_CRC = -5, SIO_FIELD = -6 };
 uint32_t sg_crc32(const uint8_t *p, uint32_t n);
 uint32_t song_encode(const Song *g, uint8_t *buf, uint32_t cap);   /* bytes written, 0 if cap too small */
-int song_decode(Song *g, const uint8_t *buf, uint32_t len);        /* SIO_OK or an error; g untouched on error. len: SONG_ENC_SIZE (v3), SONG_ENC_V2 or SONG_ENC_V1 */
+int song_decode(Song *g, const uint8_t *buf, uint32_t len);        /* SIO_OK or an error; g untouched on error. len: SONG_ENC_SIZE (v4/v3), SONG_ENC_V2 or SONG_ENC_V1 */
 void sg_voice_default(Voice *v);
 void song_demo(Song *g);
 #endif

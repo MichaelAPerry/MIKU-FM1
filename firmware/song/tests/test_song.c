@@ -328,8 +328,8 @@ static void test_edit(void){
     CHECK(!un_pop(&u,&g));
     printf("sizeof Song %zu  Seq %zu  Undo %zu\n",sizeof(Song),sizeof(Seq),sizeof(Undo));
 }
-/* MKS2 version 3 carries the 32-byte voice block; versions 2 (16 bytes) and 1 (none) still load, the rest defaulted */
-static void reframe(const uint8_t *src,uint8_t *dst,uint32_t ver,uint32_t len){   /* src (v3) as an older version of length len */
+/* MKS2 v4 keeps the v3 32-byte voice block; v1/v2/v3 still load with legacy sound/defaults. */
+static void reframe(const uint8_t *src,uint8_t *dst,uint32_t ver,uint32_t len){   /* current src as an older version of length len */
     uint32_t c;int i;
     memcpy(dst,src,len-4);dst[4]=(uint8_t)ver;dst[6]=(uint8_t)len;dst[7]=(uint8_t)(len>>8);dst[8]=dst[9]=0;
     c=sg_crc32(dst,len-4);for(i=0;i<4;i++)dst[len-4+i]=(uint8_t)(c>>(8*i));
@@ -340,7 +340,7 @@ static void test_v2(void){
     song_demo(&g);
     g.vx.rev=40;g.vx.cho=12;g.vx.chr=VC_TINY;g.vx.lang=VL_ANIMAL;g.vx.trem=7;
     g.vx.tens=80;g.vx.fry=30;g.vx.hint=60;g.vx.hchr=VC_DEEP;g.vx.obeat=100;g.vx.dtime=10;
-    CHECK(song_encode(&g,buf,sizeof buf)==SONG_ENC_SIZE&&buf[4]==3);
+    CHECK(song_encode(&g,buf,sizeof buf)==SONG_ENC_SIZE&&buf[4]==4);
     CHECK(song_decode(&B,buf,SONG_ENC_SIZE)==SIO_OK&&!memcmp(&g,&B,sizeof g));
     sg_voice_default(&D.vx);
     /* version 2: the first 16 voice bytes kept, the others defaulted */
@@ -354,7 +354,7 @@ static void test_v2(void){
     CHECK(!memcmp(B.pat,g.pat,sizeof g.pat)&&!memcmp(B.row,g.row,sizeof g.row)&&B.bpm==g.bpm);
     /* sizes and versions must agree; voice fields are range-checked */
     CHECK(song_decode(&B,v1,SONG_ENC_SIZE)!=SIO_OK&&song_decode(&B,buf,SONG_ENC_V1)!=SIO_OK&&song_decode(&B,v2,SONG_ENC_SIZE)!=SIO_OK);
-    buf[4]=2;CHECK(song_decode(&B,buf,SONG_ENC_SIZE)==SIO_VERSION);buf[4]=3;
+    buf[4]=2;CHECK(song_decode(&B,buf,SONG_ENC_SIZE)==SIO_VERSION);buf[4]=4;
     {static const int at[6]={0,11,12,13,16,31};static const uint8_t bad[6]={101,VC_N,VL_N,1,101,VC_N};int k;
      for(k=0;k<6;k++){
         uint8_t keep=buf[SONG_ENC_V1-4+at[k]];

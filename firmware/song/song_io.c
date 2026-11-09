@@ -2,7 +2,7 @@
 /* MKS2: "MKS2" u16 version u32 total length | name[8] bpm swing master transpose loop nrows |
  * 4 x (level mute solo preset vib porta breath bright) | 64 x (pat[4] sect) | 4*16*16 x step[4] |
  * version 2: voice[16], version 3: voice[32] (Voice, field order) | u32 CRC32(IEEE) of all before.
- * Versions 1 (no voice block) and 2 are still read; what they lack gets the defaults. Written: version 3. */
+ * Versions 1 (no voice block) and 2 are still read; what they lack gets the defaults. Version 4 uses the same layout and defines vocal flag high bits; old ignored bits clear on import. Written: version 4. */
 #include "firmware/song/song.h"
 uint32_t sg_crc32(const uint8_t *p,uint32_t n){
     uint32_t c=0xFFFFFFFFu,i,k;
@@ -14,7 +14,7 @@ static uint32_t r32(const uint8_t *p){return p[0]|(uint32_t)p[1]<<8|(uint32_t)p[
 uint32_t song_encode(const Song *g,uint8_t *b,uint32_t cap){
     uint32_t i,t,p,s,k,o=0;
     if(cap<SONG_ENC_SIZE)return 0;
-    b[o++]='M';b[o++]='K';b[o++]='S';b[o++]='2';b[o++]=3;b[o++]=0;
+    b[o++]='M';b[o++]='K';b[o++]='S';b[o++]='2';b[o++]=4;b[o++]=0;
     w32(b+o,SONG_ENC_SIZE);o+=4;
     for(i=0;i<8;i++)b[o++]=(uint8_t)g->name[i];
     b[o++]=g->bpm;b[o++]=g->swing;b[o++]=g->master;b[o++]=(uint8_t)g->transpose;b[o++]=g->loop;b[o++]=g->nrows;
@@ -68,7 +68,7 @@ static int parse(const uint8_t *b,uint32_t ver,Song *d){
         x->level=q[0];x->mute=q[1];x->solo=q[2];x->preset=q[3];x->vib=q[4];x->porta=q[5];x->breath=q[6];x->bright=q[7];
     }
     for(i=0;i<NROW;i++,q+=5){for(t=0;t<NTRK;t++)d->row[i].pat[t]=q[t];d->row[i].sect=q[4];}
-    for(t=0;t<NTRK;t++)for(p=0;p<NPAT;p++)for(s=0;s<NSTEP;s++,q+=4)for(k=0;k<4;k++)d->pat[t][p][s].v[k]=q[k];
+    for(t=0;t<NTRK;t++)for(p=0;p<NPAT;p++)for(s=0;s<NSTEP;s++,q+=4)for(k=0;k<4;k++)d->pat[t][p][s].v[k]=(uint8_t)(ver<4&&t==TR_VOCAL&&k==SV_FLAG?q[k]&15u:q[k]);
     sg_voice_default(&d->vx);
     if(ver>=2){uint8_t *v=(uint8_t *)&d->vx;uint32_t n=ver==2?16u:32u;for(i=0;i<n;i++)v[i]=q[i];}
     return SIO_OK;
@@ -79,7 +79,7 @@ int song_decode(Song *g,const uint8_t *b,uint32_t len){
     if(len!=SONG_ENC_SIZE && len!=SONG_ENC_V2 && len!=SONG_ENC_V1)return SIO_SIZE;
     if(b[0]!='M'||b[1]!='K'||b[2]!='S'||b[3]!='2')return SIO_MAGIC;
     ver=b[4];
-    if(b[5]!=0||ver<1||ver>3||len!=(ver==1?SONG_ENC_V1:ver==2?SONG_ENC_V2:SONG_ENC_SIZE))return SIO_VERSION;
+    if(b[5]!=0||ver<1||ver>4||len!=(ver==1?SONG_ENC_V1:ver==2?SONG_ENC_V2:SONG_ENC_SIZE))return SIO_VERSION;
     if(r32(b+6)!=len)return SIO_LEN;
     if(r32(b+len-4)!=sg_crc32(b,len-4))return SIO_CRC;
     e=parse(b,ver,0);

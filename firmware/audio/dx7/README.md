@@ -44,8 +44,7 @@ its 32-bit wrap against the previous state, like MSFA's 64-bit overflow test.
 This is DX7-compatible synthesis, not a hardware-bit-exact claim. Original MSFA
 frequency/detune/envelope scaling remains approximate, the sine table differs by
 small rounding amounts, and AMD calibration is approximate. Sync-off phase follows
-a deterministic sample-clock model. MIDI pitch bend, sustain/MPE routing and arbitrary
-USB bank transfer are not added by this backend. Native BANK edits real operator
+a deterministic sample-clock model. MPE and arbitrary USB bank transfer are not added by this backend. Native BANK edits real operator
 and global patch fields, and saved songs embed the actual packed patches.
 
 ## Independent reference and checks
@@ -68,3 +67,22 @@ the steal fade and L4 sustain.
 Host ASan+UBSan runs use ASAN_OPTIONS=detect_leaks=0 because this environment does
 not support LeakSanitizer tracing. Actual target image/state/timing results belong
 in docs/DX7_BANK_HANDOFF.md; standalone object sizes are not final device budgets.
+
+## Performance controls
+
+dx_note_legato retunes a gated voice (the newest one when there are several; in the
+engine's one-voice bass that is the bass note) without touching envelopes, LFO or
+phases. Every ratio operator's log-frequency base moves by the semitone difference
+and an offset ramps linearly back to zero over glide_ms (updated once per 64-sample
+block, 0 = jump, capped at 60 s); fixed-frequency operators stay put. The original
+note's velocity, key-level and rate scaling are kept (a slide is the same note
+moving, as on a mono synth), and the patch transpose captured at note-on is reused,
+so a patch edit never changes the interval. With no gated voice it is dx_note_on.
+The engine uses a 60 ms glide for sequenced bass notes that carry the slide flag.
+
+dx_set_bend (signed 14 bit) times dx_set_bend_range (semitones, default 2) is a
+log-frequency offset added to every sounding voice, held or releasing, next to the
+pitch envelope and LFO pitch; it takes effect at each voice's next 64-sample block.
+dx_set_sustain keeps voices that received dx_note_off sounding until the pedal is
+released, when those whose key is up are released. dx_all_off and dx_hush ignore the
+pedal. Stealing order: free, released, pedal-held, oldest. Tests: tests/test_dx7_perform.c.

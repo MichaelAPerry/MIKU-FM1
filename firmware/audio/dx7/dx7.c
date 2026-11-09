@@ -113,7 +113,7 @@ void dx_init(DxSynth *s,uint32_t voices){
     s->patch[5u*17u+14u]=99;s->patch[110]=31;s->patch[117]=24;
     for(o=106;o<110;o++)s->patch[o]=50;
     for(o=118;o<128;o++)s->patch[o]=' ';
-    dx_set_mix(s,100,64);
+    s->bend_range=2;dx_set_mix(s,100,64);
 }
 uint32_t dx_patch(DxSynth *s,const uint8_t patch[128]){
     uint32_t i;if(!s||!dx_patch_valid(patch))return 0;
@@ -142,12 +142,13 @@ void dx_note_on(DxSynth *s,uint8_t note,uint8_t velocity){
     if(!velocity){dx_note_off(s,note);return;}
     for(i=0;i<s->voices;i++)if(!s->voice[i].active){k=i;break;}
     if(k==s->voices){for(i=0;i<s->voices;i++)if(!s->voice[i].gated&&(k==s->voices||s->voice[i].age<s->voice[k].age))k=i;}
+    if(k==s->voices){for(i=0;i<s->voices;i++)if(!s->voice[i].keyed&&(k==s->voices||s->voice[i].age<s->voice[k].age))k=i;} /* pedal-held */
     if(k==s->voices){k=0;for(i=1;i<s->voices;i++)if(s->voice[i].age<s->voice[k].age)k=i;}
     v=s->voice+k;if(v->active)dx_ghost_add(s,v);
-    dx_zero(v,sizeof *v);v->active=v->gated=1;v->note=note;v->age=++s->age;
+    dx_zero(v,sizeof *v);v->active=v->gated=v->keyed=1;v->note=note;v->xpose=(uint8_t)(p[117]-24);v->age=++s->age;
     v->algorithm=p[110];v->fbshift=(uint8_t)((p[111]&7u)?8u-(p[111]&7u):16u);
     v->pmd=(uint8_t)((p[114]*165u)>>6);v->pms=dx_pitchmodsenstab[p[116]>>4];v->amd=p[115];
-    midinote=dx_min(127,dx_max(0,(int32_t)note+(int32_t)p[117]-24));
+    midinote=dx_min(127,dx_max(0,(int32_t)note+(int32_t)p[117]-24));v->midi=(uint8_t)midinote;
     for(o=0;o<6;o++){
         const uint8_t *q=p+17u*o;DxEnv *e=v->env+o;uint32_t mode=q[15]&1u,coarse=q[15]>>1,detune=q[12]>>3;
         for(i=0;i<4;i++){e->rates[i]=q[i];e->levels[i]=q[4+i];}
@@ -157,7 +158,7 @@ void dx_note_on(DxSynth *s,uint8_t note,uint8_t velocity){
         e->output=dx_max(0,out);e->down=1;
         rate=dx_min(31,dx_max(0,midinote/3-7));e->scale=(uint8_t)((q[12]&7u)*(uint32_t)rate>>3);dx_env_advance(e,0);
         if(!mode)v->base[o]=50857777+1398101*midinote+dx_coarsemul[coarse]+dx_fine[q[16]]+12606*((int32_t)detune-7);
-        else v->base[o]=(int32_t)(((int64_t)4458616*((coarse&3u)*100u+q[16]))>>3)+(detune>7?13457*((int32_t)detune-7):0);
+        else{v->fixed|=(uint8_t)(1u<<o);v->base[o]=(int32_t)(((int64_t)4458616*((coarse&3u)*100u+q[16]))>>3)+(detune>7?13457*((int32_t)detune-7):0);}
         if(!(p[111]&8u))v->phase[o]=(uint32_t)dx_freq(v->base[o])*s->clock;
         v->ams[o]=q[13]&3u;
         if((dx_algorithms[v->algorithm][o]&7u)==4u)v->carriers++;
@@ -166,12 +167,39 @@ void dx_note_on(DxSynth *s,uint8_t note,uint8_t velocity){
     v->pitch.level=(int32_t)dx_pitchtab[p[109]]*524288;v->pitch.down=1;dx_pitch_advance(&v->pitch,0);
     dx_lfo_init(&v->lfo,p);if(!v->lfo.sync)v->lfo.phase=(s->clock/64u)*v->lfo.delta;
 }
+static void dx_release(DxVoice *v){
+    uint32_t o;v->gated=0;v->keyed=0;
+    for(o=0;o<6;o++){v->env[o].down=0;dx_env_advance(v->env+o,3);}v->pitch.down=0;dx_pitch_advance(&v->pitch,3);
+}
 void dx_note_off(DxSynth *s,uint8_t note){
-    uint32_t i,o;for(i=0;i<s->voices;i++){DxVoice *v=s->voice+i;if(v->active&&v->gated&&v->note==note){v->gated=0;
-        for(o=0;o<6;o++){v->env[o].down=0;dx_env_advance(v->env+o,3);}v->pitch.down=0;dx_pitch_advance(&v->pitch,3);
+    uint32_t i;for(i=0;i<s->voices;i++){DxVoice *v=s->voice+i;if(v->active&&v->gated&&v->keyed&&v->note==note){
+        if(s->sustain)v->keyed=0;else dx_release(v);
     }}
 }
-void dx_all_off(DxSynth *s){uint32_t i;for(i=0;i<s->voices;i++)if(s->voice[i].active)dx_note_off(s,s->voice[i].note);}
+void dx_set_sustain(DxSynth *s,uint8_t on){
+    uint32_t i;s->sustain=on!=0;
+    if(!s->sustain)for(i=0;i<s->voices;i++){DxVoice *v=s->voice+i;if(v->active&&v->gated&&!v->keyed)dx_release(v);}
+}
+void dx_set_bend_range(DxSynth *s,uint8_t semis){s->bend_range=semis>48?48:semis;}
+void dx_set_bend(DxSynth *s,int32_t bend){
+    bend=bend<-8192?-8192:bend>8191?8191:bend;s->bend=(int32_t)(((int64_t)bend*(int32_t)s->bend_range*1398101)>>13);
+}
+void dx_all_off(DxSynth *s){uint32_t i;for(i=0;i<s->voices;i++)if(s->voice[i].active&&s->voice[i].gated)dx_release(s->voice+i);}
+void dx_note_legato(DxSynth *s,uint8_t note,uint8_t velocity,uint32_t glide_ms){
+    uint32_t i,o,k=s->voices,blocks;DxVoice *v;int32_t midinote,delta;
+    if(!velocity){dx_note_off(s,note);return;}
+    for(i=0;i<s->voices;i++)if(s->voice[i].active&&s->voice[i].gated&&(k==s->voices||s->voice[i].age>s->voice[k].age))k=i;
+    if(k==s->voices){dx_note_on(s,note,velocity);return;}
+    v=s->voice+k;
+    midinote=dx_min(127,dx_max(0,(int32_t)note+(int32_t)(int8_t)v->xpose));
+    delta=1398101*(midinote-(int32_t)v->midi);
+    for(o=0;o<6;o++)if(!(v->fixed&(1u<<o)))v->base[o]+=delta;
+    v->gofs-=delta;v->midi=(uint8_t)midinote;v->note=note;v->keyed=1;
+    if(glide_ms>60000u)glide_ms=60000u;
+    blocks=(glide_ms*441u/10u+DX_BLOCK-1u)/DX_BLOCK;
+    if(!blocks||!v->gofs){v->gofs=0;v->gleft=0;v->ginc=0;}
+    else{v->gleft=(uint16_t)blocks;v->ginc=-(v->gofs/(int32_t)blocks);}
+}
 void dx_hush(DxSynth *s){
     uint32_t i;for(i=0;i<s->voices;i++){DxVoice *v=s->voice+i;if(v->active==1){v->gated=0;v->active=3;}}
 }
@@ -206,12 +234,14 @@ static void dx_voice_block(DxSynth *s,DxVoice *v){
     int32_t lfo=dx_lfo_sample(&v->lfo),delay=dx_lfo_delay(&v->lfo),pitch=dx_pitch_sample(&v->pitch);
     int32_t amp=(int32_t)(((int64_t)((v->amd*128u+49u)/99u)*delay)>>24); /* amplitude depth, shared 0..99 */
     pitch+=(int32_t)(((int64_t)((uint32_t)v->pmd*(uint32_t)delay)*(v->pms*(lfo-(1<<23))))>>39);
+    pitch+=s->bend;
+    if(v->gleft){v->gofs+=v->ginc;if(!--v->gleft)v->gofs=0;}
     for(i=0;i<DX_BLOCK;i++)v->audio[i]=0;
     for(o=0;o<6;o++){
         uint32_t flags=dx_algorithms[v->algorithm][o],in=(flags>>4)&3u,out=flags&3u,add=(flags&4u)!=0;
         int32_t *dst=out?s->bus[out-1]:v->audio;const int32_t *src=in?s->bus[in-1]:0;
         int32_t level=dx_env_sample(v->env+o),level0=level,g1=v->gain[o],g2,dg,gain,fb0=v->feedback[0],fb1=v->feedback[1];
-        uint32_t phase=v->phase[o],frequency=(uint32_t)dx_freq(v->base[o]+pitch);
+        uint32_t phase=v->phase[o],frequency=(uint32_t)dx_freq(v->base[o]+pitch+((v->fixed>>o&1u)?0:v->gofs));
         /* DX7 AMS levels approximate 0 / 1.5 / 3 / 6 dB modulation at full depth. */
         if(v->ams[o])level-=(int32_t)(((int64_t)(v->ams[o]==1?1:v->ams[o]==2?2:4)*amp*(0xffffff-lfo))>>9);
         g2=dx_exp(level-14*(1<<24));

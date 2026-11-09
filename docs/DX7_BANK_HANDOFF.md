@@ -197,9 +197,13 @@ The updated recorded helper source is committed beside device-scene evidence.
 The engine is an MSFA-compatible reconstruction, not hardware-bit-exact Yamaha
 emulation. AMD calibration and sync-off phase modeling are approximate. Cached
 operator blocks introduce up to63 samples (~1.43 ms) before a note-off envelope
-update. MIDI sustain/MPE/bend routing and USB SysEx bank management are not added.
-DX7 bass currently retriggers on sequenced notes; classic bass slide/glide remains
-available. User naming/independent custom bank storage remain future UI work.
+update. The DX7 engines now implement mono legato/glide (the sequenced bass slide flag
+glides 60 ms instead of retriggering), pitch bend and the sustain pedal
+(dx_note_legato, dx_set_bend, dx_set_sustain; engine commands EN_BEND and EN_SUSTAIN,
+ignored by the classic chord/bass engines). Routing external MIDI notes, CC64 and
+bend from native/dinghy.c into those commands, MPE and USB SysEx bank management
+are not added.
+User naming/independent custom bank storage remain future UI work.
 
 The owner should listen and choose bank/genre assignments and balance. Next coding
 task: integrate chosen DX7 profiles into candidate GEN arrangements, then profile

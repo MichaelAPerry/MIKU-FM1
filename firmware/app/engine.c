@@ -90,8 +90,14 @@ static void command(Engine *e, uint32_t w) {
         else if (a == TR_BASS) {bs_note_off(&e->bs);dx_all_off(&e->dx[1]);}
         break;
     case EN_VOW: if (mora_vowel(a) < 5u) { e->vh = (uint8_t)mora_vowel(a); fv_set_vowel(&e->fv, e->vh); } break;
+    case EN_BEND:
+        if (a == TR_CHORDS || a == TR_BASS) dx_set_bend(&e->dx[a - 1u], (int32_t)((b & 127u) | (c & 127u) << 7) - 8192);
+        break;
+    case EN_SUSTAIN:
+        if (a == TR_CHORDS || a == TR_BASS) dx_set_sustain(&e->dx[a - 1u], (uint8_t)(b != 0));
+        break;
     case EN_HUSH:
-    case EN_PANIC: voff(e); e->vqn = 0; ch_all_off(&e->ch); bs_note_off(&e->bs);dx_all_off(&e->dx[0]);dx_all_off(&e->dx[1]);
+    case EN_PANIC: voff(e); e->vqn = 0; ch_all_off(&e->ch); bs_note_off(&e->bs);dx_set_sustain(&e->dx[0],0);dx_set_sustain(&e->dx[1],0);dx_all_off(&e->dx[0]);dx_all_off(&e->dx[1]);
         if ((w >> 24) == EN_HUSH) {dx_hush(&e->dx[0]);dx_hush(&e->dx[1]);}
         break;
     }
@@ -137,7 +143,7 @@ static void event(Engine *e, const SqEvent *v) {
     case SQ_NOTE_ON:
         if (v->trk == TR_VOCAL) vocal_event(e, v, 1);
         else if (v->trk == TR_CHORDS) {if(e->pre[1]>=SG_DX7_FIRST)dx_note_on(&e->dx[0],v->note,v->vel);else ch_note_on(&e->ch, v->note, v->vel);}
-        else {if(e->pre[2]>=SG_DX7_FIRST)dx_note_on(&e->dx[1],v->note,v->vel);else bs_note_on(&e->bs, v->note, v->vel, (uint8_t)(v->aux & 1u), (uint8_t)(v->aux >> 1 & 1u));}
+        else {if(e->pre[2]>=SG_DX7_FIRST){if(v->aux>>1&1u)dx_note_legato(&e->dx[1],v->note,v->vel,EN_DX_SLIDE_MS);else dx_note_on(&e->dx[1],v->note,v->vel);}else bs_note_on(&e->bs, v->note, v->vel, (uint8_t)(v->aux & 1u), (uint8_t)(v->aux >> 1 & 1u));}
         break;
     case SQ_NOTE_OFF:
         if (v->trk == TR_VOCAL) vocal_event(e, v, 0);

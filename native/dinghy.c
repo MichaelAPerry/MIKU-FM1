@@ -22,6 +22,10 @@
 #error "video benchmark requires the isolated video build"
 #endif
 #include "platform.c"
+/* Both shipped FM-1 flash variants must retain real persistent storage. */
+_Static_assert(FL_JEDEC_OK(0x856014u),"Puya FM-1 flash unsupported");
+_Static_assert(FL_JEDEC_OK(0xB36014u),"UC25HQ80 FM-1 flash unsupported");
+_Static_assert(!FL_JEDEC_OK(0xFFFFFFu),"unknown flash must remain rejected");
 #include "firmware/audio/fvoice/fvoice.c"
 #include "firmware/ui/singer_sprites.h"
 #include "firmware/ui/sprite_codec.c"

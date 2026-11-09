@@ -35,34 +35,34 @@ static uint32_t gx_seed(const GenNextCfg *c,int t,uint32_t key,uint32_t var) {
 }
 static int gx_valid(const GenNextCfg *c) { return c && c->style<GX_N && c->key<12 && c->minor<2 && c->lock<16 && c->energy<=100 && c->complexity<=100; }
 const char *gen_next_style(uint32_t s) { return s<GX_N?gx_style[s].name:""; }
-static int gx_role(const Song *g,int row) {
-    int s=g->row[row].sect;
+static int gx_role(const Row *rows,int row) {
+    int s=rows[row].sect;
     return s==SEC_CHORUS?2:s==SEC_INTRO||s==SEC_OUTRO||s==SEC_BRIDGE?0:1;
 }
-static int gx_bar(const Song *g,int row) { int n=0; while(row>0 && g->row[row-1].sect==g->row[row].sect){n++;row--;} return n; }
-static int gx_degree(const Song *g,const GenNextCfg *c,int row) {
+static int gx_bar(const Row *rows,int row) { int n=0; while(row>0 && rows[row-1].sect==rows[row].sect){n++;row--;} return n; }
+static int gx_degree(const Row *rows,const GenNextCfg *c,int row) {
     uint32_t rotation=(c->seed>>2)&3u;
-    int bar=gx_bar(g,row),d=gx_style[c->style].degree[(bar+rotation)&3];
-    if(g->row[row].sect==SEC_OUTRO)d=0;
+    int bar=gx_bar(rows,row),d=gx_style[c->style].degree[(bar+rotation)&3];
+    if(rows[row].sect==SEC_OUTRO)d=0;
     return d;
 }
-static void gx_chord(const Song *g,const GenNextCfg *c,int row,int *root,int *quality) {
-    int r=row,i,d=gx_degree(g,c,row);
+static void gx_chord(const Song *g,const Row *rows,const GenNextCfg *c,int row,int *root,int *quality) {
+    int r=row,i,d=gx_degree(rows,c,row);
     *root=48+(c->key+gx_scale[c->minor][d])%12; *quality=gx_quality[c->minor][d];
     if(c->style==GX_FUTURE_BASS || c->style==GX_IDOL_POP)
         *quality=*quality==CQ_MAJ?CQ_MAJ7:*quality==CQ_MIN?CQ_MIN7:*quality;
     if(c->lock&(1u<<TR_CHORDS)) {
-        for(;r>=0;r--) { uint32_t p=g->row[r].pat[TR_CHORDS]; if(p>=NPAT)continue;
+        for(;r>=0;r--) { uint32_t p=rows[r].pat[TR_CHORDS]; if(p>=NPAT)continue;
             for(i=0;i<NSTEP;i++)if(g->pat[TR_CHORDS][p][i].v[0]) {
                 *root=g->pat[TR_CHORDS][p][i].v[0];*quality=g->pat[TR_CHORDS][p][i].v[1]&15;return;
             }
         }
     }
 }
-static uint32_t gx_key(const Song *g,const GenNextCfg *c,int row,int t) {
-    int root,q,role=gx_role(g,row);gx_chord(g,c,row,&root,&q);
+static uint32_t gx_key(const Song *g,const Row *rows,int nrows,const GenNextCfg *c,int row,int t) {
+    int root,q,role=gx_role(rows,row);gx_chord(g,rows,c,row,&root,&q);
     /* Four roots x three energy roles <=12 contexts in native arrangements. Actual locked chord qualities join key. */
-    return t==TR_DRUMS?(uint32_t)(role*2+(row+1>=g->nrows || g->row[row+1].sect!=g->row[row].sect)):(uint32_t)(role*4096+root*16+q);
+    return t==TR_DRUMS?(uint32_t)(role*2+(row+1>=nrows || rows[row+1].sect!=rows[row].sect)):(uint32_t)(role*4096+root*16+q);
 }
 static void gx_put(Step *pat,int t,int s,int a,int b,int c,int d) {
     Step v={{(uint8_t)a,(uint8_t)b,(uint8_t)c,(uint8_t)d}};
@@ -74,13 +74,13 @@ static uint16_t gx_mask(uint16_t mask,int role,const GenNextCfg *c) {
     return mask;
 }
 static int gx_next(uint16_t m,int step) { int i;for(i=step+1;i<16;i++)if((m>>i)&1)return i;return 16; }
-static void gx_write(Step *pat,const Song *g,const GenNextCfg *c,int row,int t,uint32_t var) {
+static void gx_write(Step *pat,const Song *g,const Row *rows,int nrows,const GenNextCfg *c,int row,int t,uint32_t var) {
     const GxStyle *st=&gx_style[c->style];
-    int i,root,q,role=gx_role(g,row),level=role==2?13:11;
-    uint32_t rng=gx_seed(c,t,gx_key(g,c,row,t),var),r=gx_rand(&rng);
+    int i,root,q,role=gx_role(rows,row),level=role==2?13:11;
+    uint32_t rng=gx_seed(c,t,gx_key(g,rows,nrows,c,row,t),var),r=gx_rand(&rng);
     uint16_t m;
     for(i=0;i<16;i++) { int j;for(j=0;j<4;j++)pat[i].v[j]=0; }
-    gx_chord(g,c,row,&root,&q);
+    gx_chord(g,rows,c,row,&root,&q);
     if(t==TR_CHORDS) {
         m=gx_mask(st->chord,role,c); if(!m)m=1;
         if(var)m^=(uint16_t)(1u<<(2u+(var%6u)*2u));
@@ -106,7 +106,7 @@ static void gx_write(Step *pat,const Song *g,const GenNextCfg *c,int row,int t,u
         uint16_t kick=gx_mask(st->kick,role,c),clap=role?st->clap:0,hats=gx_mask(st->hats,role,c);
         if(c->complexity>65 && role==2)hats|=(c->style==GX_JERSEY?0xC000u:0xE000u);
         if(c->style==GX_DIGICORE && role==2) { kick&=0x7FFFu;hats^=(uint16_t)(1u<<(r%16u)); }
-        if(role && (row+1>=g->nrows || g->row[row+1].sect!=g->row[row].sect)) {
+        if(role && (row+1>=nrows || rows[row+1].sect!=rows[row].sect)) {
             hats|=c->complexity>50?0xF000u:0x5000u;
             if(c->style==GX_HYPERPOP || c->style==GX_DIGICORE){clap|=0x5000u;kick&=0x3FFFu;}
             if(c->style==GX_FUTURE_BASS)kick&=0x0FFFu;
@@ -141,38 +141,41 @@ static void gx_write(Step *pat,const Song *g,const GenNextCfg *c,int row,int t,u
         }
     }
 }
-int gen_next_song(Song *g,const GenNextCfg *c) {
-    Song context; /* prototype scratch: 4.5 KB stack; not integrated into native until measured */
-    uint32_t keys[NTRK][NPAT];uint8_t index[NTRK][NROW],counts[NTRK]={0,0,0,0};
+int gen_next_song_ws(Song *g,const GenNextCfg *c,GenNextWorkspace *w) {
     int r,t,i,j;
-    if(!g || !gx_valid(c))return 0;
+    if(!g || !gx_valid(c) || !w)return 0;
+    /* Reject overlapping caller workspace rather than destroying input during preflight. */
+    { uintptr_t ws=(uintptr_t)w,gs=(uintptr_t)g,cs=(uintptr_t)c;
+      if((ws<=gs?gs-ws<sizeof *w:ws-gs<sizeof *g) ||
+         (ws<=cs?cs-ws<sizeof *w:ws-cs<sizeof *c))return 0; }
     if(c->lock==15)return 1;
-    { /* explicit volatile byte copy: pi32v2 must not lower a Song assignment to libc memcpy */
-        volatile uint8_t *dst=(volatile uint8_t *)&context;
-        const volatile uint8_t *src=(const volatile uint8_t *)g;
-        for(uint32_t n=0;n<sizeof context;n++)dst[n]=src[n];
+    w->nrows=g->nrows;
+    if(w->nrows>NROW)return 0;
+    for(t=0;t<NTRK;t++)w->counts[t]=0;
+    for(r=0;r<w->nrows;r++){
+        w->row[r].sect=g->row[r].sect;
+        for(t=0;t<NTRK;t++)w->row[r].pat[t]=g->row[r].pat[t];
     }
     if(!c->lock) {
-        context.nrows=0;
+        w->nrows=0;
         for(i=0;i<8;i++)for(j=0;j<gx_style[c->style].bars[i];j++) {
-            r=context.nrows++;context.row[r].sect=gx_style[c->style].form[i];
-            for(t=0;t<NTRK;t++)context.row[r].pat[t]=ROW_OFF;
+            r=w->nrows++;w->row[r].sect=gx_style[c->style].form[i];
+            for(t=0;t<NTRK;t++)w->row[r].pat[t]=ROW_OFF;
         }
     }
-    if(context.nrows>NROW)return 0;
     /* Preflight all capacities before touching g. Never replace an unrelated harmony on overflow. */
-    for(t=0;t<NTRK;t++)if(!(c->lock>>t&1))for(r=0;r<context.nrows;r++) {
-        uint32_t key=gx_key(&context,c,r,t);
-        for(i=0;i<counts[t] && keys[t][i]!=key;i++){}
-        if(i==counts[t]) { if(i==NPAT)return 0;keys[t][counts[t]++]=key; }
-        index[t][r]=(uint8_t)i;
+    for(t=0;t<NTRK;t++)if(!(c->lock>>t&1))for(r=0;r<w->nrows;r++) {
+        uint32_t key=gx_key(g,w->row,w->nrows,c,r,t);
+        for(i=0;i<w->counts[t] && w->keys[t][i]!=key;i++){}
+        if(i==w->counts[t]) { if(i==NPAT)return 0;w->keys[t][w->counts[t]++]=key; }
+        w->index[t][r]=(uint8_t)i;
     }
     if(!c->lock) {
         uint32_t seed=c->seed%10000u;
-        g->nrows=context.nrows;
+        g->nrows=w->nrows;
         for(r=0;r<g->nrows;r++){
-            g->row[r].sect=context.row[r].sect;
-            for(t=0;t<NTRK;t++)g->row[r].pat[t]=context.row[r].pat[t];
+            g->row[r].sect=w->row[r].sect;
+            for(t=0;t<NTRK;t++)g->row[r].pat[t]=w->row[r].pat[t];
         }
         for(i=0;i<3;i++)g->name[i]=gx_style[c->style].tag[i];
         g->name[3]=' ';
@@ -185,18 +188,21 @@ int gen_next_song(Song *g,const GenNextCfg *c) {
         if(t)g->trk[t].preset=gx_style[c->style].pre[t-1];
         for(i=0;i<NPAT;i++)sg_clear_pat(g,t,i);
         for(r=0;r<g->nrows;r++) {
-            i=index[t][r];g->row[r].pat[t]=(uint8_t)i;
-            if(!(seen>>i&1)){gx_write(g->pat[t][i],&context,c,r,t,0);seen|=1u<<i;}
-            if(t==TR_VOCAL && gx_role(&context,r)==0)g->row[r].pat[t]=ROW_OFF;
+            i=w->index[t][r];g->row[r].pat[t]=(uint8_t)i;
+            if(!(seen>>i&1)){gx_write(g->pat[t][i],g,w->row,w->nrows,c,r,t,0);seen|=1u<<i;}
+            if(t==TR_VOCAL && gx_role(w->row,r)==0)g->row[r].pat[t]=ROW_OFF;
         }
     }
     return 1;
 }
+#ifndef GEN_NEXT_NO_STACK_WRAPPER
+int gen_next_song(Song *g,const GenNextCfg *c){GenNextWorkspace w;return gen_next_song_ws(g,c,&w);}
+#endif
 int gen_next_phrase(Song *g,const GenNextCfg *c,int row,int t,uint32_t var) {
     Step pat[NSTEP];uint32_t p;
     if(!g || !gx_valid(c) || row<0 || row>=g->nrows || t<0 || t>=NTRK || (c->lock>>t&1))return 0;
     p=g->row[row].pat[t];if(p>=NPAT)return 0;
-    gx_write(pat,g,c,row,t,var);
+    gx_write(pat,g,g->row,g->nrows,c,row,t,var);
     for(int i=0;i<NSTEP;i++)g->pat[t][p][i]=pat[i];
     return 1;
 }

@@ -1,7 +1,8 @@
 # Experimental contemporary GEN candidates (2026-11-08)
 
-The shipping POP/BALLAD/DANCE/CHIP generator and native GEN page are unchanged. `gen_next.c/h` implements a separate,
-integer-only composition engine for owner review. The five names below are candidates, not a finalized musical lineup.
+The POP/BALLAD/DANCE/CHIP engine remains available as the legacy baseline. `gen_next.c/h` implements a separate,
+integer-only composition engine for native GEN and host review. Native selection/controls are integrated separately in
+`native/dinghy.c`; the five modern directions remain candidates, not a finalized musical lineup.
 No assertion of genre authenticity substitutes for listening approval.
 
 ## Implemented behavior
@@ -67,16 +68,28 @@ of supersaws, samples or new DSP. Lead roles use the chord track; no fifth song 
 `miku_gen_next_tests` checks 360 generated configurations (five styles x three seeds x twelve keys x two scales):
 bit-exact determinism, valid steps, encode/decode equality, locked chord steps/settings/rows, deterministic localized
 phrase edits, pairwise distinct arrangement and all four track hashes, invalid settings, and atomic context overflow.
+Every configuration crosschecks host-wrapper and explicit-workspace output byte for byte. Null and overlapping workspace
+arguments are refused before mutation; ASan/UBSan passes with environment leak detection disabled. All ten historical
+review `.mks` artifacts remain byte-identical after the workspace refactor.
 The full host suite passed 15/15 at the first milestone; the focused GEN test passed again after the final freestanding
 copy correction. Other agents add tests independently, so the final branch's total may be larger.
 
-An isolated pi32v2 `-Os -ffunction-sections -fno-builtin -Wall -Wextra` compile reports 3,254 bytes of text/rodata,
-zero .data/.bss. `nm -u` lists only `mora_find`, `sg_clear_pat`, `sg_step_ok`: no libc, floating point or division helper.
-The generated function reserves 5,032 stack bytes plus saved registers and callees. That is too significant to silently
-add to the native UI stack: this prototype is **host-enabled and not included in native/dinghy.c or native/build.sh**.
-A future integration should supply caller-owned scratch/pool storage, measure UI generation time and stack high-water,
-and account for final linked flash use. It does no work in the audio ISR. Native image/pool, emulator CPU and physical
-performance deltas for this module are therefore not measured. The current device GEN remains the baseline.
+The initial prototype reserved 5,032 local stack bytes by copying a full Song; that implementation is replaced.
+`gen_next_song_ws(g, cfg, workspace)` uses **840 bytes of explicit caller-owned workspace**, containing only rows,
+context keys and pattern indices. It preflights the complete result before changing the Song, preserving transactional
+capacity refusal. Native code should allocate one `GenNextWorkspace` in its fixed pool and call `_ws` from main/UI
+context under the existing structural-edit lock; it never runs in the audio ISR. Do not alias the workspace with the
+Song or settings. The host convenience `gen_next_song()` remains compatible and uses an 840-byte local workspace;
+define `GEN_NEXT_NO_STACK_WRAPPER` before native inclusion to omit that wrapper entirely.
+
+The updated isolated pi32v2 `-Os -ffunction-sections -fno-builtin -Wall -Wextra` compile, with the host wrapper omitted,
+reports **3,368 bytes text/rodata**, zero .data/.bss. The compiler reserves **20 local stack bytes** for
+`gen_next_song_ws`, plus saved registers and callees, rather than the former 5,032 bytes. Target assembly confirms
+`sizeof(GenNextWorkspace)=840`. `nm -u` lists only `mora_find`, `sg_clear_pat`, `sg_step_ok`: no libc, floating point or
+division helper. The caller-owned native pool allocation adds 840 bytes, with no heap or audio ISR work. Final linked
+firmware image, UI generation time, full call-stack high-water, emulator and physical measurements belong to the native
+integration validation; isolated-object measurements cannot substitute for those. Baseline preset IDs and all generated
+notes/rows remain unchanged by this memory refactor.
 
 Limitations: harmony changes once per bar, the grid remains sixteen sixteenths (only the existing chord arps can use
 32nds), no triplet extension or fine-grained drum rolls, no new genre-specific drum kit parameters, no meaningful words
@@ -86,5 +99,5 @@ is unfinished. Energy/complexity are experimental settings and are not persisted
 are demonstrable, but further listening/tuning is needed before calling this a replacement workstation generator.
 
 Owner decisions: which of the five directions to keep, desired aggression/brightness, preferred forms and vocal density,
-and acceptable native control mapping. Next concrete task: collect approval on these ten examples, refine the chosen
-rhythmic templates and motifs, then replace stack scratch with explicit workspace before native GEN integration.
+and acceptable native control mapping. Next concrete task: validate the native selector and locked-regeneration flow using the explicit workspace, collect
+approval on these ten examples, and refine the chosen rhythmic templates and motifs.

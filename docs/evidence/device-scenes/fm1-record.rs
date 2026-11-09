@@ -12,6 +12,7 @@ fn main(){
  cpu.regs[0]=fm1_soc::stock_boot(&mut soc,&stock.flash,params,stock.board);
  soc.sfc_boot(stock.key,stock.app_end);
  soc.take_boot(&cpu);
+ if let Ok(id)=std::env::var("FM1_FLASH_JEDEC"){let n=u32::from_str_radix(id.trim_start_matches("0x"),16).unwrap();soc.flash.jedec=[(n>>16)as u8,(n>>8)as u8,n as u8];}
  if let Ok(path)=std::env::var("FM1_FLASH_IN"){soc.restore_flash(&std::fs::read(path).unwrap());}
  fm1_soc::script::queue(&mut soc,&args[4]);
  let duration:u64=args[2].parse().unwrap();let mut cpu1=None;let mut tick=false;

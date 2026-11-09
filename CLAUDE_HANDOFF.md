@@ -1,5 +1,8 @@
 # MIKU-FM1 — current engineering handoff for Claude review
 
+> Hardware/DX7 review: [both known FM-1 flash variants pass emulator persistence checks; DX7 engine reuse is evaluated but not integrated](docs/HARDWARE_AND_DX7_REVIEW.md).
+
+
 > Current device-wide visual pass: [pink/blue borders and gradients across all nine musical pages, popups and SAVE window, with native recordings and current measurements](docs/evidence/device-theme/README.md). This supersedes the earlier menu-only UI scope and resource figures.
 
 

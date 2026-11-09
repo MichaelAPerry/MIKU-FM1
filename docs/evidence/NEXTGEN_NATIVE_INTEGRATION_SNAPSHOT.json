@@ -1,6 +1,6 @@
 {
   "branch": "feature/miku-nextgen-performance",
-  "implementation_commit": "2414571281b179cc4a6133e291cd1e1d025450e2",
+  "implementation_commit": "bd400b9",
   "main_base": "88b0ef3e568cf615eb5dfaa42d170d8c0f75d431",
   "scope": "native integration milestone; PR21 remains draft; no physical hardware or live USB throughput claim",
   "host_ctest": {
@@ -219,8 +219,8 @@
       "sha256": "116098c90d620fdd7757ba0f7f3c78cd53abbd9f2cbcb90f96fcaa7ad7f2c058"
     },
     "docs/evidence/device-scenes/fm1-record.rs": {
-      "bytes": 2397,
-      "sha256": "314f110d35bbf1dac4ee8f8ca2bce8950d3fc1e609f3e6acf882b4db4e200287"
+      "bytes": 2565,
+      "sha256": "daaeff607b1e2ae208b7498dcc0af410175b142fdbc9ea48937b42ed9e9e1b19"
     },
     "docs/evidence/device-scenes/device-ui-walkthrough.mp4": {
       "bytes": 1483189,
@@ -325,6 +325,22 @@
     "docs/evidence/device-theme/measurements.json": {
       "bytes": 905,
       "sha256": "ffeaa5e15cd12b962e077e65374e8a560a7f1066b64a8c915e7ad89b1c1f44e5"
+    },
+    "docs/evidence/hardware-variants/restored-856014.png": {
+      "bytes": 9578,
+      "sha256": "872e464012b4e169e63550d4561d84ca797e933252999e2c4a315bb520b25a2d"
+    },
+    "docs/evidence/hardware-variants/restored-B36014.png": {
+      "bytes": 9578,
+      "sha256": "872e464012b4e169e63550d4561d84ca797e933252999e2c4a315bb520b25a2d"
+    },
+    "docs/evidence/hardware-variants/both-restored.png": {
+      "bytes": 13883,
+      "sha256": "1399e6c13304444b3015e33c53429967de6cee7b7dbc70788ef59529ec4b8c2f"
+    },
+    "docs/evidence/hardware-variants/measurements.json": {
+      "bytes": 895,
+      "sha256": "89e576654889235f7f0d744b2e8f1088d362b3a52018e800fcf7f46ff05a9ae8"
     }
   },
   "scene_prefs_bytes": 44,
@@ -336,5 +352,10 @@
     "video": 704
   },
   "device_theme_ram_delta": 0,
-  "device_theme_pool_delta": 0
+  "device_theme_pool_delta": 0,
+  "hardware_flash_variants_emulated": [
+    "0x856014",
+    "0xB36014"
+  ],
+  "physical_hardware_qualification": false
 }

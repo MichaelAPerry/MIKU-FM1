@@ -1,0 +1,76 @@
+Cloning into 'build/dinghy'...
+HEAD is now at f77bf03 fm1_flash_map.h: accept the UC25HQ80 (0xB36014) of newer FM-1s beside the Puya 0x856014 – firmwares built on Dinghy saved to RAM only on it
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
+
+  0     0    0     0    0     0      0      0 --:--:--  0:00:01 --:--:--     0
+  1 24.8M    1  479k    0     0   196k      0  0:02:09  0:00:02  0:02:07  492k
+ 50 24.8M   50 12.5M    0     0  3710k      0  0:00:06  0:00:03  0:00:03 6463k
+100 24.8M  100 24.8M    0     0  6217k      0  0:00:04  0:00:04 --:--:-- 9712k
+JIELI_TOOLCHAIN=/home/runner/work/_temp/jieli/toolchain (jieli-linux-toolchains-20260730.1)
+Cloning into '/home/runner/work/_temp/ac79-sdk'...
+warning: refs/tags/AC79NN_SDK_V1.2.1_2023-12-13 b02c8c9354c077238ccbf764e36eff53782e1c16 is not a commit!
+Note: switching to 'd179b4484759423312073f5fbb232501aa491047'.
+
+You are in 'detached HEAD' state. You can look around, make experimental
+changes and commit them, and you can discard any commits you make in this
+state without impacting any branches by switching back to a branch.
+
+If you want to create a new branch to retain commits you create, you may
+do so (now or later) by using -c with the switch command. Example:
+
+  git switch -c <new-branch-name>
+
+Or undo this operation with:
+
+  git switch -
+
+Turn off this advice by setting config variable advice.detachedHead to false
+
+Updating files:  60% (9239/15258)
+Updating files:  61% (9308/15258)
+Updating files:  61% (9409/15258)
+Updating files:  62% (9460/15258)
+Updating files:  63% (9613/15258)
+Updating files:  64% (9766/15258)
+Updating files:  65% (9918/15258)
+Updating files:  66% (10071/15258)
+Updating files:  67% (10223/15258)
+Updating files:  68% (10376/15258)
+Updating files:  69% (10529/15258)
+Updating files:  70% (10681/15258)
+Updating files:  71% (10834/15258)
+Updating files:  72% (10986/15258)
+Updating files:  73% (11139/15258)
+Updating files:  74% (11291/15258)
+Updating files:  75% (11444/15258)
+Updating files:  76% (11597/15258)
+Updating files:  77% (11749/15258)
+Updating files:  78% (11902/15258)
+Updating files:  79% (12054/15258)
+Updating files:  80% (12207/15258)
+Updating files:  81% (12359/15258)
+Updating files:  82% (12512/15258)
+Updating files:  83% (12665/15258)
+Updating files:  84% (12817/15258)
+Updating files:  85% (12970/15258)
+Updating files:  86% (13122/15258)
+Updating files:  87% (13275/15258)
+Updating files:  88% (13428/15258)
+Updating files:  89% (13580/15258)
+Updating files:  90% (13733/15258)
+Updating files:  91% (13885/15258)
+Updating files:  92% (14038/15258)
+Updating files:  93% (14190/15258)
+Updating files:  94% (14343/15258)
+Updating files:  95% (14496/15258)
+Updating files:  96% (14648/15258)
+Updating files:  97% (14801/15258)
+Updating files:  98% (14953/15258)
+Updating files:  99% (15106/15258)
+Updating files: 100% (15258/15258)
+Updating files: 100% (15258/15258), done.

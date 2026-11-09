@@ -208,8 +208,7 @@ static volatile uint32_t video_total_bytes,video_min_bytes,video_max_bytes,video
 static void video_update(const PerfState *scene){
     uint32_t at,dt;int result;
 #if MIKU_VIDEO_BENCH
-    if(video_encoded>=MIKU_VIDEO_BENCH_FRAMES || !scene->playing || scene->mouth>=5u)return; /* bounded frames under live vocal+band load */
-    if(scene->effect&&scene->effect!=STFX_BEAMS&&scene->now_ms-scene->effect_epoch<480u)return; /* measure the expanded burst, not only launch pixels */
+    if(video_encoded>=MIKU_VIDEO_BENCH_FRAMES || !scene->playing)return; /* sustained encoding includes vocal rests during band playback */
 #else
     if(!video_usb_active()){video_encoding=0;return;}
     if(video_generation!=video_usb_generation()){

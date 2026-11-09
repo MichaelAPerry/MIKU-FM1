@@ -74,13 +74,13 @@ int main(void){
     assert(!video_encoded);
     scene.playing=1;scene.mouth=0;scene.sprite=4;scene.effect=STFX_FIREWORKS;scene.now_ms=479;
     for(unsigned i=0;i<10;i++)video_update(&scene);
-    assert(!video_encoded);scene.now_ms=480;
+    assert(!video_encoded&&video_encoding);scene.now_ms=480;
     for(unsigned i=0;i<240;i++)video_update(&scene);
     assert(video_encoded==3&&!video_failed&&video_last_bytes>0&&!busy);
     uint32_t n=video_last_bytes;memcpy(prior,video_jpeg,n);
     for(unsigned i=0;i<100;i++)video_update(&scene);
     assert(video_encoded==3&&!memcmp(prior,video_jpeg,n));
-    puts("native video benchmark: active vocal gate and three frozen frames OK");
+    puts("native video benchmark: playback gate and three frozen frames OK");
 }
 '''
     (p/'main.c').write_text(bench)

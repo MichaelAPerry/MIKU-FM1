@@ -91,7 +91,7 @@ jobs:
           bash tools/emu_smoke.sh build/native/miku-fm-video.fwsc build/evidence/0.8-ci/video-smoke "$PWD/build/fm1-emu-src/target/release/fm1-emu"
           python3 tests/test_native_video.py build/dinghy
           DINGHY_DEFS="-DMIKU_VIDEO_BENCH_FRAMES=150" bash native/build.sh --video-bench 2>&1 | tee build/evidence/0.8-ci/video-bench-build.log
-          python3 tools/video_emu_bench.py --emu build/fm1-emu-src/target/release/fm1-emu --out build/evidence/0.8-ci/jpeg-bench --frames 150 --ms 30000 --keys '100:HOME,200:PLAY,250-29500:n7'
+          python3 tools/video_emu_bench.py --emu build/fm1-emu-src/target/release/fm1-emu --out build/evidence/0.8-ci/jpeg-bench --frames 150 --require-dx7 --ms 35000 --keys '100:HOME,300:HOME,500:HOME,700:HOME,900:HOME,1200:REC,1500:EDIT,1700:HOME,1900:HOME,2100:HOME,2300:HOME,2500:HOME,2700:HOME,3100:PLAY,3250-33500:n7'
           python3 tools/video_bench_report.py build/evidence/0.8-ci/jpeg-bench
           cp build/native/*resources.json build/evidence/0.8-ci/
       - name: Retain native inputs and build evidence

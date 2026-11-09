@@ -69,8 +69,13 @@ def main():
         report['encoder_frames_per_second_emulator']=(expected-1)*24000000/elapsed if elapsed else 0
         report['mean_frame_wall_us_emulator']=word('video_total_ticks')/24/expected
         report['minimum_jpeg_bytes']=word('video_min_bytes');report['maximum_jpeg_bytes']=word('video_max_bytes')
+    if 'audio_dx_tracks' in symbols:
+        report['dx7_band_tracks']=word('audio_dx_tracks')
+        report['audio_playing_frames']=word('audio_playing_frames')
     (out/'measurements.json').write_text(json.dumps(report,indent=2)+'\n')
     print(json.dumps(report,indent=2))
+    if manifest.get('require_dx7') and (report.get('dx7_band_tracks')!=3 or report.get('audio_playing_frames',0)<44100):
+        raise SystemExit('native video benchmark did not exercise full-band DX7 playback')
     if report.get('audio_overruns',0):raise SystemExit('audio overruns during native JPEG encoding')
 
 if __name__=='__main__': main()

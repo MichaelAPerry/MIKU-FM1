@@ -1,0 +1,15 @@
+{
+  "status": "provisional listening shortlist; not integrated into firmware",
+  "source": {"repository": "asb2m10/dexed", "commit": "fea2f0f0f2c397799f59b27eb11c038cd34b22c5", "archive": "assets/builtin_pgm.zip"},
+  "redistribution": "Source archive and patch bytes are not bundled here; confirm patch rights before shipping. Engine licensing is separate.",
+  "voices": [
+    {"name": "glassbell", "bank": "SynprezFM_01.syx", "role": "glassy hook", "candidate_styles": ["Hyperpop", "Digicore"]},
+    {"name": "PLUCVIBE 1", "bank": "SynprezFM_05.syx", "role": "digital chord pluck", "candidate_styles": ["Future Bass", "Electropop"]},
+    {"name": "HYPE BASS2", "bank": "SynprezFM_05.syx", "role": "aggressive FM bass", "candidate_styles": ["Hyperpop", "Digicore"]},
+    {"name": "TIGHT BASS", "bank": "SynprezFM_07.syx", "role": "short rhythmic bass", "candidate_styles": ["Jersey Club"]},
+    {"name": "Slow3D Pad", "bank": "Dexed_01.syx", "role": "evolving chord bed", "candidate_styles": ["Future Bass"]},
+    {"name": "SYN-LEAD32", "bank": "SynprezFM_07.syx", "role": "melodic lead", "candidate_styles": ["Hyperpop", "Electropop"]},
+    {"name": "FmRhodes18", "bank": "SynprezFM_02.syx", "role": "expressive keys", "candidate_styles": ["Electropop"]},
+    {"name": "SPARKLE 1", "bank": "SynprezFM_05.syx", "role": "bright digital accent", "candidate_styles": ["Digicore", "Future Bass"]}
+  ]
+}

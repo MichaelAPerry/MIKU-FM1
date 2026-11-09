@@ -267,7 +267,7 @@ clean. Nothing was compiled with the native toolchain or run on a device.
 
 | Finding | Fix | Verified on host | Still unverified |
 |---|---|---|---|
-| F1 licensing | Not fixed in code. Ten original voices proposed (`docs/DX7_PATCH_PROPOSAL.md`) | candidates are valid and render | owner listening and choice; bank swap |
+| F1 licensing | Resolved by original voices: the owner approved the ten voices of `docs/DX7_PATCH_PROPOSAL.md`; they are now the factory bank (IDs 64..73, CUSTOM 74, USER 75 reserved) and the Dexed bytes, the extraction tool and the review fixtures are removed | host CTest 46/46; reference vectors regenerated from unmodified MSFA at `f67d41d` for the new bank (±128 tolerance holds); ASan+UBSan clean; native compile and link of the default and video profiles with the device toolchain (placeholder SDK, no valid package) | on-device listening and level trim of the ten voices; emulator smoke, timing and JPEG benchmark not rerun for the new bank |
 | F2 LFO delay | wrap test against the previous state | delays 0–99 for 65 s never drop | — |
 | F3 SAVE tails | new `EN_HUSH` / `dx_hush` (≤2 blocks) used by SAVE; quiet-gain retirement; "SONG SAVED - LOOK NOT SAVED" | hush clears `act` in 2 blocks; factory tails retire about 35 % sooner | native compile; device feel |
 | F4 edit loss | CUSTOM is its own MIXER stop with a one-level copy; second press required to replace an edit (MIXER and BANK REC) | syntax-checked extracts only | native compile; inline main-loop logic not unit-tested |
@@ -279,3 +279,5 @@ clean. Nothing was compiled with the native toolchain or run on a device.
 
 Retirement uses a −72 dBFS gain floor (`DX_QUIET`), so very slow edited releases (R4 = 0, about 4 minutes) still hold a
 voice until stolen or hushed. SAVE no longer waits on them.
+
+**F1 resolved by original voices:** the compiled bank is now ten original voices authored in `tools/dx7_candidates.py` (GPL-3.0-only project data); the eight Dexed/SynprezFM voices no longer ship in firmware, data or fixtures. Sections 1–6 above describe the state at the reviewed head and are left unchanged as history.

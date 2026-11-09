@@ -1,7 +1,8 @@
 /* SPDX-License-Identifier: GPL-3.0-only */
 #include "dx7_edit.h"
 #include "firmware/audio/dx7/bank.h"
-uint32_t db_active(const Song *g,uint32_t t){return g&&(t==1||t==2)&&g->trk[t].preset>=SG_DX7_FIRST&&g->trk[t].preset<=SG_DX7_CUSTOM;}
+_Static_assert(SG_DX7_FIRST+DX7_BANK_N<=SG_DX7_CUSTOM,"factory preset IDs collide with CUSTOM");
+uint32_t db_active(const Song *g,uint32_t t){return g&&(t==1||t==2)&&g->trk[t].preset>=SG_DX7_FIRST&&g->trk[t].preset<=SG_DX7_LAST;}
 uint32_t db_select(Song *g,uint32_t t,uint32_t bank){
     uint32_t i;if(!g||(t!=1&&t!=2)||bank>=DX7_BANK_N)return 0;
     for(i=0;i<128;i++)g->dx7[t-1][i]=dx7_bank[bank][i];

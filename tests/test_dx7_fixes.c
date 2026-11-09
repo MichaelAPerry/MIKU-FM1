@@ -70,7 +70,7 @@ static void test_hush_and_retire(void){
         assert(st*4<=peak(out,0,2*DX_BLOCK)+1);
     }
     /* factory patches: release tails are never truncated while audible */
-    for(unsigned k=0;k<8;k++){
+    for(unsigned k=0;k<DX7_BANK_N;k++){
         unsigned n=0;
         dx_init(&s,4);assert(dx_patch(&s,dx7_bank[k]));dx_set_mix(&s,100,64);dx_note_on(&s,60,100);blocks(SR/DX_BLOCK);dx_note_off(&s,60);
         while(dx_active(&s)&&n<30u*SR/DX_BLOCK){

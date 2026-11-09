@@ -1,16 +1,18 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: GPL-3.0-only
-"""Original DX7 candidate voices for the GEN styles, authored for MIKU-FM1.
+"""The ten original DX7 factory voices (two per GEN style), authored for MIKU-FM1.
 
-Every value below was written for this project (no third-party cartridge data), so the
-voices can ship under the project licence. Writes assets/dx7/candidates.packed (N x 128-byte
-DX7 packed voices) and prints a summary. Review material only: the owner chooses the bank.
+Every value below was written for this project (no third-party cartridge data), so the voices
+ship under the project licence (GPL-3.0-only). This file is the single source of truth: it writes
+assets/dx7/factory.packed (10 x 128-byte DX7 packed voices, bank index = list order), which
+tools/gen_dx7_bank.py turns into firmware/audio/dx7/bank.h. Order matters: GEN style s uses
+factory voice 2*s for CHORDS and 2*s+1 for BASS.
     python3 tools/dx7_candidates.py [--check]
 """
 import sys
 from pathlib import Path
 
-OUT = Path(__file__).resolve().parents[1] / 'assets/dx7/candidates.packed'
+OUT = Path(__file__).resolve().parents[1] / 'assets/dx7/factory.packed'
 
 def op(r=(99, 50, 35, 50), l=(99, 80, 0, 0), ol=0, ratio=1, fine=0, det=7, kvs=2, rs=2,
        bp=39, ld=0, rd=0, lc=0, rc=0, ams=0, fixed=0):
@@ -114,7 +116,7 @@ def main():
     data = bytes(b for _, _, v in V for b in v)
     if '--check' in sys.argv:
         ok = OUT.exists() and OUT.read_bytes() == data
-        print('candidates.packed up to date' if ok else 'candidates.packed differs; rerun'); sys.exit(0 if ok else 1)
+        print('factory.packed up to date' if ok else 'factory.packed differs; rerun'); sys.exit(0 if ok else 1)
     OUT.write_bytes(data)
     for i, (style, role, v) in enumerate(V):
         print(f'{i}: {bytes(v[118:]).decode()!r:13} {style:12} {role:6} alg {v[110]+1}')

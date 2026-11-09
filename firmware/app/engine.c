@@ -31,7 +31,7 @@ static void hnote(Engine *e, int32_t note, uint32_t cons, uint32_t vw, uint32_t 
     fv_note_on_mora(&e->fv2, (uint8_t)(note < 1 ? 1 : note > 127 ? 127 : note), (uint8_t)cons, (uint8_t)vw, (uint8_t)vel);
 }
 static void voff(Engine *e) { fv_note_off(&e->fv); fv_note_off(&e->fv2); }
-uint32_t en_pre(uint32_t t, uint32_t p) { return (t==TR_CHORDS||t==TR_BASS)&&p>=SG_DX7_FIRST&&p<=SG_DX7_CUSTOM?p:p < npre[t] ? p : 0; }
+uint32_t en_pre(uint32_t t, uint32_t p) { return (t==TR_CHORDS||t==TR_BASS)&&p>=SG_DX7_FIRST&&p<=SG_DX7_LAST?p:p < npre[t] ? p : 0; }
 void en_init(Engine *e, const Song *g) {
     uint32_t t;
     e->g = g;

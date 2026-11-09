@@ -76,12 +76,13 @@ fixtures adapt Google MSFA (Copyright2012–2013 Google Inc.) under Apache-2.0.
 The complete license is in `firmware/audio/dx7/LICENSE`; source revision and
 changes are in its README. The combined application remains GPL-3.0-only.
 
-`assets/dx7/factory.packed` and generated `firmware/audio/dx7/bank.h` retain eight
-unchanged voices from Dexed's GPLv3-distributed `assets/builtin_pgm.zip`, pinned
-at fea2f0f0f2c397799f59b27eb11c038cd34b22c5. See `assets/dx7/README.md` for
-source/reproduction and individual source bank/program hashes in the verified
-shortlist. Retain Dexed's patch-compilation credit to Jean-Marc Desprez (SynprezFM)
-and its program-contributor credits: Dave Benson, Frank Carvalho, Tim Conrardy,
-Jack Deckard, Chris Dodunski, Tim Garrett, Hitaye, Stephan Ibsen, Christian Jezreel,
-Narfman, Godric Wilkie. Engine and patch licenses do not change the character
-art's PCL terms. DX7 is a Yamaha product name; this remains unofficial software.
+`assets/dx7/factory.packed` and generated `firmware/audio/dx7/bank.h` hold ten
+**original** DX7 voices authored for this project in `tools/dx7_candidates.py`. They
+contain no third-party patch data and are GPL-3.0-only project data like the rest of
+the application. (An earlier eight-voice bank taken from Dexed's bundled cartridges had
+no clear redistribution licence and was removed; it appears only in historical
+documents.) Users may load other DX7 voices themselves; MIKU does not redistribute them.
+The MSFA engine's Apache-2.0 licence is separate and unchanged. The regression
+fixtures in `firmware/audio/dx7/reference_vectors.h` are raw outputs of unmodified MSFA
+for these original voices (Apache-2.0 header retained). Engine and patch licenses do not
+change the character art's PCL terms. DX7 is a Yamaha product name; this remains unofficial software.

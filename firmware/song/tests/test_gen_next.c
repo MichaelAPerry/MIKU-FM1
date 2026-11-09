@@ -6,19 +6,20 @@
 #define CHECK(x) do{if(!(x)){fprintf(stderr,"line %d: %s\n",__LINE__,#x);exit(1);}}while(0)
 static Song a,b,copy,decoded;
 static GenNextWorkspace workspace;
-static uint8_t bytes[SONG_ENC_SIZE];
+static uint8_t bytes[SONG_ENC_MAX]; /* GEN maps CHORDS/BASS to factory DX7 voices, so songs encode as v5 */
 int main(void) {
     GenNextCfg c={1,0,0,0,0,75,70};
     for(int style=0;style<GX_N;style++)for(int seed=1;seed<=7;seed+=3)for(int key=0;key<12;key++)for(int minor=0;minor<2;minor++) {
         c.style=(uint8_t)style;c.seed=(uint16_t)seed;c.key=(uint8_t)key;c.minor=(uint8_t)minor;c.lock=0;
         sg_init(&a);sg_init(&b);CHECK(gen_next_song(&a,&c));CHECK(gen_next_song_ws(&b,&c,&workspace));CHECK(!memcmp(&a,&b,sizeof a));
-        CHECK(a.nrows>=16 && a.nrows<=NROW);CHECK(song_encode(&a,bytes,sizeof bytes)==sizeof bytes);
+        CHECK(a.nrows>=16 && a.nrows<=NROW);CHECK(song_encode(&a,bytes,sizeof bytes)==SONG_ENC_MAX&&bytes[4]==5);
+        CHECK(a.trk[TR_CHORDS].preset==SG_DX7_FIRST+2u*(unsigned)style&&a.trk[TR_BASS].preset==SG_DX7_FIRST+2u*(unsigned)style+1u);
         CHECK(song_decode(&decoded,bytes,sizeof bytes)==SIO_OK);CHECK(!memcmp(&a,&decoded,sizeof a));
         for(int t=0;t<NTRK;t++)for(int p=0;p<NPAT;p++)for(int s=0;s<NSTEP;s++)CHECK(sg_step_ok(t,&a.pat[t][p][s]));
         /* Locked tracks and all rows remain bit-exact, including non-generated step data. */
         copy=a;c.lock=1u<<TR_CHORDS;c.seed+=19;CHECK(gen_next_song(&a,&c));
         CHECK(!memcmp(copy.row,a.row,sizeof a.row));CHECK(!memcmp(copy.pat[TR_CHORDS],a.pat[TR_CHORDS],sizeof a.pat[TR_CHORDS]));
-        CHECK(!memcmp(&copy.trk[TR_CHORDS],&a.trk[TR_CHORDS],sizeof(Trk)));
+        CHECK(!memcmp(&copy.trk[TR_CHORDS],&a.trk[TR_CHORDS],sizeof(Trk))&&!memcmp(copy.dx7[0],a.dx7[0],128));
         CHECK(!gen_next_phrase(&a,&c,2,TR_CHORDS,1));
         /* Phrase rewrite must alter only the referenced pattern. */
         c.lock=0;copy=a;b=a;int row=3,t=TR_DRUMS,p=a.row[row].pat[t];

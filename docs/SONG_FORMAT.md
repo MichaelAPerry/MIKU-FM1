@@ -4,9 +4,20 @@
 
 Projects using DX7 on chords/bass use4764-byte v5 records. The v4 prefix is
 unchanged; two128-byte standard packed DX7 snapshots append after the32-byte
-voice block and before the final CRC. Chord/bass preset64–71 identifies factory
-origins;72 marks an edited patch. Playback uses the embedded data, not a future
-factory-bank lookup. Classic projects still write4508-byte v4. Readers continue
+voice block and before the final CRC. Chord/bass preset IDs (v5 only):
+
+| ID | Meaning |
+|---:|---|
+| 0..7 | classic presets (unchanged) |
+| 64..73 | factory DX7 voice, 64 + bank index (`SG_DX7_FIRST`, 10 original voices, `DX7_BANK_N`) |
+| 74 | `SG_DX7_CUSTOM`: an edited patch |
+| 75 | `SG_DX7_USER`: a voice loaded from a future imported user bank (reserved; accepted and played exactly like CUSTOM) |
+
+`SG_DX7_LAST` (75) bounds the valid range. Playback always uses the embedded
+snapshot, never a factory-bank lookup. **Pre-release note:** v5 was never released
+(the first factory bank used IDs 64..71 and CUSTOM = 72). A pre-release v5 file
+with ID 72 now reads as factory index 8's origin label, but it still plays its
+embedded snapshot, so it sounds as saved. Classic projects still write 4508-byte v4. Readers continue
 to accept v1–v4; old firmware rejects v5. Ten16 KiB slot strides/addresses are
 unchanged. CRC and all active patch fields validate before mutating a song.
 See [DX7 implementation and compatibility](DX7_BANK_HANDOFF.md). The v4 tables

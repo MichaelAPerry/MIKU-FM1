@@ -27,7 +27,7 @@ int main(void){
   long long power=0;for(unsigned i=0;i<32768;i++){assert(a[i]>=-32768&&a[i]<=32767);power+=(long long)a[i]*a[i];}assert(power>1000000);
   dx_note_off(&s,60);for(unsigned i=0;i<300;i++){int32_t out[512]={0};dx_render(&s,out,256);}assert(!dx_active(&s));
  }
- /* Actual shortlisted voices: independent original-MSFA raw reference, LFO depth disabled. */
+ /* Actual factory voices: independent original-MSFA raw reference (tools/gen_dx7_reference.py), LFO depth disabled. */
  for(unsigned preset=0;preset<DX7_BANK_N;preset++){
   memcpy(patch,dx7_bank[preset],128);assert(dx_patch_valid(patch));patch[114]=patch[115]=0;
   dx_init(&s,1);assert(dx_patch(&s,patch));dx_note_on(&s,60,100);

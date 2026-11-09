@@ -28,11 +28,14 @@ python3 tools/wardrobe_validate.py assets/singer/outfits/manifest.json \
   --expected-ready 11 --out build/evidence/wardrobe-validation
 ```
 
-The tool reads manifest-relative `faces` and `stage` paths, exact uniform4x3portrait
-and4x2dance grids, preserves hashes, detects blank cells and duplicate complete
+The tool reads manifest-relative `faces` and `stage` paths with exact uniform4x3
+portrait and4x2dance grids, or a `sheet` path with `layout:"paired4x5"` whose first
+three rows are portraits and last two rows are dance poses. It preserves hashes, detects blank cells and duplicate complete
 source pairs, checks that original reference assets remain untouched, and creates
 one20-state contact sheet per outfit. It rejects missing production pairs by
-default. Pending entries are excluded only with the explicitly requested
+default. The example count11is the full production candidate set; choose the accepted
+count explicitly after the measured image budget, with at least10total outfits
+including the original if needed. Pending entries are excluded only with the explicitly requested
 `--allow-pending` inspection option. `--expected-ready` makes a shortfall fail.
 
 The metrics do not certify artistic identity, matched clothing, intelligible mouth

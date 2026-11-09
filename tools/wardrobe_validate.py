@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: GPL-3.0-only
 """Independent source QA for matched portrait/dance production wardrobe sheets.
 
-Reads uniform 4x3 portrait and 4x2 dance sources named by wardrobe_pack's manifest.
+Reads uniform 4x3 portrait/4x2 dance sources or one paired4x5 source sheet.
 Does not alter artwork, quantize it, or treat a concept sheet as an animation atlas.
 Pixel metrics are diagnostics, not automatic approval of a design or identity.
 """
@@ -28,9 +28,11 @@ def source_path(parent, name):
     return path if path.is_absolute() else parent / path
 
 
-def sheet(path, cols, rows):
+def sheet(path, cols, rows, region=None):
     with Image.open(path) as src:
         im = src.convert("RGBA")
+    if region is not None:
+        im = im.crop(region)
     if im.width % cols or im.height % rows:
         raise ValueError(f"{path}: {im.size} is not an exact {cols}x{rows} grid")
     w, h = im.width // cols, im.height // rows
@@ -55,7 +57,8 @@ def sheet(path, cols, rows):
         frames.append(cell)
     unique = len({s["rgba_sha256"] for s in stats})
     return {"path": str(path), "sha256": sha(path.read_bytes()), "size": list(im.size),
-            "cell": [w, h], "frames": len(frames), "distinct_frames": unique,
+            "cell": [w, h], "source_region": list(region) if region else None,
+            "frames": len(frames), "distinct_frames": unique,
             "frame_metrics": stats}, frames
 
 
@@ -97,19 +100,31 @@ def main():
         if ident in ids:
             report["errors"].append(f"Duplicate outfit ID: {ident}")
         ids.add(ident)
+        layout = outfit.get("layout", "uniform")
+        paired = outfit.get("sheet") if layout == "paired4x5" else None
         faces = outfit.get("faces", outfit.get("portrait_atlas"))
         stage = outfit.get("stage", outfit.get("dance_atlas"))
-        if not faces or not stage or outfit.get("status") == "pending":
+        if (not paired and (not faces or not stage)) or outfit.get("status") == "pending":
             row["ready"] = False
             if not args.allow_pending:
                 report["errors"].append(f"{name}: no matched production portrait/dance source pair")
             continue
-        if outfit.get("layout", "uniform") != "uniform" or outfit.get("margin", 0) != 0:
-            report["errors"].append(f"{name}: validator requires explicit uniform source grids without margins")
+        if layout not in ["uniform", "paired4x5"] or outfit.get("margin", 0) != 0:
+            report["errors"].append(f"{name}: validator requires uniform or paired4x5 grids without margins")
             continue
         try:
-            row["faces"], fs = sheet(source_path(args.manifest.parent, faces), 4, 3)
-            row["stage"], ss = sheet(source_path(args.manifest.parent, stage), 4, 2)
+            if paired:
+                path = source_path(args.manifest.parent, paired)
+                with Image.open(path) as im:
+                    width, height = im.size
+                if width % 4 or height % 5:
+                    raise ValueError(f"{path}: {width}x{height} is not exact paired4x5 grid")
+                split = height // 5 * 3
+                row["faces"], fs = sheet(path, 4, 3, (0, 0, width, split))
+                row["stage"], ss = sheet(path, 4, 2, (0, split, width, height))
+            else:
+                row["faces"], fs = sheet(source_path(args.manifest.parent, faces), 4, 3)
+                row["stage"], ss = sheet(source_path(args.manifest.parent, stage), 4, 2)
             pair = (row["faces"]["sha256"], row["stage"]["sha256"])
             if pair in seen_pairs:
                 report["errors"].append(f"{name}: duplicate complete source pair masquerades as another outfit")

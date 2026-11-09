@@ -1,21 +1,46 @@
 /* SPDX-License-Identifier: GPL-3.0-only */
+/* Five independently clipped bands; no framebuffer or additional sprite storage. */
+#define LOOK_BG RGB(8,9,13)
+#define LOOK_CARD RGB(20,22,29)
+#define LOOK_MUTED RGB(145,150,164)
+static void look_tile(int32_t x,int32_t y,const char *knob,const char *value,uint16_t accent){
+    cv_rect(x,y,110,26,LOOK_CARD);cv_rect(x,y+5,2,16,accent);
+    txt(x+7,y+5,&FONT_S,knob,LOOK_MUTED,0);txt(x+104,y+5,&FONT_S,value,C_WHITE,2);
+}
 static void pg_visuals(uint32_t band){
     static const char *fx[]={"OFF","FIREWORKS","SPARKLES","CONFETTI","SMOKE","BEAMS"};
     static const char *bg[]={"ORIGINAL","GRID","HORIZON","CONCERT","LED WALL"};
     static const char *fr[]={"NONE","CORNERS","RAILS"};
-    char s[32];uint32_t y=band*48u;
-    if(!band){char name[18];sname_slot(name);s[0]=0;cat(s,"LOOK ");cat(s,name);if(modified)cat(s,"*");txt(120,4,&FONT_S,s,C_PNK,1);txt(120,26,&FONT_S,"SELECT: STYLE / OUTFIT",C_WHITE,1);}
-    else if(band==1){
-        uint32_t xx,yy;uint8_t index;const WardrobeSprites *w=WD_OUTFITS+performance.outfit;
-        txt(8,y+4,&FONT_S,w->name,C_PNK,0);txt(8,y+26,&FONT_S,performance.palette?"PRESETS: WARM":"PRESETS: STYLE",C_WHITE,0);
-        for(yy=0;yy<42u;yy++)for(xx=0;xx<42u;xx++){
-            uint32_t px=xx*240u/42u,py=yy*214u/42u;uint16_t colour=perf_pixel(&performance,px,py);
-            index=0;if(px>=28u&&px<211u&&py<213u&&spr_pixel(w->stage,performance.sprite,(px-28u)/3u,py/3u,&index)&&index)colour=w->stage_palette[index];
-            cv_rect(195+(int32_t)xx,(int32_t)y+2+(int32_t)yy,1,1,colour);
+    const WardrobeSprites *w=WD_OUTFITS+performance.outfit;
+    char s[32];uint32_t x,y;uint8_t index;
+    cv_rect(0,band*48u,240,48,LOOK_BG);
+    if(!band){
+        txt(8,3,&FONT_S,"SELECT OUTFIT",C_TEL,0);s[0]=0;catn(s,performance.outfit+1u);cat(s," / 12");txt(232,3,&FONT_S,s,LOOK_MUTED,2);
+        txt(8,27,&FONT_S,w->name,C_WHITE,0);if(modified)cv_rect(228,32,5,5,C_PNK);
+    }else if(band<3u){
+        /* Character keeps its aspect ratio; stage geometry fits the preview card. */
+        for(y=(band-1u)*48u;y<band*48u;y++)for(x=0;x<140u;x++){
+            uint32_t px=x*240u/140u,py=y*214u/96u;
+            uint16_t colour=perf_pixel(&performance,px,py);index=0;
+            if(x>=29u&&x<111u&&spr_pixel(w->stage,performance.sprite,(x-29u)*71u/96u,y*71u/96u,&index)&&index)colour=w->stage_palette[index];
+            cv_rect(8+(int32_t)x,48+(int32_t)y,1,1,colour);
         }
-        for(yy=0;yy<22u;yy++)for(xx=0;xx<22u;xx++){index=0;if(spr_pixel(w->faces,0,xx*4u,yy*4u,&index)&&index)cv_rect(167+(int32_t)xx,(int32_t)y+10+(int32_t)yy,1,1,w->face_palette[index]);}
+        cv_rect(156,48,76,64,LOOK_CARD);
+        if(band==1u)for(y=0;y<44u;y++)for(x=0;x<44u;x++){
+            index=0;if(spr_pixel(w->faces,0,x*90u/44u,y*90u/44u,&index)&&index)cv_rect(172+(int32_t)x,52+(int32_t)y,1,1,w->face_palette[index]);
+        }
+        if(band==2u){
+            txt(194,96,&FONT_S,"PRESETS",LOOK_MUTED,1);
+            cv_rect(156,116,76,28,LOOK_CARD);txt(194,122,&FONT_S,performance.palette?"WARM":"STYLE",C_TEL,1);
+        }
+        cv_rect(8,143,140,1,C_TEL);
+    }else{
+        look_tile(8,150,"K1",bg[performance.background],C_TEL);
+        look_tile(122,150,"K2",fr[performance.frame],C_TEL);
+        look_tile(8,180,"K3",fx[performance.effect],C_PNK);
+        s[0]=0;catn(s,performance.intensity);cat(s,"%");look_tile(122,180,"K4",s,C_PNK);
+        cv_rect(129,202,(int32_t)performance.intensity,2,C_PNK);
+        for(x=0;x<WD_OUTFIT_N;x++)cv_rect(9+(int32_t)x*19,211,13,2,x==performance.outfit?C_TEL:LOOK_CARD);
+        txt(120,220,&FONT_S,"REC FX  EDIT BACK  SAVE",LOOK_MUTED,1);
     }
-    else if(band==2){txt(8,y+4,&FONT_S,"K1 BACKGROUND",C_WHITE,0);txt(232,y+4,&FONT_S,bg[performance.background],C_PNK,2);txt(8,y+26,&FONT_S,"K2 FRAME",C_WHITE,0);txt(232,y+26,&FONT_S,fr[performance.frame],C_PNK,2);}
-    else if(band==3){txt(8,y+4,&FONT_S,"K3 EFFECT",C_WHITE,0);txt(232,y+4,&FONT_S,fx[performance.effect],C_PNK,2);s[0]=0;cat(s,"K4 INTENSITY ");catn(s,performance.intensity);txt(120,y+26,&FONT_S,s,C_WHITE,1);}
-    else{txt(120,y+4,&FONT_S,"REC: TRIGGER EFFECT",C_WHITE,1);txt(120,y+26,&FONT_S,"EDIT: DANCE SAVE: KEEP",C_PNK,1);}
 }

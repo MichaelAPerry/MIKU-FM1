@@ -108,7 +108,10 @@ _Static_assert(WD_OUTFIT_N==PERF_OUTFIT_N,"wardrobe metadata mismatch");
 #undef clr
 #include "firmware/app/engine.c"
 #define BUDGET_TICKS (5805u*FM1_TICKS_PER_US)       /* 256 frames at 44.1 kHz */
-#define BG RGB(7,17,34)
+#define BG RGB(8,10,24)
+#define UI_BLUE RGB(77,190,255)
+#define UI_PINK RGB(255,91,172)
+#define UI_EDGE RGB(65,51,100)
 #define FACE_Y 184u
 enum { PG_STAGE, PG_DANCE, PG_SONG, PG_PATTERN, PG_MIXER, PG_GEN, PG_LYRICS, PG_VISUALS, PG_LIBRARY, PG_N };
 static Engine en;
@@ -495,21 +498,33 @@ static void dance_update(void){
 }
 /* ---- pages. The screen below the face is drawn in bands of 48 lines (bit n of `dirty` = band n; bit 5 = the STAGE strip) */
 static uint32_t shown_row(void){return playing?(ppos>>8&255u):crow;}
-static void band_begin(uint32_t b){cv_begin(240,48,BG);cv_oy=-(int32_t)(b*48u);}
+/* Shared integer-only chrome. Gradients are procedural, with no new buffers. */
+static void ui_panel(int32_t x,int32_t y,int32_t w,int32_t h,uint32_t selected){
+    int32_t k;uint32_t v;
+    for(k=0;k<h;k+=4){v=(uint32_t)k*8u/(uint32_t)h;cv_rect(x,y+k,w,h-k<4?h-k:4,RGB(12+v+(selected?7u:0u),16+v,32+v*2u));}
+    cv_rect(x,y,w,1,selected?UI_BLUE:UI_EDGE);cv_rect(x,y,1,h,selected?UI_BLUE:UI_EDGE);
+    cv_rect(x,y+h-1,w,1,selected?UI_PINK:UI_EDGE);cv_rect(x+w-1,y,1,h,UI_EDGE);
+}
+static void ui_rim(int32_t y,int32_t h){
+    cv_rect(0,y,1,h,UI_BLUE);cv_rect(239,y,1,h,UI_PINK);
+    cv_rect(0,y,120,1,UI_BLUE);cv_rect(120,y,120,1,UI_PINK);
+    cv_rect(0,y+h-1,120,1,UI_PINK);cv_rect(120,y+h-1,120,1,UI_BLUE);
+}
+static void band_begin(uint32_t b){cv_begin(240,48,BG);cv_oy=-(int32_t)(b*48u);if(!b)ui_panel(1,0,238,48,1);}
 static void band_end(uint32_t b){cv_oy=0;cv_blit(0,b*48u);}
 static void txt(int32_t x,int32_t y,const felucca_font_t *f,const char *s,uint16_t c,int al){
     int32_t w=text_w(f,s);
     cv_text(al==1?x-w/2:al==2?x-w:x,y,f,s,c);
 }
 static void cell(int32_t x,int32_t y,int32_t w,int32_t h,const char *s,uint16_t fg,uint16_t bg){
-    cv_rect(x,y,w,h,bg);txt(x+w/2,y+(h-16)/2,&FONT_S,s,fg,1);
+    cv_rect(x,y,w,h,bg);cv_rect(x,y,w,1,UI_BLUE);cv_rect(x,y+h-1,w,1,UI_PINK);txt(x+w/2,y+(h-16)/2,&FONT_S,s,fg,1);
 }
 static void head(const char *name,const char *l2,uint16_t c2){
     char s[12];
     uint32_t t=fm1_ms;
     if(toast_s && (int32_t)(t-toast_until)<0)txt(4,0,&FONT_L,toast_s,toast_err?RGB(255,110,110):RGB(249,207,94),0);
     else{
-        txt(4,0,&FONT_L,name,RGB(64,222,209),0);
+        txt(4,0,&FONT_L,name,UI_BLUE,0);
         s[0]=0;cat(s,tname[trk]);txt(236,8,&FONT_S,s,tcol[trk],2);
     }
     txt(4,32,&FONT_S,l2,c2,0);
@@ -535,16 +550,16 @@ static void pg_song(uint32_t b){
         int32_t y=(int32_t)(48u+(b-1u)*48u+i*24u);
         r=top+(b-1u)*2u+i;
         if(r>=sg.nrows)continue;
-        if(r==crow)cv_rect(0,y,240,24,RGB(24,40,76));
+        ui_panel(2,y,236,24,r==crow);
         s[0]=0;if(r<9u)cat(s," ");catn(s,r+1u);
         txt(6,y+4,&FONT_S,s,(playing && (ppos>>8&255u)==r)?RGB(249,207,94):RGB(150,160,190),0);
         if(playing && (ppos>>8&255u)==r)cv_rect(0,y+2,3,20,RGB(249,207,94));
-        txt(34,y+4,&FONT_S,sname[sg.row[r].sect],RGB(64,222,209),0);
+        txt(34,y+4,&FONT_S,sname[sg.row[r].sect],UI_BLUE,0);
         {uint32_t t;for(t=0;t<NTRK;t++){
             uint32_t p=sg.row[r].pat[t];
             s[0]=0;if(p==ROW_OFF)cat(s,"--");else catn(s,p+1u);
             if(r==crow && t==trk)cell(110+(int32_t)t*32,y+1,30,22,s,BG,tcol[t]);
-            else cell(110+(int32_t)t*32,y+1,30,22,s,p==ROW_OFF?RGB(80,90,120):tcol[t],RGB(14,26,50));
+            else cell(110+(int32_t)t*32,y+1,30,22,s,p==ROW_OFF?RGB(80,90,120):tcol[t],RGB(17,19,37));
         }}
     }
 }
@@ -552,8 +567,8 @@ static void roll(void){
     uint32_t p=pat_of(),i,lo=127,hi=0,ph=playing && (ppos>>8&255u)==crow?(ppos&255u):99u;
     int32_t cw=15;
     for(i=0;i<NSTEP;i++){                                  /* beats and the cursor column */
-        cv_rect((int32_t)i*cw,52,cw-1,136,(i&3u)?RGB(12,24,46):RGB(16,30,58));
-        if(i==cstep)cv_rect((int32_t)i*cw,52,cw-1,136,RGB(34,52,96));
+        cv_rect((int32_t)i*cw,52,cw-1,136,(i&3u)?RGB(13,15,31):RGB(24,23,46));
+        if(i==cstep)cv_rect((int32_t)i*cw,52,cw-1,136,RGB(47,39,82));
     }
     if(p==ROW_OFF){txt(120,100,&FONT_S,"SILENT HERE",RGB(150,160,190),1);txt(120,124,&FONT_S,"PLAY A KEY OR PRESETS",RGB(100,110,140),1);}
     else if(trk==TR_DRUMS){
@@ -637,7 +652,7 @@ static void pg_mixer(uint32_t b){
         int32_t y=(int32_t)b*48;
         uint32_t mu=k->mute;
         e=en_pre(t,k->preset);pn=pf.pan[t];
-        if(t==trk)cv_rect(0,y,240,47,RGB(24,40,76));
+        ui_panel(3,y+1,234,45,t==trk);
         txt(6,y+4,&FONT_S,tname[t],mu?RGB(90,100,130):tcol[t],0);
         txt(88,y+4,&FONT_S,pnm[t][e],RGB(150,160,190),0);
         if(mu)cell(196,y+3,18,18,"M",BG,RGB(255,110,110));
@@ -656,10 +671,10 @@ static void pg_mixer(uint32_t b){
 enum { VS_NONE, VS_KNOB, VS_CHR, VS_LANG, VS_BPM };
 static uint32_t vis_kind,vis_id,dial_ms;
 static int32_t dial_q=-1;                                  /* the dial's shown position, syllables Q8 (eases toward ed_mora) */
-#define C_PNK RGB(247,123,180)
-#define C_TEL RGB(64,222,209)
+#define C_PNK UI_PINK
+#define C_TEL UI_BLUE
 #define C_DIMR RGB(60,72,110)
-#define C_PNL RGB(16,30,58)
+#define C_PNL RGB(24,23,46)
 static int32_t isin(int32_t a){return fv_sin[a&255];}     /* 256 steps a turn, Q15 */
 static int32_t icos(int32_t a){return fv_sin[(a+64)&255];}
 static uint32_t hsh(uint32_t i){i*=2654435761u;return i>>24;}
@@ -758,7 +773,7 @@ static void graph(uint32_t id,int32_t v){                  /* id: bank*4+knob (0
 static void pg_stage(void){
     char s[30];
     uint32_t vis=toast_s && (int32_t)(fm1_ms-toast_until)<0 && toast_s==popbuf && vis_kind;
-    cv_begin(240,56,RGB(12,20,40));
+    cv_begin(240,56,BG);ui_panel(1,0,238,56,0);
     if(vis){
         int32_t v,mx=100;
         const char *nm;
@@ -783,7 +798,7 @@ static void pg_stage(void){
             cv_text(236-text_w(&FONT_S,s),38,&FONT_S,s,RGB(249,207,94));
         }
     }
-    cv_blit(0,FACE_Y);
+    ui_rim(0,56);cv_blit(0,FACE_Y);
 }
 static void pop(uint32_t kind,uint32_t id,const char *name,uint32_t v){   /* what a control just did: the picture on STAGE, text on DANCE */
     popbuf[0]=0;cat(popbuf,name);
@@ -857,9 +872,10 @@ static void pg_gen(uint32_t b){
         s[0]=0;cat(s,"ROW ");catn(s,crow+1u);txt(236,32,&FONT_S,s,RGB(249,207,94),2);
         return;
     }
+    if(b>0u)ui_panel(2,(int32_t)b*48,236,47,b==1u);
     if(b==1u){
         txt(4,52,&FONT_S,"STYLE  K1",RGB(100,110,140),0);
-        txt(4,66,&FONT_L,native_gen_style(),RGB(64,222,209),0);
+        txt(4,66,&FONT_L,native_gen_style(),UI_BLUE,0);
         txt(236,52,&FONT_S,"KEY K2  K3",RGB(100,110,140),2);
         s[0]=0;cat(s,kn12[gcf.key%12u]);cat(s,gcf.scale?" MIN":" MAJ");
         txt(236,66,&FONT_L,s,RGB(249,207,94),2);
@@ -892,14 +908,14 @@ static void pg_dance(void){
     up[i]=0;
     num(s+4,sg.bpm);
     r1[0]=0;cat(r1,"R");catn(r1,r+1u);cat(r1," ");cat(r1,r<sg.nrows?sname[sg.row[r].sect]:"");
-    cv_begin(240,26,RGB(12,20,40));
+    cv_begin(240,26,BG);ui_panel(1,0,238,26,0);
     if(toast_s && (int32_t)(fm1_ms-toast_until)<0)txt(120,4,&FONT_S,toast_s,toast_err?RGB(255,110,110):RGB(249,207,94),1);
     else{
         cv_text(4,4,&FONT_S,playing?r1:"EDIT: LOOKS",RGB(150,160,190));
         cv_text(120-text_w(&FONT_S,playing?up:"ARP SONGS")/2,4,&FONT_S,playing?up:"ARP SONGS",C_WHITE);
         cv_text(236-text_w(&FONT_S,s),4,&FONT_S,s,RGB(249,207,94));
     }
-    cv_blit(0,214);
+    ui_rim(0,26);cv_blit(0,214);
 }
 #include "lyrics_ui.inc"
 #include "visuals_ui.inc"
@@ -909,7 +925,15 @@ static void redraw(void){
     uint32_t b;
     if(full){
         full=0;
-        if(!page){lcd_fill(0,0,240,240,RGB(12,20,40));face_draw(face_cur,0,0,SINGER_FACE_W,SINGER_FACE_H);dirty|=0x20u;}
+        if(!page){
+            lcd_fill(0,0,240,240,RGB(12,20,40));face_draw(face_cur,0,0,SINGER_FACE_W,SINGER_FACE_H);
+            for(b=0;b<2u;b++){
+                uint32_t x=b?216u:8u,edge=b?230u:8u;uint16_t c=b?UI_PINK:UI_BLUE;
+                lcd_fill(x,8,16,2,c);lcd_fill(edge,8,2,16,c);
+                lcd_fill(x,FACE_Y-10u,16,2,c);lcd_fill(edge,FACE_Y-24u,2,16,c);
+            }
+            dirty|=0x20u;
+        }
         else if(page==PG_DANCE){lcd_fill(0,0,240,240,RGB(12,20,40));dance_cur=99;dirty|=0x20u;}
         else dirty|=0x1Fu;
     }
@@ -921,7 +945,7 @@ static void redraw(void){
         band_begin(b);
         if(page==PG_SONG)pg_song(b);else if(page==PG_PATTERN)pg_pattern(b);else if(page==PG_GEN)pg_gen(b);else if(page==PG_LYRICS)pg_lyrics(b);else if(page==PG_VISUALS)pg_visuals(b);else if(page==PG_LIBRARY)pg_library(b);else pg_mixer(b);
         if(!b&&(page==PG_LIBRARY||page==PG_LYRICS||page==PG_VISUALS)&&toast_s&&(int32_t)(fm1_ms-toast_until)<0){cv_rect(0,0,240,24,BG);txt(120,4,&FONT_S,toast_s,toast_err?RGB(255,110,110):RGB(249,207,94),1);}
-        band_end(b);
+        ui_rim(0,240);band_end(b);
         return;                                            /* one band per pass: the main loop polls between */
     }
 }
@@ -936,18 +960,18 @@ static void do_play(void){
     happy_until=fm1_ms+500u;
 }
 static void menu_draw(void){
-    char s[24],nm[10];
-    uint32_t ok=slot_name(menu_slot,nm);
-    cv_oy=0;
-    lcd_fill(0,0,240,240,BG);
-    s[0]=0;cat(s,"SLOT ");catn(s,menu_slot+1u);
-    draw_text_box(0,20,240,&FONT_L,s,RGB(64,222,209),1);
-    draw_text_box(0,70,240,&FONT_L,ok?nm:"EMPTY",ok?C_WHITE:RGB(100,110,140),1);
-    draw_text_box(0,118,240,&FONT_S,menu_slot==pf.slot?"(CURRENT)":"",RGB(249,207,94),1);
-    draw_text_box(0,146,240,&FONT_S,"SELECT: SLOT",RGB(150,160,190),1);
-    draw_text_box(0,166,240,&FONT_S,"FX LOAD   SCL NEW   ENV DEMO",RGB(150,160,190),1);
-    draw_text_box(0,190,240,&FONT_S,modified?"UNSAVED CHANGES":"",RGB(255,110,110),1);
-    draw_text_box(0,214,240,&FONT_S,"RELEASE SAVE: SAVE HERE",RGB(100,110,140),1);
+    char s[24],nm[10];uint32_t b,ok=slot_name(menu_slot,nm);
+    for(b=0;b<5u;b++){
+        band_begin(b);ui_panel(12,52,216,84,1);ui_panel(12,144,216,62,0);
+        s[0]=0;cat(s,"SAVE / SLOT ");catn(s,menu_slot+1u);txt(120,12,&FONT_S,s,UI_BLUE,1);
+        txt(120,70,&FONT_L,ok?nm:"EMPTY",C_WHITE,1);
+        txt(120,112,&FONT_S,menu_slot==pf.slot?"CURRENT SLOT":"SELECT TO CHANGE",UI_PINK,1);
+        txt(120,150,&FONT_S,"FX LOAD   SCL NEW",C_WHITE,1);
+        txt(120,174,&FONT_S,"ENV DEMO",C_WHITE,1);
+        txt(120,192,&FONT_S,modified?"UNSAVED CHANGES":"",UI_PINK,1);
+        txt(120,218,&FONT_S,"RELEASE SAVE: SAVE HERE",UI_BLUE,1);
+        ui_rim(0,240);band_end(b);
+    }
 }
 static void app_main(void){
     uint32_t i;

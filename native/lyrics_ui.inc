@@ -100,7 +100,7 @@ static void pg_lyrics(uint32_t band){
     }
     if(at>=lyric_count)return;
     {LyUnit *u=&lyric_units[at];int32_t y=52+(int32_t)(band-1u)*48;
-     if(at==lyric_cursor)cv_rect(0,y-2,240,44,RGB(30,48,72));
+     ui_panel(2,y-2,236,44,at==lyric_cursor);
      text[0]=0;catn(text,at+1u);cat(text," ");cat(text,u->flags&LY_REST?"REST":u->flags&LY_SUSTAIN?"HOLD":mora_str(u->mora));
      txt(5,y,&FONT_L,text,at==lyric_cursor?C_PNK:C_WHITE,0);
      text[0]=0;cat(text,"LEN ");catn(text,u->ticks);

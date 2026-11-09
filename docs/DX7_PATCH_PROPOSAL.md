@@ -1,7 +1,9 @@
 # DX7 patches: what FM-1 owners use, and original candidates for the GEN styles
 
-Status: **proposal for owner listening.** Nothing here changes the compiled bank (`firmware/audio/dx7/bank.h`).
-It answers review finding F1 in `docs/PR21_CLAUDE_REVIEW.md`.
+Status: **approved and integrated.** The owner approved the ten original voices below as the factory bank, with the
+style assignment in the table. They are now `assets/dx7/factory.packed` and `firmware/audio/dx7/bank.h` (preset IDs 64..73),
+and unlocked GEN maps each style to its pair (see `docs/DX7_BANK_HANDOFF.md`). This closes review finding F1 in
+`docs/PR21_CLAUDE_REVIEW.md`. The text below is the original proposal, kept for the research and design notes.
 
 ## What FM-1 owners actually load (researched 2026-11-09)
 
@@ -31,8 +33,8 @@ themselves, but they are not cleared for MIKU to compile into firmware. The clea
 ## Original candidates, two per GEN style
 
 Authored for this project in `tools/dx7_candidates.py`. That file holds every parameter, there are no third-party bytes,
-and the voices fall under the project licence. Running it writes `assets/dx7/candidates.packed`
-(10 × 128-byte packed voices). The renders below come from the device renderer via `tools/dx7_audition.c`. All voices
+and the voices fall under the project licence. Running it writes `assets/dx7/factory.packed`
+(10 × 128-byte packed voices; this file used to be called `candidates.packed`). The renders below come from the device renderer via `tools/dx7_audition.c`. All voices
 play the same C–Am–F–G progression at 140 BPM: chord voices as four-voice half-note chords, bass voices as a one-voice
 eighth-note line.
 
@@ -49,20 +51,18 @@ eighth-note line.
 | 8 | IDOL KEYS | IDOL POP | chords | 5 | bright tine electric-piano design (14× tine, velocity-sensitive) | [MP3](evidence/dx7-candidates/cand-8.mp3) |
 | 9 | IDOL BASS | IDOL POP | bass | 5 | round finger-style pluck bass | [MP3](evidence/dx7-candidates/cand-9.mp3) |
 
-Levels from `levels.txt`: candidate RMS is 272–1171, against 941–3070 for the current factory eight under identical
+Levels from `levels.txt`: candidate RMS is 272–1171, against 941–3070 for the superseded Dexed-based eight under identical
 playback. The short stabs and the two-carrier basses (CLUB STAB, DIGI GROWL, DIGI PLUCK) are the quietest. Before any
 of these replace the bank, set a level trim per voice by listening, using operator output levels or a track level.
 Nobody has listened to these on an FM-1 speaker yet. Treat them as first drafts to audition and tweak in BANK, not as
 finished sounds.
 
-## Proposed next steps (owner decides)
+## Next steps (done unless marked)
 
-1. Listen to the ten MP3s next to the current eight
-   ([existing auditions](evidence/dx7-bank/)). Keep, tweak or drop each one.
-2. If you approve, build the firmware bank from the chosen originals (`gen_dx7_bank.py` with `candidates.packed`), map
-   GEN styles to them (each style's chord/bass pair above), and remove the Dexed/SynprezFM voices from release images.
-   That closes F1.
-3. Optional: add user DX7 SysEx/bank import so owners can load the cartridges they already use (Dexed_cart, FM-1
+1. Listen to the ten MP3s. (The owner approved them; on-device tuning is still open.)
+2. Done: the firmware bank is built from the originals (`gen_dx7_bank.py`), GEN styles map to their chord/bass pairs, and
+   the Dexed/SynprezFM voices are removed from the firmware and data paths. That closes F1.
+3. Open, optional: add user DX7 SysEx/bank import so owners can load the cartridges they already use (Dexed_cart, FM-1
    factory) themselves, without MIKU redistributing them.
 
 Reproduce:
@@ -76,5 +76,5 @@ cc -std=c11 -O2 -I. tools/dx7_audition.c firmware/audio/dx7/dx7.c firmware/audio
 ```
 
 ```bash
-build/dx7_audition assets/dx7/candidates.packed docs/evidence/dx7-candidates cand
+build/dx7_audition assets/dx7/factory.packed docs/evidence/dx7-candidates cand
 ```

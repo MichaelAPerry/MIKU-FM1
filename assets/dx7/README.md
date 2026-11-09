@@ -1,20 +1,31 @@
-# Curated DX7 factory bank
+# DX7 factory bank (original voices)
 
-Eight original packed DX7 voices selected from `assets/builtin_pgm.zip` in
-asb2m10/dexed at fea2f0f0f2c397799f59b27eb11c038cd34b22c5:
-https://github.com/asb2m10/dexed/tree/fea2f0f0f2c397799f59b27eb11c038cd34b22c5/assets
+`factory.packed` is 10 x 128 bytes of standard packed DX7 voices, bank index 0..9 (preset
+IDs 64..73). All ten were authored for this project in `tools/dx7_candidates.py`, which holds every
+parameter. There is no third-party cartridge or patch data in this file, so the voices are
+GPL-3.0-only project data (see `LICENSING.md`).
 
-The archive is distributed as part of that GPLv3 repository; retain its license
-and patch-author credits. Dexed credits Jean-Marc Desprez (SynprezFM) for program
-compilation and credits the DX7 program contributors in its README. No patch
-bytes were invented or retuned for this selection. Source bank/program indices,
-original names, algorithms and SHA-256 hashes are recorded in
-`docs/evidence/neon-console/dx7-shortlist-verified.json`. `config/dx7/review_bank.json`
-records the pinned shortlist and candidate musical roles. Final musical choices
-still require listening review. Engine code has separate Apache-2.0 provenance.
+| Index | Name | GEN style | Track |
+|---:|---|---|---|
+| 0 | HYPER GLAS | HYPERPOP | chords |
+| 1 | HYPER 808 | HYPERPOP | bass |
+| 2 | FUTURE SAW | FUTURE BASS | chords |
+| 3 | FUTURE SUB | FUTURE BASS | bass |
+| 4 | CLUB STAB | JERSEY CLUB | chords |
+| 5 | CLUB BOUNC | JERSEY CLUB | bass |
+| 6 | DIGI PLUCK | DIGICORE | chords |
+| 7 | DIGI GROWL | DIGICORE | bass |
+| 8 | IDOL KEYS | IDOL POP | chords |
+| 9 | IDOL BASS | IDOL POP | bass |
 
-Reproduce the exact 1024-byte `factory.packed` using
-`tools/prepare_dx7_review_bank.py` on the pinned source ZIP, then copy its
-`review-voices.bin`. `tools/gen_dx7_bank.py` converts those unchanged bytes into
-the compiled header. The complete upstream ZIP remains available at the source
-revision; `factory.packed` preserves complete packed data for all selected voices.
+Single source of truth and rebuild:
+
+```sh
+python3 tools/dx7_candidates.py          # writes assets/dx7/factory.packed ( --check verifies it )
+python3 tools/gen_dx7_bank.py            # writes firmware/audio/dx7/bank.h ( --check verifies it )
+```
+
+Names in `bank.h` come from the patches. The bank holds at most 10 voices because preset IDs
+74 (edited) and 75 (user bank) follow the factory range. Audition renders are in
+`docs/evidence/dx7-candidates/`. Engine code has separate Apache-2.0 provenance
+(`firmware/audio/dx7/`). The voices are first drafts that have not been heard on a device speaker.

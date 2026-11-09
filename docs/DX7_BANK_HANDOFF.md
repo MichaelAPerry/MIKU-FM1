@@ -13,12 +13,14 @@ coarse/fine/detune, velocity/key scaling, pitch envelope and LFO. There is no
 JUCE/plugin wrapper, heap, runtime floating-point table generation or binary
 M-VAVE SDK engine. Module source/license/provenance: firmware/audio/dx7/.
 
-The eight source patches are unchanged packed voices from Dexed's bundled bank
-archive at fea2f0f0f2c397799f59b27eb11c038cd34b22c5. Source identity, program indices
-and patch hashes are preserved in the earlier verified shortlist. Packed patch
-bytes are now included in assets/dx7/factory.packed and generated into bank.h;
-this replaces the earlier offline-only selection status. Patch and engine
-licenses are separate; see LICENSING.md and assets/dx7/README.md.
+The factory bank is **ten original voices** authored for this project in
+`tools/dx7_candidates.py` (two per GEN style) and compiled from
+`assets/dx7/factory.packed` into `bank.h` by `tools/gen_dx7_bank.py`. They are
+GPL-3.0-only project data with no third-party patch bytes. This replaced an earlier
+shortlist of eight voices taken from Dexed's bundled cartridges, which had no clear
+redistribution licence (review finding F1, resolved by this change). The old
+shortlist is mentioned only in historical documents. Patch and engine licences are
+separate; see LICENSING.md and assets/dx7/README.md.
 
 Chords use four DX7 voices and bass uses one. The original formant singer,
 synthesized drums and four-track arrangement remain. Existing classic instrument
@@ -31,6 +33,10 @@ second press (REPLACE EDIT? AGAIN); moving into a classic preset does not.
 No factory demo arrangement or approved genre lineup was silently replaced.
 
 ## Review actual firmware and audio
+
+The ten original voices: [auditions](evidence/dx7-candidates/) (same bytes as the compiled bank).
+The links below are historical evidence of the BANK UI and persistence, recorded with the
+superseded eight-voice Dexed-based bank. Their voice names and audio are not the current bank.
 
 - [Native BANK walkthrough, with actual keyboard and full-band audio](evidence/dx7-bank/device-walkthrough.mp4)
 - [Native bank/operator/envelope/bass/stage gallery](evidence/dx7-bank/dx7-device-pages.png)
@@ -50,21 +56,28 @@ with explanatory captions outside the display. The browser is not synthesizing a
 replacement instrument. Musical preference is for owner listening review; code
 presence and spectral similarity alone do not establish a better arrangement.
 
-| Bank | Existing source patch | Provisional role / candidates | Listen |
-|---:|---|---|---|
-|1|glassbell|Glassy hook; Hyperpop/Digicore|[MP3](evidence/dx7-bank/audio/dx7-0.mp3)|
-|2|PLUCVIBE 1|Digital pluck; Future Bass/Electropop|[MP3](evidence/dx7-bank/audio/dx7-1.mp3)|
-|3|HYPE BASS2|Aggressive bass; Hyperpop/Digicore|[MP3](evidence/dx7-bank/audio/dx7-2.mp3)|
-|4|TIGHT BASS|Short rhythmic bass; Jersey Club|[MP3](evidence/dx7-bank/audio/dx7-3.mp3)|
-|5|Slow3D Pad|Evolving chord bed; Future Bass|[MP3](evidence/dx7-bank/audio/dx7-4.mp3)|
-|6|SYN-LEAD32|Melodic lead; Hyperpop/Electropop|[MP3](evidence/dx7-bank/audio/dx7-5.mp3)|
-|7|FmRhodes18|Expressive keys; Electropop|[MP3](evidence/dx7-bank/audio/dx7-6.mp3)|
-|8|SPARKLE 1|Digital accent; Digicore/Future Bass|[MP3](evidence/dx7-bank/audio/dx7-7.mp3)|
+| Bank | Factory ID | Voice | GEN style | Track | Algorithm | Listen |
+|---:|---:|---|---|---|---:|---|
+|1|64|HYPER GLAS|HYPERPOP|chords|5|[MP3](evidence/dx7-candidates/cand-0.mp3)|
+|2|65|HYPER 808|HYPERPOP|bass|2|[MP3](evidence/dx7-candidates/cand-1.mp3)|
+|3|66|FUTURE SAW|FUTURE BASS|chords|22|[MP3](evidence/dx7-candidates/cand-2.mp3)|
+|4|67|FUTURE SUB|FUTURE BASS|bass|1|[MP3](evidence/dx7-candidates/cand-3.mp3)|
+|5|68|CLUB STAB|JERSEY CLUB|chords|5|[MP3](evidence/dx7-candidates/cand-4.mp3)|
+|6|69|CLUB BOUNC|JERSEY CLUB|bass|1|[MP3](evidence/dx7-candidates/cand-5.mp3)|
+|7|70|DIGI PLUCK|DIGICORE|chords|9|[MP3](evidence/dx7-candidates/cand-6.mp3)|
+|8|71|DIGI GROWL|DIGICORE|bass|5|[MP3](evidence/dx7-candidates/cand-7.mp3)|
+|9|72|IDOL KEYS|IDOL POP|chords|5|[MP3](evidence/dx7-candidates/cand-8.mp3)|
+|10|73|IDOL BASS|IDOL POP|bass|5|[MP3](evidence/dx7-candidates/cand-9.mp3)|
 
-These are a reviewable bank, not a final genre lineup or proof every patch is best
-for its proposed use. Individual first-row auditions deliberately use identical
-chord events for comparison, including the bass presets played as chords. In the
-full mix TIGHT BASS is used on the bass track, with one-voice behavior.
+Design notes per voice are in [DX7_PATCH_PROPOSAL.md](DX7_PATCH_PROPOSAL.md). The voices are
+first drafts that nobody has heard on an FM-1 speaker; some are quiet (CLUB STAB, DIGI GROWL,
+DIGI PLUCK) and may need a per-voice level trim after listening.
+
+**GEN mapping.** An unlocked GEN pass (`firmware/song/gen_next.c`) sets CHORDS to factory voice
+0/2/4/6/8 and BASS to 1/3/5/7/9 for HYPERPOP, FUTURE BASS, JERSEY CLUB, DIGICORE and IDOL POP,
+and copies the 128-byte snapshot into the song (the engine plays snapshots). Drums keep their
+classic preset. Locked tracks keep preset and snapshot. GEN songs therefore encode as MKS2 v5.
+The older classic generator (`gen.c`) is unchanged and still picks classic presets.
 
 ## Native controls
 
@@ -73,7 +86,7 @@ BANK is appended as page10; the previous nine page indices are unchanged.
 - MIXER REC opens BANK; HOME also cycles to it.
 - SCL selects CHORDS and ENV selects BASS. FX/LFO show that DX7 applies to these
   two tracks; they do not replace the singer or drum engine.
-- SELECT in BROWSE chooses one of eight candidates **silently**. The screen names
+- SELECT in BROWSE chooses one of the ten factory voices (`DX7_BANK_N`, shown as "/ 10") **silently**. The screen names
   the candidate and separately names the loaded sound. Browsing alone does not
   change a sounding patch or create a note-on.
 - REC in BROWSE loads the displayed DX7 patch. KEYS play the loaded sound.
@@ -121,8 +134,11 @@ an appended pair of128-byte packed snapshots before the CRC. Both track snapshot
 are stored; only an enabled DX7 track requires a valid packed patch. CRC/field
 validation is transactional and malformed input does not mutate the loaded song.
 
-Classic preset IDs0–7 retain their meaning. Chord/bass IDs64–71 identify factory
-origins;72 identifies an edited patch. Playback uses the embedded snapshots, so
+Classic preset IDs0–7 retain their meaning. Chord/bass IDs 64..73 are the ten factory
+voices (64 + bank index), 74 (`SG_DX7_CUSTOM`) an edited patch, 75 (`SG_DX7_USER`) a
+voice from a future imported user bank (reserved; played like CUSTOM); `SG_DX7_LAST` is 75.
+v5 was never released, so the first-draft numbering (64..71, CUSTOM 72) was replaced; see
+SONG_FORMAT.md. Playback uses the embedded snapshots, so
 changing a future factory bank cannot silently change an existing saved song.
 Old firmware rejects v5; it cannot reproduce newly embedded DX7 patches. Classic
 exports remain v4-compatible. Full DX7 global-bank import/export and named user
@@ -138,19 +154,24 @@ both selected DX7 preset identity and the actual locked patch snapshot.
 
 ## Validation and measurements
 
-Release host CMake build and **46/46 CTests pass**. Original table/sprite regeneration
+Host test results, image/static/pool numbers and the MSFA comparison were rerun for the
+original ten-voice bank. The emulator smoke scripts, recordings, callback timings and the JPEG
+benchmark below were recorded with the superseded eight-voice bank and have **not** been
+repeated for the original voices (no emulator in this environment).
+
+Release host CMake build and **46/46 CTests pass** (47 minus the removed Dexed extraction test). Original table/sprite regeneration
 and new DX7 bank/table checks pass. Renderer ASan+UBSan passes with LeakSanitizer
 trace detection disabled for this environment. Original-MSFA reference vectors
 regenerate exactly using tools/gen_dx7_reference.py on the pinned upstream jni
 checkout. Its host-only adapter supplies controllers/patch-transport stubs and a
 stddef include; it does not substitute the new renderer into the reference.
 
-Core tests compare256 sampled raw Q24 points across the eight patches with the
+Core tests compare 320 sampled raw Q24 points (32 per patch, regenerated for the ten original voices) with the
 independent original renderer (note60,velocity100,44100 Hz, PMD/AMD disabled),
 allowing128 units for sine-LUT rounding. Tests separately cover32 algorithms,
 algorithm4/6 feedback, actual full-patch LFO/polyphony,17-vs256-frame exact output,
 A4 frequency, malformed-patch rejection, held snapshot isolation, stealing and
-natural release. Integration checks all eight actual routed presets, every editor
+natural release. Integration checks all ten actual routed presets, the GEN style mapping, every editor
 field/range, v5 round trips, legacy isolation, held pitch and GEN track locks.
 
 Actual default/video emulator smoke scripts pass:124928 audio frames, RMS2738,
@@ -160,11 +181,11 @@ host full-band example peaks29273 with zero full-scale samples.
 
 | Target profile | Image used/free | Static RAM used/free | Pool used/free |
 |---|---:|---:|---:|
-| Default |531820 / 49744|42512 / 55792|255624 / 88440|
-| MIDI+UVC |538444 / 43120|40720 / 57584|266080 / 77984|
-| Offline JPEG benchmark |538328 / 43236|40720 / 57584|266080 / 77984|
+| Default | 532584 / 48980 | 43280 / 55024 | 255624 / 88440 |
+| MIDI+UVC | 539244 / 42320 | 41488 / 56816 | 266080 / 77984 |
+| Offline JPEG benchmark | not rebuilt for the bank swap (previous: 538328 / 43236) | previous: 40720 / 57584 | previous: 266080 / 77984 |
 
-Actual limits remain581564 image /98304 static /344064 pool bytes. The owner's
+The default and MIDI+UVC rows were rebuilt with the original ten-voice bank (real device toolchain, placeholder SDK files, so no valid package). Actual limits remain581564 image /98304 static /344064 pool bytes. The owner's
 removed64 KiB flash floor stays removed. Static/pool margins remain16384/32768.
 Relative to the neon UI milestone, DX7 + editor + persistence/diagnostics cost
 23956 default /23928 video image bytes,6752/6736 static bytes and zero pool bytes.
@@ -201,9 +222,9 @@ update. MIDI sustain/MPE/bend routing and USB SysEx bank management are not adde
 DX7 bass currently retriggers on sequenced notes; classic bass slide/glide remains
 available. User naming/independent custom bank storage remain future UI work.
 
-The owner should listen and choose bank/genre assignments and balance. Next coding
-task: integrate chosen DX7 profiles into candidate GEN arrangements, then profile
-and optimize sustained native video under that musical load. Existing genre
+The owner should listen to the ten original voices on the device and tune balance. GEN
+mapping to the bank is done. Next coding task: profile and optimize sustained native
+video under that musical load, and optionally add user DX7 bank import (`SG_DX7_USER`). Existing genre
 lineup approval and physical-device/USB qualification remain open. Pedal USB audio
 routing and live companion telemetry remain unfinished. No main merge/release,
 website deployment or physical flash was performed. Keep PR21 draft for review.

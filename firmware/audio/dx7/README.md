@@ -7,7 +7,7 @@ https://github.com/google/music-synthesizer-for-android/tree/f67d41d313b7dc85f6f
 
 Copyright 2012–2013 Google Inc. Apache-2.0; full LICENSE is included here.
 The combined MIKU firmware remains GPL-3.0-only. The separate patch-bank source
-and license/provenance are in assets/dx7/README.md; artwork retains its PCL terms.
+and license/provenance (ten original project voices) are in assets/dx7/README.md; artwork retains its PCL terms.
 
 Ported behavior comes from dx7note.cc (frequency/velocity/key scaling), env.cc,
 pitchenv.cc, lfo.cc, fm_core.cc and the scalar fm_op_kernel.cc. The 32 algorithm
@@ -50,12 +50,14 @@ and global patch fields, and saved songs embed the actual packed patches.
 
 ## Independent reference and checks
 
-reference_vectors.h was generated from original MSFA using note60/velocity100,
+reference_vectors.h was generated from original MSFA (run `python3 tools/gen_dx7_reference.py
+<clone>/app/src/main/jni`, which rewrites it from `assets/dx7/factory.packed`; `--check` compares)
+for the ten original MIKU factory voices, using note60/velocity100,
 44100 Hz,64 blocks of64 samples per voice; every second block's first raw Q24
 sample is retained (32 points per patch). PMD/AMD were disabled for this core
 comparison; source packed transpose was applied. The host reference uses original
 MSFA scalar kernels with host-only Controllers and patch-transport stubs. The port
-must stay within128 raw Q24 units at every retained point across all eight voices.
+must stay within128 raw Q24 units at every retained point across all ten voices.
 This tolerance covers the direct-math sine LUT versus upstream's Q30 oscillator
 LUT initialization. Full-patch LFO, three-note polyphony and release are separate
 tests. Reference fixtures are not used to generate device audio.

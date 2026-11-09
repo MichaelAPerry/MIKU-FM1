@@ -61,9 +61,14 @@ Review [before/after wardrobe](evidence/neon-console/wardrobe-before-after.png),
 [all native windows](evidence/neon-console/all-pages.png), and
 [actual firmware walkthrough](evidence/neon-console/walkthrough.mp4).
 
-## Concrete DX7 shortlist
+## Concrete DX7 shortlist (historical, superseded)
 
-config/dx7/review_bank.json identifies eight existing patches in the banks bundled
+**Superseded:** this eight-voice Dexed shortlist and its extraction tool and plan
+(`config/dx7/review_bank.json`, `tools/prepare_dx7_review_bank.py`) were removed from the repository
+because the voices had no clear redistribution licence. The factory bank is now ten original voices;
+see `assets/dx7/README.md`. What follows is kept as history.
+
+config/dx7/review_bank.json identified eight existing patches in the banks bundled
 with [Dexed](https://github.com/asb2m10/dexed/tree/fea2f0f0f2c397799f59b27eb11c038cd34b22c5/assets).
 The source revision/archive and individual source banks are pinned in the plan.
 These are provisional audition candidates, not claims of superior sound or an

@@ -164,7 +164,8 @@ audio/MIDI/UVC are not completed. Do not approve or describe them as implemented
 ### 6. Licensing and evidence integrity
 
 Verify MSFA Apache-2.0 provenance/notices and compatibility with the GPLv3 application.
-Verify the redistribution basis for the selected Dexed/Synprez program data,
+Verify the redistribution basis for the DX7 program data (the review brief was written for the first
+eight-voice Dexed/Synprez shortlist, since replaced by ten original voices),
 including that code-engine licensing alone is not proof about a patch archive.
 Verify pinned source/program hashes, generated header reproducibility and attribution.
 Keep PCL character-art terms, notices and noncommercial restrictions intact.

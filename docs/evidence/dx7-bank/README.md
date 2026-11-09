@@ -1,4 +1,9 @@
-# Actual DX7 bank review
+# Actual DX7 bank review (historical evidence)
+
+> These recordings were made with the superseded eight-voice Dexed-based bank, which has been replaced by
+> ten original voices (see `assets/dx7/README.md`). They remain valid evidence of the BANK UI, persistence and
+> engine behaviour, but the preset names and audio here are not the current factory bank. Current auditions:
+> `../dx7-candidates/`.
 
 Start with [the engineering handoff and control map](../../DX7_BANK_HANDOFF.md),
 then [native walkthrough](device-walkthrough.mp4), [page gallery](dx7-device-pages.png)

@@ -1,5 +1,8 @@
 # MIKU-FM1 — current engineering handoff for Claude review
 
+> Current policy and UI: [fixed 64 KiB flash reserve removed at owner request; neon console UI implemented; eight-voice DX7 audition bank prepared offline](docs/NEON_UI_AND_DX7_BANK.md). Earlier fixed-flash-reserve instructions are superseded.
+
+
 > Hardware/DX7 review: [both known FM-1 flash variants pass emulator persistence checks; DX7 engine reuse is evaluated but not integrated](docs/HARDWARE_AND_DX7_REVIEW.md).
 
 
@@ -83,14 +86,15 @@ These figures come from actual target builds, not host object sizes.
 
 | Profile | Image used / free | Static used / free | Pool used / free |
 |---|---:|---:|---:|
-| Default native |506540 / 75024|35760 / 62544|255624 / 88440|
-| Native MIDI+UVC |513180 / 68384|33984 / 64320|266080 / 77984|
+| Default native |507864 / 73700|35760 / 62544|255624 / 88440|
+| Native MIDI+UVC |514516 / 67048|33984 / 64320|266080 / 77984|
 | Offline video benchmark |513108 / 68456|33984 / 64320|266080 / 77984|
 
-All profiles pass the unchanged minimum-free floors: **65536 image, 16384
-static, 32768 pool bytes**. The video profile has 2848 image bytes above its
-64 KiB free floor. Further substantial features must be measured against this
-budget; do not quietly waive it or drop an outfit.
+The owner removed the fixed image-space floor. The actual image limit remains
+581564 bytes; static/pool free-space margins remain 16384/32768 bytes. The current
+video profile has **67048 genuinely free image bytes**, with no 64 KiB reservation.
+The offline benchmark row is historical. Measure upcoming DX7 and USB work;
+do not reintroduce an arbitrary flash reservation or silently drop outfits.
 
 All eleven additional wardrobe packs total **335463 accounted bytes**, including
 metadata, against a 340000-byte packing budget. A final review caught generated
@@ -132,7 +136,7 @@ Uncompressed WAV hashes/RMS/durations are in
 
 ## Validation completed
 
-- Release host build and **40/40 CTest checks**.
+- Release host build and **41/41 CTest checks**.
 - Original fvoice/fmband table generation and original sprite regeneration.
 - Original compact-header regeneration; full wardrobe packing/checks; independent
   eleven-pair source audit with original source hashes unchanged.

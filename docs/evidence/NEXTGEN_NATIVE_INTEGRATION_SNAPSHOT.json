@@ -1,20 +1,20 @@
 {
   "branch": "feature/miku-nextgen-performance",
-  "implementation_commit": "bd400b9",
+  "implementation_commit": "026f682",
   "main_base": "88b0ef3e568cf615eb5dfaa42d170d8c0f75d431",
   "scope": "native integration milestone; PR21 remains draft; no physical hardware or live USB throughput claim",
   "host_ctest": {
-    "passed": 40,
+    "passed": 41,
     "failed": 0
   },
   "resources": {
     "default": {
       "image": {
-        "used": 507396,
+        "used": 507864,
         "limit": 581564,
-        "free": 74168,
-        "minimum_free": 65536,
-        "margin_above_reserve": 8632,
+        "free": 73700,
+        "minimum_free": 0,
+        "margin_above_reserve": 73700,
         "pass": true
       },
       "static_ram": {
@@ -36,11 +36,11 @@
     },
     "video": {
       "image": {
-        "used": 514044,
+        "used": 514516,
         "limit": 581564,
-        "free": 67520,
-        "minimum_free": 65536,
-        "margin_above_reserve": 1984,
+        "free": 67048,
+        "minimum_free": 0,
+        "margin_above_reserve": 67048,
         "pass": true
       },
       "static_ram": {
@@ -84,7 +84,8 @@
         "minimum_free": 32768,
         "margin_above_reserve": 45216,
         "pass": true
-      }
+      },
+      "scope": "historical build before owner removed flash reserve"
     }
   },
   "video_target_emulator": {
@@ -341,6 +342,70 @@
     "docs/evidence/hardware-variants/measurements.json": {
       "bytes": 895,
       "sha256": "89e576654889235f7f0d744b2e8f1088d362b3a52018e800fcf7f46ff05a9ae8"
+    },
+    "docs/evidence/neon-console/mixer.png": {
+      "bytes": 3939,
+      "sha256": "dbcc2416c6f069e51c7449ac1028adcd687b848e86d6ace01ea4105be88ab322"
+    },
+    "docs/evidence/neon-console/pattern.png": {
+      "bytes": 2691,
+      "sha256": "2c71b317a2025420f5769253af7302741672e0475cd4608432e8d80354107506"
+    },
+    "docs/evidence/neon-console/stage.png": {
+      "bytes": 8441,
+      "sha256": "f0e4918d1aa36defe0c732caf9f67b85327591414c0fe422da6f389b1915050d"
+    },
+    "docs/evidence/neon-console/wardrobe-before-after.png": {
+      "bytes": 18913,
+      "sha256": "e3ad0669602cfef2e5c1fad1fb1d5345279a9af7ce3684592ec24a22af2928fa"
+    },
+    "docs/evidence/neon-console/gen.png": {
+      "bytes": 4980,
+      "sha256": "54dc9ad0961a747c9c894bc6c4574c36233fb48a6c4435111893bf1b42052dd5"
+    },
+    "docs/evidence/neon-console/library.png": {
+      "bytes": 4027,
+      "sha256": "60d492afde3a9030aa499dd9174fd052696c44c76dd1862729bb90b2f43e2c71"
+    },
+    "docs/evidence/neon-console/all-pages.png": {
+      "bytes": 67446,
+      "sha256": "eefefb421164160ab06642fd552b42575ba0bad9e873a5cce860e81eee727ac6"
+    },
+    "docs/evidence/neon-console/voice-popup.png": {
+      "bytes": 7928,
+      "sha256": "012e2130492ff6f9e77f1dfab6eb9ae9795224adbd959e6d66df69b2551b2aa1"
+    },
+    "docs/evidence/neon-console/dance.png": {
+      "bytes": 5418,
+      "sha256": "076a4df38ab9367f7561788ad6d7109e68c7cc22375dc089b0f8596cd702f438"
+    },
+    "docs/evidence/neon-console/dx7-shortlist-verified.json": {
+      "bytes": 2738,
+      "sha256": "70e5a8da4cf6606aab18f53966acc87696ac6ccebdab19284d26e548aba887e9"
+    },
+    "docs/evidence/neon-console/song.png": {
+      "bytes": 4741,
+      "sha256": "ea8f424896b3619b12b8e01b75d88bac1260f01d52e1fe669839964972d163bc"
+    },
+    "docs/evidence/neon-console/look.png": {
+      "bytes": 10235,
+      "sha256": "8d25472856e3b41e36288d24f588a8038a6a2a1ba774c84ba10ff89d5edcb5c2"
+    },
+    "docs/evidence/neon-console/walkthrough.mp4": {
+      "bytes": 1430752,
+      "sha256": "f9c8141626d9dc69731cf251ce6c88d05366e742e0b4c3029cd452ede6be5180"
+    },
+    "docs/evidence/neon-console/lyrics.png": {
+      "bytes": 4144,
+      "sha256": "84ba0a531f457f16d1d85e58b18e0f3327d124a18efd1114e4a3a42995a70ddc"
+    },
+    "docs/evidence/neon-console/save-window.png": {
+      "bytes": 3213,
+      "sha256": "86a78f29acc2c5a8954a63978f1a9789a29602530ad627f95c11bdf3b1fb9b48"
+    },
+    "docs/evidence/neon-console/measurements.json": {
+      "bytes": 148,
+      "sha256": "57014c2e336d54e076a1967b84e1e367771f3f925567b40676c1e673d463c164"
     }
   },
   "scene_prefs_bytes": 44,
@@ -357,5 +422,11 @@
     "0x856014",
     "0xB36014"
   ],
-  "physical_hardware_qualification": false
+  "physical_hardware_qualification": false,
+  "flash_reserve_removed_by_owner": true,
+  "dx7_bank": {
+    "voices": 8,
+    "packed_bytes": 1024,
+    "status": "offline prepared only; no device renderer or bank loader"
+  }
 }

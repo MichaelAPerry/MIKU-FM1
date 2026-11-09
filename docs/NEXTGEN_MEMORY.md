@@ -1,5 +1,8 @@
 # Wardrobe and USB-video headroom (2026-11-08)
 
+> Current policy and UI: [fixed 64 KiB flash reserve removed at owner request; neon console UI implemented; eight-voice DX7 audition bank prepared offline](NEON_UI_AND_DX7_BANK.md). Earlier fixed-flash-reserve instructions are superseded.
+
+
 > Current device-wide visual pass: [pink/blue borders and gradients across all nine musical pages, popups and SAVE window, with native recordings and current measurements](evidence/device-theme/README.md). This supersedes the earlier menu-only UI scope and resource figures.
 
 
@@ -9,10 +12,10 @@
 ## Current integrated build
 
 All twelve outfits, native lyrics/GEN, ten slots, four factory songs and effects
-are linked. Actual image/static/pool usage: default **504416/35728/255624** bytes;
-MIDI+UVC **510900/33924/266080** bytes. The video profile retains **70664** image
-bytes, **64380** static bytes and **77984** pool bytes free. The unchanged floors
-remain 65536/16384/32768 free. No item was dropped. Additional wardrobe packing
+are linked. Actual image/static/pool usage: default **507864/35760/255624** bytes;
+MIDI+UVC **514516/33984/266080** bytes. The video profile retains **67048** image
+bytes, **64320** static bytes and **77984** pool bytes free. The current floors
+are 0/16384/32768 free; the old image reservation was removed by the owner. No item was dropped. Additional wardrobe packing
 is335463 bytes; nearby-row deltas saved4304 bytes without changing pixels or
 adding decoder depth. See [current snapshot](evidence/NEXTGEN_NATIVE_INTEGRATION_SNAPSHOT.json)
 and [native integration notes](NEXTGEN_NATIVE_INTEGRATION.md).

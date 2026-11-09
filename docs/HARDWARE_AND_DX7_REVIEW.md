@@ -1,5 +1,8 @@
 # FM-1 hardware variants and DX7 reuse review
 
+> Current policy and UI: [fixed 64 KiB flash reserve removed at owner request; neon console UI implemented; eight-voice DX7 audition bank prepared offline](NEON_UI_AND_DX7_BANK.md). Earlier fixed-flash-reserve instructions are superseded.
+
+
 Review implementation guard: `bd400b9`. Branch: feature/miku-nextgen-performance.
 This is compatibility verification and a sound-engine feasibility review, not a
 DX7 integration claim. PR21 stays draft. No physical FM-1 was modified/flashed.

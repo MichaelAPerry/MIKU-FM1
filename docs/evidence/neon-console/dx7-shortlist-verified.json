@@ -1,0 +1,99 @@
+{
+  "status": "offline audition payload; renderer and device bank not integrated",
+  "packed_bytes": 1024,
+  "voices": [
+    {
+      "name": "glassbell",
+      "bank": "SynprezFM_01.syx",
+      "role": "glassy hook",
+      "candidate_styles": [
+        "Hyperpop",
+        "Digicore"
+      ],
+      "source_program_1based": 9,
+      "algorithm_1based": 5,
+      "sha256": "d2a8edeccc817a700d97f10f52ea1b2c16f9308bbdefbe8b09778a88e46f9b93"
+    },
+    {
+      "name": "PLUCVIBE 1",
+      "bank": "SynprezFM_05.syx",
+      "role": "digital chord pluck",
+      "candidate_styles": [
+        "Future Bass",
+        "Electropop"
+      ],
+      "source_program_1based": 2,
+      "algorithm_1based": 9,
+      "sha256": "f784b888b6717d0554d93b96b2bf1d00055ee300124e7ef56b2b48dd35bed03f"
+    },
+    {
+      "name": "HYPE BASS2",
+      "bank": "SynprezFM_05.syx",
+      "role": "aggressive FM bass",
+      "candidate_styles": [
+        "Hyperpop",
+        "Digicore"
+      ],
+      "source_program_1based": 4,
+      "algorithm_1based": 2,
+      "sha256": "8efcc9cdb3df20b476dcd83f273827fec36eb5c8a2b689bce295da437efc0c77"
+    },
+    {
+      "name": "TIGHT BASS",
+      "bank": "SynprezFM_07.syx",
+      "role": "short rhythmic bass",
+      "candidate_styles": [
+        "Jersey Club"
+      ],
+      "source_program_1based": 5,
+      "algorithm_1based": 10,
+      "sha256": "3a1ee26b6fa5b7d3ffed98669cc89ef27df68a990a8ecb027f4001adee5e24f9"
+    },
+    {
+      "name": "Slow3D Pad",
+      "bank": "Dexed_01.syx",
+      "role": "evolving chord bed",
+      "candidate_styles": [
+        "Future Bass"
+      ],
+      "source_program_1based": 31,
+      "algorithm_1based": 9,
+      "sha256": "5a31698284b399a28ea3525adf0f981e443d944ef1e1fe09c828171752864c95"
+    },
+    {
+      "name": "SYN-LEAD32",
+      "bank": "SynprezFM_07.syx",
+      "role": "melodic lead",
+      "candidate_styles": [
+        "Hyperpop",
+        "Electropop"
+      ],
+      "source_program_1based": 26,
+      "algorithm_1based": 22,
+      "sha256": "c3e507553c1ee0d7d0d460b120507c74ae2f30d56c564e14ab82b9ad6978bc83"
+    },
+    {
+      "name": "FmRhodes18",
+      "bank": "SynprezFM_02.syx",
+      "role": "expressive keys",
+      "candidate_styles": [
+        "Electropop"
+      ],
+      "source_program_1based": 16,
+      "algorithm_1based": 2,
+      "sha256": "de59ce289a8812e02bb9d91c4fddf937eb18a717a5f8e265705b36dcaf72ee8b"
+    },
+    {
+      "name": "SPARKLE 1",
+      "bank": "SynprezFM_05.syx",
+      "role": "bright digital accent",
+      "candidate_styles": [
+        "Digicore",
+        "Future Bass"
+      ],
+      "source_program_1based": 32,
+      "algorithm_1based": 25,
+      "sha256": "93ab1ae2c31328ac6f08dcecb53c475b16e34fb04220fa5b49b1065a303ba7b7"
+    }
+  ]
+}

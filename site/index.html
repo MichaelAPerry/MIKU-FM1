@@ -20,7 +20,7 @@
 <body><main>
 <div class="top">
   <div class="brand">Miku<span>-FM</span> {{VERSION}} · <span style="color:var(--dim);font-weight:500">a singer in your FM-1</span></div>
-  <nav><a href="#play">Play</a><a href="#trailer">Trailer</a><a href="#listen">Listen</a><a href="#install">Install</a></nav>
+  <nav><a href="#new">New in {{VERSION}}</a><a href="#play">Play</a><a href="#trailer">Trailer</a><a href="#listen">Listen</a><a href="guide.html">Guide</a><a href="bank.html">DX7 bank</a><a href="#install">Install</a></nav>
 </div>
 
 <header class="hero">
@@ -34,12 +34,28 @@
       <a class="btn alt" href="#trailer">Watch the trailer ↓</a>
       <a class="btn alt" href="#listen">Hear her songs ↓</a>
       <a class="btn pink" href="#install">Install {{VERSION}} ↓</a>
-      <a class="btn alt" href="https://github.com/MichaelAPerry/MIKU-FM1/blob/main/docs/MANUAL.md">Read the manual ↗</a>
+      <a class="btn alt" href="guide.html">Read the guide ↗</a>
     </div>
   </div>
   <div class="dancer" role="img" aria-label="The pixel singer dancing"></div>
 </header>
 <div class="marquee" aria-hidden="true"><span>うたって · sing it back · ららら · la la la · おとのはこ · a box of sound · うたって · sing it back · ららら · la la la · おとのはこ · a box of sound · </span></div>
+
+<section id="new">
+  <p class="label"><b>NEW</b> / WHAT'S NEW IN {{VERSION}}</p>
+  <h2>A bigger box of sound.</h2>
+  <p class="note">Everything below is in the firmware you can play on this page and install at the bottom. <a href="guide.html">The guide</a> shows every control.</p>
+  <div class="grid">
+    <div class="card feat"><span class="num">DX7</span><h3>Six-operator FM.</h3><p>A real DX7 engine with ten original voices, and every operator editable on the FM-1: ratios, envelopes, scaling, LFO. Your edits are saved inside the song.</p></div>
+    <div class="card feat"><span class="num">CARTRIDGES</span><h3>Your own 32 voices.</h3><p>Send a DX7 cartridge or a single voice from Dexed, or from the <a href="bank.html">bank tool</a> right here, and keep a user bank of 32. Save it back as a .syx whenever you like.</p></div>
+    <div class="card feat"><span class="num">MIDI</span><h3>Play her from a keyboard.</h3><p>Notes from a MIDI keyboard play the current track. On DX7 chords and bass the sustain pedal and pitch bend work too, and the bass can glide.</p></div>
+    <div class="card feat"><span class="num">SONGS</span><h3>Ten slots, four folk songs.</h3><p>Sakura Sakura, Tōryanse, Furusato and Kōjō no Tsuki are ready in slots 1 to 4, written as ordinary songs you can edit. The LIBRARY page loads, saves and restores them.</p></div>
+    <div class="card feat"><span class="num">LYRICS</span><h3>Edit what she sings.</h3><p>A LYRICS page for the syllables of a vocal pattern: change them, hold a vowel, mark words and phrases, copy a lyric onto another melody.</p></div>
+    <div class="card feat"><span class="num">LOOK</span><h3>Dress the stage.</h3><p>Per song: 12 outfits, backgrounds, frames and stage effects (fireworks, sparkles, confetti, smoke, beams). The look is saved with the song's slot.</p></div>
+    <div class="card feat"><span class="num">GEN</span><h3>Five new styles.</h3><p>HYPERPOP, FUTURE BASS, JERSEY CLUB, DIGICORE and IDOL POP join POP, BALLAD, DANCE and CHIP, each with its own DX7 chords and bass. Hear them <a href="#listen">below</a>.</p></div>
+  </div>
+  <p class="note">Coming later: video out over USB. It is not in {{VERSION}}.</p>
+</section>
 
 <section id="stage">
   <p class="label"><b>01</b> / ON STAGE</p>
@@ -61,11 +77,12 @@
   <h2>Your FM-1, in the browser.</h2>
   <p>This is the firmware package itself, emulated by <a href="https://github.com/joakimeriksson/fm1-emu">fm1-emu</a>. Click it, then:</p>
   <ol>
-    <li><b>PLAY</b>: she sings the demo 「おとのはこ」. <b>HOME</b> steps through STAGE, DANCE, SONG, PATTERN, MIXER, GEN, LYRICS, the LOOK page, the song LIBRARY and the DX7 BANK.</li>
+    <li><b>PLAY</b>: she sings the demo 「おとのはこ」. <b>HOME</b> steps through STAGE, DANCE, SONG, PATTERN, MIXER, GEN, LYRICS, LOOK, the song LIBRARY and the DX7 BANK. On STAGE or DANCE, <b>ARP</b> jumps to the LIBRARY: <b>SELECT</b> a slot, <b>PLAY</b> plays it (slots 1 to 4 are the folk songs).</li>
     <li>On SONG, PATTERN, MIXER and GEN, <b>FX · SCL · ENV · LFO</b> pick the track (vocal, chords, bass, drums); the keys play it. On PATTERN a key writes the step.</li>
     <li>On STAGE the knobs shape her voice: <b>FX</b>, <b>ENV</b>, <b>LFO</b> switch the four knobs (effects, envelope, vibrato), and holding one of them, or <b>SEL</b>, opens a deeper layer (source, effect details, articulation, harmony). <b>SELECT</b> turns the syllable dial.</li>
-    <li>On GEN: knob 1 the style, 2 the key, 3 major or minor, 4 the seed; <b>REC</b> writes a new song, <b>PLAY</b> plays it.</li>
-    <li>On MIXER, <b>REC</b> opens the DX7 BANK: <b>SELECT</b> browses, <b>REC</b> loads, <b>EDIT</b> opens the operator pages and the knobs edit them.</li>
+    <li>On GEN: knob 1 the style (nine of them), 2 the key, 3 major or minor, 4 the seed; <b>REC</b> writes a new song, <b>PLAY</b> plays it.</li>
+    <li>On LYRICS, <b>SELECT</b> picks a syllable and <b>ALGORITHM</b> changes it; on LOOK, <b>SELECT</b> picks an outfit and the knobs set the background, frame and effect.</li>
+    <li>On MIXER, <b>REC</b> opens the DX7 BANK: <b>SELECT</b> browses, <b>REC</b> loads, <b>EDIT</b> opens the operator pages and the knobs edit them. To bring in your own voices, use the <a href="bank.html">DX7 bank tool</a> on a real FM-1.</li>
   </ol>
   <iframe class="emu" src="fm1-emu/" title="Miku-FM in the fm1-emu emulator" loading="lazy" allow="autoplay"></iframe>
   <p class="note"><a href="fm1-emu/">Open the emulator on its own page ↗</a></p>
@@ -81,7 +98,7 @@
 <section id="listen">
   <p class="label"><b>04</b> / LISTEN</p>
   <h2>Songs she sings.</h2>
-  <p class="note">Rendered on a computer by the same C engine that runs in the FM-1's audio interrupt.</p>
+  <p class="note">Rendered on a computer by the same C engine that runs in the FM-1's audio interrupt. The classic styles first.</p>
   <div class="grid3">
     <div class="card song"><b>「おとのはこ」 · the demo</b><span class="note">148 BPM, C major. Lyrics in Japanese, hand-written.</span><audio controls preload="none" src="media/listen/otonohako.mp3"></audio></div>
     <div class="card song"><b>「おとのはこ」 · dressed up</b><span class="note">The same song with her voice shaped on STAGE: a DEEP harmony an octave down, chorus, a dotted-eighth delay, reverb.</span><audio controls preload="none" src="media/listen/otonohako-dressed.mp3"></audio></div>
@@ -89,6 +106,16 @@
     <div class="card song"><b>GEN · BALLAD</b><span class="note">A minor, seed 7.</span><audio controls preload="none" src="media/listen/gen-ballad.mp3"></audio></div>
     <div class="card song"><b>GEN · DANCE</b><span class="note">A minor, seed 42. Four on the floor.</span><audio controls preload="none" src="media/listen/gen-dance.mp3"></audio></div>
     <div class="card song"><b>GEN · CHIP</b><span class="note">G major, seed 300. Square waves and fast arps.</span><audio controls preload="none" src="media/listen/gen-chip.mp3"></audio></div>
+  </div>
+  <h3 style="margin-top:28px">New in {{VERSION}}: five more styles, and the DX7 bank.</h3>
+  <p class="note">Rendered the same way, A minor, energy 75, complexity 70, each with its own DX7 chords and bass.</p>
+  <div class="grid3">
+    <div class="card song"><b>GEN · HYPERPOP</b><span class="note">164 BPM, seed 1. Bright plucks, chopped stabs, a busy digital fill.</span><audio controls preload="none" src="media/listen/gen-hyperpop.mp3"></audio></div>
+    <div class="card song"><b>GEN · FUTURE BASS</b><span class="note">148 BPM, seed 7. Pads and a sub, half-time claps and a drop.</span><audio controls preload="none" src="media/listen/gen-futurebass.mp3"></audio></div>
+    <div class="card song"><b>GEN · JERSEY CLUB</b><span class="note">140 BPM, seed 3. The five-kick bounce and one-step vocal chops.</span><audio controls preload="none" src="media/listen/gen-jerseyclub.mp3"></audio></div>
+    <div class="card song"><b>GEN · DIGICORE</b><span class="note">172 BPM, seed 5. Chip arps, glitchy hats, short syllables.</span><audio controls preload="none" src="media/listen/gen-digicore.mp3"></audio></div>
+    <div class="card song"><b>GEN · IDOL POP</b><span class="note">132 BPM, seed 2. Electric piano, a four-on-the-floor chorus.</span><audio controls preload="none" src="media/listen/gen-idolpop.mp3"></audio></div>
+    <div class="card song"><b>DX7 · the ten voices</b><span class="note">A tour of the ten original DX7 voices that come with Miku-FM, about five seconds each: HYPER GLAS and HYPER 808 first, IDOL KEYS and IDOL BASS last. <a href="bank.html">Get them as a .syx for Dexed</a>.</span><audio controls preload="none" src="media/listen/dx7-bank-tour.mp3"></audio></div>
   </div>
 </section>
 
@@ -101,7 +128,7 @@
     <div class="card feat"><span class="num">GEN</span><h3>Dream one up.</h3><p>HYPERPOP, FUTURE BASS, JERSEY CLUB, DIGICORE, IDOL POP, or the classic POP, BALLAD, DANCE and CHIP, in any key. Each new style brings its own DX7 chords and bass. Lock what you like, regenerate the rest. Keep it or drop it.</p></div>
     <div class="card feat"><span class="num">STAGE</span><h3>She is on stage.</h3><p>A pixel face that mouths every vowel and a full-body dancer that moves to your song, in 12 outfits, with backgrounds, frames and stage effects chosen per song.</p></div>
     <div class="card feat"><span class="num">DX7</span><h3>A real six-operator FM bank.</h3><p>All 32 DX7 algorithms, feedback, envelopes, LFO, pitch bend, sustain and bass glide. Ten original voices, every operator editable on the device, and your edits saved inside the song.</p></div>
-    <div class="card feat"><span class="num">MIDI</span><h3>Bring your cartridges.</h3><p>Send a DX7 bank or single voice from Dexed over USB and keep 32 voices of your own. Play any track from a MIDI keyboard, with sustain pedal and pitch bend.</p></div>
+    <div class="card feat"><span class="num">MIDI</span><h3>Bring your cartridges.</h3><p>Send a DX7 bank or single voice from Dexed or the <a href="bank.html">bank tool</a> over USB and keep 32 voices of your own; save them back as a .syx. Play any track from a MIDI keyboard; DX7 voices answer the sustain pedal and pitch bend.</p></div>
   </div>
 </section>
 

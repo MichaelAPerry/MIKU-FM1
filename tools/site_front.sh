@@ -1,6 +1,7 @@
 #!/bin/sh
 # SPDX-License-Identifier: MIT
-# Install the front page (site/index.html), the installer page (site/install.html) and their assets (site.css, js/, media/)
+# Install the front page (site/index.html), the installer page (site/install.html), the DX7 bank tool (bank.html, with the syx.html
+# redirect), the guide (guide.html) and their assets (site.css, js/, media/)
 # into SITE, filling in the version, the build kind and the commit, the SHA-256 and the identity of the package.
 # release: the attested package of a published release. dev: built by the Pages workflow from a commit of main (not attested).
 #   tools/site_front.sh SITE_DIR VERSION [release|dev] [COMMIT]
@@ -41,6 +42,10 @@ for name, keys in (("index.html", ("{{VERSION}}", "{{PACKAGE}}", "{{SHA256}}", "
         assert k in page, (name, k)
         page = page.replace(k, fill[k])
     assert "{{" not in page and "/*META*/" not in page, name
+    (site / name).write_text(page)
+for name in ("bank.html", "syx.html", "guide.html"):        # static pages: no placeholders
+    page = (root / "site" / name).read_text()
+    assert "{{" not in page, name
     (site / name).write_text(page)
 (site / ".nojekyll").touch()
 PY

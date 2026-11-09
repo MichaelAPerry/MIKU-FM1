@@ -298,4 +298,4 @@ static RAM 43,424 -> 51,424 B (+8,000: `sx_frame` +3,464, user bank 4,096, the r
 **Not done / unverified:** device USB behaviour (a 4.1 KB SysEx through the pinned EP1 path, host NAK/hold-back), interop with
 Dexed and real cartridges (parser tested only with constructed dumps and the ten original voices), flash writes on a device,
 the on-screen look of the new strings (layout follows `bank_ui.inc`, not seen on the LCD), export receivable by a DX7/Dexed.
-The optional `site/syx.html` page only loads a .syx and sends it through Web MIDI; it is untested against hardware.
+The website's DX7 bank tool (`site/bank.html`, `site/js/dx7syx.js`; `syx.html` redirects to it) opens, sends, receives and saves .syx files through Web MIDI; its packed/VCED conversion is tested against this C code (`tests/test_bank_tool.py`), the page itself is untested against hardware.

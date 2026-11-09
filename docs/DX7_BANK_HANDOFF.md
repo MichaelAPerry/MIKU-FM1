@@ -232,3 +232,70 @@ video under that musical load, and optionally add user DX7 bank import (`SG_DX7_
 lineup approval and physical-device/USB qualification remain open. Pedal USB audio
 routing and live companion telemetry remain unfinished. No main merge/release,
 website deployment or physical flash was performed. Keep PR21 draft for review.
+
+## User bank, DX7 SysEx import and external MIDI (owner-requested additions)
+
+Status: implemented and compiled with the device toolchain (placeholder SDK; no valid package, emulator not run, nothing
+tried on a device or with Dexed). Host-tested: the parser (`tests/test_dx7_sysex.c`, also under ASan/UBSan), the patch script
+(`tests/test_patch_dinghy_sysex.py`) and the real MIDI-in routing code extracted from `native/dinghy.c`
+(`tests/test_native_midi_in.py`).
+
+**Receiving.** Dinghy's USB layer assembles one SysEx frame at a time (`sx_frame`, the 7-bit bytes between F0 and F7) and
+`ota_service()` decoded it as M-UPGRADE and threw away everything else. `tools/patch_dinghy_sysex.py` (exact-match, refuses if
+the pinned text changed, run by `native/build.sh` after the optional video patch, which hashes the pristine `usb.c`) (1)
+enlarges `sx_frame` from 640 to 4104 bytes in the app (the update loader, which also compiles `usb.c`, keeps 640) and (2) lets
+`ota_service()` offer a frame whose first byte is 0x43 (Yamaha) to `app_sysex()` in `native/dinghy.c` and release it. M-UPGRADE
+frames never start with 0x43 (their first decoded byte is 0, so the first 7-bit group is 0). The M-UPGRADE handshake and
+session, the soft-key/UBOOT paths and recovery mode are unchanged (no hook in recovery or the loader). Frames arriving while
+the app has not yet released the previous one are dropped by Dinghy as before; `app_sysex` only validates and returns.
+
+**Parsing** (`firmware/song/dx7_sysex.{c,h}`, GPL-3.0-only, no heap/libm): the 32-voice bulk dump (VMEM, `43 0n 09 20 00`
++ 4096 + checksum, the same 128-byte packed voice the firmware uses) and the single voice (VCED, `43 0n 00 01 1B` + 155 +
+checksum, packed OP6-first). Any channel nibble is accepted. Checksum and every voice (`dx_patch_valid`) are checked; a bulk
+dump with any bad voice is rejected whole and the toast says which ("INVALID VOICE 12"). Bits the DX7 does not use in a
+few flag bytes are masked before validation. Toasts: IMPORT 32 VOICES? REC, BAD CHECKSUM, INVALID VOICE n, BAD DX7 LENGTH.
+Other Yamaha messages (parameter changes, requests) are ignored silently.
+
+**Applying** (nothing changes before REC; the prompt lasts 10 s and REC on it works on any page):
+- bulk dump: replaces the whole user bank (IMPORT 32 VOICES? REC), selects USER 1;
+- single voice: if the BANK page is on an edit page (a DX7 CHORDS/BASS patch open) it goes into that track's edit buffer
+  (preset becomes CUSTOM; the previous edit is kept in the usual one-level copy); anywhere else it goes into the currently
+  selected user slot ("VOICE TO USER n? REC"); with no bank yet, the other 31 slots are filled with INIT VOICE.
+
+**Storage.** The user bank is device data, not song data: songs still embed the snapshot they use and the song format is
+unchanged. 32 x 128 B = 4096 B in Dinghy blobs 0 and 1 (16 voices, 2048 B each; blobs were unused by MIKU-FM). The RAM copy
+is loaded at boot; the bank exists only if both blobs pass Dinghy's CRC and all 32 voices pass `dx_patch_valid`. Writes
+follow `do_save`: refused while a song plays ("STOP FIRST"), then `EN_HUSH` and a wait (up to 800 ms) for `en.act`, then
+the erase/program (the sound drops out for that moment). A bulk import writes blob 0 then 1; if the second fails the old
+bank is written back. A power cut between the two writes leaves a mixed (but valid) bank; a failed write mid-sector can
+leave the half invalid, in which case the bank reads as "no user bank" at the next start.
+
+**BANK UI.** BROWSE shows FACTORY n / 10 or USER n / 32 with the voice name. **ARP** in BROWSE switches the source (USER only
+once a bank exists: "NO USER BANK - SEND DX7 SYSEX"). SELECT browses silently as before. **REC** loads the displayed voice
+into the track: preset SG_DX7_USER with the 128-byte snapshot copied; if the track holds CUSTOM or USER the existing second
+press (REPLACE EDIT? AGAIN, 3 s) applies, and leaving USER stashes it like CUSTOM. Entering BANK opens on USER when the track
+holds a USER voice. **Store:** on an edit page **GLO** picks a user slot (starts at the selected slot, each further press
+within 8 s goes to the next), the page shows "REC STORE USER n  GLO NEXT", **REC** writes the track's snapshot into the slot
+with its 10-character name. Naming the slot after the existing content is the overwrite confirmation (there is no separate
+prompt). Name editing is future work: the project has no name-entry helper (song names cannot be edited on the device
+either); imported and stored voices keep the name in the patch bytes. **GLO in BROWSE** sends the user bank to the
+computer as a DX7 bulk dump on channel 1 (`ota_wire_send`, which blocks the main loop while the USB ring drains; the audio
+engine keeps running).
+
+**MIDI in.** The main loop drains Dinghy's `midi_get` (USB and TRS share the ring), at most 48 messages per pass.
+Note-on/off on any channel plays the current track exactly where the keys do (same page-to-track rule: STAGE/DANCE/LIBRARY
+sing, otherwise the selected track; same `EN_ON` arguments; drums map note mod 12 onto the 12 keys' drum map). A 128-entry table
+records which track started a note so its note-off goes there after a page or track change; mono tracks (vocal, bass) release
+when the last MIDI or physical key held on them is released; a note-off that finds the command ring full is retried every loop. CC64
+is `EN_SUSTAIN` and pitch bend is `EN_BEND` for the current chords/bass track; a track that stops being current gets pedal up and
+centre. CC120/123 release every held note. Clock and other realtime are ignored. MIDI does not write pattern steps. Mixing
+physical keys and MIDI on one mono track at once is not specially handled. Silent BANK browsing creates no notes.
+
+**Cost** (default build, measured with the real toolchain, baseline = parent commit): image 533,292 -> 538,220 B (+4,928),
+static RAM 43,424 -> 51,424 B (+8,000: `sx_frame` +3,464, user bank 4,096, the rest MIDI/prompt state), pool 255,624 ->
+263,824 B (+8,200: the pending-import and export buffers). Resource budgets pass. The update loader is byte-identical in size.
+
+**Not done / unverified:** device USB behaviour (a 4.1 KB SysEx through the pinned EP1 path, host NAK/hold-back), interop with
+Dexed and real cartridges (parser tested only with constructed dumps and the ten original voices), flash writes on a device,
+the on-screen look of the new strings (layout follows `bank_ui.inc`, not seen on the LCD), export receivable by a DX7/Dexed.
+The optional `site/syx.html` page only loads a .syx and sends it through Web MIDI; it is untested against hardware.

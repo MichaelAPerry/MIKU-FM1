@@ -178,3 +178,12 @@ and the same press again within 3 seconds goes through.
 | **OCT−** | USB rescue: no sound, only the updater, so another firmware can be installed |
 
 If the firmware crashes twice at boot, the FM-1 goes to the USB rescue by itself.
+
+### BANK: user voices, SysEx, MIDI in
+
+BROWSE: **ARP** switches FACTORY (10) / USER (32, once imported). **SELECT** browses silently, **REC** loads into the
+track (second press if it holds an edit). **GLO** sends the user bank as a DX7 dump. Edit pages: **GLO** picks a user slot
+(again: next), **REC** stores the patch (with its name) there. A DX7 bulk dump or single voice sent over USB (Dexed, any
+librarian) shows IMPORT 32 VOICES? REC / VOICE TO USER n? REC / VOICE TO EDIT? REC: press **REC** within 10 s on any page.
+Imports and stores need the song stopped. MIDI notes (USB or TRS) play the current track like the keys; CC64 sustains and the
+wheel bends chords/bass. [Details](DX7_BANK_HANDOFF.md).

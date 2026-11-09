@@ -117,6 +117,19 @@ The STAGE CPU figure shows what it costs: harmony and the effects together rough
 The singer full-body, dancing: she sways on the beat, sings while the vocal sounds, throws her arms up in the chorus and
 bows when the song stops. The knobs, SELECT, SCL and ALGORITHM do what they do on STAGE.
 
+## DX7 voices from your computer, and a MIDI keyboard
+
+Send a DX7 32-voice cartridge (a .syx from Dexed or any librarian, MIDI channel any) to the FM-1's USB MIDI port. The screen
+asks IMPORT 32 VOICES? REC: press REC within 10 seconds (the song must be stopped) and the user bank is replaced and saved.
+A single voice asks VOICE TO USER n? REC (or VOICE TO EDIT? REC while a DX7 edit page is open). Bad data is refused with a
+message: BAD CHECKSUM, INVALID VOICE 12 (a whole cartridge with one bad voice is refused). In BANK, ARP in BROWSE switches
+between FACTORY (10) and USER (32); SELECT browses without sound, REC loads the voice into CHORDS or BASS. In an edit page,
+GLO then REC stores the current patch (its name included) in a user slot; GLO again picks the next slot. GLO in BROWSE sends the user bank back to the computer.
+User voices are device data: songs keep their own copy of the patch they use. There is no name editing yet.
+
+A MIDI keyboard on USB or the TRS jack plays the current track exactly like the keys (singer on the stage pages, otherwise
+the selected track; drums use the note modulo 12), with sustain pedal and pitch bend on CHORDS/BASS. It does not record into patterns.
+
 ## Saving and other firmwares
 
 Songs live in Dinghy's 10 slots of the FM-1's flash (one song is 4,508 bytes, CRC-checked: a damaged slot is refused,
@@ -127,7 +140,7 @@ installing. Saving erases flash, so it only happens while stopped and silent.
 ## Limits of this version
 
 No song renaming on the device (a new song is "NEW SONG", a generated one is named after its style and seed, e.g. "POP 0001"). Pan is a device setting, not part of the song file. Lyrics, other
-vocal consonants, MIDI sync and WAV export from the device are not there yet (see [ROADMAP](ROADMAP.md)).
+vocal consonants, MIDI clock sync and WAV export from the device are not there yet (see [ROADMAP](ROADMAP.md)).
 
 ## When something goes wrong
 

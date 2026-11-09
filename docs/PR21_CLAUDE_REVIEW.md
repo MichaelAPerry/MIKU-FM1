@@ -281,3 +281,10 @@ Retirement uses a −72 dBFS gain floor (`DX_QUIET`), so very slow edited releas
 voice until stolen or hushed. SAVE no longer waits on them.
 
 **F1 resolved by original voices:** the compiled bank is now ten original voices authored in `tools/dx7_candidates.py` (GPL-3.0-only project data); the eight Dexed/SynprezFM voices no longer ship in firmware, data or fixtures. Sections 1–6 above describe the state at the reviewed head and are left unchanged as history.
+
+**Owner-requested additions (user bank, SysEx import, MIDI in).** A DX7 32-voice / single-voice SysEx import with REC
+confirmation, a 32-voice user bank in Dinghy blobs 0-1 (preset SG_DX7_USER, snapshot copied; songs unchanged), a BANK
+FACTORY/USER source switch, store-to-slot from an edit page, bank export, and external MIDI note/sustain/bend routing were added
+on this branch. The Dinghy change is the build-time `tools/patch_dinghy_sysex.py` (a larger SysEx buffer in the app and a
+0x43-only hook ahead of M-UPGRADE decoding; loader, recovery and soft-key paths untouched). Host tests and device-toolchain
+compiles pass; device USB reception, Dexed interop and flash writes are unverified. Details: DX7_BANK_HANDOFF.md, last section.

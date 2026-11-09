@@ -37,6 +37,16 @@ The historical milestones below remain useful for baseline comparisons.
 Levels, never interchangeable: **built** (compiled), **host tests**, **emulator** (fm1-emu running the real package),
 **hardware** (a physical FM-1).
 
+## DX7 import, user bank, MIDI in (owner-requested additions)
+
+Host Release: all checks pass, including `dx7_sysex` (parser: constructed bulk and single dumps, round trip of every factory
+voice, checksum failure, truncation, wrong format, any channel nibble, one bad voice rejects the bank; also run under ASan+UBSan),
+`native_midi_in` (the native routing code extracted from `native/dinghy.c`: note ownership across track changes, retried
+note-offs, pedal/wheel) and `patch_dinghy_sysex` (exact-match patch). The default and `--video` builds compile and link
+with the real Jieli toolchain against the placeholder SDK (checks real; the package is not valid and was deleted). Default:
+image 538,220 B (+4,928), static RAM 51,424 B (+8,000), pool 263,824 B (+8,200), all budgets pass. Not validated: emulator,
+device USB reception of a 4.1 KB SysEx, Dexed, flash writes on hardware, the new screen text on the LCD.
+
 ## Step 0: clean-up (2026-11-03)
 
 ### Host

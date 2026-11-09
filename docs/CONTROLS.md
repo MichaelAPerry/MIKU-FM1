@@ -1,5 +1,16 @@
 # Controls
 
+## DX7 BANK
+
+MIXER **REC** opens the DX7 bank (also page10 via HOME). **SCL/ENV** choose chords/bass.
+**SELECT** browses eight candidates silently; **REC** loads; keys play the loaded
+patch. **EDIT/PRESETS** choose parameter pages; SELECT/ALGORITHM select OP1–OP6
+while editing. K1–K4 edit the labeled actual DX7 fields. ARP changes ratio/fixed
+mode on OP FREQUENCY or LFO waveform on MODULATION. REC returns from editing to
+BROWSE. Stop then SAVE embeds the actual patch in the song. Long release tails
+may require waiting before saving. [Full page map and recordings](DX7_BANK_HANDOFF.md).
+
+
 > Current policy and UI: [fixed 64 KiB flash reserve removed at owner request; neon console UI implemented; eight-voice DX7 audition bank prepared offline](NEON_UI_AND_DX7_BANK.md). Earlier fixed-flash-reserve instructions are superseded.
 
 

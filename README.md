@@ -1,5 +1,8 @@
 # Miku-FM
 
+> Current DX7 milestone: [real six-operator renderer, dedicated BANK/operator editor, embedded patch saving, native video/audio evidence and current measurements](docs/DX7_BANK_HANDOFF.md). This supersedes earlier DX7-plan-only status.
+
+
 Feature-branch development now includes a ten-song library with four editable
 factory songs, paired outfit animation, reusable stage effects and native
 lyric/GEN controls. See [current handoff](CLAUDE_HANDOFF.md) and

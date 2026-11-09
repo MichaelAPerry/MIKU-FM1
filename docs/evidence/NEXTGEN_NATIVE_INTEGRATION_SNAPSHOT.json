@@ -1,28 +1,28 @@
 {
   "branch": "feature/miku-nextgen-performance",
-  "implementation_commit": "026f682",
+  "implementation_commit": "2bb1662",
   "main_base": "88b0ef3e568cf615eb5dfaa42d170d8c0f75d431",
   "scope": "native integration milestone; PR21 remains draft; no physical hardware or live USB throughput claim",
   "host_ctest": {
-    "passed": 41,
+    "passed": 46,
     "failed": 0
   },
   "resources": {
     "default": {
       "image": {
-        "used": 507864,
+        "used": 531820,
         "limit": 581564,
-        "free": 73700,
+        "free": 49744,
         "minimum_free": 0,
-        "margin_above_reserve": 73700,
+        "margin_above_reserve": 49744,
         "pass": true
       },
       "static_ram": {
-        "used": 35760,
+        "used": 42512,
         "limit": 98304,
-        "free": 62544,
+        "free": 55792,
         "minimum_free": 16384,
-        "margin_above_reserve": 46160,
+        "margin_above_reserve": 39408,
         "pass": true
       },
       "pool": {
@@ -36,19 +36,19 @@
     },
     "video": {
       "image": {
-        "used": 514516,
+        "used": 538444,
         "limit": 581564,
-        "free": 67048,
+        "free": 43120,
         "minimum_free": 0,
-        "margin_above_reserve": 67048,
+        "margin_above_reserve": 43120,
         "pass": true
       },
       "static_ram": {
-        "used": 33984,
+        "used": 40720,
         "limit": 98304,
-        "free": 64320,
+        "free": 57584,
         "minimum_free": 16384,
-        "margin_above_reserve": 47936,
+        "margin_above_reserve": 41200,
         "pass": true
       },
       "pool": {
@@ -62,19 +62,19 @@
     },
     "video_bench": {
       "image": {
-        "used": 513108,
+        "used": 538328,
         "limit": 581564,
-        "free": 68456,
-        "minimum_free": 65536,
-        "margin_above_reserve": 2920,
+        "free": 43236,
+        "minimum_free": 0,
+        "margin_above_reserve": 43236,
         "pass": true
       },
       "static_ram": {
-        "used": 33984,
+        "used": 40720,
         "limit": 98304,
-        "free": 64320,
+        "free": 57584,
         "minimum_free": 16384,
-        "margin_above_reserve": 47936,
+        "margin_above_reserve": 41200,
         "pass": true
       },
       "pool": {
@@ -84,23 +84,25 @@
         "minimum_free": 32768,
         "margin_above_reserve": 45216,
         "pass": true
-      },
-      "scope": "historical build before owner removed flash reserve"
+      }
     }
   },
   "video_target_emulator": {
     "encoded_frames": 3,
     "encoder_failures": 0,
     "jpeg_bytes": 4779,
-    "max_tile_us_emulator": 1577.125,
-    "max_frame_wall_us_emulator": 86064.16666666667,
+    "max_tile_us_emulator": 2306.9166666666665,
+    "max_frame_wall_us_emulator": 101067.91666666667,
     "audio_frames": 137984,
-    "audio_peak": 10293,
+    "audio_peak": 9751,
     "full_scale_samples": 0,
-    "isr_percent_emulator": 8.9,
+    "isr_percent_emulator": 17.9,
     "scope": "three JPEG frames during real native vocal+band playback; not real USB throughput or hardware timing",
-    "audio_render_moving_peak_us_emulator": 308.0833333333333,
-    "audio_callback_deadline_us": 5804.988662131519
+    "audio_render_moving_peak_us_emulator": 1137.7083333333333,
+    "audio_callback_deadline_us": 5804.988662131519,
+    "audio_render_worst_us_emulator": 1864.3333333333333,
+    "audio_overruns": 0,
+    "audio_init_us_emulator": 1062.8333333333333
   },
   "wardrobe_additional_bytes": 335463,
   "wardrobe_count": 12,
@@ -220,8 +222,8 @@
       "sha256": "116098c90d620fdd7757ba0f7f3c78cd53abbd9f2cbcb90f96fcaa7ad7f2c058"
     },
     "docs/evidence/device-scenes/fm1-record.rs": {
-      "bytes": 2565,
-      "sha256": "daaeff607b1e2ae208b7498dcc0af410175b142fdbc9ea48937b42ed9e9e1b19"
+      "bytes": 3004,
+      "sha256": "6aa18b5046eb0e6161a07bb6c6215784d56544a2f31c6bf2d67824160482af41"
     },
     "docs/evidence/device-scenes/device-ui-walkthrough.mp4": {
       "bytes": 1483189,
@@ -406,11 +408,167 @@
     "docs/evidence/neon-console/measurements.json": {
       "bytes": 148,
       "sha256": "57014c2e336d54e076a1967b84e1e367771f3f925567b40676c1e673d463c164"
+    },
+    "docs/evidence/dx7-bank/edited-native.mks": {
+      "bytes": 4764,
+      "sha256": "ea567f4c7471e7d3daea3c73890fd9b503eb5021f6e4d4b8cac8769086e7276c"
+    },
+    "docs/evidence/dx7-bank/dx7-device-pages.png": {
+      "bytes": 25834,
+      "sha256": "3caae6db96d05b2ebe05a50e59361db181c40cbf1c1842aff6579f7f8cc1e9a8"
+    },
+    "docs/evidence/dx7-bank/README.md": {
+      "bytes": 806,
+      "sha256": "5d1ddc45c5feb2249cb35dd6cef17b4c62d848b953611216f8f146479812990a"
+    },
+    "docs/evidence/dx7-bank/emulator-source.json": {
+      "bytes": 260,
+      "sha256": "3d3494224b84759667bed55c1b4e54dec6e747bf331d80491d0fc60759ad2597"
+    },
+    "docs/evidence/dx7-bank/restored-operator.png": {
+      "bytes": 4643,
+      "sha256": "40d8fb16656be9d2b5e21dae73f14dcb1014460d4f4bce92576e95655737972b"
+    },
+    "docs/evidence/dx7-bank/device-walkthrough.mp4": {
+      "bytes": 2003472,
+      "sha256": "10a2dbc16433f54e04bafc2921055f2164222e9e972c9da8eb6ec10c2ab78f79"
+    },
+    "docs/evidence/dx7-bank/bass.png": {
+      "bytes": 3961,
+      "sha256": "935a961ac7005fa9586fba65bb3476b0c72f5d09c549efd0b548e5e8bc545d91"
+    },
+    "docs/evidence/dx7-bank/operator.png": {
+      "bytes": 4658,
+      "sha256": "333e2ce80392ede194610a1364daf99c35b6c37e023d2603321bfd8fab91934b"
+    },
+    "docs/evidence/dx7-bank/keys.txt": {
+      "bytes": 644,
+      "sha256": "d0dec15c14d9641dc9a082b78673c2c0d02ccb682990ff34185a286d9f5e3f0f"
+    },
+    "docs/evidence/dx7-bank/video-measurements.json": {
+      "bytes": 633,
+      "sha256": "b3353641ac173fa42e9026b4f32e5469cbe91072ee1b6a196f6bbbc954a4116a"
+    },
+    "docs/evidence/dx7-bank/restored-puya.png": {
+      "bytes": 4643,
+      "sha256": "40d8fb16656be9d2b5e21dae73f14dcb1014460d4f4bce92576e95655737972b"
+    },
+    "docs/evidence/dx7-bank/rates.png": {
+      "bytes": 4524,
+      "sha256": "4e22f9f7946e9e9f31d1bb7937ecc623ed68b7f01673e268550f0b4a7b89d002"
+    },
+    "docs/evidence/dx7-bank/stage.png": {
+      "bytes": 5314,
+      "sha256": "6ffed139ca5032b3037daa4e24b407267c374e68bb4f90cc18ebe2144a82aacc"
+    },
+    "docs/evidence/dx7-bank/browser.png": {
+      "bytes": 4309,
+      "sha256": "1e058e3d95161acb35b32fb9ff80200a9bc17c4ee6638db2717d3ba666d93634"
+    },
+    "docs/evidence/dx7-bank/emulator-flash.patch": {
+      "bytes": 1214,
+      "sha256": "708c36eba8aaf96c1b6db688a70992f26bb916004461fce282f65531262e718b"
+    },
+    "docs/evidence/dx7-bank/persistence.json": {
+      "bytes": 216,
+      "sha256": "bbac694af460959b64f6f27bbe9fbb733a2060a72e9611e08f532ba6f4f30229"
+    },
+    "docs/evidence/dx7-bank/levels.png": {
+      "bytes": 4434,
+      "sha256": "b68785d1081c993494c1c2f983ec1006ed748f762dc7f42164b33e5880a503fa"
+    },
+    "docs/evidence/dx7-bank/measurements.json": {
+      "bytes": 2448,
+      "sha256": "094fa2a42bf49e5afdd4f56779746f3cc6f31797041bcc12f2cfa045f3adca77"
+    },
+    "docs/evidence/dx7-bank/audio-measurements.json": {
+      "bytes": 1296,
+      "sha256": "d955b4323905e2189244cf11b3b15a9f9426d9239aab3b551bcaf3a643965956"
+    },
+    "docs/evidence/dx7-bank/audio/dx7-3.mp3": {
+      "bytes": 88232,
+      "sha256": "645153b43dcfa732de3586ca27c0971d6898cfa55707ad0f1b7446a3454f14be"
+    },
+    "docs/evidence/dx7-bank/audio/dx7-2.mks": {
+      "bytes": 4764,
+      "sha256": "3b90b40fc74105b62c66f57be551984a71f4bcfb3190c464baea0376baa42207"
+    },
+    "docs/evidence/dx7-bank/audio/dx7-5.mks": {
+      "bytes": 4764,
+      "sha256": "9a2a89cd1fce510cbe3b2c9737cc7f51f1277f52d8fe6542e5a57596f8636afc"
+    },
+    "docs/evidence/dx7-bank/audio/dx7-4.mp3": {
+      "bytes": 88232,
+      "sha256": "081dda160871393d0799a4aea3e820ce86a3320100df86e02b9c8321a3103820"
+    },
+    "docs/evidence/dx7-bank/audio/dx7-6.mks": {
+      "bytes": 4764,
+      "sha256": "32fe323339c3f1358b37bcd70acd0474d1c6c3faecc17cb3d31fd8deb6190cc6"
+    },
+    "docs/evidence/dx7-bank/audio/classic-8.mp3": {
+      "bytes": 88232,
+      "sha256": "dd0e059f9fdf63ced118e94cafec833656a8abc9d3a92866560458b385865941"
+    },
+    "docs/evidence/dx7-bank/audio/dx7-6.mp3": {
+      "bytes": 88232,
+      "sha256": "8c4bab905ecf137c2c7b6f78c444ca92cefdb28c6bc7d01edf7d88b34cca73f5"
+    },
+    "docs/evidence/dx7-bank/audio/classic-8.mks": {
+      "bytes": 4508,
+      "sha256": "5fc3d35c1f224e140ba8c2f248eaa582f12b0d0f74ea1a6040c7f5727d25bade"
+    },
+    "docs/evidence/dx7-bank/audio/dx7-3.mks": {
+      "bytes": 4764,
+      "sha256": "260ecaff1920da5c1e878ac431272839aedf02c7842abc66af4488c9184b6b99"
+    },
+    "docs/evidence/dx7-bank/audio/dx7-0.mks": {
+      "bytes": 4764,
+      "sha256": "0645559d7e7691c71891001aa1108f5448b0e84da0a9181bb307af2ccaf7f1e0"
+    },
+    "docs/evidence/dx7-bank/audio/dx7-1.mks": {
+      "bytes": 4764,
+      "sha256": "3383a186fae4e3b07f8e8e047c8ad96942a1073bd33a913f33c7505e0d8b48dd"
+    },
+    "docs/evidence/dx7-bank/audio/dx7-1.mp3": {
+      "bytes": 88232,
+      "sha256": "ac505cdaafeb134fd2fa36cf3e8980cd5837a8943aef745ebc9858d1a157cda9"
+    },
+    "docs/evidence/dx7-bank/audio/full-band.mp3": {
+      "bytes": 328664,
+      "sha256": "9b80e803c1d95d255e48fd551f08695024fb4f0ead3ab3ab42ffcb714bac1efc"
+    },
+    "docs/evidence/dx7-bank/audio/dx7-7.mp3": {
+      "bytes": 88232,
+      "sha256": "2d685e769ea5de6bbb386912398995cc9dde9738e3f168563235f537a5da8c3b"
+    },
+    "docs/evidence/dx7-bank/audio/dx7-7.mks": {
+      "bytes": 4764,
+      "sha256": "db10142c1a8151021a6c30e7ef7e38391690e97785160ade99b79c1aeaada074"
+    },
+    "docs/evidence/dx7-bank/audio/dx7-4.mks": {
+      "bytes": 4764,
+      "sha256": "d2f0230f32f06e18e2273f9b4643b77e95ee7ffe6eba0ccc13d45e888fcaf05e"
+    },
+    "docs/evidence/dx7-bank/audio/dx7-5.mp3": {
+      "bytes": 88232,
+      "sha256": "01d5c83a3286a175cafe98b651b4419e7b325214fd4d5a831c1742a4b4dd76b9"
+    },
+    "docs/evidence/dx7-bank/audio/dx7-2.mp3": {
+      "bytes": 88232,
+      "sha256": "26b09ba64ee78a9b20f94f0d9eef3cc31a4e443129459e56553911152327336a"
+    },
+    "docs/evidence/dx7-bank/audio/dx7-0.mp3": {
+      "bytes": 88232,
+      "sha256": "b8436c0ce9c2cc600f320bc6b3bf124a8a6059f53818e4f82ad245a0fe42909c"
+    },
+    "docs/evidence/dx7-bank/audio/edited.mp3": {
+      "bytes": 328664,
+      "sha256": "07e467ee1fba88ee80caa584b6080152c8f481fbfa2b6e2b8cfde9550d962c81"
     }
   },
   "scene_prefs_bytes": 44,
   "scene_prefs_version": 3,
-  "video_benchmark_implementation_commit": "71035d9",
+  "video_benchmark_implementation_commit": "2bb1662",
   "menu_redesign_image_delta": 160,
   "device_theme_image_delta": {
     "default": 696,
@@ -427,6 +585,34 @@
   "dx7_bank": {
     "voices": 8,
     "packed_bytes": 1024,
-    "status": "offline prepared only; no device renderer or bank loader"
+    "status": "integrated six-operator renderer, native bank/operator editor and embedded project snapshots",
+    "project_version": 5,
+    "project_bytes": 4764
+  },
+  "native_dx7_timing": {
+    "recording": {
+      "render_worst_us": 1881.125,
+      "render_initialization_us": 1062.7083333333333,
+      "overruns": 0,
+      "callback_deadline_us": 5804.988662131519
+    },
+    "stress": {
+      "render_worst_us": 2717.625,
+      "render_initialization_us": 1062.7083333333333,
+      "overruns": 0,
+      "callback_deadline_us": 5804.988662131519
+    },
+    "audio_capture": {
+      "frames": 2021888,
+      "peak": 11381,
+      "rms": 1538.6298384509766,
+      "full_scale_samples": 0
+    },
+    "stress_capture": {
+      "frames": 279296,
+      "peak": 5548,
+      "rms": 1493.432609469654,
+      "full_scale_samples": 0
+    }
   }
 }

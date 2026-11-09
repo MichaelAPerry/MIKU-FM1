@@ -1,0 +1,28 @@
+diff --git a/crates/fm1-emu/src/main.rs b/crates/fm1-emu/src/main.rs
+index 7f1136e..2fc3f6b 100644
+--- a/crates/fm1-emu/src/main.rs
++++ b/crates/fm1-emu/src/main.rs
+@@ -489,6 +489,15 @@ fn main() -> ExitCode {
+     let mut stop = false;
+     let mut park = false; // (core 1 stopped on a fault this step: dropped below)
+     soc.take_boot(&cpus[0]);
++ if let Ok(path)=std::env::var("FM1_FLASH_IN"){
++  let mut incoming=std::fs::read(path).unwrap();
++  if std::env::var("FM1_FLASH_DATA_ONLY").is_ok(){
++   let mut image=soc.flash.mem.clone();
++   for (a,b) in [(0x97000,0xbf000),(0xfc000,0xfd000)]{image[a..b].copy_from_slice(&incoming[a..b]);}
++   incoming=image;
++  }
++  soc.restore_flash(&incoming);
++ }
+     for _ in 0..args.steps {
+         // a chip reset (the watchdog, PR_PWR): cpu0 from its start, core 1 held again
+         if soc.reset_due() {
+@@ -692,6 +701,7 @@ fn main() -> ExitCode {
+     }
+     let cpu = &cpus[report_core];
+ 
++    if let Ok(path) = std::env::var("FM1_FLASH_OUT") { std::fs::write(path, &soc.flash.mem).expect("FM1_FLASH_OUT write"); }
+     if !args.quiet {
+         let stopped = halt.is_some() || true;
+         let mut top: Vec<(&'static str, u64)> = hist.into_iter().collect();

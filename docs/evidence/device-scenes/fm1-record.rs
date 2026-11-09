@@ -13,7 +13,15 @@ fn main(){
  soc.sfc_boot(stock.key,stock.app_end);
  soc.take_boot(&cpu);
  if let Ok(id)=std::env::var("FM1_FLASH_JEDEC"){let n=u32::from_str_radix(id.trim_start_matches("0x"),16).unwrap();soc.flash.jedec=[(n>>16)as u8,(n>>8)as u8,n as u8];}
- if let Ok(path)=std::env::var("FM1_FLASH_IN"){soc.restore_flash(&std::fs::read(path).unwrap());}
+ if let Ok(path)=std::env::var("FM1_FLASH_IN"){
+  let mut incoming=std::fs::read(path).unwrap();
+  if std::env::var("FM1_FLASH_DATA_ONLY").is_ok(){
+   let mut image=soc.flash.mem.clone();
+   for (a,b) in [(0x97000,0xbf000),(0xfc000,0xfd000)]{image[a..b].copy_from_slice(&incoming[a..b]);}
+   incoming=image;
+  }
+  soc.restore_flash(&incoming);
+ }
  fm1_soc::script::queue(&mut soc,&args[4]);
  let duration:u64=args[2].parse().unwrap();let mut cpu1=None;let mut tick=false;
  let mut capture=0u64;let start=std::time::Instant::now();
@@ -24,6 +32,7 @@ fn main(){
   }
  }
  write_wav(&args[3],&soc.periph.audio).unwrap();
+ if let Ok(probes)=std::env::var("FM1_PROBE"){for a in probes.split(','){let at=u32::from_str_radix(a.trim_start_matches("0x"),16).unwrap();println!("probe {:#x} = {}",at,soc.read32(at));}}
  if let Ok(path)=std::env::var("FM1_FLASH_OUT"){std::fs::write(path,&soc.flash.mem).unwrap();}
  println!("{} emulated ms, {} stereo frames, {:.3} real seconds",soc.periph.ms(),soc.periph.audio.len()/2,start.elapsed().as_secs_f64());
 }

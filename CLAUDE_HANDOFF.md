@@ -1,5 +1,8 @@
 # MIKU-FM1 — current engineering handoff for Claude review
 
+> Current DX7 milestone: [real six-operator renderer, dedicated BANK/operator editor, embedded patch saving, native video/audio evidence and current measurements](docs/DX7_BANK_HANDOFF.md). This supersedes earlier DX7-plan-only status.
+
+
 > Current policy and UI: [fixed 64 KiB flash reserve removed at owner request; neon console UI implemented; eight-voice DX7 audition bank prepared offline](docs/NEON_UI_AND_DX7_BANK.md). Earlier fixed-flash-reserve instructions are superseded.
 
 
@@ -86,14 +89,14 @@ These figures come from actual target builds, not host object sizes.
 
 | Profile | Image used / free | Static used / free | Pool used / free |
 |---|---:|---:|---:|
-| Default native |507864 / 73700|35760 / 62544|255624 / 88440|
-| Native MIDI+UVC |514516 / 67048|33984 / 64320|266080 / 77984|
-| Offline video benchmark |513108 / 68456|33984 / 64320|266080 / 77984|
+| Default native |531820 / 49744|42512 / 55792|255624 / 88440|
+| Native MIDI+UVC |538444 / 43120|40720 / 57584|266080 / 77984|
+| Offline video benchmark |538328 / 43236|40720 / 57584|266080 / 77984|
 
 The owner removed the fixed image-space floor. The actual image limit remains
 581564 bytes; static/pool free-space margins remain 16384/32768 bytes. The current
-video profile has **67048 genuinely free image bytes**, with no 64 KiB reservation.
-The offline benchmark row is historical. Measure upcoming DX7 and USB work;
+video profile has **43120 genuinely free image bytes**, with no 64 KiB reservation.
+The offline benchmark row now includes DX7 playback. Measure upcoming DX7 and USB work;
 do not reintroduce an arbitrary flash reservation or silently drop outfits.
 
 All eleven additional wardrobe packs total **335463 accounted bytes**, including
@@ -136,7 +139,7 @@ Uncompressed WAV hashes/RMS/durations are in
 
 ## Validation completed
 
-- Release host build and **41/41 CTest checks**.
+- Release host build and **46/46 CTest checks**.
 - Original fvoice/fmband table generation and original sprite regeneration.
 - Original compact-header regeneration; full wardrobe packing/checks; independent
   eleven-pair source audit with original source hashes unchanged.

@@ -68,3 +68,20 @@ listed in `assets/stage/README.md` and `assets/NOTICE.md`; the code licence does
 not relicense their pixels. Factory-song provenance is documented in
 `assets/songs/factory/README.md`; no third-party recording or modern
 accompaniment is bundled.
+
+## Embedded DX7 engine and factory patches
+
+`firmware/audio/dx7/dx7.c,h`, constants, generated lookup tables and reference
+fixtures adapt Google MSFA (Copyright2012–2013 Google Inc.) under Apache-2.0.
+The complete license is in `firmware/audio/dx7/LICENSE`; source revision and
+changes are in its README. The combined application remains GPL-3.0-only.
+
+`assets/dx7/factory.packed` and generated `firmware/audio/dx7/bank.h` retain eight
+unchanged voices from Dexed's GPLv3-distributed `assets/builtin_pgm.zip`, pinned
+at fea2f0f0f2c397799f59b27eb11c038cd34b22c5. See `assets/dx7/README.md` for
+source/reproduction and individual source bank/program hashes in the verified
+shortlist. Retain Dexed's patch-compilation credit to Jean-Marc Desprez (SynprezFM)
+and its program-contributor credits: Dave Benson, Frank Carvalho, Tim Conrardy,
+Jack Deckard, Chris Dodunski, Tim Garrett, Hitaye, Stephan Ibsen, Christian Jezreel,
+Narfman, Godric Wilkie. Engine and patch licenses do not change the character
+art's PCL terms. DX7 is a Yamaha product name; this remains unofficial software.

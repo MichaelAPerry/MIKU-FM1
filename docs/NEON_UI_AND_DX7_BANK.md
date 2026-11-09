@@ -1,5 +1,8 @@
 # Neon console UI, released flash headroom and DX7 audition bank
 
+> Current DX7 milestone: [real six-operator renderer, dedicated BANK/operator editor, embedded patch saving, native video/audio evidence and current measurements](DX7_BANK_HANDOFF.md). This supersedes earlier DX7-plan-only status.
+
+
 Current implementation: `026f682` on feature/miku-nextgen-performance.
 Related commits: `1dee4b0` removes the fixed flash floor; `0df5a45` prepares the
 DX7 shortlist/extractor. PR21 remains draft. This supersedes all earlier

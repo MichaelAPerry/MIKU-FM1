@@ -25,17 +25,21 @@ harness=r'''
 #include "firmware/ui/stagefx.h"
 #include "firmware/song/song.h"
 static uint32_t active,busy,ticks,published,generation;
-#if MIKU_VIDEO_BENCH
-static void video_copy_into_hold(const uint8_t *p,uint32_t n){assert(n>=4&&n<=8192&&p[0]==255&&p[1]==216&&p[n-2]==255&&p[n-1]==217);}
-#endif
+
 static uint32_t fm1_ticks(void){ticks+=100;return ticks;}
 static uint32_t video_usb_generation(void){return generation;}
 static uint32_t video_usb_active(void){return active;}
-static uint32_t video_usb_busy(void){return busy;}
+static const uint8_t *cached,*pending,*released;
+static uint32_t cached_bytes;
+static uint32_t video_usb_busy(void){return busy||released!=0;}
+static const uint8_t *video_usb_take_free(void){const uint8_t*p=released;released=0;return p;}
+static void consume(void){assert(busy&&pending);released=cached;cached=pending;cached_bytes=published;pending=0;busy=0;}
+static void reset_stream(void){generation++;busy=published=0;cached=pending=released=0;}
+
 static uint32_t video_usb_publish(const uint8_t*p,uint32_t n,uint32_t epoch){
     assert(epoch==generation);
-    assert(active&&!busy&&p&&n<=8192&&p[0]==255&&p[1]==216&&p[n-2]==255&&p[n-1]==217);
-    busy=1;published=n;return 1;
+    assert(active&&!busy&&!released&&p!=cached&&p&&n<=8192&&p[0]==255&&p[1]==216&&p[n-2]==255&&p[n-1]==217);
+    busy=1;pending=p;published=n;return 1;
 }
 PRODUCER
 static uint32_t app_idle_ready,page,trk,polls,midi_polls;
@@ -48,40 +52,47 @@ static void midi_service(uint32_t t){assert(t<4);midi_polls++;}
 IDLE
 static uint8_t prior[8192],want[8192];static MjEncoder reference;
 int main(void){
-    app_lcd_idle();assert(!polls&&!midi_polls&&!video_encoded); /* pre-platform init */
+    app_lcd_idle();assert(!polls&&!midi_polls&&!video_encoded);
     PerfState scene;perf_init(&scene);scene.sprite=6;scene.background=1;
     for(unsigned i=0;i<100;i++)video_update(&scene);
     assert(!video_encoding&&!video_encoded&&!published);
-    active=1;
-    for(unsigned i=0;i<79;i++){video_update(&scene);assert(!published);}
-    video_update(&scene);assert(video_encoded==1&&busy&&published);
+    active=1;reset_stream();performance=scene;app_idle_ready=1;
+    for(unsigned i=0;i<80;i++)app_lcd_idle();
+    assert(video_encoded==1&&busy&&pending==video_jpeg&&polls==80&&midi_polls==80);
     assert(video_cache.decoded_rows<=71u);
-    memcpy(prior,video_jpeg,published);uint32_t n=published;
+    memcpy(prior,pending,published);uint32_t n=published;
     assert(mj_begin(&reference,160,120,65,want,sizeof want,mj_perf_pixel,&scene));
     assert(mj_step(&reference,80)==1&&mj_size(&reference)==n&&!memcmp(prior,want,n));
+    /* Encode the second image while the first is still pending/owned. */
     scene.sprite=7;
-    for(unsigned i=0;i<100;i++)video_update(&scene);
-    assert(video_encoded==1&&!memcmp(prior,video_jpeg,n)); /* DMA-owned frame immutable */
-    busy=0;published=0;
-    for(unsigned i=0;i<10;i++)video_update(&scene);
-    assert(video_encoding&&!published);
-    active=0;video_update(&scene);assert(!video_encoding); /* disconnect aborts unfinished frame */
-    active=1;generation++;
     for(unsigned i=0;i<80;i++)video_update(&scene);
-    assert(busy&&video_encoded==2&&published);
+    assert(video_ready&&video_encoded==1&&!memcmp(pending,prior,n));
+    consume();assert(cached==video_jpeg);
+    video_update(&scene);assert(video_encoded==2&&busy&&pending==video_next&&!video_ready);
+    assert(!memcmp(cached,prior,n));
     assert(mj_begin(&reference,160,120,65,want,sizeof want,mj_perf_pixel,&scene));
-    assert(mj_step(&reference,80)==1&&mj_size(&reference)==published&&!memcmp(video_jpeg,want,published));
-    busy=0;published=0;for(unsigned i=0;i<10;i++)video_update(&scene);
-    assert(video_encoding);generation++;scene.sprite=2;
-    for(unsigned i=0;i<79;i++){video_update(&scene);assert(!published);}
-    video_update(&scene);assert(published&&video_encoded==3);
+    assert(mj_step(&reference,80)==1&&mj_size(&reference)==published&&!memcmp(pending,want,published));
+    consume();assert(cached==video_next&&released==video_jpeg);
+    scene.sprite=2;
+    for(unsigned i=0;i<10;i++)video_update(&scene);
+    assert(video_encoding&&!memcmp(cached,want,cached_bytes)); /* only released buffer is reused */
+    active=0;video_update(&scene);assert(!video_encoding&&!video_ready);
+    active=1;video_update(&scene); /* transient inactivity without a new generation */
+    assert(video_encoding&&!memcmp(cached,want,cached_bytes));
+    reset_stream();
+    for(unsigned i=0;i<80;i++)video_update(&scene);
+    assert(video_encoded==3&&busy&&pending==video_jpeg);
+    consume();scene.sprite=4;
+    for(unsigned i=0;i<10;i++)video_update(&scene);
+    reset_stream();scene.sprite=5;
+    for(unsigned i=0;i<80;i++)video_update(&scene);
+    assert(video_encoded==4&&busy&&pending==video_jpeg);
+    assert(mj_begin(&reference,160,120,65,want,sizeof want,mj_perf_pixel,&scene));
+    assert(mj_step(&reference,80)==1&&mj_size(&reference)==published&&!memcmp(pending,want,published));
     assert(video_min_bytes&&video_max_bytes>=video_min_bytes&&video_total_bytes>=published);
-    /* Entire JPEG can progress during LCD DMA waits, without main-loop passes. */
-    busy=0;published=0;performance=scene;app_idle_ready=1;
-    for(unsigned i=0;i<80;i++)app_lcd_idle();
-    assert(busy&&published&&video_encoded==4&&polls==80&&midi_polls==80);
-    puts("native video main: incremental budget, immutable USB ownership, disconnect/restart, exact JPEG");
+    puts("native video main: two-buffer encoding, pointer ownership/release, generation abort, exact JPEG");
 }
+
 '''.replace('PRODUCER',producer).replace('IDLE',idle)
 with tempfile.TemporaryDirectory() as td:
     p=pathlib.Path(td);(p/'main.c').write_text(harness)

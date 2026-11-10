@@ -34,7 +34,7 @@ Verified source: `{a.commit}`. CPU-emulator measurements use timed 12 MHz LCD tr
 - Worst audio callback: STAGE {stage['audio_worst_us']:.3f} µs and DANCE {dance['audio_worst_us']:.3f} µs, both no higher than the instrumented 0.7 baseline; zero overruns.
 - Full-song JPEG run: {video['encoded_frames']} frames over {video['encoding_window_ms_emulator']/1000:.3f} s, {video['encoder_frames_per_second_emulator']:.3f} encoded fps, {video['minimum_jpeg_bytes']}–{video['maximum_jpeg_bytes']} bytes/JPEG. Mean/max frame time {video['mean_frame_wall_us_emulator']/1000:.3f}/{video['max_frame_wall_us_emulator']/1000:.3f} ms; zero encoder failures/audio overruns. These are encoder measurements, not physical USB throughput.
 - The real USB driver separately reconstructs 150 fresh frames, then 150 frames during an encoder pause (1 fresh/149 repeated), with 66–67 ms intervals, exact payloads and recovery checks. A separate compressed snapshot keeps the camera cadence independent of encoding; fresh/repeated counters remain distinct. This is protocol evidence, not OS enumeration.
-- The native benchmark also measures the bounded snapshot copy in main context: worst {video['max_snapshot_copy_wall_us_emulator']:.3f} µs including preemption. Physical USB-ISR cost remains unverified.
+- Main and USB swap ownership of two fixed compressed buffers between class frames. TIMER5 performs no JPEG-sized copy or encoding; physical USB-ISR cost remains unverified.
 
 | Profile | Image bytes (≤581564) | Static free (≥16384) | Pool free (≥32768) |
 | --- | ---: | ---: | ---: |

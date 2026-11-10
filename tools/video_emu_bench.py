@@ -25,7 +25,7 @@ def main():
     if not 0<=a.frames<=600 or a.min_frames<1:p.error('frames must be in 0..600 and min-frames positive')
     out=a.out.resolve();(out/'work').mkdir(parents=True,exist_ok=True)
     symbols=a.symbols.read_text();names=['video_jpeg','video_encoded','video_step_ticks','video_frame_ticks','video_last_bytes','video_failed','pub_peak']
-    names += [n for n in ['video_copy_ticks','video_encoding','video_first_ticks','video_last_ticks','video_total_ticks','video_min_bytes','video_max_bytes','audio_dx_tracks','audio_playing_frames','audio_hard_peak','audio_overruns','audio_init_ticks'] if re.search(r'^([0-9a-f]+) .*\s'+n+r'$',symbols,re.M)]
+    names += [n for n in ['video_encoding','video_first_ticks','video_last_ticks','video_total_ticks','video_min_bytes','video_max_bytes','audio_dx_tracks','audio_playing_frames','audio_hard_peak','audio_overruns','audio_init_ticks'] if re.search(r'^([0-9a-f]+) .*\s'+n+r'$',symbols,re.M)]
     addresses={name:int(re.search(r'^([0-9a-f]+) .*\s'+name+r'$',symbols,re.M).group(1),16) for name in names}
     (out/'symbols.json').write_text(json.dumps(addresses,indent=2)+'\n')
     package=a.package.resolve();manifest={'package':str(package),'sha256':hashlib.sha256(package.read_bytes()).hexdigest(),

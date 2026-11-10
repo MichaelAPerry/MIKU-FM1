@@ -199,22 +199,24 @@ static uint16_t pw[16],dpw[16],c_bg,c_disc;
 static uint32_t dance_cur=99,dance_ms;
 static PerfState performance;
 #if MIKU_UVC
-/* Encoder output plus incremental MCU scratch: no pixel framebuffer or core1 ownership.
-   TIMER5 has a separate compressed snapshot, so encoding overlaps transmission.
-   The main output stays immutable until the mailbox copy releases it. */
+/* Two compressed JPEGs (one for the offline benchmark), no pixel framebuffer.
+   Main encodes a free buffer while TIMER5 holds/repeats the other. A pointer
+   release between class frames transfers ownership back without an ISR copy. */
 static MjEncoder video_encoder __attribute__((section(".pool")));
 static uint8_t video_jpeg[MJ_FRAME_CAP] __attribute__((section(".pool"),aligned(32)));
 static PerfState video_scene;
 static MjPerfCache video_cache __attribute__((section(".pool")));
 static uint32_t video_encoding,video_started;
 #if !MIKU_VIDEO_BENCH
-static uint32_t video_generation;
+static uint8_t video_next[MJ_FRAME_CAP] __attribute__((section(".pool"),aligned(32)));
+static uint32_t video_generation,video_free=3u,video_index,video_ready;
 static volatile uint32_t video_rejected;
 #endif
 static volatile uint32_t video_step_ticks,video_frame_ticks,video_encoded,video_failed,video_last_bytes;
 static volatile uint32_t video_total_bytes,video_min_bytes,video_max_bytes,video_total_ticks,video_first_ticks,video_last_ticks;
 static void video_update(const PerfState *scene){
     uint32_t at,dt;int result;
+    uint8_t *output=video_jpeg;
 #if MIKU_VIDEO_BENCH
     /* A zero frame cap measures the entire song; stop starting frames before
        the emulator dump deadline, but always finish the immutable snapshot. */
@@ -228,25 +230,58 @@ static void video_update(const PerfState *scene){
 #endif
     }
 #else
-    if(!video_usb_active()){video_encoding=0;return;}
-    if(video_generation!=video_usb_generation()){
-        video_encoding=0;video_generation=video_usb_generation();
+    if(!video_usb_active()){
+        if(video_encoding||video_ready)video_free|=1u<<video_index;
+        video_encoding=video_ready=0;return;
     }
-    if(video_usb_busy())return;
+    if(video_generation!=video_usb_generation()){
+        video_encoding=video_ready=0;video_free=3u;
+        video_generation=video_usb_generation();
+    }
+    {
+        const uint8_t *released=video_usb_take_free();
+        if(released==video_jpeg)video_free|=1u;
+        else if(released==video_next)video_free|=2u;
+    }
+    if(video_ready){
+        output=video_index?video_next:video_jpeg;
+        if(!video_usb_busy()){
+            if(video_usb_publish(output,video_last_bytes,video_generation)){video_ready=0;video_encoded++;}
+            else video_rejected++;
+        }
+        return;
+    }
+    if(!video_encoding){
+        if(!video_free)return;
+        video_index=(video_free&1u)?0u:1u;video_free&=~(1u<<video_index);
+    }
+    output=video_index?video_next:video_jpeg;
 #endif
     if(!video_encoding){
         volatile uint8_t *to=(volatile uint8_t *)&video_scene;
         const uint8_t *from=(const uint8_t *)scene;uint32_t i;
         for(i=0;i<sizeof video_scene;i++)to[i]=from[i];
         mj_perf_cache_init(&video_cache,&video_scene);
-        if(!mj_begin(&video_encoder,MUVC_WIDTH,MUVC_HEIGHT,65,video_jpeg,sizeof video_jpeg,mj_perf_cached_pixel,&video_cache)){video_failed++;return;}
+        if(!mj_begin(&video_encoder,MUVC_WIDTH,MUVC_HEIGHT,65,output,sizeof video_jpeg,mj_perf_cached_pixel,&video_cache)){
+            video_failed++;
+#if !MIKU_VIDEO_BENCH
+            video_free|=1u<<video_index;
+#endif
+            return;
+        }
         video_encoding=1;video_started=fm1_ticks();
     }
     at=fm1_ticks();result=mj_step(&video_encoder,1); /* <=one16x16 tile per poll pass */
     dt=fm1_ticks()-at;if(dt>video_step_ticks)video_step_ticks=dt;
     if(result==0)return;
     video_encoding=0;dt=fm1_ticks()-video_started;if(dt>video_frame_ticks)video_frame_ticks=dt;
-    if(result<0){video_failed++;return;}
+    if(result<0){
+        video_failed++;
+#if !MIKU_VIDEO_BENCH
+        video_free|=1u<<video_index;
+#endif
+        return;
+    }
     video_last_bytes=mj_size(&video_encoder);
     if(!video_encoded)video_first_ticks=fm1_ticks();
     video_last_ticks=fm1_ticks();
@@ -254,11 +289,13 @@ static void video_update(const PerfState *scene){
     if(!video_min_bytes||video_last_bytes<video_min_bytes)video_min_bytes=video_last_bytes;
     if(video_last_bytes>video_max_bytes)video_max_bytes=video_last_bytes;
 #if MIKU_VIDEO_BENCH
-    video_copy_into_hold(video_jpeg,video_last_bytes); /* measure bounded snapshot copy in main, not USB throughput */
     video_encoded++;
 #else
-    if(video_usb_publish(video_jpeg,mj_size(&video_encoder),video_generation))video_encoded++;
-    else video_rejected++;
+    video_ready=1;
+    if(!video_usb_busy()){
+        if(video_usb_publish(output,video_last_bytes,video_generation)){video_ready=0;video_encoded++;}
+        else video_rejected++;
+    }
 #endif
 }
 #endif

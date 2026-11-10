@@ -1,14 +1,20 @@
-DX7 playback in 0.7 recomputes patch checksums in each audio block, and the isolated USB-camera prototype does not recover cleanly from suspend or endpoint stalls. This draft moves patch invalidation to locked edits, overlaps sprite rendering with LCD transfers, stabilizes upright pose sizing, and completes the MIDI+UVC stream lifecycle without adding heap allocation or floating point to the audio path.
+DX7 playback in 0.7 recomputes patch checksums in every audio block, and DANCE serializes rendering with LCD transfers. This draft moves patch invalidation to locked edits, overlaps rendering and transfer within the existing canvas, caches decoded body/effect rows, and protects musical-clock frame deadlines. Added outfits now keep consistent upright sprite heights.
 
-USB video now has corrected UVC camera-terminal control-bitmap geometry, immutable session-stamped JPEG publication, suspend/resume and endpoint-timeout recovery, deadline-based packet pacing, bounded decoded-row caching, and transmitted-frame/size/interval counters. It stays a separate 160x120 MJPEG/MIDI profile; USB-audio sharing is excluded because both profiles use EP4.
+USB video includes corrected UVC descriptors, generation-checked immutable JPEG ownership, suspend/resume and stalled-endpoint recovery, packet pacing, and completed-transfer counters. It stays a separate 160×120 MJPEG + MIDI profile because UVC and USB audio share EP4. Also included: BANK/LIBRARY layout fixes, checked user-bank name editing, and CC64 for classic chords/bass and the singer. MKS2 v4/v5 and both flash chips remain supported; no heap or libm was added to the audio path.
 
-Also included: BANK/LIBRARY hint layouts, checked user-bank slot naming, and CC64 for classic chords, bass and singer notes. Song format, both flash IDs and resource limits are retained.
+Verified source: `85fe73363d257481a7eed4b582e3c75e64f62642`. CPU-emulator measurements use timed 12 MHz LCD transfers and full-band DX7 playback:
 
-Validation:
-- 56/56 host CTest checks pass, including 729 layout states and cached/reference JPEG byte equality across the wardrobe/effect fixtures.
-- The real patched USB driver passes a 150-frame fake-controller transport run with 66–67 ms simulated frame intervals, exact reconstruction, FID/EOF checks and suspend/stall/restart cases. This is not OS or hardware enumeration evidence.
-- Native development CI installs the authentic toolchain and pinned SDK, builds default/video/benchmark profiles with resource checks, and runs the pinned CPU emulator. The first UVC implementation commit passed all these steps; the latest run adds full-song baseline/candidate measurements and must be checked before approval.
+- 56/56 host CTest checks pass, including 729 text-layout states and 720 cached/reference JPEG fixtures. Default/video/benchmark native builds, resource checks and default/video emulator smoke pass.
+- DANCE draw mean 75.494 ms; frame intervals 98.508–102.669 ms. The unchanged 10 ms interval-spread check passes.
+- Worst audio callback: STAGE 2271.792 µs and DANCE 2271.833 µs, both no higher than the instrumented 0.7 baseline; zero overruns.
+- Full-song JPEG run: 639 frames over 30.537 s, 20.893 encoded fps, 4329–4822 bytes/JPEG. Mean/max frame time 47.684/112.452 ms; zero encoder failures/audio overruns. These are encoder measurements, not physical USB throughput.
+- The real USB driver separately reconstructs 150 frames through a fake controller with 66–67 ms intervals and recovery checks; this is protocol evidence, not OS enumeration.
 
-[Native validation runs](https://github.com/MichaelAPerry/MIKU-FM1/actions/workflows/native-development.yml) · [validation record](https://github.com/MichaelAPerry/MIKU-FM1/blob/feature/0.8-smooth-and-seen/docs/VALIDATION.md) · [before/after host images and sprites](https://github.com/MichaelAPerry/MIKU-FM1/blob/feature/0.8-smooth-and-seen/docs/evidence/smooth-and-seen/README.md)
+| Profile | Image bytes (≤581564) | Static free (≥16384) | Pool free (≥32768) |
+| --- | ---: | ---: | ---: |
+| miku-fm | 544,976 | 46,688 | 80,240 |
+| miku-fm-video | 551,304 | 48,384 | 68,912 |
 
-Review gates: native frame/callback measurements and emulator page artifacts; owner-approved listening trims for CLUB STAB/DIGI GROWL/DIGI PLUCK; Claude review before main integration. OS webcam enumeration, sustained physical USB throughput and real-device audio deadlines remain unverified. The owner does not permit experimental firmware on their FM-1 before Claude review and main integration. No main push, release tag, deployment or hardware access is authorized by this PR.
+[Before/after emulator screenshots, all BANK pages and both tracks](https://github.com/MichaelAPerry/MIKU-FM1/blob/feature/0.8-smooth-and-seen/docs/evidence/smooth-and-seen/native-ci/README.md) · [validation and limitations](https://github.com/MichaelAPerry/MIKU-FM1/blob/feature/0.8-smooth-and-seen/docs/VALIDATION.md) · [review handoff](https://github.com/MichaelAPerry/MIKU-FM1/blob/feature/0.8-smooth-and-seen/docs/0_8_REVIEW.md)
+
+Remaining owner gates: macOS/Windows/Linux webcam enumeration and physical sustained USB/audio timing are unverified. CLUB STAB, DIGI GROWL and DIGI PLUCK trims await listening decisions; their bytes are unchanged. Claude review and main integration must precede experimental installation on the owner's FM-1. No main push, release tag, deployment or device access occurs in this work.

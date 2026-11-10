@@ -1,0 +1,27 @@
+{
+  "scope": "CPU emulator only",
+  "passed": true,
+  "pages": {
+    "stage": {
+      "audio_worst_before_us": 2331.0833333333335,
+      "audio_worst_after_us": 2271.7916666666665,
+      "audio_overruns": 0,
+      "draw_before_us": 6097.397897897898,
+      "draw_after_us": 9492.483552631578,
+      "interval_spread_after_ms": 2563.9150833333333,
+      "audio_worst_unchanged_or_better": true,
+      "passed": true
+    },
+    "dance": {
+      "audio_worst_before_us": 2330.0833333333335,
+      "audio_worst_after_us": 2271.8333333333335,
+      "audio_overruns": 0,
+      "draw_before_us": 134568.567264574,
+      "draw_after_us": 75493.6476910828,
+      "interval_spread_after_ms": 4.160624999999996,
+      "audio_worst_unchanged_or_better": true,
+      "passed": true,
+      "steady_frame_interval": true
+    }
+  }
+}

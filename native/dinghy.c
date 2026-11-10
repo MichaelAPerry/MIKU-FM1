@@ -739,6 +739,7 @@ static void dance_draw(uint32_t f){
        This overlaps CPU rendering and 12 MHz SPI without another buffer. */
     const uint32_t rows=CV_MAX/(2u*240u);
     uint32_t slot=0;
+    StageFxCache effects;stagefx_cache_init(&effects);
     cv_oy=0;lcd_sync();
     for(y=0;y<214u;y+=rows){
         uint16_t *pixels=cv_px+slot*rows*240u;
@@ -752,11 +753,18 @@ static void dance_draw(uint32_t f){
                 k=0;
                 if(y+r<213u&&x>=DX&&x<DX+183u)k=row[(x-DX)/3u];
                 /* Opaque sprite pixels cover all procedural stage work. */
-                pixels[r*240u+x]=k?dpw[k]:swap16(perf_pixel(&performance,x,y+r));
+                pixels[r*240u+x]=k?dpw[k]:swap16(perf_cached_pixel(&performance,&effects,x,y+r));
             }
         }
         lcd_blit(0,y,240,n,pixels);slot^=1u;
     }
+}
+/* The 26-row status strip needs 8.32 ms of SPI plus drawing/ISR time.
+ * Reserve the final 20 ms before the next pose slot so a status change cannot
+ * make that slot late. Its dirty bit stays set until the next safe window. */
+static uint32_t dance_status_ready(uint32_t now){
+    uint32_t age=now-dance_ms;
+    return !playing||dance_cur==99u||age<80u||age>=100u;
 }
 static void dance_update(void){
     uint32_t now=fm1_ms,f=performance.sprite;
@@ -1227,7 +1235,7 @@ static void redraw(void){
         else dirty|=0x1Fu;
     }
     if(!page){if(dirty&0x20u){dirty&=~0x20u;pg_stage();}dirty&=~0x1Fu;return;}
-    if(page==PG_DANCE){if(dirty&0x20u){dirty&=~0x20u;pg_dance();}dirty&=~0x1Fu;return;}
+    if(page==PG_DANCE){if((dirty&0x20u)&&dance_status_ready(fm1_ms)){dirty&=~0x20u;pg_dance();}dirty&=~0x1Fu;return;}
     dirty&=~0x20u;
     for(b=0;b<5u;b++)if(dirty&(1u<<b)){
         dirty&=~(1u<<b);

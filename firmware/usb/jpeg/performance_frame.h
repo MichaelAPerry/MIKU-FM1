@@ -10,6 +10,7 @@ typedef struct {
     const PerfState *scene;
     uint8_t row_y[12],rows[12][61];
     uint32_t decoded_rows;
+    StageFxCache effects;
 } MjPerfCache;
 void mj_perf_cache_init(MjPerfCache *cache,const PerfState *scene);
 uint16_t mj_perf_cached_pixel(void *cache,uint32_t x,uint32_t y);

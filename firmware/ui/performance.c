@@ -69,7 +69,7 @@ uint32_t perf_update(PerfState *s,const PerfInput *in){
     s->light=(uint8_t)light;s->playing=in->playing!=0;s->section=in->section;s->initialized=1;
     return dirty;
 }
-uint16_t perf_pixel(const PerfState *s,uint32_t x,uint32_t y){
+static uint16_t perf_sample(const PerfState *s,StageFxCache *cache,uint32_t x,uint32_t y){
     uint16_t base=PRGB(12,20,40),accent,dim;uint32_t beam,grid;
     if(!s||x>=PERF_W||y>=PERF_SCENE_H)return 0;
     accent=s->palette==PERF_PALETTE_AMBER?PRGB(248,176,64):PRGB(40,208,200);
@@ -117,6 +117,9 @@ uint16_t perf_pixel(const PerfState *s,uint32_t x,uint32_t y){
     }
     {uint32_t age=s->now_ms-s->effect_epoch;uint16_t fx;
      if(s->playing&&s->effect==STFX_BEAMS)age%=960u;
-     fx=stagefx_pixel(s->effect,age,s->intensity,x,y);if(fx)base=fx;}
+     fx=cache?stagefx_cached_pixel(cache,s->effect,age,s->intensity,x,y):stagefx_pixel(s->effect,age,s->intensity,x,y);if(fx)base=fx;}
     return base;
 }
+
+uint16_t perf_cached_pixel(const PerfState *s,StageFxCache *cache,uint32_t x,uint32_t y){return perf_sample(s,cache,x,y);}
+uint16_t perf_pixel(const PerfState *s,uint32_t x,uint32_t y){return perf_sample(s,0,x,y);}

@@ -4,12 +4,12 @@
 #include <assert.h>
 #include <stdio.h>
 int main(void){
-    unsigned mode,t,x,y,count;
+    unsigned mode,t,x,y,count;StageFxCache cache;stagefx_cache_init(&cache);
     for(mode=1;mode<STFX_N;mode++){
         count=0;
         for(t=0;t<960;t+=120)for(y=0;y<214;y++)for(x=0;x<240;x++){
             unsigned p=stagefx_pixel(mode,t,100,x,y);
-            assert(p==stagefx_pixel(mode,t,100,x,y));count+=p!=0;
+            assert(p==stagefx_cached_pixel(&cache,mode,t,100,x,y));count+=p!=0;
             assert(!stagefx_pixel(mode,t,0,x,y));
         }
         assert(count);assert(!stagefx_pixel(mode,960,100,8,28));

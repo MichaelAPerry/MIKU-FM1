@@ -17,6 +17,13 @@ Set JIELI_TOOLCHAIN and AC79_SDK to the documented local dependencies, then run
 they reuse/reset the ignored build/dinghy checkout. Preserve actual resource and
 HAL checks. Device DSP remains freestanding and integer-only.
 
+The 0.8 video profile is 160x120 MJPEG at nominal 15 fps plus USB MIDI.
+USB audio/CDC are disabled: UVC and USB audio share EP4 and cannot be enabled
+simultaneously in this implementation. Rendering remains on the main loop;
+audio and USB interrupt handlers never encode JPEG. Suspend/resume, endpoint
+recovery, stale-session rejection and transmitted-frame statistics are included.
+See `docs/evidence/smooth-and-seen/README.md` for counters and CI artifacts.
+
 No physical hardware qualification or sustained USB-video result is claimed.
 Do not flash hardware, merge main, release or deploy without owner authorization.
 See LICENSING.md for GPL application, Apache MSFA and separate character-art terms.

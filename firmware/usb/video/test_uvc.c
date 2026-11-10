@@ -49,6 +49,13 @@ int main(void){
     T(muvc_offer(&s,short_jpeg,4,12));T(!muvc_prepare(&s,0x10u,packet,sizeof packet));
     T(muvc_prepare(&s,0xfffffff0u+MUVC_FRAME_US,packet,sizeof packet)==6);T(muvc_ack(&s,1));T(muvc_take_release(&s,0,0));
     T(!muvc_offer(&s,jpeg,3,12));T(!muvc_offer(&s,jpeg,MUVC_FRAME_CAP+1,12));
+    /* Late producer slots skip missed deadlines without accumulating phase drift. */
+    muvc_stream(&s,0);muvc_stream(&s,1);
+    T(muvc_offer(&s,short_jpeg,4,13));T(muvc_prepare(&s,1000,packet,sizeof packet));T(muvc_ack(&s,1));T(muvc_take_release(&s,0,0));
+    T(muvc_offer(&s,short_jpeg,4,14));T(muvc_prepare(&s,1000+MUVC_FRAME_US+10000,packet,sizeof packet));
+    T(muvc_ack(&s,1));T(muvc_take_release(&s,0,0));
+    T(muvc_offer(&s,short_jpeg,4,15));T(!muvc_prepare(&s,1000+2*MUVC_FRAME_US-1,packet,sizeof packet));
+    T(muvc_prepare(&s,1000+2*MUVC_FRAME_US,packet,sizeof packet));T(muvc_ack(&s,1));T(muvc_take_release(&s,0,0));
     /* Probe/commit caps are never accepted from host unchecked. */
     T(setup(&s,0x81,1,1,26,probe,&n)==1);T(probe[22]==0 && probe[23]==2);
     probe[23]=4;T(setup(&s,1,2,0,26,probe,&n)==0);T(muvc_control_data(&s,probe,26)==-1);
@@ -56,6 +63,9 @@ int main(void){
     /* Every descriptor length is self-consistent and advertised packet/frame fit profile. */
     T(muvc_configuration_length==152);T(muvc_configuration_descriptor[2]==152);
     unsigned at=0,eps=0;while(at<muvc_configuration_length){unsigned len=muvc_configuration_descriptor[at];T(len>=2);T(at+len<=muvc_configuration_length);
+        if(muvc_configuration_descriptor[at+1]==36&&muvc_configuration_descriptor[at+2]==2&&muvc_configuration_descriptor[at+3]==1){
+            T(len==18&&muvc_configuration_descriptor[at+14]==3);T(len==15u+muvc_configuration_descriptor[at+14]);
+        }
         if(muvc_configuration_descriptor[at+1]==5){eps++;T(muvc_configuration_descriptor[at+2]==MUVC_EP);T(muvc_configuration_descriptor[at+4]==0 && muvc_configuration_descriptor[at+5]==2);}at+=len;}
     T(at==muvc_configuration_length && eps==1);
     printf("uvc: controls/caps/FID/EOF/ERR/reset/ownership/backpressure/pacing passed; sizeof state=%zu\n",sizeof(Muvc));return 0;

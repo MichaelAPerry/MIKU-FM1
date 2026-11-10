@@ -1,3 +1,8 @@
+# Current task: 0.8 smooth and seen
+
+Review [the 0.8 handoff](docs/0_8_REVIEW.md) and the latest branch/evidence SHA.
+The PR21 material below is historical context, not the current assignment.
+
 # MIKU-FM1 — current handoff for Claude Code
 
 **Start with [CLAUDE_CODE_REVIEW.md](CLAUDE_CODE_REVIEW.md).** It is the independent

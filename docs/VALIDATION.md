@@ -1,3 +1,109 @@
+## 0.8 draft: smooth and seen (2026-11-10)
+
+Verified source: `a6ad1ec278cc1c859d442052ea6a4a1f042266f0` on `feature/0.8-smooth-and-seen`, descended from
+`v0.7` (`c0675f4`) and merged with current 0.7 main. This record supersedes the
+historical figures below. No main push, release tag or device installation occurred.
+The agent has no hardware access. Only the owner handles later device testing,
+after Claude review and main integration.
+
+**Host: 56/56 CTest checks pass.** Native default, `--video` and `--video-bench`
+builds use the authentic JieLi toolchain and pinned AC79 SDK. Default/video
+emulator smoke, strict HAL checks, call-free RAM checks and resource checks pass.
+No substitute SDK or verification bypass was used. Limits remain image≤581564,
+static free≥16384 and pool free≥32768 bytes:
+
+| Profile | Image bytes | Static free | Pool free |
+| --- | ---: | ---: | ---: |
+| Default | 544,976 | 46,688 | 80,240 |
+| MIDI+UVC | 551,584 | 48,336 | 60,740 |
+| Offline JPEG benchmark | 551,180 | 48,352 | 68,932 |
+
+Timed CPU-emulator comparisons run 40 s with `FM1_LCD_TIMED=1` (12 MHz SPI),
+identical instrumentation and a complete generated HYPERPOP arrangement with both
+DX7 tracks. The clean-start slot 0 look (outfit 1/concert scene) is measured; all-outfit pixel/JPEG tests
+do not establish every look's device timing.
+
+| Playback measurement | Instrumented 0.7 | 0.8 |
+| --- | ---: | ---: |
+| DANCE mean draw, ms | 134.569 | 75.494 |
+| DANCE worst draw, ms | 163.130 | 102.666 |
+| DANCE worst audio callback, µs | 2330.083 | 2271.833 |
+| STAGE mean changed-mouth draw, ms | 6.097 | 9.492 |
+| STAGE worst draw, ms | 19.917 | 33.526 |
+| STAGE worst audio callback, µs | 2331.083 | 2271.792 |
+
+DANCE intervals are **98.508–102.669 ms**,
+spread 4.161 ms, passing the unchanged 10 ms
+criterion. Worst audio callback is no higher than baseline; **zero audio overruns**
+were recorded in STAGE, DANCE and JPEG runs. The callback deadline is 5.805 ms.
+STAGE mouths are event driven with a 40 ms sampling clock; musical rests are not
+periodic-frame failures. Its total measured mouth-draw work was 1.354 s before and 1.443 s after.
+The mouth clock/closure fix changes the sequence and count of shapes, so these
+means describe different sets of mouth draws; both costs are reported above.
+
+Draw intervals measure draw starts; draw time includes LCD waits and interrupt
+preemption through final strip submission, with the last DMA possibly still in
+flight. DANCE audio-render wall share is 19.620% over
+the run; the emulator reports 21.5% in all ISRs.
+The full audio ISR is not separately isolated. These are CPU-emulator counters,
+not physical ISR/presentation deadlines.
+
+The sustained JPEG run completes **639 frames over
+30.532 s**, 20.896
+encoded fps. JPEG size: 4329–4822 bytes;
+mean/max frame wall time: 47.593/
+110.371 ms; maximum MCU step:
+2.630 ms. Both DX7 tracks play, with zero encoder
+failures, audio overruns or full-scale samples. Encoding spans the arrangement,
+then finishes/freezes the last JPEG before the 40 s dump. This is encoder
+performance, not transmitted USB FPS.
+
+Production uses two fixed 8 KiB compressed buffers. Main encodes a free buffer;
+TIMER5 swaps cached pointers only between completed class frames and releases the
+old pointer. It repeats the last complete image if encoding is late, without a
+JPEG-sized copy or encoding in TIMER5 (which outranks audio). Fresh/repeated
+deliveries have separate counters. Real patched-driver/fake-controller tests
+reconstruct 150 fresh frames, then 150 frames during an encoder pause
+(1 fresh/149 repeated), all at 66–67 ms intervals with exact payload/FID/EOF,
+queued ownership, safe free-buffer reuse, suspend/resume, endpoint recovery,
+stale-generation rejection and MIDI rescue. This does not prove OS enumeration.
+MIDI+UVC remains separate from USB audio because both use EP4; analog synthesis
+remains enabled.
+
+Other verified work:
+
+- 729 BANK/LIBRARY text-layout states, both tracks/all 11 bank pages, long names,
+ pending hints, playing/stopped library and name-entry/save-failure handling.
+ [52 before/after emulator images](evidence/smooth-and-seen/native-ci/README.md)
+ cover the requested pages. USER naming persists through checked bank storage;
+ a song's embedded patch copy stays independent.
+- CC64 tests cover classic chords/bass/singer, sequenced/delayed vocal releases,
+ retrigger, pedal-up/panic and same-batch MIDI ordering. MKS2 v4/v5 roundtrips and
+ both flash-chip guards remain enabled. No heap or libm enters the audio path.
+- Upright added-outfit silhouettes/feet are normalized before packing; the bow
+ stays intentionally shorter and original art stays unchanged. Additional
+ wardrobe data: 339850/340000 bytes. All 720 cached/reference JPEG fixtures are
+ byte-identical and fit 8192 bytes; asynchronous LCD tests enforce exact pixels
+ and immutable DMA sources across all outfits.
+- A 60 s full-band host benchmark before/after the CRC change produced identical
+ PCM hash `082935c5`, mean 21.904→19.320 µs and worst 845.342→684.995 µs, with no
+ host deadline misses. Desktop scheduling noise is included; this is not device
+ timing. Patch CRC work now occurs at locked edit boundaries, not each block.
+
+**Not hardware verified:** macOS/Windows/Linux webcam enumeration, physical
+sustained USB throughput/frame freshness, real audio/USB ISR deadlines, LCD
+cadence, DMA coherency and physical flash/OTA behavior. No FM-1 was accessed,
+flashed or asked to run experimental firmware. The owner's Claude/main gate
+precedes any later owner testing. CLUB STAB, DIGI GROWL and DIGI PLUCK trims are
+unchanged pending listening decisions; no subjective listening claim is made.
+
+GitHub rejected draft creation: `GitHub Actions is not permitted to create or approve pull requests`. The [prepared body](PR_0_8_DRAFT.md) and [compare page](https://github.com/MichaelAPerry/MIKU-FM1/compare/main...feature/0.8-smooth-and-seen?expand=1) are ready; the owner must enable that repository setting or open the draft using an authenticated user.
+
+See the [source-stamped native evidence](evidence/smooth-and-seen/native-ci/manifest.json),
+[reproduction and counter definitions](evidence/smooth-and-seen/README.md),
+[review handoff](0_8_REVIEW.md) and [native validation runs](https://github.com/MichaelAPerry/MIKU-FM1/actions/workflows/native-development.yml).
+Earlier failed timing runs remain separately labeled diagnostic evidence.
+
 # Validation
 
 > Current DX7 milestone: [real six-operator renderer, dedicated BANK/operator editor, embedded patch saving, native video/audio evidence and current measurements](DX7_BANK_HANDOFF.md). This supersedes earlier DX7-plan-only status.

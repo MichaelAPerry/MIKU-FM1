@@ -69,10 +69,19 @@ static void finish_in(void){for(unsigned n=0;usb.e0_tx&&n<16;n++){regs[0][S_CSR0
 int main(void){
     uint8_t probe[26],jpeg[1200];
     usb.up=1;
+    request(0x80,6,0x100,0,18);finish_in();
+    assert(control_n==18&&control[4]==0xef&&control[5]==2&&control[6]==1&&control[12]==0x11&&control[13]==4);
+    request(0x80,6,0x302,0x409,64);finish_in();assert(control_n==28&&control[0]==28);
+    const char *product="MIKU-FM VIDEO";for(unsigned i=0;i<13;i++)assert(control[2+2*i]==product[i]&&!control[3+2*i]);
     request(0x80,6,0x200,0,512);finish_in();assert(control_n==252&&control[4]==4);
     unsigned off=0,ep1=0,ep4=0,ifs=0;
     while(off<control_n){unsigned n=control[off];assert(n>=2&&off+n<=control_n);
         if(control[off+1]==4&&control[off+3]==0)ifs++;
+        if(control[off+1]==36&&control[off+2]==2&&control[off+3]==1&&n>=8&&control[off+4]==1&&control[off+5]==2){
+            /* UVC camera terminal: descriptor length must include bmControls. */
+            assert(n==18&&control[off+14]==3&&n==15u+control[off+14]);
+            assert(!control[off+15]&&!control[off+16]&&!control[off+17]);
+        }
         if(control[off+1]==5){if(control[off+2]==1||control[off+2]==0x81)ep1++;
             if(control[off+2]==0x84){ep4++;assert(control[off+4]==0&&control[off+5]==2);}}
         off+=n;
@@ -87,16 +96,23 @@ int main(void){
     request(0x21,1,0x200,3,26);data(probe,26);assert(video_class.committed);
     request(1,11,1,3,0);assert(video_usb_active());
     memset(jpeg,42,sizeof jpeg);jpeg[0]=255;jpeg[1]=216;jpeg[1198]=255;jpeg[1199]=217;
-    assert(video_usb_publish(jpeg,sizeof jpeg));assert(video_usb_busy());assert(!video_usb_publish(jpeg,sizeof jpeg));
+    assert(video_usb_publish(jpeg,sizeof jpeg,video_usb_generation()));assert(video_usb_busy());assert(!video_usb_publish(jpeg,sizeof jpeg,video_usb_generation()));
     video_usb_service();assert(sends==1&&payload_n==512&&payload[0]==2&&!(payload[1]&2));
-    uint8_t snapshot[512];memcpy(snapshot,payload,sizeof snapshot);
+    assert(!video_usb_busy()&&video_class.source==jpeg&&video_usb.cached==jpeg);
+    assert(!video_usb_publish(jpeg,sizeof jpeg,video_usb_generation())); /* cached buffer is still owned */
+    uint8_t snapshot[512],next_jpeg[1200];memcpy(snapshot,payload,sizeof snapshot);
+    memcpy(next_jpeg,jpeg,sizeof jpeg);next_jpeg[2]=77;
+    assert(video_usb_publish(next_jpeg,sizeof next_jpeg,video_usb_generation())&&video_usb_busy());
     video_usb_service();assert(sends==1&&!memcmp(snapshot,payload,sizeof snapshot));
-    regs[4][S_TXCSR1]=0;video_usb_service();assert(sends==2&&video_usb_busy());
-    regs[4][S_TXCSR1]=0;video_usb_service();assert(sends==3&&payload[1]&2&&video_usb_busy());
-    regs[4][S_TXCSR1]=0;video_usb_service();assert(!video_usb_busy()&&video_usb.completed==1);
+    regs[4][S_TXCSR1]=0;video_usb_service();assert(sends==2&&video_usb_busy()&&!memcmp(payload+2,jpeg+510,payload_n-2));
+    regs[4][S_TXCSR1]=0;video_usb_service();assert(sends==3&&payload[1]&2&&video_usb_busy()&&!memcmp(payload+2,jpeg+1020,payload_n-2));
+    regs[4][S_TXCSR1]=0;video_usb_service();assert(video_usb.completed==1&&video_usb.cached==next_jpeg&&video_usb_busy());
+    assert(video_usb_take_free()==jpeg&&!video_usb_busy());
     /* Alt0 flush releases an in-flight frame; next alt1 starts clean. */
-    assert(video_usb_publish(jpeg,sizeof jpeg));fm1_ms=100;video_usb_service();assert(video_usb_busy());
-    request(1,11,0,3,0);assert(!video_usb_active()&&!video_usb_busy()&&!video_class.source);
+    assert(video_usb_publish(jpeg,sizeof jpeg,video_usb_generation()));fm1_ms=100;video_usb_service();assert(video_class.source);
+    assert(video_usb_take_free()==next_jpeg&&!video_usb_busy());
+    assert(video_usb_publish(next_jpeg,sizeof next_jpeg,video_usb_generation())&&video_usb_busy());
+    request(1,11,0,3,0);assert(!video_usb_active()&&!video_usb_busy()&&!video_class.source&&!video_usb.cached_bytes);
     request(1,11,1,3,0);assert(video_usb_active());
     /* Abandoned SET_CUR must not consume the next request as data. */
     request(0x21,1,0x100,3,26);regs[0][S_CSR0]=0x10;ep0_service();assert(!video_class.control_pending);
@@ -108,10 +124,78 @@ int main(void){
     /* Consumer cancels late publication interrupted by alt0. */
     request(1,11,0,3,0);video_usb.owner=1;video_usb_service();assert(!video_usb_busy());
     /* Suspended stream and bus reset release DMA/source before re-use. */
-    request(1,11,1,3,0);assert(video_usb_publish(jpeg,sizeof jpeg));fm1_ms=200;video_usb_service();
+    request(1,11,1,3,0);assert(video_usb_publish(jpeg,sizeof jpeg,video_usb_generation()));fm1_ms=200;video_usb_service();
     usb.suspended=1;video_usb_service();assert(!video_usb_busy()&&!video_usb_active());usb.suspended=0;
-    request(1,11,1,3,0);assert(video_usb_publish(jpeg,sizeof jpeg));fm1_ms=300;video_usb_service();
+    video_usb_service();assert(video_usb_active()); /* resume needs no new alt1 */
+    uint32_t stale=video_usb_generation();
+    request(1,11,0,3,0);request(1,11,1,3,0);
+    assert(!video_usb_publish(jpeg,sizeof jpeg,stale));
+    /* Simulate preemption after publisher's first generation check. */
+    video_usb.source=jpeg;video_usb.length=sizeof jpeg;video_usb.source_generation=stale;video_usb.owner=1;
+    unsigned old_sends=sends;video_usb_service();assert(!video_usb_busy()&&sends==old_sends);
+    /* A timed-out packet recovers on the same alternate setting. */
+    fm1_ms=250;assert(video_usb_publish(jpeg,sizeof jpeg,video_usb_generation()));video_usb_service();
+    for(unsigned i=0;i<40;i++)video_usb_service();
+    assert(video_usb_active()&&!video_usb_busy()&&video_usb.stalls==1);
+    request(1,11,1,3,0);assert(video_usb_publish(jpeg,sizeof jpeg,video_usb_generation()));fm1_ms=300;video_usb_service();
     global_regs[S_INTRUSB]=4;usb_poll();assert(!usb.config&&!video_usb_busy()&&!video_class.committed);
+    /* Ten seconds of delivery across 150 frames: retain the entire payload,
+       EOF exactly once, alternating FID, bounded packet sizes and timer cadence. */
+    request(0,9,1,0,0);
+    request(0x21,1,0x100,3,26);data(probe,26);
+    request(0x21,1,0x200,3,26);data(probe,26);
+    request(1,11,1,3,0);
+    unsigned start_completed=video_usb.completed,previous_start=0,first_fid=video_class.fid;
+    memcpy(next_jpeg,jpeg,sizeof jpeg);
+    for(unsigned frame=0;frame<150;frame++){
+        uint8_t received[1200];unsigned bytes=0,packet=0,fid=0;
+        uint8_t *producer=(frame&1u)?next_jpeg:jpeg;
+        memset(producer,(uint8_t)(frame%250u+1u),sizeof jpeg);producer[0]=255;producer[1]=216;producer[1198]=255;producer[1199]=217;
+        const uint8_t *freed=0;
+        assert(video_usb_publish(producer,sizeof jpeg,video_usb_generation()));
+        for(unsigned turns=0;video_usb.completed<start_completed+frame+1u&&turns<100;turns++){
+            unsigned before=sends;fm1_ms++;regs[4][S_TXCSR1]=0;video_usb_service();
+            const uint8_t *returned=video_usb_take_free();
+            if(returned){assert(frame&&!freed&&returned!=producer&&returned==((frame&1u)?jpeg:next_jpeg));freed=returned;memset((uint8_t *)returned,0,sizeof jpeg);}
+            if(sends!=before){
+                assert(payload_n>=2&&payload_n<=512&&payload[0]==2&&!(payload[1]&0x40));
+                if(!packet){fid=payload[1]&1;assert(fid==(first_fid^(frame&1)));
+                    if(previous_start&&!(fm1_ms-previous_start>=66&&fm1_ms-previous_start<=67)){fprintf(stderr,"frame %u at %u previous %u clock %u\n",frame,fm1_ms,previous_start,video_class.last_start_us);assert(0);}
+                    previous_start=fm1_ms;
+                }
+                assert((payload[1]&1)==fid&&bytes+payload_n-2<=sizeof received);
+                memcpy(received+bytes,payload+2,payload_n-2);bytes+=payload_n-2;packet++;
+                assert(!!(payload[1]&2)==(bytes==sizeof received));
+            }
+        }
+        assert(!video_usb.owner&&bytes==sizeof jpeg&&!memcmp(received,producer,sizeof jpeg));
+        assert(freed==(frame?((frame&1u)?jpeg:next_jpeg):0)&&!video_usb_busy()&&!video_usb_take_free());
+    }
+    assert(video_usb.completed-start_completed==150&&video_usb.session_frames==150);
+    assert(video_usb.session_bytes==150*sizeof jpeg&&video_usb.interval_min_ms==66&&video_usb.interval_max_ms==67);
+    assert(video_usb.session_fresh==150&&!video_usb.session_repeated);
+    printf("UVC transport simulation: %u frames, %u bytes, frame intervals %u..%u ms\n",video_usb.session_frames,video_usb.session_bytes,video_usb.interval_min_ms,video_usb.interval_max_ms);
+    /* An encoder pause must keep USB cadence. Main can encode in the other
+       buffer while this cached JPEG stays immutable until pointer release. */
+    request(1,11,1,3,0);
+    memset(jpeg,42,sizeof jpeg);jpeg[0]=255;jpeg[1]=216;jpeg[1198]=255;jpeg[1199]=217;
+    uint8_t expected[1200],received[1200];memcpy(expected,jpeg,sizeof jpeg);
+    assert(video_usb_publish(jpeg,sizeof jpeg,video_usb_generation()));
+    unsigned completed=0,bytes=0,packets=0,last_start=0,expected_fid=video_class.fid;
+    for(unsigned turn=0;video_usb.session_frames<150&&turn<11000;turn++){
+        unsigned before=sends;fm1_ms++;regs[4][S_TXCSR1]=0;video_usb_service();
+        memset(next_jpeg,0,sizeof next_jpeg); /* encode in the free buffer; cached jpeg stays immutable */
+        if(sends!=before){
+            if(!packets){assert((payload[1]&1)==expected_fid);if(last_start)assert(fm1_ms-last_start>=66&&fm1_ms-last_start<=67);last_start=fm1_ms;}
+            assert(bytes+payload_n-2<=sizeof received&&!(payload[1]&0x40));
+            memcpy(received+bytes,payload+2,payload_n-2);bytes+=payload_n-2;packets++;
+            assert(!!(payload[1]&2)==(bytes==sizeof received));
+            if(payload[1]&2){assert(!memcmp(received,expected,sizeof expected));completed++;expected_fid^=1u;bytes=packets=0;}
+        }
+    }
+    assert(completed==150&&video_usb.session_frames==150&&video_usb.session_fresh==1&&video_usb.session_repeated==149);
+    assert(video_usb.interval_min_ms==66&&video_usb.interval_max_ms==67);
+    printf("UVC encoder-pause simulation: %u delivered, %u fresh, %u repeated; free buffer safely reused\n",video_usb.session_frames,video_usb.session_fresh,video_usb.session_repeated);
     /* Existing MIDI rescue command still works. */
     const uint8_t key[]={0xf0,0x22,0x24,0x35,0x7d,0xf7};for(unsigned i=0;i<6;i++)sysex_byte(key[i]);assert(usb.uboot_req);
     puts("native UVC: descriptors/EP0/probe/commit/alt/payload/ownership/reset/MIDI rescue OK");

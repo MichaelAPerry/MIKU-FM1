@@ -11,6 +11,12 @@
 #define MUVC_FRAME_CAP 8192u
 #define MUVC_PACKET_CAP 512u
 #define MUVC_PROBE_LEN 26u
+#ifndef MIKU_VIDEO_BENCH_FRAMES
+#define MIKU_VIDEO_BENCH_FRAMES 3u
+#endif
+#ifndef MIKU_VIDEO_BENCH_END_MS
+#define MIKU_VIDEO_BENCH_END_MS 0u
+#endif
 #ifndef MUVC_VC_IF
 #define MUVC_VC_IF 0u
 #endif

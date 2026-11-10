@@ -2,7 +2,7 @@
 static void pg_library(uint32_t band){
     char s[32],name[9];uint32_t first=library_cursor/4u*4u,slot,y=band*48u;
     ui_back(band);
-    if(!band){ui_header();ui_badge();txt(30,8,&FONT_S,playing?"LIBRARY / PLAYING":"SONG LIBRARY",C_TEL,0);txt(232,8,&FONT_S,"LFO LOOK",LOOK_MUTED,2);txt(8,32,&FONT_S,"EDIT LOAD",C_WHITE,0);txt(232,32,&FONT_S,"REC SAVE",LOOK_MUTED,2);return;}
+    if(!band){ui_header();ui_badge();txt(30,8,&FONT_S,playing?"LIBRARY / PLAY":"LIBRARY",C_TEL,0);txt(232,8,&FONT_S,"LFO LOOK",LOOK_MUTED,2);txt(8,32,&FONT_S,"EDIT LOAD",C_WHITE,0);txt(232,32,&FONT_S,"REC SAVE",LOOK_MUTED,2);return;}
     slot=first+band-1u;if(slot>=NSLOT)return;
     ui_panel(8,y+1,224,43,slot==library_cursor);
     if(slot==library_cursor){cv_rect(8,y+1,3,43,C_TEL);cv_rect(12,y+42,220,2,C_TEL);}

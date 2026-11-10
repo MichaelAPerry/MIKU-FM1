@@ -1,0 +1,162 @@
+{
+  "scope": "CPU emulator screenshots, not device screenshots",
+  "package_sha256": "7ef2f53e042fcf1799bf7c5ed3ee185b502df8545691299d09ad71e6c0499e4f",
+  "captures": [
+    {
+      "track": "chords",
+      "page": "library-stopped",
+      "time_ms": 2000,
+      "file": "chords-library-stopped.png"
+    },
+    {
+      "track": "chords",
+      "page": "library-playing",
+      "time_ms": 2600,
+      "file": "chords-library-playing.png"
+    },
+    {
+      "track": "chords",
+      "page": "bank-00-browse",
+      "time_ms": 3400,
+      "file": "chords-bank-00-browse.png"
+    },
+    {
+      "track": "chords",
+      "page": "bank-01-global",
+      "time_ms": 7000,
+      "file": "chords-bank-01-global.png"
+    },
+    {
+      "track": "chords",
+      "page": "bank-02",
+      "time_ms": 7600,
+      "file": "chords-bank-02.png"
+    },
+    {
+      "track": "chords",
+      "page": "bank-03",
+      "time_ms": 8200,
+      "file": "chords-bank-03.png"
+    },
+    {
+      "track": "chords",
+      "page": "bank-04",
+      "time_ms": 8800,
+      "file": "chords-bank-04.png"
+    },
+    {
+      "track": "chords",
+      "page": "bank-05",
+      "time_ms": 9400,
+      "file": "chords-bank-05.png"
+    },
+    {
+      "track": "chords",
+      "page": "bank-06",
+      "time_ms": 10000,
+      "file": "chords-bank-06.png"
+    },
+    {
+      "track": "chords",
+      "page": "bank-07",
+      "time_ms": 10600,
+      "file": "chords-bank-07.png"
+    },
+    {
+      "track": "chords",
+      "page": "bank-08",
+      "time_ms": 11200,
+      "file": "chords-bank-08.png"
+    },
+    {
+      "track": "chords",
+      "page": "bank-09",
+      "time_ms": 11800,
+      "file": "chords-bank-09.png"
+    },
+    {
+      "track": "chords",
+      "page": "bank-10",
+      "time_ms": 12400,
+      "file": "chords-bank-10.png"
+    },
+    {
+      "track": "bass",
+      "page": "library-stopped",
+      "time_ms": 2000,
+      "file": "bass-library-stopped.png"
+    },
+    {
+      "track": "bass",
+      "page": "library-playing",
+      "time_ms": 2600,
+      "file": "bass-library-playing.png"
+    },
+    {
+      "track": "bass",
+      "page": "bank-00-browse",
+      "time_ms": 3400,
+      "file": "bass-bank-00-browse.png"
+    },
+    {
+      "track": "bass",
+      "page": "bank-01-global",
+      "time_ms": 7000,
+      "file": "bass-bank-01-global.png"
+    },
+    {
+      "track": "bass",
+      "page": "bank-02",
+      "time_ms": 7600,
+      "file": "bass-bank-02.png"
+    },
+    {
+      "track": "bass",
+      "page": "bank-03",
+      "time_ms": 8200,
+      "file": "bass-bank-03.png"
+    },
+    {
+      "track": "bass",
+      "page": "bank-04",
+      "time_ms": 8800,
+      "file": "bass-bank-04.png"
+    },
+    {
+      "track": "bass",
+      "page": "bank-05",
+      "time_ms": 9400,
+      "file": "bass-bank-05.png"
+    },
+    {
+      "track": "bass",
+      "page": "bank-06",
+      "time_ms": 10000,
+      "file": "bass-bank-06.png"
+    },
+    {
+      "track": "bass",
+      "page": "bank-07",
+      "time_ms": 10600,
+      "file": "bass-bank-07.png"
+    },
+    {
+      "track": "bass",
+      "page": "bank-08",
+      "time_ms": 11200,
+      "file": "bass-bank-08.png"
+    },
+    {
+      "track": "bass",
+      "page": "bank-09",
+      "time_ms": 11800,
+      "file": "bass-bank-09.png"
+    },
+    {
+      "track": "bass",
+      "page": "bank-10",
+      "time_ms": 12400,
+      "file": "bass-bank-10.png"
+    }
+  ]
+}

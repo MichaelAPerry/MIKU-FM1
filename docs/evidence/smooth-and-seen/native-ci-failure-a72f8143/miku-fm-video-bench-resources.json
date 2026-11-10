@@ -1,0 +1,26 @@
+{
+  "image": {
+    "used": 550724,
+    "limit": 581564,
+    "free": 30840,
+    "minimum_free": 0,
+    "margin_above_reserve": 30840,
+    "pass": true
+  },
+  "static_ram": {
+    "used": 49856,
+    "limit": 98304,
+    "free": 48448,
+    "minimum_free": 16384,
+    "margin_above_reserve": 32064,
+    "pass": true
+  },
+  "pool": {
+    "used": 275008,
+    "limit": 344064,
+    "free": 69056,
+    "minimum_free": 32768,
+    "margin_above_reserve": 36288,
+    "pass": true
+  }
+}

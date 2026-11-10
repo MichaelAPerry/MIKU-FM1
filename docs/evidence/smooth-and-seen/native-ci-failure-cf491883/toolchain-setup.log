@@ -1,0 +1,20 @@
+Cloning into 'build/dinghy'...
+HEAD is now at f77bf03 fm1_flash_map.h: accept the UC25HQ80 (0xB36014) of newer FM-1s beside the Puya 0x856014 – firmwares built on Dinghy saved to RAM only on it
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
+
+  0 24.8M    0  3621    0     0   1965      0  3:40:45  0:00:01  3:40:44  1965
+  7 24.8M    7 1895k    0     0   668k      0  0:00:38  0:00:02  0:00:36 1901k
+ 75 24.8M   75 18.7M    0     0  4996k      0  0:00:05  0:00:03  0:00:02 9594k
+100 24.8M  100 24.8M    0     0  6069k      0  0:00:04  0:00:04 --:--:-- 10.5M
+JIELI_TOOLCHAIN=/home/runner/work/_temp/jieli/toolchain (jieli-linux-toolchains-20260730.1)
+Cloning into '/home/runner/work/_temp/ac79-sdk'...
+error: RPC failed; curl 56 GnuTLS recv error (-110): The TLS connection was non-properly terminated.
+error: 3552 bytes of body are still expected
+fetch-pack: unexpected disconnect while reading sideband packet
+fatal: early EOF
+fatal: fetch-pack: invalid index-pack output

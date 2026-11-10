@@ -1,0 +1,17 @@
+{
+  "video_jpeg": 29758016,
+  "video_encoded": 29440348,
+  "video_step_ticks": 29440368,
+  "video_frame_ticks": 29440372,
+  "video_last_bytes": 29440376,
+  "video_failed": 29440356,
+  "pub_peak": 29440104,
+  "video_first_ticks": 29440380,
+  "video_last_ticks": 29440384,
+  "video_total_ticks": 29440388,
+  "video_min_bytes": 29440396,
+  "video_max_bytes": 29440400,
+  "audio_hard_peak": 29440092,
+  "audio_overruns": 29440096,
+  "audio_init_ticks": 29440100
+}

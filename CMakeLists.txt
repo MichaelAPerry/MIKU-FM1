@@ -146,6 +146,19 @@ if(NOT MSVC)
 endif()
 add_test(NAME patch_dinghy_sysex COMMAND ${Python3_EXECUTABLE} -I ${CMAKE_SOURCE_DIR}/tests/test_patch_dinghy_sysex.py ${CMAKE_SOURCE_DIR})
 add_test(NAME dx7_tables_generated COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tools/gen_dx7_tables.py --check)
+
+# Host timing is diagnostic; desktop scheduling is not a device deadline test.
+if(UNIX)
+ add_executable(playback_bench tools/playback_bench.c)
+ target_link_libraries(playback_bench PRIVATE miku_engine miku_song miku_dx7 m)
+endif()
+
+add_executable(playback_edit_tests tests/test_playback_edits.c)
+target_link_libraries(playback_edit_tests PRIVATE miku_engine miku_dx7 m)
+add_test(NAME playback_edits COMMAND playback_edit_tests)
+if(NOT MSVC)
+ add_test(NAME page_text COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tests/test_page_text.py ${CMAKE_SOURCE_DIR} ${CMAKE_C_COMPILER})
+endif()
 # The DX7 bank tool (site/bank.html, site/js/dx7syx.js): the factory .syx is generated from assets/dx7/factory.packed, the page's
 # JS packed <-> VCED conversion is checked against the firmware's C code (needs node for the JS half; skipped without it).
 add_test(NAME dx7_factory_syx COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tools/dx7_factory_syx.py --check)
@@ -153,3 +166,7 @@ add_test(NAME guide_html COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tools
 add_executable(dx7_vectors tests/dx7_vectors.c)
 target_link_libraries(dx7_vectors PRIVATE miku_song)
 add_test(NAME bank_tool COMMAND ${Python3_EXECUTABLE} -I ${CMAKE_SOURCE_DIR}/tests/test_bank_tool.py ${CMAKE_SOURCE_DIR} $<TARGET_FILE:dx7_vectors> ${CMAKE_BINARY_DIR}/dx7_vectors.json)
+
+if(NOT MSVC)
+ add_test(NAME face_clock COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tests/test_face_clock.py ${CMAKE_SOURCE_DIR} ${CMAKE_C_COMPILER})
+endif()

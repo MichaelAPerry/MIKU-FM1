@@ -1,0 +1,9 @@
+{
+  "package": "/home/runner/work/MIKU-FM1/MIKU-FM1/build/native/miku-fm-video-bench.fwsc",
+  "sha256": "613c38b3aa0966c3d47968a6db3c6246177a9fa48e5fa888001f77a7cbf90a14",
+  "expected_frames": 150,
+  "run_ms": 40000,
+  "require_dx7": true,
+  "lcd_spi_timing": true,
+  "scope": "emulator-only offline JPEG benchmark, not USB camera throughput"
+}

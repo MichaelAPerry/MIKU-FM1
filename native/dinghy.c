@@ -21,6 +21,8 @@
 #if MIKU_VIDEO_BENCH && !MIKU_UVC
 #error "video benchmark requires the isolated video build"
 #endif
+static void app_lcd_idle(void);
+#define LCD_IDLE() app_lcd_idle()
 #include "platform.c"
 /* Both shipped FM-1 flash variants must retain real persistent storage. */
 _Static_assert(FL_JEDEC_OK(0x856014u),"Puya FM-1 flash unsupported");
@@ -123,6 +125,7 @@ _Static_assert(WD_OUTFIT_N==PERF_OUTFIT_N,"wardrobe metadata mismatch");
 #define FACE_Y 184u
 enum { PG_STAGE, PG_DANCE, PG_SONG, PG_PATTERN, PG_MIXER, PG_GEN, PG_LYRICS, PG_VISUALS, PG_LIBRARY, PG_BANK, PG_N };
 static Engine en;
+static uint32_t app_idle_ready;
 static Song sg;
 static Undo un;
 static Song gbak;                                   /* GEN: the song before the last take (GLO drops the take) */
@@ -196,39 +199,103 @@ static uint16_t pw[16],dpw[16],c_bg,c_disc;
 static uint32_t dance_cur=99,dance_ms;
 static PerfState performance;
 #if MIKU_UVC
-/* One compressed frame plus incremental MCU scratch: no video framebuffer or core1 ownership.
-   TIMER5 owns USB state; the main loop owns encoder/scene until immutable publication. */
+/* Two compressed JPEGs (one for the offline benchmark), no pixel framebuffer.
+   Main encodes a free buffer while TIMER5 holds/repeats the other. A pointer
+   release between class frames transfers ownership back without an ISR copy. */
 static MjEncoder video_encoder __attribute__((section(".pool")));
 static uint8_t video_jpeg[MJ_FRAME_CAP] __attribute__((section(".pool"),aligned(32)));
 static PerfState video_scene;
+static MjPerfCache video_cache __attribute__((section(".pool")));
 static uint32_t video_encoding,video_started;
+#if !MIKU_VIDEO_BENCH
+static uint8_t video_next[MJ_FRAME_CAP] __attribute__((section(".pool"),aligned(32)));
+static uint32_t video_generation,video_free=3u,video_index,video_ready;
+static volatile uint32_t video_rejected;
+#endif
 static volatile uint32_t video_step_ticks,video_frame_ticks,video_encoded,video_failed,video_last_bytes;
+static volatile uint32_t video_total_bytes,video_min_bytes,video_max_bytes,video_total_ticks,video_first_ticks,video_last_ticks;
 static void video_update(const PerfState *scene){
     uint32_t at,dt;int result;
+    uint8_t *output=video_jpeg;
 #if MIKU_VIDEO_BENCH
-    if(video_encoded>=3u || !scene->playing || scene->mouth>=5u)return; /* three frames under live vocal+band load */
-    if(scene->effect&&scene->effect!=STFX_BEAMS&&scene->now_ms-scene->effect_epoch<480u)return; /* measure the expanded burst, not only launch pixels */
+    /* A zero frame cap measures the entire song; stop starting frames before
+       the emulator dump deadline, but always finish the immutable snapshot. */
+    if(!video_encoding){
+#if MIKU_VIDEO_BENCH_FRAMES
+        if(video_encoded>=MIKU_VIDEO_BENCH_FRAMES)return;
+#endif
+        if(!scene->playing)return;
+#if MIKU_VIDEO_BENCH_END_MS
+        if(scene->now_ms>=MIKU_VIDEO_BENCH_END_MS)return;
+#endif
+    }
 #else
-    if(!video_usb_active()){video_encoding=0;return;}
-    if(video_usb_busy())return;
+    if(!video_usb_active()){
+        if(video_encoding||video_ready)video_free|=1u<<video_index;
+        video_encoding=video_ready=0;return;
+    }
+    if(video_generation!=video_usb_generation()){
+        video_encoding=video_ready=0;video_free=3u;
+        video_generation=video_usb_generation();
+    }
+    {
+        const uint8_t *released=video_usb_take_free();
+        if(released==video_jpeg)video_free|=1u;
+        else if(released==video_next)video_free|=2u;
+    }
+    if(video_ready){
+        output=video_index?video_next:video_jpeg;
+        if(!video_usb_busy()){
+            if(video_usb_publish(output,video_last_bytes,video_generation)){video_ready=0;video_encoded++;}
+            else video_rejected++;
+        }
+        return;
+    }
+    if(!video_encoding){
+        if(!video_free)return;
+        video_index=(video_free&1u)?0u:1u;video_free&=~(1u<<video_index);
+    }
+    output=video_index?video_next:video_jpeg;
 #endif
     if(!video_encoding){
         volatile uint8_t *to=(volatile uint8_t *)&video_scene;
         const uint8_t *from=(const uint8_t *)scene;uint32_t i;
         for(i=0;i<sizeof video_scene;i++)to[i]=from[i];
-        if(!mj_begin(&video_encoder,MUVC_WIDTH,MUVC_HEIGHT,65,video_jpeg,sizeof video_jpeg,mj_perf_pixel,&video_scene)){video_failed++;return;}
+        mj_perf_cache_init(&video_cache,&video_scene);
+        if(!mj_begin(&video_encoder,MUVC_WIDTH,MUVC_HEIGHT,65,output,sizeof video_jpeg,mj_perf_cached_pixel,&video_cache)){
+            video_failed++;
+#if !MIKU_VIDEO_BENCH
+            video_free|=1u<<video_index;
+#endif
+            return;
+        }
         video_encoding=1;video_started=fm1_ticks();
     }
     at=fm1_ticks();result=mj_step(&video_encoder,1); /* <=one16x16 tile per poll pass */
     dt=fm1_ticks()-at;if(dt>video_step_ticks)video_step_ticks=dt;
     if(result==0)return;
     video_encoding=0;dt=fm1_ticks()-video_started;if(dt>video_frame_ticks)video_frame_ticks=dt;
-    if(result<0){video_failed++;return;}
+    if(result<0){
+        video_failed++;
+#if !MIKU_VIDEO_BENCH
+        video_free|=1u<<video_index;
+#endif
+        return;
+    }
     video_last_bytes=mj_size(&video_encoder);
+    if(!video_encoded)video_first_ticks=fm1_ticks();
+    video_last_ticks=fm1_ticks();
+    video_total_ticks+=dt;video_total_bytes+=video_last_bytes;
+    if(!video_min_bytes||video_last_bytes<video_min_bytes)video_min_bytes=video_last_bytes;
+    if(video_last_bytes>video_max_bytes)video_max_bytes=video_last_bytes;
 #if MIKU_VIDEO_BENCH
     video_encoded++;
 #else
-    if(video_usb_publish(video_jpeg,mj_size(&video_encoder)))video_encoded++;
+    video_ready=1;
+    if(!video_usb_busy()){
+        if(video_usb_publish(output,video_last_bytes,video_generation)){video_ready=0;video_encoded++;}
+        else video_rejected++;
+    }
 #endif
 }
 #endif
@@ -241,12 +308,33 @@ static const char *const dnn[6]={"KICK","SNARE","CLAP","CHAT","OHAT","PERC"};
 static const char *const pnm[NTRK][8]={{"VOICE"},{"BELLS","E.PIANO","CHIP ARP","PAD","ORGAN","PLUCK","MARIMBA","CLAV"},{"FM BASS","SUB","CHIP SQ","ACID","SUB DROP","HARD ACID"},{"808","CHIP","PUNCH","DIGITAL"}};
 static const uint8_t kbase[NTRK]={53,41,29,0};     /* key 0 (F3) plays this note (before OCT) */
 static const uint8_t npst[NTRK]={1,CH_NPRESET,BS_NPRESET,DR_NPRESET};
+/* Debugger-readable cumulative telemetry. Tick counters wrap modulo 2^32;
+ * sample deltas frequently. Drawing includes LCD waits, so audio share explains
+ * ISR preemption of a long draw. Reset only with playback stopped. */
+static volatile uint32_t audio_calls,audio_ticks,audio_frames,audio_dx_tracks,audio_playing_frames;
+typedef struct {uint32_t frames,last,interval_min,interval_max,draw_max,draw_ticks;} DrawProfile;
+static volatile DrawProfile stage_profile,dance_profile;
+static uint32_t draw_start(volatile DrawProfile *p){
+    if(!playing)return 0;
+    uint32_t t=fm1_ticks(),dt=t-p->last;
+    if(p->frames){if(!p->interval_min||dt<p->interval_min)p->interval_min=dt;if(dt>p->interval_max)p->interval_max=dt;}
+    p->last=t;return t;
+}
+static void draw_end(volatile DrawProfile *p,uint32_t t){
+    if(!playing)return;
+    uint32_t dt=fm1_ticks()-t;p->frames++;p->draw_ticks+=dt;if(dt>p->draw_max)p->draw_max=dt;
+}
 static void app_audio(int32_t *out,uint32_t n){
     static uint32_t pk;
     uint32_t t0=fm1_ticks(),c,ready=en.up;
     if(!en.up)en_init(&en,&sg);
     en_render(&en,out,n);
     c=fm1_ticks()-t0;
+    if(ready){
+        audio_calls++;audio_ticks+=c;audio_frames+=n;
+        audio_dx_tracks=(en.pre[TR_CHORDS]>=SG_DX7_FIRST?1u:0u)|(en.pre[TR_BASS]>=SG_DX7_FIRST?2u:0u);
+        if((en.pos>>16)&1u)audio_playing_frames+=n;
+    }
     if(ready){if(c>audio_hard_peak)audio_hard_peak=c;if(c>BUDGET_TICKS)audio_overruns++;}else audio_init_ticks=c;
     if(c>pk)pk=c;else pk-=pk>>6;
     pub_peak=pk;
@@ -577,6 +665,14 @@ static void mi_on(uint32_t n,uint32_t kt){
     if(mi_own[n]&7u)mi_off(n);                              /* retrigger, or the note belonged to another track */
     if(en_post(&en,EN_ON,kt,n,ed_mora))mi_own[n]=(uint8_t)(kt+1u);
 }
+static void midi_controls(uint32_t kt){
+    uint32_t t;
+    for(t=TR_VOCAL;t<=TR_BASS;t++){                         /* pedal follows the current pitched track */
+        uint32_t wb=t==kt?mi_wheel:8192u,ws=t==kt?mi_ped:0u;
+        if(t!=TR_VOCAL&&wb!=mi_sent_b[t]&&en_post(&en,EN_BEND,t,wb&127u,wb>>7))mi_sent_b[t]=(uint16_t)wb;
+        if(ws!=mi_sent_s[t]&&en_post(&en,EN_SUSTAIN,t,ws,0))mi_sent_s[t]=(uint8_t)ws;
+    }
+}
 static void midi_service(uint32_t kt){
     uint8_t st,d1,d2;uint32_t n,t;
     if(mi_npend){mi_npend=0;for(n=0;n<128u;n++)if((mi_own[n]&0x80u)&&!mi_off(n))mi_npend=1;}
@@ -585,15 +681,11 @@ static void midi_service(uint32_t kt){
         if(s==0x90u&&d2)mi_on(d1,kt);
         else if(s==0x80u||s==0x90u)mi_note_off(d1);
         else if(s==0xB0u){
-            if(d1==64u)mi_ped=d2>=64u;
+            if(d1==64u){mi_ped=d2>=64u;midi_controls(kt);}
             else if(d1==120u||d1==123u)for(t=0;t<128u;t++)if(mi_own[t]&7u)mi_note_off(t);
         }else if(s==0xE0u)mi_wheel=(uint16_t)(d1|d2<<7);
     }
-    for(t=TR_CHORDS;t<=TR_BASS;t++){                        /* only the current chords/bass track bends and sustains */
-        uint32_t wb=t==kt?mi_wheel:8192u,ws=t==kt?mi_ped:0u;
-        if(wb!=mi_sent_b[t]&&en_post(&en,EN_BEND,t,wb&127u,wb>>7))mi_sent_b[t]=(uint16_t)wb;
-        if(ws!=mi_sent_s[t]&&en_post(&en,EN_SUSTAIN,t,ws,0))mi_sent_s[t]=(uint8_t)ws;
-    }
+    midi_controls(kt);
 }
 static void guarded(uint32_t act,uint32_t arg){            /* actions that drop the current song need a second press when it is unsaved */
     if(modified && !(pend==act && pend_arg==arg && (int32_t)(fm1_ms-pend_t)<0)){pend=act;pend_arg=arg;pend_t=fm1_ms+3000u;toast("UNSAVED! AGAIN",1);return;}
@@ -602,6 +694,20 @@ static void guarded(uint32_t act,uint32_t arg){            /* actions that drop 
     else if(act==5){stop_wait();lk();sf_load(&sg,arg);ulk();pf.slot=(uint8_t)arg;sp_reset_scene(&pf,arg);scene_load(arg);after_load();modified=1;toast("FACTORY RESTORED",0);}
     else if(act==6){do_new();pf.slot=(uint8_t)arg;scene_load(arg);modified=1;}
     else do_demo();
+}
+/* Use otherwise idle SPI transfer time without touching the DMA-owned canvas.
+ * The JPEG source is an immutable scene snapshot with separate fixed storage. */
+static void app_lcd_idle(void){
+    static uint32_t entered;
+    /* lcd_init runs before ADC, USB and interrupts are ready. */
+    if(!app_idle_ready||entered)return;
+    entered=1;
+    platform_poll();
+    midi_service(page<=PG_DANCE||page==PG_LIBRARY?TR_VOCAL:trk);
+#if MIKU_UVC
+    video_update(&performance); /* at most one MCU, main context only */
+#endif
+    entered=0;
 }
 /* ---- face: 4bpp sprite rows, 2x, into the canvas buffer, blitted (the panel wants bytes swapped: swap16) */
 #define FX 30u
@@ -640,13 +746,17 @@ static void face_set(uint32_t f){
         x0=p[0]<q[0]?p[0]:q[0];y0=p[1]<q[1]?p[1]:q[1];
         x1=p[0]+p[2]>q[0]+q[2]?p[0]+p[2]:q[0]+q[2];y1=p[1]+p[3]>q[1]+q[3]?p[1]+p[3]:q[1]+q[3];
     }
-    face_draw(f,x0,y0,x1-x0,y1-y0);
+    {uint32_t t=draw_start(&stage_profile);face_draw(f,x0,y0,x1-x0,y1-y0);draw_end(&stage_profile,t);}
 }
 static void face_update(void){
     static const uint8_t vf[5]={SF_A,SF_I,SF_U,SF_E,SF_O};
     static uint32_t lip_until;
     uint32_t now=fm1_ms,m=en.mouth,w;
     if(m==5u && en.level>=6u)lip_until=now+70u;              /* lips shut while sounding (m b p closure, the n hum): hold so a 40 ms face update sees it */
+    /* Sample lips on the fixed clock even when the sprite stays unchanged.
+       Short consonant closures above are still latched between presentation ticks. */
+    if(now-face_ms<40u)return;
+    face_ms=now-(now-face_ms)%40u;
     if((int32_t)(now-happy_until)<0)w=SF_HAPPY;
     else if((int32_t)(now-lip_until)<0)w=SF_N;
     else if(m<5u)w=en.level>=100u?vf[m]:SF_N;
@@ -654,7 +764,7 @@ static void face_update(void){
     else if((int32_t)(now-next_blink)>=0){
         blink_until=now+120u;next_blink=now+2500u+(rng()>>16)%2500u;w=SF_BLINK;
     }else w=SF_NEUTRAL;
-    if(w!=face_cur && (uint32_t)(now-face_ms)>=40u){face_ms=now;face_set(w);}
+    if(w!=face_cur)face_set(w);
 }
 static void stage_init(void){
     uint32_t i,v,h;
@@ -672,24 +782,46 @@ static void stage_init(void){
    song stops; a slow sway when stopped. A frame is redrawn only when it changes. */
 #define DX 28u
 static void dance_draw(uint32_t f){
-    uint8_t row[SINGER_STAGE_W];uint32_t y,x,k,r,n;
-    cv_oy=0;
-    for(y=0;y<214u;y+=4u){
-        n=214u-y<4u?214u-y:4u;lcd_sync();
+    uint8_t row[SINGER_STAGE_W];uint32_t y,x,k,r,n,decoded=~0u;
+    /* Split the existing canvas into two strips. Prepare the next strip while
+       DMA reads the other; lcd_blit waits before reusing the previous strip.
+       This overlaps CPU rendering and 12 MHz SPI without another buffer. */
+    const uint32_t rows=CV_MAX/(2u*240u);
+    uint32_t slot=0;
+    StageFxCache effects;stagefx_cache_init(&effects);
+    cv_oy=0;lcd_sync();
+    for(y=0;y<214u;y+=rows){
+        uint16_t *pixels=cv_px+slot*rows*240u;
+        n=214u-y<rows?214u-y:rows;
         for(r=0;r<n;r++){
-            if(y+r<213u && !spr_decode_row(WD_OUTFITS[performance.outfit].stage,f,(y+r)/3u,row,sizeof row))return;
+            if(y+r<213u && decoded!=(y+r)/3u){
+                decoded=(y+r)/3u;
+                if(!spr_decode_row(WD_OUTFITS[performance.outfit].stage,f,decoded,row,sizeof row))return;
+            }
             for(x=0;x<240u;x++){
-                uint16_t p=perf_pixel(&performance,x,y+r);
-                if(y+r<213u&&x>=DX&&x<DX+183u){k=row[(x-DX)/3u];if(k)p=WD_OUTFITS[performance.outfit].stage_palette[k];}
-                cv_px[r*240u+x]=swap16(p);
+                k=0;
+                if(y+r<213u&&x>=DX&&x<DX+183u)k=row[(x-DX)/3u];
+                /* Opaque sprite pixels cover all procedural stage work. */
+                pixels[r*240u+x]=k?dpw[k]:swap16(perf_cached_pixel(&performance,&effects,x,y+r));
             }
         }
-        lcd_blit(0,y,240,n,cv_px);
+        lcd_blit(0,y,240,n,pixels);slot^=1u;
     }
+}
+/* The 26-row status strip needs 8.32 ms of SPI plus drawing/ISR time.
+ * Reserve the final 20 ms before the next pose slot so a status change cannot
+ * make that slot late. Its dirty bit stays set until the next safe window. */
+static uint32_t dance_status_ready(uint32_t now){
+    uint32_t age=now-dance_ms;
+    return !playing||dance_cur==99u||age<80u;
 }
 static void dance_update(void){
     uint32_t now=fm1_ms,f=performance.sprite;
-    if((f!=dance_cur || performance.effect || performance.background || performance.frame) && (dance_cur==99u || now-dance_ms>=100u)){dance_ms=now;dance_cur=f;dance_draw(f);}
+    if(dance_cur!=99u&&now-dance_ms<100u)return;
+    dance_ms=dance_cur==99u?now:now-(now-dance_ms)%100u;
+    if(f!=dance_cur||performance.effect||performance.background||performance.frame){
+        dance_cur=f;{uint32_t t=draw_start(&dance_profile);dance_draw(f);draw_end(&dance_profile,t);}
+    }
 }
 /* ---- pages. The screen below the face is drawn in bands of 48 lines (bit n of `dirty` = band n; bit 5 = the STAGE strip) */
 static uint32_t shown_row(void){return playing?(ppos>>8&255u):crow;}
@@ -1156,7 +1288,7 @@ static void redraw(void){
         else dirty|=0x1Fu;
     }
     if(!page){if(dirty&0x20u){dirty&=~0x20u;pg_stage();}dirty&=~0x1Fu;return;}
-    if(page==PG_DANCE){if(dirty&0x20u){dirty&=~0x20u;pg_dance();}dirty&=~0x1Fu;return;}
+    if(page==PG_DANCE){if((dirty&0x20u)&&dance_status_ready(fm1_ms)){dirty&=~0x20u;pg_dance();}dirty&=~0x1Fu;return;}
     dirty&=~0x20u;
     for(b=0;b<5u;b++)if(dirty&(1u<<b)){
         dirty&=~(1u<<b);
@@ -1215,12 +1347,17 @@ static void app_main(void){
     scene_load(pf.slot);
     next_blink=fm1_ms+3000u;full=1;
     bank_leds();
+    app_idle_ready=1;
     for(;;){
         uint32_t released,b,keys,down,now,tb,sh,kt,oldpos=ppos;
         int32_t dS,dA,dP,dK[4];
         platform_poll();
         now=fm1_ms;
         ppos=en.pos;playing=ppos>>16&1u;
+        if(playing&&!((oldpos>>16)&1u)){
+            stage_profile.frames=stage_profile.last=stage_profile.interval_min=stage_profile.interval_max=stage_profile.draw_max=stage_profile.draw_ticks=0;
+            dance_profile.frames=dance_profile.last=dance_profile.interval_min=dance_profile.interval_max=dance_profile.draw_max=dance_profile.draw_ticks=0;
+        }
         b=fm1_input_edges(&released);
         dS=fm1_enc_take(ENC_SELECT);dA=fm1_enc_take(ENC_ALGORITHM);dP=fm1_enc_take(ENC_PRESETS);
         for(i=0;i<4;i++)dK[i]=fm1_enc_take(ENC_KNOB1+i);
@@ -1246,7 +1383,7 @@ static void app_main(void){
             prev_keys=keys;
             continue;
         }
-        if(b&(1u<<BTN_HOME)){if(page==PG_GEN){take=0;gen_edit=0;}page=page+1u<PG_N?page+1u:0;if(page==PG_LYRICS){trk=TR_VOCAL;lyric_load();}if(page==PG_LIBRARY)library_cursor=pf.slot;if(page==PG_BANK){if(trk!=1&&trk!=2)trk=1;bank_sync();}full=1;mk(0x3Fu);bank_leds();}
+        if(b&(1u<<BTN_HOME)){if(page==PG_GEN){take=0;gen_edit=0;}bank_naming=0;page=page+1u<PG_N?page+1u:0;if(page==PG_LYRICS){trk=TR_VOCAL;lyric_load();}if(page==PG_LIBRARY)library_cursor=pf.slot;if(page==PG_BANK){if(trk!=1&&trk!=2)trk=1;bank_sync();}full=1;mk(0x3Fu);bank_leds();}
         for(tb=0;tb<4u;tb++){
             uint32_t bit=1u<<(BTN_FX+tb),held=(fm1_in.buttons&bit)!=0;
             if(page<=PG_DANCE){
@@ -1282,12 +1419,13 @@ static void app_main(void){
             else do_play();
         }
         if(b&(1u<<BTN_SEQ)){if(page==PG_LIBRARY){page=PG_SONG;full=1;mk(0x1fu);}else stop_play();}
-        if(b&(1u<<BTN_GLO)){if(page==PG_SONG||page==PG_PATTERN||page==PG_LYRICS){do_undo();if(page==PG_LYRICS)lyric_load();}else if(page==PG_GEN)gen_drop();else if(page==PG_BANK){if(dx_page)st_start();else bank_export();mk(0x1fu);}}
-        if(b&(1u<<BTN_ARP)){if(page==PG_BANK&&!dx_page){if(dx_src)dx_src=0;else if(ub_ok)dx_src=1;else toast("NO USER BANK - SEND DX7 SYSEX",1);mk(0x1fu);}else if(page==PG_BANK){uint32_t r;lk();r=db_toggle(&sg,trk,dx_op,dx_page);ulk();if(r){modified=1;mk(0x1fu);}}if(page==PG_STAGE||page==PG_DANCE){page=PG_LIBRARY;library_cursor=pf.slot;full=1;mk(0x3fu);}anchor=cstep;arp_c=0;if(page==PG_SONG && sg.nrows && sg.nrows<NROW){u_pushrows();lk();sg_row_dup(&sg,(int)crow);ulk();crow++;modified=1;mk(0x1Fu);}
+        if(b&(1u<<BTN_GLO)){if(page==PG_SONG||page==PG_PATTERN||page==PG_LYRICS){do_undo();if(page==PG_LYRICS)lyric_load();}else if(page==PG_GEN)gen_drop();else if(page==PG_BANK){if(bank_naming)bank_naming=0;else if(dx_page)st_start();else bank_export();mk(0x1fu);}}
+        if(b&(1u<<BTN_ARP)){if(page==PG_BANK&&bank_naming){bank_naming=0;}else if(page==PG_BANK&&!dx_page){if(dx_src)dx_src=0;else if(ub_ok)dx_src=1;else toast("NO USER BANK - SEND DX7 SYSEX",1);mk(0x1fu);}else if(page==PG_BANK){uint32_t r;lk();r=db_toggle(&sg,trk,dx_op,dx_page);ulk();if(r){modified=1;mk(0x1fu);}}if(page==PG_STAGE||page==PG_DANCE){page=PG_LIBRARY;library_cursor=pf.slot;full=1;mk(0x3fu);}anchor=cstep;arp_c=0;if(page==PG_SONG && sg.nrows && sg.nrows<NROW){u_pushrows();lk();sg_row_dup(&sg,(int)crow);ulk();crow++;modified=1;mk(0x1Fu);}
             if(page==PG_MIXER){sg.trk[trk].solo^=1u;modified=1;mk(0x1Fu);}
             if(page==PG_GEN)gen_go(1);
             }
         if((b&(1u<<BTN_REC))&&imp_pending(now)){import_apply();mk(0x1fu);}            /* REC on an import prompt (any page) */
+        else if((b&(1u<<BTN_REC))&&page==PG_BANK&&bank_naming){bank_name_save();mk(0x1fu);}
         else if((b&(1u<<BTN_REC))&&page==PG_BANK&&dx_page&&st_pending(now)){st_apply();mk(0x1fu);}
         else if(b&(1u<<BTN_REC)){
             if(page==PG_MIXER){page=PG_BANK;if(trk!=1&&trk!=2)trk=1;bank_sync();full=1;mk(0x1fu);}
@@ -1307,7 +1445,7 @@ static void app_main(void){
             else if(page==PG_SONG && sg.nrows){u_pushrows();lk();sg_row_delete(&sg,(int)crow);ulk();modified=1;if(crow && crow>=sg.nrows)crow=sg.nrows-1u;mk(0x1Fu);}
         }
         if(b&(1u<<BTN_EDIT)){
-            if(page==PG_BANK){if(db_active(&sg,trk))dx_page=(dx_page+1u)%DB_PAGES;else toast("LOAD DX7 WITH REC",0);mk(0x1fu);}
+            if(page==PG_BANK){if(!dx_page&&dx_src)bank_name_begin();else if(db_active(&sg,trk))dx_page=(dx_page+1u)%DB_PAGES;else toast("LOAD DX7 WITH REC",0);mk(0x1fu);}
             else if(page==PG_DANCE){page=PG_VISUALS;full=1;mk(0x3fu);}
             else if(page==PG_VISUALS){page=PG_DANCE;full=1;mk(0x3fu);}
             else if(page==PG_SONG){
@@ -1398,6 +1536,12 @@ static void app_main(void){
             if(dK[3]&&sg.nrows){crow=(uint32_t)cl((int32_t)crow+dK[3],0,(int32_t)sg.nrows-1);lyric_load();}
             if(dP){tweak(&sg.bpm,dP,40,240);if(playing)en_post(&en,EN_BPM,sg.bpm,0,0);mk(1u);}
         }else if(page==PG_BANK){
+            if(bank_naming){
+                if(dS)bank_char=(uint32_t)wr((int32_t)bank_char+dS,10);
+                if(dK[0])bank_name[bank_char]=(char)(32+wr((int32_t)bank_name[bank_char]-32+dK[0],95));
+                if(dS||dK[0])mk(0x1fu);
+                dP=dS=dA=0;for(i=0;i<4;i++)dK[i]=0;
+            }
             if(dP){if(db_active(&sg,trk))dx_page=(uint32_t)wr((int32_t)dx_page+dP,DB_PAGES);else toast("LOAD DX7 WITH REC",0);mk(0x1fu);}
             if(!dx_page){if(dS){if(dx_src)ub_cursor=(uint32_t)wr((int32_t)ub_cursor+dS,UB_N);else dx_cursor=(uint32_t)wr((int32_t)dx_cursor+dS,DX7_BANK_N);mk(0x1fu);}}
             else{

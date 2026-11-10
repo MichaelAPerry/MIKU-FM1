@@ -1,0 +1,81 @@
+fm1-emu: 585728 bytes at 0x02000000, entry 0x02000120, ram 1048576 bytes at 0x01c00000
+stopped after 9600000000 instructions (step limit, hist top-12 of 351 classes):
+  r_mov_r_i                    1015154152 ( 10.6%)
+  r_add_i                      941274845 (  9.8%)
+  if_r_lt_r_goto_i             793756235 (  8.3%)
+  ifs_r_lt_i_goto_i            789018062 (  8.2%)
+  r_mov_r_l_s                  777797396 (  8.1%)
+  r_mov_i_l2                   298951054 (  3.1%)
+  r_mov_r                      238782808 (  2.5%)
+  if_r_eq_i_goto_i             184477587 (  1.9%)
+  r_add_r                      170152691 (  1.8%)
+  r_mov_b_r_i_u                151872230 (  1.6%)
+  r_mov_r_lsr_i                149931394 (  1.6%)
+  r_mov_i_l4                   149607434 (  1.6%)
+last executed pcs:
+0x20026e0 -> 0x20026e2 -> 0x20026e8 -> 0x20026ea -> 0x20026ec -> 0x20026f0 -> 0x20026f2 -> 0x20026f4 -> 0x20026f8 -> 0x20026fc -> 0x2002700 -> 0x2002702
+pc histogram top-8:
+  0x020004a0  773236925
+  0x0200049e  773236823
+  0x0200049c  773236719
+  0x020004a6  773157649
+  0x020004a4  773157510
+  0x02007dec  50365959
+  0x02007dea  50365941
+  0x02007de8  50365930
+cpu0: 22.3% in an ISR, 0.4% nested (54.5 M ISR instructions per emulated s)
+time 40000 ms, 403310 interrupts, 6838 audio halves (1750528 samples)
+interrupts by source: c0 irq 63 x396476, c0 irq 11 x6834
+wav: audio.wav (39.69 s)
+lcd frames=12936 inverted=true display_on=true
+listing 0x01c13ee0..0x01c13ee4:
+  01c13ee0  b0 1a              R >>= R                            [0, 3]  A r0 r0 >> r3
+  01c13ee2  00 00              nop                                []  
+listing 0x01c13ee4..0x01c13ee8:
+  01c13ee4  a8 44              b[R+#i] = R                        [2, 4, 0]  S r0 r2 4 w1
+  01c13ee6  b6 0b              R = [R++=R]                        [6, 3, 15]  Q ld r6 post r3 r15 w4 u
+listing 0x01c13ee8..0x01c13eec:
+  01c13ee8  00 b0              R = R << #i                        [0, 0, 16]  A r0 r0 << 16
+  01c13eea  001a ?
+listing 0x01c13ef4..0x01c13ef8:
+  01c13ef4  72 da              R <<= R #                          [2, 7]  A r2 r2 << r7
+  01c13ef6  00 00              nop                                []  
+listing 0x01c13ef8..0x01c13efc:
+  01c13ef8  00 00              nop                                []  
+  01c13efa  00 00              nop                                []  
+listing 0x01c13eec..0x01c13ef0:
+  01c13eec  03 00              hbkpt                              []  
+  01c13eee  00 00              nop                                []  
+listing 0x01c13ef0..0x01c13ef4:
+  01c13ef0  00 24              R = [sp+#i]                        [0, 16]  L r0 sp 16 w4 u
+  01c13ef2  0015 ?
+listing 0x01c14088..0x01c140a0:
+  01c14088  00 00              nop                                []  
+  01c1408a  00 00              nop                                []  
+  01c1408c  00 00              nop                                []  
+  01c1408e  00 00              nop                                []  
+  01c14090  00 00              nop                                []  
+  01c14092  00 00              nop                                []  
+  01c14094  00 00              nop                                []  
+  01c14096  00 00              nop                                []  
+  01c14098  00 00              nop                                []  
+  01c1409a  00 00              nop                                []  
+  01c1409c  00 00              nop                                []  
+  01c1409e  00 00              nop                                []  
+listing 0x01c140a0..0x01c140b8:
+  01c140a0  df 00              goto R                             [15]  
+  01c140a2  00 00              nop                                []  
+  01c140a4  58 dc              R = R + R #                        [0, 5, 1]  A r0 r5 + r1
+  01c140a6  06 39              R = [sp+#i]                        [6, 100]  L r6 sp 100 w4 u
+  01c140a8  939c ?
+  01c140aa  0025 ?
+  01c140ac  8bb2 ?
+  01c140ae  4a 00              R = #i                             [2, 0]  I r2 32
+  01c140b0  68 bd              R = R <<< #i                       [0, 6, 29]  
+  01c140b2  3b 00              btbclr                             []  
+  01c140b4  1c 8c              R = R + #i                         [4, 1, 12]  A r4 r1 + 12
+  01c140b6  ed 2a              R += -#i                           [5, -86]  A r5 r5 + 4294967210
+111 unknown MMIO accesses at 3 addresses (bring-up list, first 24):
+  read  @ 0x000100c0 first value=0x00000000 x1
+  read  @ 0x00040200 first value=0x00000000 x66
+  write @ 0x00040200 first value=0x00000000 x44

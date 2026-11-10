@@ -1,0 +1,81 @@
+fm1-emu: 585728 bytes at 0x02000000, entry 0x02000120, ram 1048576 bytes at 0x01c00000
+stopped after 9600000000 instructions (step limit, hist top-12 of 350 classes):
+  r_mov_i                      506322697 (  5.3%)
+  r_mov_r_i                    460682915 (  4.8%)
+  r_mov_i_l2                   417980577 (  4.4%)
+  r_mov_r_i_4                  366991941 (  3.8%)
+  if_r_eq_i_goto_i             361969046 (  3.8%)
+  r_mov_i_l4                   338833404 (  3.5%)
+  r_add_i                      287048874 (  3.0%)
+  r_mov_sp_i_l2                255188802 (  2.7%)
+  r_add_r                      241468604 (  2.5%)
+  r_i_mov_r                    202816972 (  2.1%)
+  r_mov_r                      191547933 (  2.0%)
+  if_r_ne_i_goto_i_3           190886451 (  2.0%)
+last executed pcs:
+0x2004272 -> 0x2004276 -> 0x2004278 -> 0x200429a -> 0x200429c -> 0x20042a0 -> 0x20042a2 -> 0x20042a8 -> 0x20042ac -> 0x20042b0 -> 0x20042b2 -> 0x20042b4
+pc histogram top-8:
+  0x02000582  52920597
+  0x0200057e  52920589
+  0x02000580  52920581
+  0x02000584  52920581
+  0x0200048e  39592305
+  0x0200049a  39592246
+  0x020004a4  39592238
+  0x02000494  39592237
+cpu0: 21.5% in an ISR, 0.4% nested (52.6 M ISR instructions per emulated s)
+time 40000 ms, 403310 interrupts, 6838 audio halves (1750528 samples)
+interrupts by source: c0 irq 63 x396476, c0 irq 11 x6834
+wav: audio.wav (39.69 s)
+lcd frames=914 inverted=true display_on=true
+listing 0x01c13f24..0x01c13f28:
+  01c13f24  b0 1a              R >>= R                            [0, 3]  A r0 r0 >> r3
+  01c13f26  00 00              nop                                []  
+listing 0x01c13f28..0x01c13f2c:
+  01c13f28  17 30              R = -#i                            [7, -16]  I r7 4294967280
+  01c13f2a  3e 0b              [R++=R] = R                        [3, 14, 6]  Q st r6 post r3 r14 w4
+listing 0x01c13f2c..0x01c13f30:
+  01c13f2c  00 b0              R = R << #i                        [0, 0, 16]  A r0 r0 << 16
+  01c13f2e  001a ?
+listing 0x01c13f38..0x01c13f3c:
+  01c13f38  d4fb ?
+  01c13f3a  00 00              nop                                []  
+listing 0x01c13f3c..0x01c13f40:
+  01c13f3c  00 00              nop                                []  
+  01c13f3e  00 00              nop                                []  
+listing 0x01c13f30..0x01c13f34:
+  01c13f30  03 00              hbkpt                              []  
+  01c13f32  00 00              nop                                []  
+listing 0x01c13f34..0x01c13f38:
+  01c13f34  00 34              R = [sp+#i]                        [0, 80]  L r0 sp 80 w4 u
+  01c13f36  0015 ?
+listing 0x01c140d8..0x01c140f0:
+  01c140d8  9a 00              callns R                           [10]  
+  01c140da  00 00              nop                                []  
+  01c140dc  3a9f ?
+  01c140de  ef 38              R += -#i                           [7, -72]  A r7 r7 + 4294967224
+  01c140e0  ad 25              [sp+#i] = R                        [148, 13]  S r13 sp 148 w4
+  01c140e2  000c ?
+  01c140e4  fc 25              R += -#i                           [4, -27]  A r4 r4 + 4294967269
+  01c140e6  b8 03              rep #i R {                         []  
+  01c140e8  e0 ba              R = R >> #i                        [0, 6, 26]  A r0 r6 >> 26
+  01c140ea  000c ?
+  01c140ec  ef 7a              h[R+-#i] = R                       [6, -12, 7]  S r7 r6 -12 w2
+  01c140ee  2b 02              flush [R]                          [11]  
+listing 0x01c140f0..0x01c14108:
+  01c140f0  00 00              nop                                []  
+  01c140f2  00 00              nop                                []  
+  01c140f4  00 00              nop                                []  
+  01c140f6  00 00              nop                                []  
+  01c140f8  00 00              nop                                []  
+  01c140fa  00 00              nop                                []  
+  01c140fc  00 00              nop                                []  
+  01c140fe  00 00              nop                                []  
+  01c14100  00 00              nop                                []  
+  01c14102  00 00              nop                                []  
+  01c14104  00 00              nop                                []  
+  01c14106  00 00              nop                                []  
+111 unknown MMIO accesses at 3 addresses (bring-up list, first 24):
+  read  @ 0x000100c0 first value=0x00000000 x1
+  read  @ 0x00040200 first value=0x00000000 x66
+  write @ 0x00040200 first value=0x00000000 x44

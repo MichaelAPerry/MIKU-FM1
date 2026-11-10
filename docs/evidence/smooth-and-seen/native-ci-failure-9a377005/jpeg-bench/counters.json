@@ -1,0 +1,21 @@
+{
+  "expected_frames": 150,
+  "counters": {
+    "video_encoded": 150,
+    "video_step_ticks": 63098,
+    "video_frame_ticks": 2606927,
+    "video_last_bytes": 4329,
+    "video_failed": 0,
+    "pub_peak": 35628,
+    "video_first_ticks": 205841102,
+    "video_last_ticks": 373845383,
+    "video_total_ticks": 167807641,
+    "video_min_bytes": 4329,
+    "video_max_bytes": 4636,
+    "audio_dx_tracks": 3,
+    "audio_playing_frames": 1387520,
+    "audio_hard_peak": 54581,
+    "audio_overruns": 0,
+    "audio_init_ticks": 27216
+  }
+}

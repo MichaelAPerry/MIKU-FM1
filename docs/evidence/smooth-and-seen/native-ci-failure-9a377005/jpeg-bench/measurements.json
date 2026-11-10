@@ -1,0 +1,23 @@
+{
+  "encoded_frames": 150,
+  "encoder_failures": 0,
+  "jpeg_bytes": 4329,
+  "max_tile_us_emulator": 2629.0833333333335,
+  "max_frame_wall_us_emulator": 108621.95833333333,
+  "audio_frames": 1750528,
+  "audio_peak": 6444,
+  "full_scale_samples": 0,
+  "isr_percent_emulator": 21.6,
+  "scope": "bounded JPEG frames during real native vocal+band playback; not real USB throughput or hardware timing",
+  "audio_render_moving_peak_us_emulator": 1484.5,
+  "audio_callback_deadline_us": 5804.988662131519,
+  "audio_render_worst_us_emulator": 2274.2083333333335,
+  "audio_overruns": 0,
+  "audio_init_us_emulator": 1134.0,
+  "encoder_frames_per_second_emulator": 21.285171893923344,
+  "mean_frame_wall_us_emulator": 46613.233611111114,
+  "minimum_jpeg_bytes": 4329,
+  "maximum_jpeg_bytes": 4636,
+  "dx7_band_tracks": 3,
+  "audio_playing_frames": 1387520
+}

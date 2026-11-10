@@ -33,7 +33,7 @@ jobs:
           python3 -m pip install -r tools/requirements-dev.txt
           cmake -S . -B build/host -DCMAKE_BUILD_TYPE=Release
           cmake --build build/host --parallel 2
-          ctest --test-dir build/host --output-on-failure
+          ctest --test-dir build/host --output-on-failure 2>&1 | tee build/evidence/0.8-ci/host-tests.log
       - name: Ensure the requested draft PR exists
         if: github.event_name == 'push' && github.ref == 'refs/heads/feature/0.8-smooth-and-seen'
         continue-on-error: true
@@ -177,6 +177,7 @@ jobs:
     runs-on: ubuntu-24.04
     permissions:
       contents: write
+      pull-requests: write
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
@@ -213,6 +214,33 @@ jobs:
           if [ "$VALIDATION_STATUS" != success ]; then destination=docs/evidence/smooth-and-seen/native-ci-failure-${VERIFIED_SHA:0:8}; extra=(--incomplete); fi
           python3 tools/save_native_review_evidence.py build/evidence/0.8-ci "$destination" "$VERIFIED_SHA" "${extra[@]}"
           git add "$destination"
+          if [ "$VALIDATION_STATUS" = success ]; then
+            python3 tools/write_0_8_pr_body.py build/evidence/0.8-ci docs/PR_0_8_DRAFT.md "$VERIFIED_SHA"
+            git add docs/PR_0_8_DRAFT.md
+          fi
           if git diff --cached --quiet; then exit 0; fi
           git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m 'Attach native 0.8 emulator measurements and page captures'
+          git push origin HEAD:refs/heads/feature/0.8-smooth-and-seen
+
+      - name: Open or update the requested draft with verified measurements
+        if: needs.build.result == 'success' && needs.measure.result == 'success' && steps.performance.outcome == 'success'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          current=$(git ls-remote origin refs/heads/feature/0.8-smooth-and-seen | cut -f1)
+          if [ "$current" != "$(git rev-parse HEAD)" ]; then exit 0; fi
+          existing=$(gh pr list --head feature/0.8-smooth-and-seen --base main --state open --json number --jq '.[0].number // empty')
+          if [ -z "$existing" ]; then
+            gh pr create --draft --base main --head feature/0.8-smooth-and-seen --title 'Miku-FM 0.8: smooth and seen' --body-file docs/PR_0_8_DRAFT.md
+          elif [ "$(gh pr view "$existing" --json isDraft --jq .isDraft)" = true ]; then
+            gh pr edit "$existing" --body-file docs/PR_0_8_DRAFT.md
+          fi
+          gh pr list --head feature/0.8-smooth-and-seen --base main --state open --json number,url,isDraft > docs/evidence/smooth-and-seen/native-ci/draft-pr.json
+          git add docs/evidence/smooth-and-seen/native-ci/draft-pr.json
+          if git diff --cached --quiet; then exit 0; fi
+          git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m 'Link the measured 0.8 draft review PR'
           git push origin HEAD:refs/heads/feature/0.8-smooth-and-seen

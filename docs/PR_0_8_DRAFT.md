@@ -1,11 +1,11 @@
-DX7 playback in 0.7 recomputes patch checksums in each audio block, and the isolated USB-camera prototype does not recover cleanly from suspend or endpoint stalls. This draft moves patch invalidation to locked edits, reduces sprite decode work, stabilizes upright pose sizing, and completes the MIDI+UVC stream lifecycle without adding heap allocation or floating point to the audio path.
+DX7 playback in 0.7 recomputes patch checksums in each audio block, and the isolated USB-camera prototype does not recover cleanly from suspend or endpoint stalls. This draft moves patch invalidation to locked edits, overlaps sprite rendering with LCD transfers, stabilizes upright pose sizing, and completes the MIDI+UVC stream lifecycle without adding heap allocation or floating point to the audio path.
 
 USB video now has corrected UVC camera-terminal control-bitmap geometry, immutable session-stamped JPEG publication, suspend/resume and endpoint-timeout recovery, deadline-based packet pacing, bounded decoded-row caching, and transmitted-frame/size/interval counters. It stays a separate 160x120 MJPEG/MIDI profile; USB-audio sharing is excluded because both profiles use EP4.
 
 Also included: BANK/LIBRARY hint layouts, checked user-bank slot naming, and CC64 for classic chords, bass and singer notes. Song format, both flash IDs and resource limits are retained.
 
 Validation:
-- 52/52 host CTest checks pass, including 729 layout states and cached/reference JPEG byte equality across the wardrobe/effect fixtures.
+- 56/56 host CTest checks pass, including 729 layout states and cached/reference JPEG byte equality across the wardrobe/effect fixtures.
 - The real patched USB driver passes a 150-frame fake-controller transport run with 66–67 ms simulated frame intervals, exact reconstruction, FID/EOF checks and suspend/stall/restart cases. This is not OS or hardware enumeration evidence.
 - Native development CI installs the authentic toolchain and pinned SDK, builds default/video/benchmark profiles with resource checks, and runs the pinned CPU emulator. The first UVC implementation commit passed all these steps; the latest run adds full-song baseline/candidate measurements and must be checked before approval.
 

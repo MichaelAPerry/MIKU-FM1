@@ -1,5 +1,8 @@
 # USB video feasibility core (2026-11-08)
 
+For the current integrated MIDI+UVC profile and 0.8 recovery changes, see
+[NEXTGEN_VIDEO_NATIVE.md](NEXTGEN_VIDEO_NATIVE.md) and [VALIDATION.md](VALIDATION.md).
+
 Working code: `firmware/usb/video/uvc.c/h` implements a bounded UVC 1.0 MJPEG class and payload core. It is freestanding,
 integer-only, contains no hardware register access, and runs independently of the audio engine. It is **not proof that
 an FM-1 enumerates as a camera**. Native HAL attachment, JPEG production, and physical-host testing are separate gates.
@@ -34,8 +37,10 @@ its completion releases the frame as failed. Once a final EOF packet is already 
 retroactively. Stop/reset must first flush the hardware endpoint, then release source ownership and clear pending DMA
 state. Reset clears negotiation/stream state while preserving diagnostic counters. No frame is replayed after reset.
 
-Frames are paced from their first prepared packet using unsigned microsecond clock differences, including timer wrap.
-The minimum interval is 66,667 us (14.999925 fps); actual frame delivery depends on producer and host demand. A too-small
+Frames use a phase-preserving 66,667 us schedule anchored at the first prepared packet,
+using unsigned microsecond clock differences including timer wrap. Poll rounding produces
+66–67 ms starts at 1 ms resolution; missed deadlines skip slots without accumulating drift.
+Actual frame delivery depends on producer and host demand. A too-small
 caller packet buffer fails without starting a frame or advancing state. The core never blocks while waiting for a frame,
 USB completion, a deadline, or a producer. Counters track completed frames, dropped frames, packets, rejected offers and
 control stalls. It does not claim that each caller ack represents a real USB transmission: the HAL adapter must enforce

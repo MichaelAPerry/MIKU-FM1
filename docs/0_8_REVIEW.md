@@ -3,10 +3,11 @@
 Review `feature/0.8-smooth-and-seen` against `v0.7`; record the full code HEAD and
 native evidence manifest's verified code SHA. This branch is a draft, not a
 release. The owner permits no experimental installation until Claude review and
-main integration. Do not push main, create release tags, deploy, or flash hardware.
+main integration. The agent has no hardware access; the owner alone handles later
+approved device testing. Do not push main, create release tags, deploy, or flash hardware.
 
-The previous turn left required USB-video implementation and native evidence
-unfinished. The follow-up includes these concrete video changes:
+This draft fixes DX7 playback animation and completes the isolated MIDI+UVC
+prototype for review. Inspect these concrete video changes:
 
 - `tools/patch_dinghy_video.py` and `firmware/usb/video/uvc.c`: UVC camera-terminal
   control bitmap length now matches the 18-byte descriptor. Inspect the full
@@ -20,18 +21,28 @@ unfinished. The follow-up includes these concrete video changes:
 - `firmware/usb/jpeg/performance_frame.*`: twelve fixed decoded rows replace
   repeated per-pixel decode; verify byte-identical JPEGs for all 720 wardrobe/
   scene/effect fixtures and bounded pool use, no framebuffer or heap.
-- `native/dinghy.c`: encoding stays in the main loop, one MCU per pass. The
+- `native/dinghy.c`: encoding stays in main context, one MCU per pass, including LCD DMA
+  waits. DANCE uses two strips within the existing canvas to overlap rendering
+  and transfer; the DMA-source immutability test covers every outfit. Fixed
+  decoded-effect rows avoid per-pixel atlas traversal, and status-strip work is
+  deferred during the final 20 ms before a DANCE slot. The
   video profile retains MIDI and analog audio, disabling USB audio/CDC because
   video and UAC both use EP4. Do not claim simultaneous UAC+UVC support.
-- Delivered-frame counters distinguish USB completion from encoder publication.
-  The 150-frame real-driver/fake-controller test is protocol evidence only.
+- Two fixed8 KiB compressed buffers decouple encoding from USB output. TIMER5
+  swaps the cached pointer only between class frames and returns the old pointer
+  through `video_usb_take_free()`. Main never overwrites an owned buffer. Inspect
+  the one-slot release invariant, queued publication/EOF ordering, generation
+  invalidation and fresh/repeated counters. TIMER5 outranks audio and performs no
+  JPEG-sized copy or encoding. The second150-frame driver test pauses encoding
+  and verifies exact repeated payloads/cadence while the other buffer is reused.
+  Both driver tests are fake-controller evidence, not hardware qualification.
 
 Playback and small-item source map:
 
 | Requirement | Implementation / evidence |
 | --- | --- |
 | Stop per-block patch CRC | `en_refresh_patches` at locked edit boundary, `dx_loaded` invalidation, actual-renderer regression test |
-| Smooth display | row reuse in native DANCE, phase-preserving cadence, existing musical-clock animation, draw/audio telemetry |
+| Smooth display | row reuse and alternating canvas strips in native DANCE, phase-preserving cadence, existing musical-clock animation, draw/audio telemetry |
 | Sprite size jumps | upright outfit pose normalization before packing, bow preserved, original outfit untouched, source/companion generated together |
 | BANK/LIBRARY layout | actual page text checked in 729 states, both tracks/all 11 bank pages, pending hints, long names, playing/stopped library |
 | Sustain | classic chords/bass/singer note releases deferred under CC64; retrigger/pedal-up/panic and same MIDI-batch ordering tests |
@@ -41,7 +52,8 @@ Playback and small-item source map:
 Run all host tests and the pinned real-driver test. Native development CI builds
 baseline/default/video/video-benchmark packages with the authentic toolchain and
 pinned SDK, checks linked resources, boots default and video packages, runs
-baseline/candidate complete-song profiles, and captures all requested bank pages
+baseline/candidate complete-song profiles, runs JPEG encoding throughout the
+arrangement with an end cutoff that freezes the final JPEG, and captures all requested bank pages
 plus library states. Timing probes are identical in baseline and candidate.
 Measurements marked incomplete or associated with another code SHA are not proof
 for the current HEAD. Review the comparator's 10 ms DANCE spread target and
@@ -50,7 +62,9 @@ worst-callback/no-overrun checks against the underlying counters.
 The initial native run at `22d3a68` passed build/budget/smoke checks. Later baseline
 instrumentation initially tripped the strict HAL checker on a state-mask literal;
 the state read was corrected to bit extraction, and the original checker is
-retained. Read the latest manifest instead of relying on that historical pass.
+retained. Later timed runs exposed real DANCE and encoder scheduling failures;
+those diagnostics are retained separately. Read the latest successful manifest
+instead of relying on a historical pass or incomplete measurement.
 
 Remaining owner-dependent evidence:
 

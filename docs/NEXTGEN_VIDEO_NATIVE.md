@@ -1,8 +1,8 @@
-# Optional native UVC integration prototype
+# Isolated native MIDI+UVC profile
 
-Current integration status: [NEXTGEN_NATIVE_INTEGRATION.md](NEXTGEN_NATIVE_INTEGRATION.md)
-and [CLAUDE_HANDOFF.md](../CLAUDE_HANDOFF.md) supersede earlier original-only,
-host-only, provisional source-grid and memory figures in this milestone document.
+Current 0.8 status: [review handoff](0_8_REVIEW.md) and
+[validation](VALIDATION.md). They supersede the historical integration figures
+at the end of this document. No physical host enumeration is claimed.
 
 This is an isolated Dinghy development profile, selected explicitly with `native/build.sh --video`.
 It retains the existing MIDI interface and updater SysEx on EP1 and adds UVC1.0 MJPEG on EP4 IN.
@@ -17,8 +17,9 @@ The generated source selects the patched driver only for `MIKU_UVC=1` and a non-
 an exact copy of the original source. The rescue/update loader therefore retains its original MIDI-only driver.
 Default builds never invoke this patch. UAC/CDC combinations are compile-time errors in this video profile.
 
-The development descriptor keeps the existing project test VID/PID and changes `bcdDevice` to4.10 to distinguish
-host descriptor caches. It is not a newly allocated production USB identity. Configuration is252bytes/four interfaces:
+The development descriptor keeps the existing project test VID/PID and changes `bcdDevice` to4.11 to distinguish
+host descriptor caches and advertises `MIKU-FM VIDEO`. The 18-byte camera
+terminal declares its three-byte control bitmap consistently. It is not a newly allocated production USB identity. Configuration is252bytes/four interfaces:
 audio-control0/MIDI-streaming1 (unchanged EP1 OUT/IN), video-control2/video-streaming3, alt0 without endpoints,
 alt1 EP4 IN isochronous512bytes/1ms. Advertised mode is160×120 MJPEG, nominal15fps, maximum8192bytes/frame.
 An audio/MIDI IAD and a video IAD group their respective interfaces. Raw configuration traversal is checked by tests.
@@ -26,19 +27,38 @@ The shared UVC class core is included into the driver's translation unit; it mus
 
 ## Ownership and interrupt work
 
-`native/video_usb.inc` exposes three main-loop helpers: `video_usb_active()`, `video_usb_busy()` and
-`video_usb_publish(jpeg,length)`. Publish accepts one complete JPEG; the caller must retain its immutable storage until
-busy becomes0. A single-producer mailbox publishes pointer/length before its volatile ownership flag. The TIMER5
-consumer alone operates the UVC core, EP0 class state, packetization and endpoint DMA. There is no shared core mutation
-from main, no busy waiting, no heap, no frame rendering or JPEG encoding in either USB or audio ISR.
+`native/video_usb.inc` exposes `video_usb_active()`, `video_usb_busy()`,
+`video_usb_generation()`, `video_usb_publish(jpeg,length,generation)` and
+`video_usb_take_free()`. Main owns two fixed8192-byte compressed buffers in the
+pool, with one encoder and an immutable scene snapshot. It encodes only into a
+free buffer. Publish transfers that buffer through a single-frame mailbox;
+`busy()==0` means mailbox capacity, not permission to overwrite the cached image.
+A buffer is writable again only when `take_free()` returns its pointer, or a
+stream generation change has invalidated all ownership.
 
-The consumer copies at most510JPEG bytes plus a2byte UVC header to one aligned512byte DMA buffer. It does not prepare
-another payload until the previous TxPktRdy clears; only then does it acknowledge completion and advance the core.
-The JPEG is released after final payload completion, not merely after preparing EOF. Alt0, new configuration, bus reset,
-detach and observed suspension flush EP4 before releasing ownership. A late publication interrupted by alt0 is cancelled
-on the next consumer pass. A queued payload unconsumed for40timer polls (approximately20ms) stops/flushed the stream;
-the host must reopen alt1. This bounded timeout policy needs real-host evaluation. It prevents a disconnected host from
-holding the caller's single JPEG indefinitely while the native instrument continues independently.
+TIMER5 accepts a mailbox only between class frames, swaps its cached pointer,
+and returns the old pointer through one release slot. Publish refuses another
+mailbox until that slot is drained, so a release cannot be overwritten. The
+cached image stays immutable through final packet completion and may repeat on
+the nominal15fps schedule while main encodes the other buffer. Each packet
+copies at most510JPEG bytes plus a2byte header to the aligned512byte DMA buffer.
+There is no JPEG-sized copy, rendering or encoding in TIMER5, which outranks
+audio. The default offline benchmark retains one buffer and measures encoding;
+physical USB-ISR cost remains unverified.
+
+`session_fresh` counts newly published JPEGs actually transmitted, and
+`session_repeated` counts cached replays. Fresh means a new encoder publication,
+not a different pixel hash. Neither count alone proves physical USB throughput.
+The consumer checks publication generations again, rejecting a mailbox
+interrupted by stop/reset/resume. Main and TIMER5 each own one side of the
+mailbox/release handoff; only TIMER5 operates the UVC core, EP0 and endpoint DMA.
+
+Alt0, configuration, reset, detach and suspension flush EP4 before releasing
+class ownership and invalidate the cached image. A late publication is cancelled
+on the next consumer pass. A queued payload unconsumed for40timer polls is flushed
+and its frame dropped; the selected stream restarts without a host alt1 reselect.
+Resume restarts the selected stream with a fresh generation/image. Recovery,
+DMA coherency and physical timing still need the owner's later hardware testing.
 
 Probe/Commit requests route only to streaming interface3 with exact26byte SET_CUR data stages. Wrong interface/entity,
 unsupported control, invalid length and malformed Commit stall. SetupEnd and SentStall clear pending control OUT state.
@@ -56,7 +76,11 @@ its actual EP0/EP4 functions. Tested and passing:
 -wrong/high interface indices and unsupported alt rejection;
 -payload boundaries, EOF, immutable pending DMA contents and source release only after hardware completion;
 -alt0 flush, abandoned-control SetupEnd, late mailbox publication, suspension and USB reset;
--the existing MIDI rescue SysEx command.
+-the existing MIDI rescue SysEx command;
+-150 consecutive fresh reconstructed frames (180,000 bytes), then150 frames
+ during an encoder pause (1 fresh/149 repeated), all at66–67 ms simulated
+ intervals with exact payload/FID/EOF and safe producer-buffer reuse;
+-suspend/resume, stalled endpoint recovery, queued mailbox ownership and stale generations.
 
 This is a software protocol/ownership test. Fake SIE completion is not a measured host IN transaction, and it does not
 reproduce the PHY, DMA coherency, bus timing or OS camera stack. Actual native link/resource figures, main-loop JPEG
@@ -64,9 +88,22 @@ cost and emulator evidence are recorded by the coordinator in the development/va
 `--video-bench` build encodes bounded main-loop frames for emulator inspection without pretending an enumerated host
 is present. It is separate from transport validation.
 
-Next concrete task: capture real descriptor/control traces and MJPEG frames on an authorized FM-1 connected to a host,
-measure frame throughput under simultaneous native synthesis and MIDI traffic, and verify recovery/update behavior.
-No broader USB combination or platform migration should be inferred from this isolated profile.
+Encoding advances one MCU per main-context service, including LCD DMA waits after
+platform initialization. A twelve-row decoded sprite cache avoids repeated per-pixel
+atlas traversal; a separate fixed three-row effect cache also avoids per-pixel
+sprite decoding. All 720 cached/reference fixtures produce identical JPEG bytes.
+CI compiles with `-DMIKU_VIDEO_BENCH_FRAMES=0 -DMIKU_VIDEO_BENCH_END_MS=39000`:
+encoding continues across the full generated DX7 arrangement, starts no new frame
+after the cutoff, and finishes the last JPEG before the 40 s emulator dump.
+The report requires at least 150 completed frames and 29 s between first/last
+completion, timed LCD transfers, both DX7 tracks and zero audio overruns.
+The default bounded benchmark remains three frames. Encoder FPS is distinct
+from completed USB FPS.
+Delivered counters and formulas are in the [evidence guide](evidence/smooth-and-seen/README.md).
+
+Hardware traces, camera-app compatibility on macOS/Windows/Linux and sustained physical
+throughput remain unverified. The owner permits experimental installation only after
+Claude review and main integration; no device access or installation is part of this work.
 
 ## Actual native integration result (2026-11-08)
 

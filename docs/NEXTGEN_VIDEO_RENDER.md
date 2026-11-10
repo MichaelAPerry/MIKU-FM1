@@ -1,5 +1,9 @@
 # Incremental JPEG rendering prototype (2026-11-08)
 
+Current 0.8 integration uses all wardrobe atlases and a fixed decoded-row cache;
+see [native profile](NEXTGEN_VIDEO_NATIVE.md) and [validation](VALIDATION.md).
+The original-only timings below are historical.
+
 The working host prototype renders MIKU's actual existing original atlas and shared
 `PerfState`/`perf_pixel` scene into a baseline colour JPEG, without a framebuffer.
 It is firmware C compiled for the host, not a captured screenshot or a replacement
@@ -41,7 +45,8 @@ establish a device-time deadline. This module performs no multicore handoff.
 mkdir -p build/evidence/video
 cc -O2 -std=c11 -Wall -Wextra -Wpedantic -I. tools/video_render.c \
   firmware/usb/jpeg/mjpeg.c firmware/usb/jpeg/performance_frame.c \
-  firmware/ui/performance.c -o build/video_render
+  firmware/ui/performance.c firmware/ui/stagefx.c firmware/ui/sprite_codec.c \
+  -o build/video_render
 build/video_render build/evidence/video
 python3 firmware/usb/jpeg/check_decode.py build/evidence/video
 ```
@@ -56,13 +61,13 @@ capacity and completed-state stability are exercised. AddressSanitizer and UBSan
 pass; this environment requires `ASAN_OPTIONS=detect_leaks=0` because LeakSanitizer
 cannot run under its ptrace arrangement. No allocations occur in the encoder.
 
-At quality65,the24 current scenes produce3475..5027bytes/frame. RGB PSNR versus the
+At quality65,the24 current scenes produce3475..5035bytes/frame. RGB PSNR versus the
 exact PPM is24.2..27.2dB; 4:2:0 visibly softens saturated pixel-art edges. This is
 compression evidence,not owner approval of image quality. One observed Release
 host run averages0.36ms/frame; worst observed MCU59us on that run. Host timings are
 noisy and are not physical-device or emulator deadlines.
 
-At15fps,this fixture range implies52,125..75,405JPEG bytes/s. The8192-byte cap
+At15fps,this fixture range implies52,125..75,525JPEG bytes/s. The8192-byte cap
 limits encoded payload to122,880bytes/s at15fps. Actual USB scheduling,host camera
 buffering,frame rate and coexistence still require the transport integration tests.
 

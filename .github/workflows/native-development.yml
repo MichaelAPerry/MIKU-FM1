@@ -97,7 +97,7 @@ jobs:
           bash native/build.sh --video 2>&1 | tee build/evidence/0.8-ci/video-build.log
           bash tools/emu_smoke.sh build/native/miku-fm-video.fwsc build/evidence/0.8-ci/video-smoke "$PWD/build/fm1-emu-src/target/release/fm1-emu"
           python3 tests/test_native_video.py build/dinghy
-          DINGHY_DEFS="-DMIKU_VIDEO_BENCH_FRAMES=150" bash native/build.sh --video-bench 2>&1 | tee build/evidence/0.8-ci/video-bench-build.log
+          DINGHY_DEFS="-DMIKU_VIDEO_BENCH_FRAMES=0 -DMIKU_VIDEO_BENCH_END_MS=39000" bash native/build.sh --video-bench 2>&1 | tee build/evidence/0.8-ci/video-bench-build.log
           cp build/native/*resources.json build/evidence/0.8-ci/
       - name: Retain native inputs and build evidence
         if: always()
@@ -150,7 +150,7 @@ jobs:
           extra=()
           if [ "$FLAVOR" = baseline ]; then prefix=build/baseline-0.7/build/native/miku-fm; extra=(--allow-overruns); fi
           if [ "$PAGE" = video ]; then
-            python3 tools/video_emu_bench.py --emu build/fm1-emu-src/target/release/fm1-emu --out build/evidence/0.8-ci/jpeg-bench --frames 150 --require-dx7 --ms 40000 --keys '2000:HOME,2500:HOME,3000:HOME,3500:HOME,4000:HOME,4500:REC,5000:EDIT,5500:HOME,6000:HOME,6500:HOME,7000:HOME,7500:HOME,8000:HOME,8500:PLAY,9000-39500:n7'
+            python3 tools/video_emu_bench.py --emu build/fm1-emu-src/target/release/fm1-emu --out build/evidence/0.8-ci/jpeg-bench --frames 0 --min-frames 150 --require-dx7 --ms 40000 --keys '2000:HOME,2500:HOME,3000:HOME,3500:HOME,4000:HOME,4500:REC,5000:EDIT,5500:HOME,6000:HOME,6500:HOME,7000:HOME,7500:HOME,8000:HOME,8500:PLAY,9000-39500:n7'
             python3 tools/video_bench_report.py build/evidence/0.8-ci/jpeg-bench 2>&1 | tee build/evidence/0.8-ci/jpeg-bench-report.log
           elif [ "$PAGE" = capture ]; then
             python3 tools/capture_bank_library_emu.py --emu build/fm1-emu-src/target/release/fm1-emu --package "$prefix.fwsc" --out "build/evidence/0.8-ci/$OUTPUT" 2>&1 | tee "build/evidence/0.8-ci/$OUTPUT-report.log"

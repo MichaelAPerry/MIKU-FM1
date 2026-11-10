@@ -215,7 +215,17 @@ static volatile uint32_t video_total_bytes,video_min_bytes,video_max_bytes,video
 static void video_update(const PerfState *scene){
     uint32_t at,dt;int result;
 #if MIKU_VIDEO_BENCH
-    if(video_encoded>=MIKU_VIDEO_BENCH_FRAMES || !scene->playing)return; /* sustained encoding includes vocal rests during band playback */
+    /* A zero frame cap measures the entire song; stop starting frames before
+       the emulator dump deadline, but always finish the immutable snapshot. */
+    if(!video_encoding){
+#if MIKU_VIDEO_BENCH_FRAMES
+        if(video_encoded>=MIKU_VIDEO_BENCH_FRAMES)return;
+#endif
+        if(!scene->playing)return;
+#if MIKU_VIDEO_BENCH_END_MS
+        if(scene->now_ms>=MIKU_VIDEO_BENCH_END_MS)return;
+#endif
+    }
 #else
     if(!video_usb_active()){video_encoding=0;return;}
     if(video_generation!=video_usb_generation()){

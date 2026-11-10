@@ -108,3 +108,29 @@ int main(void){
         str(root/'firmware/usb/jpeg/mjpeg.c'),str(root/'firmware/usb/jpeg/performance_frame.c'),
         str(root/'firmware/ui/performance.c'),str(root/'firmware/ui/stagefx.c'),str(root/'firmware/ui/sprite_codec.c'),'-o',str(p/'bench')],check=True)
     subprocess.run([str(p/'bench')],check=True)
+
+    # An uncapped run must cover the whole interval and freeze a complete JPEG
+    # even if STOP/cutoff arrives partway through its final frame.
+    continuous=harness[:harness.index('int main(void)')]+r'''
+int main(void){
+    PerfState scene;perf_init(&scene);scene.playing=1;scene.now_ms=1000;
+    for(unsigned i=0;i<80*200;i++)video_update(&scene);
+    assert(video_encoded==200&&!video_failed);
+    scene.now_ms=1999;
+    for(unsigned i=0;i<10;i++)video_update(&scene);
+    scene.now_ms=2000;scene.playing=0;
+    for(unsigned i=0;i<100;i++)video_update(&scene);
+    assert(video_encoded==201&&!video_encoding&&!video_failed);
+    uint32_t n=video_last_bytes;memcpy(prior,video_jpeg,n);
+    for(unsigned i=0;i<100;i++)video_update(&scene);
+    assert(video_encoded==201&&!memcmp(prior,video_jpeg,n));
+    puts("native video benchmark: whole-interval encoding, final JPEG frozen across cutoff/STOP OK");
+}
+'''
+    (p/'main.c').write_text(continuous)
+    subprocess.run([cc,'-std=c11','-O2','-Wall','-Wextra','-Wno-unused-function','-Wno-unused-variable',
+        '-DMIKU_VIDEO_BENCH=1','-DMIKU_UVC=1','-DMIKU_COMPACT_SPRITES=1',
+        '-DMIKU_VIDEO_BENCH_FRAMES=0','-DMIKU_VIDEO_BENCH_END_MS=2000','-I'+str(root),str(p/'main.c'),
+        str(root/'firmware/usb/jpeg/mjpeg.c'),str(root/'firmware/usb/jpeg/performance_frame.c'),
+        str(root/'firmware/ui/performance.c'),str(root/'firmware/ui/stagefx.c'),str(root/'firmware/ui/sprite_codec.c'),'-o',str(p/'continuous')],check=True)
+    subprocess.run([str(p/'continuous')],check=True)

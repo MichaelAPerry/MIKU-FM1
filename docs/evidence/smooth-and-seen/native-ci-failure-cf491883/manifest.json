@@ -1,0 +1,9 @@
+{
+  "verified_code_commit": "cf491883fff3442facfb665943f1eeaacfa0ccab",
+  "validation_complete": false,
+  "scope": "Native builds and CPU emulator; physical USB/OS/hardware unverified",
+  "files": [
+    "draft-pr.log",
+    "toolchain-setup.log"
+  ]
+}

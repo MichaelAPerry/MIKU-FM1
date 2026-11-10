@@ -61,7 +61,14 @@ jobs:
           git clone https://github.com/zvenson/dinghy.git build/dinghy
           git -C build/dinghy checkout --detach f77bf03283bbb2c05294b01cdad68a30b410f93d
           bash build/dinghy/tools/get_toolchain.sh "$RUNNER_TEMP/jieli"
-          git clone --depth 1 --branch AC79NN_SDK_V1.2.1_2023-12-13 https://gitee.com/Jieli-Tech/fw-AC79_AIoT_SDK.git "$RUNNER_TEMP/ac79-sdk"
+          # Gitee occasionally closes a shallow clone mid-pack. Retry the same
+          # pinned source; the following SHA check remains mandatory.
+          for attempt in 1 2 3; do
+            if git clone --depth 1 --branch AC79NN_SDK_V1.2.1_2023-12-13 https://gitee.com/Jieli-Tech/fw-AC79_AIoT_SDK.git "$RUNNER_TEMP/ac79-sdk"; then break; fi
+            rm -rf "$RUNNER_TEMP/ac79-sdk"
+            if [ "$attempt" = 3 ]; then exit 1; fi
+            sleep 5
+          done
           test "$(git -C "$RUNNER_TEMP/ac79-sdk" rev-parse HEAD)" = d179b4484759423312073f5fbb232501aa491047
           echo "JIELI_TOOLCHAIN=$RUNNER_TEMP/jieli/toolchain" >> "$GITHUB_ENV"
           echo "AC79_SDK=$RUNNER_TEMP/ac79-sdk" >> "$GITHUB_ENV"

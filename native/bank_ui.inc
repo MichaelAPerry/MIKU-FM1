@@ -32,7 +32,7 @@ static void pg_bank(uint32_t band){
         txt(8,152,&FONT_S,"REC SAVE / GLO CANCEL",C_TEL,0);return;
     }
     if(!band){ui_badge();txt(30,0,&FONT_L,"DX7 BANK",C_WHITE,0);
-        txt(236,8,&FONT_S,trk==TR_CHORDS?"CH":"BS",C_TEL,2);
+        txt(236,8,&FONT_S,trk==TR_CHORDS?"CHORD":"BASS",C_TEL,2);
         txt(8,32,&FONT_S,dx_page?dx_pages[dx_page]:"SEL PICK  ARP FACT/USER",C_TEL,0);if(modified)cv_rect(228,38,5,5,C_PNK);return;}
     ui_panel(8,52,224,86,1);
     s[0]=0;cat(s,dx_page?"ALGO ":dx_src?"USER ":"FACTORY ");catn(s,dx_page?(uint32_t)p[110]+1u:dx_src?ub_cursor+1u:dx_cursor+1u);

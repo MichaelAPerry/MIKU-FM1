@@ -43,6 +43,7 @@ def main():
         try:counters[name]=word(name)
         except KeyError:counters[name]=None
     (out/'counters.json').write_text(json.dumps({'expected_frames':expected,'counters':counters},indent=2)+'\n')
+    if 'halt reason:' in log:raise SystemExit('native video benchmark halted early')
     n=word('video_last_bytes')
     if not 4<=n<=8192 or word('video_encoded')!=expected or word('video_failed'):
         raise SystemExit('native benchmark incomplete or encoder failed')
@@ -80,6 +81,8 @@ def main():
         report['audio_playing_frames']=word('audio_playing_frames')
     (out/'measurements.json').write_text(json.dumps(report,indent=2)+'\n')
     print(json.dumps(report,indent=2))
+    if manifest.get('run_ms') and frames<(manifest['run_ms']-1000)*44100//1000:
+        raise SystemExit('short native benchmark audio: requested duration did not complete')
     if manifest.get('require_dx7') and (report.get('dx7_band_tracks')!=3 or report.get('audio_playing_frames',0)<44100):
         raise SystemExit('native video benchmark did not exercise full-band DX7 playback')
     if report.get('audio_overruns',0):raise SystemExit('audio overruns during native JPEG encoding')

@@ -64,6 +64,8 @@ def main():
         'interval_max_ms':profile['interval_max_ticks']/24000}
     (out/'measurements.json').write_text(json.dumps(report,indent=2)+'\n')
     print(json.dumps(report,indent=2))
+    if 'halt reason:' in log:raise SystemExit('emulator halted before completing the playback run')
+    if frames<(a.ms-1000)*44100//1000:raise SystemExit('short emulator audio: requested playback duration did not complete')
     if not counters['audio_calls'] or profile['frames']<2 or frames<10000 or not report['audio_peak']:
         raise SystemExit('incomplete playback/draw measurement')
     if counters['audio_dx_tracks']!=3 or counters['audio_playing_frames']<44100:

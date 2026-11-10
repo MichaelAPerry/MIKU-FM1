@@ -21,6 +21,8 @@
 #if MIKU_VIDEO_BENCH && !MIKU_UVC
 #error "video benchmark requires the isolated video build"
 #endif
+static void app_lcd_idle(void);
+#define LCD_IDLE() app_lcd_idle()
 #include "platform.c"
 /* Both shipped FM-1 flash variants must retain real persistent storage. */
 _Static_assert(FL_JEDEC_OK(0x856014u),"Puya FM-1 flash unsupported");
@@ -123,6 +125,7 @@ _Static_assert(WD_OUTFIT_N==PERF_OUTFIT_N,"wardrobe metadata mismatch");
 #define FACE_Y 184u
 enum { PG_STAGE, PG_DANCE, PG_SONG, PG_PATTERN, PG_MIXER, PG_GEN, PG_LYRICS, PG_VISUALS, PG_LIBRARY, PG_BANK, PG_N };
 static Engine en;
+static uint32_t app_idle_ready;
 static Song sg;
 static Undo un;
 static Song gbak;                                   /* GEN: the song before the last take (GLO drops the take) */
@@ -202,9 +205,13 @@ static MjEncoder video_encoder __attribute__((section(".pool")));
 static uint8_t video_jpeg[MJ_FRAME_CAP] __attribute__((section(".pool"),aligned(32)));
 static PerfState video_scene;
 static MjPerfCache video_cache __attribute__((section(".pool")));
-static uint32_t video_encoding,video_started,video_generation;
+static uint32_t video_encoding,video_started;
+#if !MIKU_VIDEO_BENCH
+static uint32_t video_generation;
+static volatile uint32_t video_rejected;
+#endif
 static volatile uint32_t video_step_ticks,video_frame_ticks,video_encoded,video_failed,video_last_bytes;
-static volatile uint32_t video_total_bytes,video_min_bytes,video_max_bytes,video_total_ticks,video_rejected,video_first_ticks,video_last_ticks;
+static volatile uint32_t video_total_bytes,video_min_bytes,video_max_bytes,video_total_ticks,video_first_ticks,video_last_ticks;
 static void video_update(const PerfState *scene){
     uint32_t at,dt;int result;
 #if MIKU_VIDEO_BENCH
@@ -639,6 +646,21 @@ static void guarded(uint32_t act,uint32_t arg){            /* actions that drop 
     else if(act==6){do_new();pf.slot=(uint8_t)arg;scene_load(arg);modified=1;}
     else do_demo();
 }
+/* Use otherwise idle SPI transfer time without touching the DMA-owned canvas.
+ * The JPEG source is an immutable scene snapshot with separate fixed storage. */
+static void app_lcd_idle(void){
+    static uint32_t entered;
+    if(entered)return;
+    entered=1;
+    platform_poll();
+    if(app_idle_ready){
+        midi_service(page<=PG_DANCE||page==PG_LIBRARY?TR_VOCAL:trk);
+#if MIKU_UVC
+        video_update(&performance); /* at most one MCU, main context only */
+#endif
+    }
+    entered=0;
+}
 /* ---- face: 4bpp sprite rows, 2x, into the canvas buffer, blitted (the panel wants bytes swapped: swap16) */
 #define FX 30u
 #define FY 2u
@@ -713,21 +735,28 @@ static void stage_init(void){
 #define DX 28u
 static void dance_draw(uint32_t f){
     uint8_t row[SINGER_STAGE_W];uint32_t y,x,k,r,n,decoded=~0u;
-    cv_oy=0;
-    for(y=0;y<214u;y+=4u){
-        n=214u-y<4u?214u-y:4u;lcd_sync();
+    /* Split the existing canvas into two strips. Prepare the next strip while
+       DMA reads the other; lcd_blit waits before reusing the previous strip.
+       This overlaps CPU rendering and 12 MHz SPI without another buffer. */
+    const uint32_t rows=CV_MAX/(2u*240u);
+    uint32_t slot=0;
+    cv_oy=0;lcd_sync();
+    for(y=0;y<214u;y+=rows){
+        uint16_t *pixels=cv_px+slot*rows*240u;
+        n=214u-y<rows?214u-y:rows;
         for(r=0;r<n;r++){
             if(y+r<213u && decoded!=(y+r)/3u){
                 decoded=(y+r)/3u;
                 if(!spr_decode_row(WD_OUTFITS[performance.outfit].stage,f,decoded,row,sizeof row))return;
             }
             for(x=0;x<240u;x++){
-                uint16_t p=perf_pixel(&performance,x,y+r);
-                if(y+r<213u&&x>=DX&&x<DX+183u){k=row[(x-DX)/3u];if(k)p=WD_OUTFITS[performance.outfit].stage_palette[k];}
-                cv_px[r*240u+x]=swap16(p);
+                k=0;
+                if(y+r<213u&&x>=DX&&x<DX+183u)k=row[(x-DX)/3u];
+                /* Opaque sprite pixels cover all procedural stage work. */
+                pixels[r*240u+x]=k?dpw[k]:swap16(perf_pixel(&performance,x,y+r));
             }
         }
-        lcd_blit(0,y,240,n,cv_px);
+        lcd_blit(0,y,240,n,pixels);slot^=1u;
     }
 }
 static void dance_update(void){
@@ -1258,6 +1287,7 @@ static void app_main(void){
     scene_load(pf.slot);
     next_blink=fm1_ms+3000u;full=1;
     bank_leds();
+    app_idle_ready=1;
     for(;;){
         uint32_t released,b,keys,down,now,tb,sh,kt,oldpos=ppos;
         int32_t dS,dA,dP,dK[4];

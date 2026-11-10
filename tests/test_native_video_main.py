@@ -9,6 +9,11 @@ root, cc=pathlib.Path(sys.argv[1]),sys.argv[2]
 s=(root/'native/dinghy.c').read_text()
 a=s.index('static MjEncoder video_encoder');b=s.index('\n}\n#endif',a)+2
 producer=s[a:b]
+a=s.index('static void app_lcd_idle(void){');b=s.index('{',a)+1;depth=1
+while depth:
+    depth+=(s[b]=='{')-(s[b]=='}');b+=1
+idle=s[a:b]
+
 harness=r'''
 #include <stdint.h>
 #include <assert.h>
@@ -18,6 +23,7 @@ harness=r'''
 #include "firmware/usb/jpeg/performance_frame.h"
 #include "firmware/usb/video/uvc.h"
 #include "firmware/ui/stagefx.h"
+#include "firmware/song/song.h"
 static uint32_t active,busy,ticks,published,generation;
 static uint32_t fm1_ticks(void){ticks+=100;return ticks;}
 static uint32_t video_usb_generation(void){return generation;}
@@ -29,6 +35,14 @@ static uint32_t video_usb_publish(const uint8_t*p,uint32_t n,uint32_t epoch){
     busy=1;published=n;return 1;
 }
 PRODUCER
+static uint32_t app_idle_ready,page,trk,polls,midi_polls;
+static PerfState performance;
+#define PG_DANCE 1u
+#define PG_LIBRARY 8u
+static void app_lcd_idle(void);
+static void platform_poll(void){polls++;app_lcd_idle();} /* intentional reentry must be blocked */
+static void midi_service(uint32_t t){assert(t<4);midi_polls++;}
+IDLE
 static uint8_t prior[8192],want[8192];static MjEncoder reference;
 int main(void){
     PerfState scene;perf_init(&scene);scene.sprite=6;scene.background=1;
@@ -58,12 +72,16 @@ int main(void){
     for(unsigned i=0;i<79;i++){video_update(&scene);assert(!published);}
     video_update(&scene);assert(published&&video_encoded==3);
     assert(video_min_bytes&&video_max_bytes>=video_min_bytes&&video_total_bytes>=published);
+    /* Entire JPEG can progress during LCD DMA waits, without main-loop passes. */
+    busy=0;published=0;performance=scene;app_idle_ready=1;
+    for(unsigned i=0;i<80;i++)app_lcd_idle();
+    assert(busy&&published&&video_encoded==4&&polls==80&&midi_polls==80);
     puts("native video main: incremental budget, immutable USB ownership, disconnect/restart, exact JPEG");
 }
-'''.replace('PRODUCER',producer)
+'''.replace('PRODUCER',producer).replace('IDLE',idle)
 with tempfile.TemporaryDirectory() as td:
     p=pathlib.Path(td);(p/'main.c').write_text(harness)
-    subprocess.run([cc,'-std=c11','-O2','-Wall','-Wextra','-DMIKU_COMPACT_SPRITES=1','-I'+str(root),str(p/'main.c'),
+    subprocess.run([cc,'-std=c11','-O2','-Wall','-Wextra','-DMIKU_UVC=1','-DMIKU_COMPACT_SPRITES=1','-I'+str(root),str(p/'main.c'),
         str(root/'firmware/usb/jpeg/mjpeg.c'),str(root/'firmware/usb/jpeg/performance_frame.c'),
         str(root/'firmware/ui/performance.c'),str(root/'firmware/ui/stagefx.c'),str(root/'firmware/ui/sprite_codec.c'),'-o',str(p/'main')],check=True)
     subprocess.run([str(p/'main')],check=True)
@@ -85,7 +103,7 @@ int main(void){
 '''
     (p/'main.c').write_text(bench)
     subprocess.run([cc,'-std=c11','-O2','-Wall','-Wextra','-Wno-unused-function','-Wno-unused-variable',
-        '-DMIKU_VIDEO_BENCH=1','-DMIKU_COMPACT_SPRITES=1','-I'+str(root),str(p/'main.c'),
+        '-DMIKU_VIDEO_BENCH=1','-DMIKU_UVC=1','-DMIKU_COMPACT_SPRITES=1','-I'+str(root),str(p/'main.c'),
         str(root/'firmware/usb/jpeg/mjpeg.c'),str(root/'firmware/usb/jpeg/performance_frame.c'),
         str(root/'firmware/ui/performance.c'),str(root/'firmware/ui/stagefx.c'),str(root/'firmware/ui/sprite_codec.c'),'-o',str(p/'bench')],check=True)
     subprocess.run([str(p/'bench')],check=True)

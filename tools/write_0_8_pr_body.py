@@ -33,7 +33,8 @@ Verified source: `{a.commit}`. CPU-emulator measurements use timed 12 MHz LCD tr
 - DANCE draw mean {dance['draw_mean_us']/1000:.3f} ms; frame intervals {dance['interval_min_ms']:.3f}–{dance['interval_max_ms']:.3f} ms. The unchanged 10 ms interval-spread check passes.
 - Worst audio callback: STAGE {stage['audio_worst_us']:.3f} µs and DANCE {dance['audio_worst_us']:.3f} µs, both no higher than the instrumented 0.7 baseline; zero overruns.
 - Full-song JPEG run: {video['encoded_frames']} frames over {video['encoding_window_ms_emulator']/1000:.3f} s, {video['encoder_frames_per_second_emulator']:.3f} encoded fps, {video['minimum_jpeg_bytes']}–{video['maximum_jpeg_bytes']} bytes/JPEG. Mean/max frame time {video['mean_frame_wall_us_emulator']/1000:.3f}/{video['max_frame_wall_us_emulator']/1000:.3f} ms; zero encoder failures/audio overruns. These are encoder measurements, not physical USB throughput.
-- The real USB driver separately reconstructs 150 frames through a fake controller with 66–67 ms intervals and recovery checks; this is protocol evidence, not OS enumeration.
+- The real USB driver separately reconstructs 150 fresh frames, then 150 frames during an encoder pause (1 fresh/149 repeated), with 66–67 ms intervals, exact payloads and recovery checks. A separate compressed snapshot keeps the camera cadence independent of encoding; fresh/repeated counters remain distinct. This is protocol evidence, not OS enumeration.
+- The native benchmark also measures the bounded snapshot copy in main context: worst {video['max_snapshot_copy_wall_us_emulator']:.3f} µs including preemption. Physical USB-ISR cost remains unverified.
 
 | Profile | Image bytes (≤581564) | Static free (≥16384) | Pool free (≥32768) |
 | --- | ---: | ---: | ---: |

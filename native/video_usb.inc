@@ -6,10 +6,20 @@ static void e0_send(const uint8_t *p,uint16_t len,uint16_t wlen);
 static Muvc video_class;
 static uint8_t video_dma[MUVC_PACKET_CAP] __attribute__((aligned(32)));
 static uint8_t video_reply[MUVC_PROBE_LEN];
+/* A compressed snapshot, not a pixel framebuffer. TIMER5 alone owns it.
+ * Keep transmitting this complete image while main encodes the next one. */
+static uint8_t video_hold[MUVC_FRAME_CAP] __attribute__((section(".pool"),aligned(32)));
+static volatile uint32_t video_copy_ticks;
+static void video_copy_into_hold(const uint8_t *from,uint32_t bytes){
+    uint32_t at=fm1_ticks(),dt,i;
+    volatile uint8_t *to=&video_hold[0];
+    for(i=0;i<bytes;i++)to[i]=from[i];
+    dt=fm1_ticks()-at;if(dt>video_copy_ticks)video_copy_ticks=dt;
+}
 static struct {
     const uint8_t * volatile source;
     volatile uint32_t length;
-    volatile uint8_t owner; /* 0 free; main publishes1; timer owns2 until DMA completion/flush */
+    volatile uint8_t owner; /* 0 producer buffer free; 1 immutable mailbox until copied/cancelled */
     volatile uint8_t active;
     volatile uint32_t generation,source_generation;
     uint8_t paused;
@@ -17,6 +27,8 @@ static struct {
     volatile uint32_t completed,cancelled,stalls,bytes_completed;
     volatile uint32_t first_frame_ms,last_frame_ms,interval_min_ms,interval_max_ms,session_frames,session_bytes;
     uint8_t measured;
+    uint32_t cached_bytes,cached_serial,frame_serial,sent_serial;
+    volatile uint32_t fresh_frames,repeated_frames,session_fresh,session_repeated;
 } video_usb;
 static __attribute__((unused)) uint32_t video_usb_busy(void){return video_usb.owner!=0;}
 static __attribute__((unused)) uint32_t video_usb_active(void){return video_usb.active&&!usb.suspended;}
@@ -42,16 +54,18 @@ static void video_collect_release(void){
                 if(!video_usb.interval_min_ms||interval<video_usb.interval_min_ms)video_usb.interval_min_ms=interval;
                 if(interval>video_usb.interval_max_ms)video_usb.interval_max_ms=interval;
             }else{video_usb.first_frame_ms=now;video_usb.measured=1;}
-            video_usb.last_frame_ms=now;video_usb.bytes_completed+=video_usb.length;video_usb.completed++;
-            video_usb.session_frames++;video_usb.session_bytes+=video_usb.length;
+            video_usb.last_frame_ms=now;video_usb.bytes_completed+=video_usb.cached_bytes;video_usb.completed++;
+            video_usb.session_frames++;video_usb.session_bytes+=video_usb.cached_bytes;
+            if(video_usb.frame_serial!=video_usb.sent_serial){video_usb.fresh_frames++;video_usb.session_fresh++;}
+            else{video_usb.repeated_frames++;video_usb.session_repeated++;}
+            video_usb.sent_serial=video_usb.frame_serial;
         }else video_usb.cancelled++;
-        RING_PUBLISH();video_usb.owner=0;
     }
 }
 static void video_usb_stop(uint32_t reset){
     video_usb.active=0;video_usb.paused=0;video_usb.generation++;video_ep4_flush();
     if(reset)muvc_reset(&video_class);else muvc_stream(&video_class,0);
-    video_collect_release();
+    video_collect_release();video_usb.cached_bytes=0;
     /* Also cancel a main-loop publication not yet offered to the class core. */
     RING_PUBLISH();video_usb.owner=0;
 }
@@ -66,6 +80,7 @@ static int video_usb_alt(uint32_t alt){
     video_usb.active=(uint8_t)alt;
     video_usb.measured=0;video_usb.interval_min_ms=video_usb.interval_max_ms=0;
     video_usb.session_frames=video_usb.session_bytes=0;
+    video_usb.session_fresh=video_usb.session_repeated=0;
     return 1;
 }
 static void video_usb_abort_control(void){video_class.control_pending=0;}
@@ -108,10 +123,22 @@ static void video_usb_service(void){
         video_usb.pending=video_usb.wait=0;
         muvc_ack(&video_class,1);video_collect_release();
     }
-    if(video_usb.owner==1u){
+    /* Never change the snapshot while a class frame/DMA refers to it. The
+       next producer JPEG can wait in its own mailbox during that transfer. */
+    if(!video_class.source&&video_usb.owner==1u){
         RING_PUBLISH();
-        if(video_usb.source_generation==video_usb.generation && muvc_offer(&video_class,video_usb.source,video_usb.length,1))video_usb.owner=2;
-        else{video_usb.cancelled++;RING_PUBLISH();video_usb.owner=0;}
+        if(video_usb.source_generation==video_usb.generation){
+            video_copy_into_hold(video_usb.source,video_usb.length);
+            video_usb.cached_bytes=video_usb.length;video_usb.cached_serial++;
+        }else video_usb.cancelled++;
+        RING_PUBLISH();video_usb.owner=0;
+    }
+    /* Offer only at a due slot, leaving the snapshot replaceable between
+       transfers. A slow encoder repeats a complete frame at the camera rate;
+       counters distinguish repeated pictures from fresh ones. */
+    if(!video_class.source&&video_usb.cached_bytes&&(!video_class.clocked||
+       (uint32_t)(fm1_ms*1000u-video_class.last_start_us)>=MUVC_FRAME_US)){
+        if(muvc_offer(&video_class,video_hold,video_usb.cached_bytes,1))video_usb.frame_serial=video_usb.cached_serial;
     }
     n=muvc_prepare(&video_class,fm1_ms*1000u,video_dma,sizeof video_dma);
     if(!n)return;

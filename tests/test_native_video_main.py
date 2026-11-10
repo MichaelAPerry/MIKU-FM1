@@ -25,6 +25,9 @@ harness=r'''
 #include "firmware/ui/stagefx.h"
 #include "firmware/song/song.h"
 static uint32_t active,busy,ticks,published,generation;
+#if MIKU_VIDEO_BENCH
+static void video_copy_into_hold(const uint8_t *p,uint32_t n){assert(n>=4&&n<=8192&&p[0]==255&&p[1]==216&&p[n-2]==255&&p[n-1]==217);}
+#endif
 static uint32_t fm1_ticks(void){ticks+=100;return ticks;}
 static uint32_t video_usb_generation(void){return generation;}
 static uint32_t video_usb_active(void){return active;}

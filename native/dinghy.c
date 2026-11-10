@@ -199,8 +199,9 @@ static uint16_t pw[16],dpw[16],c_bg,c_disc;
 static uint32_t dance_cur=99,dance_ms;
 static PerfState performance;
 #if MIKU_UVC
-/* One compressed frame plus incremental MCU scratch: no video framebuffer or core1 ownership.
-   TIMER5 owns USB state; the main loop owns encoder/scene until immutable publication. */
+/* Encoder output plus incremental MCU scratch: no pixel framebuffer or core1 ownership.
+   TIMER5 has a separate compressed snapshot, so encoding overlaps transmission.
+   The main output stays immutable until the mailbox copy releases it. */
 static MjEncoder video_encoder __attribute__((section(".pool")));
 static uint8_t video_jpeg[MJ_FRAME_CAP] __attribute__((section(".pool"),aligned(32)));
 static PerfState video_scene;
@@ -253,6 +254,7 @@ static void video_update(const PerfState *scene){
     if(!video_min_bytes||video_last_bytes<video_min_bytes)video_min_bytes=video_last_bytes;
     if(video_last_bytes>video_max_bytes)video_max_bytes=video_last_bytes;
 #if MIKU_VIDEO_BENCH
+    video_copy_into_hold(video_jpeg,video_last_bytes); /* measure bounded snapshot copy in main, not USB throughput */
     video_encoded++;
 #else
     if(video_usb_publish(video_jpeg,mj_size(&video_encoder),video_generation))video_encoded++;

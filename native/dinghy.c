@@ -774,11 +774,15 @@ static void dance_draw(uint32_t f){
  * make that slot late. Its dirty bit stays set until the next safe window. */
 static uint32_t dance_status_ready(uint32_t now){
     uint32_t age=now-dance_ms;
-    return !playing||dance_cur==99u||age<80u||age>=100u;
+    return !playing||dance_cur==99u||age<80u;
 }
 static void dance_update(void){
     uint32_t now=fm1_ms,f=performance.sprite;
-    if((f!=dance_cur || performance.effect || performance.background || performance.frame) && (dance_cur==99u || now-dance_ms>=100u)){dance_ms=dance_cur==99u?now:now-(now-dance_ms)%100u;dance_cur=f;{uint32_t t=draw_start(&dance_profile);dance_draw(f);draw_end(&dance_profile,t);}}
+    if(dance_cur!=99u&&now-dance_ms<100u)return;
+    dance_ms=dance_cur==99u?now:now-(now-dance_ms)%100u;
+    if(f!=dance_cur||performance.effect||performance.background||performance.frame){
+        dance_cur=f;{uint32_t t=draw_start(&dance_profile);dance_draw(f);draw_end(&dance_profile,t);}
+    }
 }
 /* ---- pages. The screen below the face is drawn in bands of 48 lines (bit n of `dirty` = band n; bit 5 = the STAGE strip) */
 static uint32_t shown_row(void){return playing?(ppos>>8&255u):crow;}

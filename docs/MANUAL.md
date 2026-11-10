@@ -222,7 +222,8 @@ The user bank is 32 voices of your own, kept on the FM-1 (not in the songs) unti
 - On any edit page, press **GLO**: the page shows REC STORE USER n and GLO NEXT. **GLO** again picks the next slot; **REC** stores the
   current patch there, with its name. Storing into a slot replaces what was in it. You have 8 seconds to press REC.
 - With no bank yet, the first store creates one and fills the other 31 slots with INIT VOICE.
-- Voice names come with the patch (10 characters); there is no name editing on the device yet.
+- Voice names come with the patch (10 characters). To rename a user voice: stop the song, switch BROWSE to USER with **ARP**, pick the
+  slot with **SELECT** and press **EDIT**. **SELECT** moves between letters, **K1** changes the letter, **REC** saves and **GLO** cancels.
 - Stores need the song stopped.
 
 ### Export
@@ -254,8 +255,8 @@ Dexed too.
 ## MIDI keyboard in
 
 A MIDI keyboard on USB or the TRS jack plays the current track exactly like the keys: the singer on STAGE, DANCE and LIBRARY, otherwise
-the selected track (drums use the note modulo 12). When CHORDS or BASS plays a DX7 voice, the **sustain pedal** (CC 64) holds its
-notes and the **pitch bend wheel** bends them; the classic sounds ignore both. CC 120 and 123 release every held note. MIDI does not write pattern
+the selected track (drums use the note modulo 12). The **sustain pedal** (CC 64) holds the notes of the singer, the chords and the bass, classic or DX7.
+The **pitch bend wheel** bends DX7 chords and bass; the classic sounds ignore it. CC 120 and 123 release every held note. MIDI does not write pattern
 steps, and MIDI clock is ignored.
 
 ## Other firmwares, limits, and when something goes wrong
@@ -264,9 +265,9 @@ Songs live in Dinghy's 10 slots of the FM-1's flash; the current slot, the pan s
 settings sector and blobs. Miku-FM does not read other firmwares' projects or samples, and saving replaces the settings other
 Felucca-family firmwares keep: back up before installing (see [INSTALL](INSTALL.md)).
 
-Limits of this version: no song or voice renaming on the device (a new song is NEW SONG, a generated one is named after its style and
-seed); 4/4 only; one bar of 16 steps per pattern; pan is a device setting, not part of the song file; looks are per slot, not in exported
-songs. USB video output is not in 0.7. MIDI clock sync and WAV export from the device are not there yet (see [ROADMAP](ROADMAP.md)).
+Limits of this version: songs can't be renamed on the device (a new song is NEW SONG, a generated one is named after its style and
+seed; user DX7 voices can be renamed); 4/4 only; one bar of 16 steps per pattern; pan is a device setting, not part of the song file; looks are per slot, not in exported
+songs. USB video output is not in 0.8. MIDI clock sync and WAV export from the device are not there yet (see [ROADMAP](ROADMAP.md)).
 
 If the firmware misbehaves, hold **OCT-** while switching on for the USB rescue (no sound, only the updater).
 

@@ -650,15 +650,14 @@ static void guarded(uint32_t act,uint32_t arg){            /* actions that drop 
  * The JPEG source is an immutable scene snapshot with separate fixed storage. */
 static void app_lcd_idle(void){
     static uint32_t entered;
-    if(entered)return;
+    /* lcd_init runs before ADC, USB and interrupts are ready. */
+    if(!app_idle_ready||entered)return;
     entered=1;
     platform_poll();
-    if(app_idle_ready){
-        midi_service(page<=PG_DANCE||page==PG_LIBRARY?TR_VOCAL:trk);
+    midi_service(page<=PG_DANCE||page==PG_LIBRARY?TR_VOCAL:trk);
 #if MIKU_UVC
-        video_update(&performance); /* at most one MCU, main context only */
+    video_update(&performance); /* at most one MCU, main context only */
 #endif
-    }
     entered=0;
 }
 /* ---- face: 4bpp sprite rows, 2x, into the canvas buffer, blitted (the panel wants bytes swapped: swap16) */

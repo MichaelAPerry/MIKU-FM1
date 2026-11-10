@@ -45,6 +45,7 @@ static void midi_service(uint32_t t){assert(t<4);midi_polls++;}
 IDLE
 static uint8_t prior[8192],want[8192];static MjEncoder reference;
 int main(void){
+    app_lcd_idle();assert(!polls&&!midi_polls&&!video_encoded); /* pre-platform init */
     PerfState scene;perf_init(&scene);scene.sprite=6;scene.background=1;
     for(unsigned i=0;i<100;i++)video_update(&scene);
     assert(!video_encoding&&!video_encoded&&!published);

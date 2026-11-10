@@ -1,6 +1,6 @@
 {
   "package": "/home/runner/work/MIKU-FM1/MIKU-FM1/build/native/miku-fm-video-bench.fwsc",
-  "sha256": "4261ea7ce57d11faa095f67a5a981175b703cd0c4b99c9d3eba5e8801d3b4718",
+  "sha256": "296518300ab9b25ab7705425f957a60cb385e4d499fd60d877ca0f596bab18ab",
   "expected_frames": 0,
   "minimum_frames": 150,
   "minimum_encoding_ms": 29000,

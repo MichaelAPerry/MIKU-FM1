@@ -1,6 +1,6 @@
 # Native 0.8 review evidence
 
-Generated from verified code `85fe73363d257481a7eed4b582e3c75e64f62642`. CPU emulator only; no physical USB or device qualification.
+Generated from verified code `a6ad1ec278cc1c859d442052ea6a4a1f042266f0`. CPU emulator only; no physical USB or device qualification.
 
 | Track / page | v0.7 baseline | 0.8 candidate |
 | --- | --- | --- |

@@ -1,26 +1,26 @@
 {
   "image": {
-    "used": 551304,
+    "used": 551584,
     "limit": 581564,
-    "free": 30260,
+    "free": 29980,
     "minimum_free": 0,
-    "margin_above_reserve": 30260,
+    "margin_above_reserve": 29980,
     "pass": true
   },
   "static_ram": {
-    "used": 49920,
+    "used": 49968,
     "limit": 98304,
-    "free": 48384,
+    "free": 48336,
     "minimum_free": 16384,
-    "margin_above_reserve": 32000,
+    "margin_above_reserve": 31952,
     "pass": true
   },
   "pool": {
-    "used": 275152,
+    "used": 283324,
     "limit": 344064,
-    "free": 68912,
+    "free": 60740,
     "minimum_free": 32768,
-    "margin_above_reserve": 36144,
+    "margin_above_reserve": 27972,
     "pass": true
   }
 }

@@ -1,0 +1,33 @@
+{
+  "scope": "CPU emulator; generated full-band DX7; not USB or hardware qualification",
+  "page": "dance",
+  "package_sha256": "1d81e61b74843ea35ae4540f01ba5581fa20478aa9a4f0eaadacb28150c4c9b1",
+  "run_ms": 40000,
+  "lcd_spi_timing": true,
+  "audio": {
+    "audio_calls": 6832,
+    "audio_ticks": 188016061,
+    "audio_frames": 1748992,
+    "audio_hard_peak": 54570,
+    "audio_overruns": 0,
+    "audio_dx_tracks": 3,
+    "audio_playing_frames": 1385472
+  },
+  "draw": {
+    "frames": 225,
+    "last_ticks": 958916174,
+    "interval_min_ticks": 2500749,
+    "interval_max_ticks": 4723513,
+    "draw_max_ticks": 3877157,
+    "draw_total_ticks": 722075258
+  },
+  "audio_peak": 6524,
+  "wav_frames": 1750528,
+  "audio_worst_us": 2273.75,
+  "audio_isr_share_percent": 21.5,
+  "audio_render_share_percent": 19.585006354166666,
+  "draw_mean_us": 133717.64037037035,
+  "draw_worst_us": 161548.20833333334,
+  "interval_min_ms": 104.197875,
+  "interval_max_ms": 196.81304166666666
+}

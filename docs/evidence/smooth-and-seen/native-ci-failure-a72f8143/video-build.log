@@ -1,0 +1,13 @@
+From https://github.com/zvenson/dinghy
+ * branch            f77bf03283bbb2c05294b01cdad68a30b410f93d -> FETCH_HEAD
+loader: image 10468 B at 0x1c0a800, bss end 0x1c0ff50
+loader: ota.bin 9067 B
+  ok    .ram_text: 916 insns, no calls
+  ok    image 550784 B of 581564; RAM .data+.bss 49872 B of 98304; pool 275008 B of 344064
+  ok    register access: hal/ only (src/, loader/ clean)
+app      /home/runner/work/MIKU-FM1/MIKU-FM1/build/dinghy/build/dinghy.bin  550784 B
+loader   /home/runner/work/MIKU-FM1/MIKU-FM1/build/dinghy/build/loader/ota.bin  9067 B
+package  /home/runner/work/MIKU-FM1/MIKU-FM1/build/dinghy/build/dinghy.fwsc  612223 B, identity FM-1_39000000
+resource budget: image: used 550784, free 30780, reserve 0: PASS
+resource budget: static_ram: used 49872, free 48432, reserve 16384: PASS
+resource budget: pool: used 275008, free 69056, reserve 32768: PASS

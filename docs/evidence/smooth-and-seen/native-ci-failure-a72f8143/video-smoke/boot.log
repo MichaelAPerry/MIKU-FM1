@@ -1,0 +1,34 @@
+fm1-emu: 585728 bytes at 0x02000000, entry 0x02000120, ram 1048576 bytes at 0x01c00000
+stopped after 720000000 instructions (step limit, hist top-12 of 319 classes):
+  r_mov_i                      32950561 (  4.6%)
+  r_mov_r_i                    32733278 (  4.5%)
+  r_mov_r_i_4                  31752212 (  4.4%)
+  r_mov_sp_i_l2                31140021 (  4.3%)
+  r_mov_i_l2                   29350377 (  4.1%)
+  if_r_eq_i_goto_i             28125070 (  3.9%)
+  r_add_i                      20785655 (  2.9%)
+  r_mov_i_l4                   19265430 (  2.7%)
+  r_add_r                      18461299 (  2.6%)
+  r_mov_r_r_l2                 17989523 (  2.5%)
+  r_mov_b_r_i_u                15988395 (  2.2%)
+  r_i_mov_r                    14065980 (  2.0%)
+last executed pcs:
+0x201407e -> 0x2014080 -> 0x20141e2 -> 0x20141e4 -> 0x2013f1a -> 0x2013f1e -> 0x2013f22 -> 0x2013f24 -> 0x2013f28 -> 0x2013f2c -> 0x2013f30 -> 0x2013f32
+pc histogram top-8:
+  0x02007d62  8750000
+  0x02007d66  8750000
+  0x02007d68  8750000
+  0x02007e6c  4207503
+  0x02007e6a  4207502
+  0x02007e70  4207501
+  0x02007e6e  4207497
+  0x02013d42  3082792
+cpu0: 12.6% in an ISR, 0.2% nested (30.8 M ISR instructions per emulated s)
+time 3000 ms, 28492 interrupts, 488 audio halves (124928 samples)
+interrupts by source: c0 irq 63 x28008, c0 irq 11 x484
+wav: audio.wav (2.83 s)
+lcd frames=61 inverted=true display_on=true
+51 unknown MMIO accesses at 3 addresses (bring-up list, first 24):
+  read  @ 0x000100c0 first value=0x00000000 x1
+  read  @ 0x00040200 first value=0x00000000 x30
+  write @ 0x00040200 first value=0x00000000 x20

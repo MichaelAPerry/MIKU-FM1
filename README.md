@@ -16,15 +16,16 @@ all, over FM chords, bass and drums. Shape her voice, write patterns or let her 
 <img src="site/media/screens/library.png" width="200" alt="LIBRARY: ten song slots">
 </p>
 
-**Current release: [Miku-FM 0.7](https://github.com/MichaelAPerry/MIKU-FM1/releases/tag/v0.7)**: a six-operator DX7 engine with ten
-original voices, DX7 cartridge import, MIDI keyboard input, a 10-song library, lyrics editing and 12 stage outfits.
+**Current release: [Miku-FM 0.8](https://github.com/MichaelAPerry/MIKU-FM1/releases/tag/v0.8)**: smooth dancing, even pose
+heights across all outfits, user DX7 voice names and a sustain pedal for every sound, on top of 0.7's six-operator DX7 engine,
+DX7 cartridge import, MIDI keyboard input, 10-song library, lyrics editing and 12 stage outfits.
 
 **Try it in your browser, watch the trailer, install it:** https://michaelaperry.github.io/MIKU-FM1/ (the emulator runs the
 real firmware package; the installer works in Chrome or Edge over USB).
 
 ### Quick start
 
-1. Open the [website](https://michaelaperry.github.io/MIKU-FM1/), connect the FM-1 by USB and press **Install 0.7** (Chrome or Edge).
+1. Open the [website](https://michaelaperry.github.io/MIKU-FM1/), connect the FM-1 by USB and press **Install 0.8** (Chrome or Edge).
 2. Press **PLAY**: she sings. **HOME** steps through STAGE, DANCE, SONG, PATTERN, MIXER, GEN, LYRICS, LOOK, LIBRARY and DX7 BANK.
 3. Load your own DX7 sounds: open the [DX7 bank tool](https://michaelaperry.github.io/MIKU-FM1/bank.html), pick a `.syx`, send it,
    and press **REC** on the FM-1 within 10 seconds. Sending a cartridge from Dexed over USB works too.
@@ -40,13 +41,13 @@ real firmware package; the installer works in Chrome or Edge over USB).
   with ten original voices, every operator editable on the device and saved inside the song. A 32-voice user bank: import a DX7
   cartridge or a single voice from Dexed or the website's [DX7 bank tool](https://michaelaperry.github.io/MIKU-FM1/bank.html) over
   USB, store your own patches, export the bank as a .syx.
-- **MIDI keyboard (0.7):** USB or TRS notes play the current track; sustain pedal and pitch bend work on DX7 voices.
+- **MIDI keyboard (0.7):** USB or TRS notes play the current track; the sustain pedal holds every sound, pitch bend works on DX7 voices.
 - **Songs and stage (0.7):** 10 song slots with a LIBRARY page and four Japanese folk songs ready in slots 1 to 4; a LYRICS page to
   edit the sung syllables; per-song LOOK with 12 outfits, backgrounds, frames and stage effects. Her face mouths every vowel on
-  STAGE; on DANCE she dances to the song. USB video output is not in 0.7.
+  STAGE; on DANCE she dances to the song. USB video output is not in 0.8 (experimental, coming later).
 - **Guide:** [docs/MANUAL.md](docs/MANUAL.md) (also the website's [guide page](https://michaelaperry.github.io/MIKU-FM1/guide.html)),
   every control: [docs/CONTROLS.md](docs/CONTROLS.md), what is measured: [docs/VALIDATION.md](docs/VALIDATION.md).
-- **Status:** 0.7 is a release built and attested on GitHub and booted in the fm1-emu emulator. Earlier versions run on real
+- **Status:** 0.8 is a release built and attested on GitHub and booted in the fm1-emu emulator. Earlier versions run on real
   FM-1s. Not yet tried on a real FM-1: DX7 SysEx over USB with Dexed and the bank tool, and MIDI keyboard input.
 - **Other firmwares' data:** Miku-FM does not read other firmwares' projects or samples (see below). Back up first.
 - **Licence:** code GPL-3.0-only; the singer is Hatsune Miku fan art under Crypton's Piapro Character License (free and

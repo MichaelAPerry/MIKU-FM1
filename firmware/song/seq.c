@@ -124,7 +124,7 @@ static void vocal_start(C *c,const Step *st,uint32_t step){
     uint32_t mo=st->v[SV_MORA],fl=st->v[SV_FLAG],authored=fl&240u,aux,i;
     int32_t d=dur(s,g,step,st->v[SV_LEN]);
     if(n<1||n>127)return;
-    if(mo>=MORA_N)mo=0;
+    if(mo>=MORA_N&&mo<SG_SYL0)mo=0;
     if(!authored){const Step *pat=st-step;for(i=0;i<NSTEP;i++)authored|=pat[i].v[SV_FLAG]&240u;}
     aux=mora_vowel(mo)|(fl&VF_SUSTAIN);
     if(authored&&!s->vsl)aux|=SQ_VOCAL_REATTACK;

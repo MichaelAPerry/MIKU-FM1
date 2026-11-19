@@ -39,6 +39,11 @@ typedef struct {
     uint8_t clen, clev, vspd, obeat;          /* ARTICULATION: consonant length, consonant level, vowel speed (50 = 100 %), on-beat */
     uint8_t hint, hmix, hdet, hchr;           /* HARMONY: interval (7 steps, first = off), mix, detune, its character (0..4) */
 } Voice;
+/* English (MKS2 v6): a VOCAL step's mora byte SG_SYL0 + i sings the song's syllable i: phonemes onset[3] vowel coda[4]
+   (fvoice FvSyl / english.h EP_* codes, 40 = the schwa) and its spelling for the screens. */
+#define SG_SYL0 128u
+#define SG_NSYL 120u                          /* mora bytes 248..255 are the engine's live syllable slots (EN_LIVE0) */
+typedef struct { uint8_t ph[8]; char text[8]; } SgSyl;
 typedef struct {
     char name[8];                             /* A-Z 0-9 space */
     uint8_t bpm, swing, master, loop, nrows;  /* 40..240, 0..75 (% of a sixteenth that odd sixteenths are delayed), 0..127, 0/1, 0..NROW */
@@ -48,8 +53,13 @@ typedef struct {
     Voice vx;                                 /* the voice's sound (MKS2 version 2; version 1 files get the defaults) */
     Row row[NROW];
     Step pat[NTRK][NPAT][NSTEP];
+    uint8_t nsyl;                             /* v6: English syllables in use, 0..SG_NSYL */
+    SgSyl syl[SG_NSYL];
 } Song;
 void sg_init(Song *g);                                        /* empty song, 120 BPM */
+int sg_syl_add(Song *g, const uint8_t ph[8], const char *text);   /* the mora byte for this syllable (an equal one is reused), -1 when full */
+const SgSyl *sg_syl(const Song *g, uint32_t mora);            /* the English syllable a mora byte names, 0 for Japanese / out of range */
+void sg_syl_compact(Song *g);                                 /* drop syllables no VOCAL step uses, renumbering the steps */
 int sg_step_ok(int trk, const Step *s);                       /* field bounds for a track */
 int sg_set_step(Song *g, int trk, int pat, int step, const Step *s);   /* all editing helpers: 1 = done, 0 = refused (nothing changed) */
 int sg_clear_step(Song *g, int trk, int pat, int step);
@@ -84,11 +94,13 @@ int un_pop(Undo *u, Song *g);                                 /* restore the new
 #define SG_DX7_USER 75u
 #define SG_DX7_LAST 75u
 #define SONG_ENC_MAX (SONG_ENC_V3 + 256u) /* v5 DX7 snapshots; classic records retain their size */
+#define SONG_ENC_V6(n) (SONG_ENC_MAX + 1u + 16u * (n))    /* v6: the v5 layout (DX7 block always present) + count + n syllables */
+#define SONG_ENC_CAP SONG_ENC_V6(SG_NSYL)
 #define SONG_ENC_SIZE SONG_ENC_V3                                                        /* 4508: v4, same layout; vocal flag semantics */
 enum { SIO_OK = 0, SIO_SIZE = -1, SIO_MAGIC = -2, SIO_VERSION = -3, SIO_LEN = -4, SIO_CRC = -5, SIO_FIELD = -6 };
 uint32_t sg_crc32(const uint8_t *p, uint32_t n);
 uint32_t song_encode(const Song *g, uint8_t *buf, uint32_t cap);   /* bytes written, 0 if cap too small */
-int song_decode(Song *g, const uint8_t *buf, uint32_t len);        /* SIO_OK or an error; g untouched on error. len: SONG_ENC_MAX (DX7 v5), SONG_ENC_SIZE (v4/v3), SONG_ENC_V2 or SONG_ENC_V1 */
+int song_decode(Song *g, const uint8_t *buf, uint32_t len);        /* SIO_OK or an error; g untouched on error. len: SONG_ENC_V6(n) (English), SONG_ENC_MAX (DX7 v5), SONG_ENC_SIZE (v4/v3), SONG_ENC_V2 or SONG_ENC_V1 */
 void sg_voice_default(Voice *v);
 void song_demo(Song *g);
 #endif

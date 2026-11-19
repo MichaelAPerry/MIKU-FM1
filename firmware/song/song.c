@@ -16,6 +16,41 @@ void sg_init(Song *g){
     sg_voice_default(&g->vx);
     for(i=0;i<NROW;i++){for(t=0;t<NTRK;t++)g->row[i].pat[t]=ROW_OFF;g->row[i].sect=SEC_NONE;}
     for(t=0;t<NTRK;t++)for(p=0;p<NPAT;p++)for(s=0;s<NSTEP;s++)for(k=0;k<4;k++)g->pat[t][p][s].v[k]=0;
+    g->nsyl=0;
+    for(i=0;i<SG_NSYL;i++)for(k=0;k<8u;k++){g->syl[i].ph[k]=0;g->syl[i].text[k]=0;}
+}
+int sg_syl_add(Song *g,const uint8_t ph[8],const char *text){
+    uint32_t i,k,n=0;
+    char t[8];
+    for(k=0;k<8u;k++)t[k]=0;
+    while(text&&text[n]&&n<7u){t[n]=text[n];n++;}
+    for(i=0;i<g->nsyl;i++){
+        for(k=0;k<8u;k++)if(g->syl[i].ph[k]!=ph[k]||g->syl[i].text[k]!=t[k])break;
+        if(k==8u)return (int)(SG_SYL0+i);
+    }
+    if(g->nsyl>=SG_NSYL)return -1;
+    for(k=0;k<8u;k++){g->syl[i].ph[k]=ph[k];g->syl[i].text[k]=t[k];}
+    g->nsyl++;
+    return (int)(SG_SYL0+i);
+}
+const SgSyl *sg_syl(const Song *g,uint32_t mora){
+    return mora>=SG_SYL0&&mora-SG_SYL0<g->nsyl?&g->syl[mora-SG_SYL0]:0;
+}
+void sg_syl_compact(Song *g){
+    uint8_t map[SG_NSYL];
+    uint32_t i,p,s,n=0;
+    for(i=0;i<SG_NSYL;i++)map[i]=0;
+    for(p=0;p<NPAT;p++)for(s=0;s<NSTEP;s++){uint32_t m=g->pat[TR_VOCAL][p][s].v[SV_MORA];if(m>=SG_SYL0&&m-SG_SYL0<g->nsyl)map[m-SG_SYL0]=1;}
+    for(i=0;i<g->nsyl;i++)if(map[i]){
+        if(n!=i)g->syl[n]=g->syl[i];
+        map[i]=(uint8_t)(SG_SYL0+n++);
+    }
+    for(p=0;p<NPAT;p++)for(s=0;s<NSTEP;s++){
+        uint8_t *m=&g->pat[TR_VOCAL][p][s].v[SV_MORA];
+        if(*m>=SG_SYL0)*m=*m-SG_SYL0<g->nsyl&&map[*m-SG_SYL0]?map[*m-SG_SYL0]:0;
+    }
+    for(i=n;i<g->nsyl;i++){uint32_t k;for(k=0;k<8u;k++){g->syl[i].ph[k]=0;g->syl[i].text[k]=0;}}
+    g->nsyl=(uint8_t)n;
 }
 void sg_voice_default(Voice *v){
     static const uint8_t d[32]={13,35,40,63,50,45,0,0,0,0,0,VC_MIKU,VL_JP,0,0,0,   /* = fvoice's 0.5 settings: attack 8 ms, release 61 (60), scoop 40, human 80, 5.5 Hz, 202 ms (200) */
@@ -27,7 +62,7 @@ void sg_voice_default(Voice *v){
 int sg_step_ok(int trk, const Step *s){
     const uint8_t *v=s->v;
     switch(trk){
-    case TR_VOCAL: return v[0]<=127 && v[1]<=64 && (v[0]==0||v[1]>=1) && v[2]<MORA_N;
+    case TR_VOCAL: return v[0]<=127 && v[1]<=64 && (v[0]==0||v[1]>=1) && (v[2]<MORA_N||v[2]>=SG_SYL0);
     case TR_CHORDS: return v[0]<=127 && (v[1]&15)<=CQ_ADD9 && (v[1]>>4)<=CM_UPDOWN32 && v[2]<=64 && (v[0]==0||v[2]>=1) && v[3]<=15;
     case TR_BASS: return v[0]<=127 && v[1]<=64 && (v[0]==0||v[1]>=1) && (v[2]&0xFCu)==0 && v[3]<=15;
     case TR_DRUMS: return (v[0]&0xC0u)==0 && (v[1]&0xC0u)==0 && !v[2] && !v[3];

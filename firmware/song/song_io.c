@@ -2,7 +2,10 @@
 /* MKS2: "MKS2" u16 version u32 total length | name[8] bpm swing master transpose loop nrows |
  * 4 x (level mute solo preset vib porta breath bright) | 64 x (pat[4] sect) | 4*16*16 x step[4] |
  * version 2: voice[16], version 3: voice[32] (Voice, field order) | u32 CRC32(IEEE) of all before.
- * Versions 1 (no voice block) and 2 are still read; what they lack gets the defaults. Version 4 uses the same layout and defines vocal flag high bits; old ignored bits clear on import. Version5 appends two packed DX7 snapshots (256 bytes). Written: v5 for DX7 projects, otherwise unchanged v4. */
+ * Versions 1 (no voice block) and 2 are still read; what they lack gets the defaults. Version 4 uses the same layout and defines vocal flag high bits; old ignored bits clear on import. Version5 appends two packed DX7 snapshots (256 bytes). Written: v5 for DX7 projects, otherwise unchanged v4.
+ * Version 6 (0.9, English): the v5 layout (its DX7 block always present, zero for classic presets) + u8 n + n x
+ * (phonemes[8] spelling[8]); a VOCAL step's mora byte SG_SYL0+i (< SG_SYL0+n) sings syllable i. Written only when a
+ * VOCAL step uses one (after sg_syl_compact), so songs without English stay readable by 0.8. */
 #include "firmware/song/song.h"
 #include "firmware/audio/dx7/dx7.h"
 uint32_t sg_crc32(const uint8_t *p,uint32_t n){
@@ -13,11 +16,16 @@ uint32_t sg_crc32(const uint8_t *p,uint32_t n){
 static void w32(uint8_t *p,uint32_t v){p[0]=(uint8_t)v;p[1]=(uint8_t)(v>>8);p[2]=(uint8_t)(v>>16);p[3]=(uint8_t)(v>>24);}
 static uint32_t r32(const uint8_t *p){return p[0]|(uint32_t)p[1]<<8|(uint32_t)p[2]<<16|(uint32_t)p[3]<<24;}
 uint32_t song_encode(const Song *g,uint8_t *b,uint32_t cap){
-    uint32_t i,t,p,s,k,o=0,dx=0,size;
+    uint32_t i,t,p,s,k,o=0,dx=0,en=0,size;
     for(t=1;t<=2;t++)if(g->trk[t].preset>=SG_DX7_FIRST&&g->trk[t].preset<=SG_DX7_LAST)dx=1;
-    size=dx?SONG_ENC_MAX:SONG_ENC_SIZE;
+    for(p=0;p<NPAT;p++)for(s=0;s<NSTEP;s++)if(g->pat[TR_VOCAL][p][s].v[SV_MORA]>=SG_SYL0){
+        en=1;
+        if(g->pat[TR_VOCAL][p][s].v[SV_MORA]-SG_SYL0>=g->nsyl)return 0;   /* a step names a missing syllable: refuse, never write a file that cannot load */
+    }
+    if(g->nsyl>SG_NSYL)return 0;
+    size=en?SONG_ENC_V6(g->nsyl):dx?SONG_ENC_MAX:SONG_ENC_SIZE;
     if(cap<size)return 0;
-    b[o++]='M';b[o++]='K';b[o++]='S';b[o++]='2';b[o++]=(uint8_t)(dx?5:4);b[o++]=0;
+    b[o++]='M';b[o++]='K';b[o++]='S';b[o++]='2';b[o++]=(uint8_t)(en?6:dx?5:4);b[o++]=0;
     w32(b+o,size);o+=4;
     for(i=0;i<8;i++)b[o++]=(uint8_t)g->name[i];
     b[o++]=g->bpm;b[o++]=g->swing;b[o++]=g->master;b[o++]=(uint8_t)g->transpose;b[o++]=g->loop;b[o++]=g->nrows;
@@ -29,7 +37,8 @@ uint32_t song_encode(const Song *g,uint8_t *b,uint32_t cap){
     for(i=0;i<NROW;i++){for(t=0;t<NTRK;t++)b[o++]=g->row[i].pat[t];b[o++]=g->row[i].sect;}
     for(t=0;t<NTRK;t++)for(p=0;p<NPAT;p++)for(s=0;s<NSTEP;s++)for(k=0;k<4;k++)b[o++]=g->pat[t][p][s].v[k];
     {const uint8_t *v=(const uint8_t *)&g->vx;for(i=0;i<32;i++)b[o++]=v[i];}
-    if(dx)for(t=0;t<2;t++)for(i=0;i<128;i++)b[o++]=g->dx7[t][i];
+    if(dx||en)for(t=0;t<2;t++)for(i=0;i<128;i++)b[o++]=g->dx7[t][i];
+    if(en){b[o++]=g->nsyl;for(i=0;i<g->nsyl;i++){for(k=0;k<8;k++)b[o++]=g->syl[i].ph[k];for(k=0;k<8;k++)b[o++]=(uint8_t)g->syl[i].text[k];}}
     w32(b+o,sg_crc32(b,o));o+=4;
     return o;
 }
@@ -51,18 +60,31 @@ static int parse(const uint8_t *b,uint32_t ver,Song *d){
     if(q[0]<40||q[0]>240||q[1]>75||q[2]>127||(int8_t)q[3]<-24||(int8_t)q[3]>24||q[4]>1||q[5]>NROW)return SIO_FIELD;
     q+=6;
     for(t=0;t<NTRK;t++,q+=8)
-        if(q[0]>127||q[1]>1||q[2]>1||(q[3]>7&&!(ver==5&&(t==1||t==2)&&q[3]>=SG_DX7_FIRST&&q[3]<=SG_DX7_LAST))||q[4]>100||q[5]>100||q[6]>100||q[7]>100)return SIO_FIELD;
+        if(q[0]>127||q[1]>1||q[2]>1||(q[3]>7&&!(ver>=5&&(t==1||t==2)&&q[3]>=SG_DX7_FIRST&&q[3]<=SG_DX7_LAST))||q[4]>100||q[5]>100||q[6]>100||q[7]>100)return SIO_FIELD;
     for(i=0;i<NROW;i++,q+=5){
         for(t=0;t<NTRK;t++)if(q[t]>=NPAT&&q[t]!=ROW_OFF)return SIO_FIELD;
         if(q[4]>=SEC_N)return SIO_FIELD;
     }
-    for(t=0;t<NTRK;t++)for(p=0;p<NPAT;p++)for(s=0;s<NSTEP;s++,q+=4){
-        Step st;
-        for(k=0;k<4;k++)st.v[k]=q[k];
-        if(!sg_step_ok((int)t,&st))return SIO_FIELD;
+    {   /* v6: the syllable count sits after the voice and DX7 blocks; every English step must name one of them */
+        uint32_t nsyl=ver==6?q[NTRK*NPAT*NSTEP*4+32+256]:0;
+        for(t=0;t<NTRK;t++)for(p=0;p<NPAT;p++)for(s=0;s<NSTEP;s++,q+=4){
+            Step st;
+            for(k=0;k<4;k++)st.v[k]=q[k];
+            if(!sg_step_ok((int)t,&st))return SIO_FIELD;
+            if(t==TR_VOCAL&&q[SV_MORA]>=SG_SYL0&&(ver<6||q[SV_MORA]-SG_SYL0>=nsyl))return SIO_FIELD;
+        }
     }
     if(ver>=2 && !voice_ok(q,ver==2?16u:32u))return SIO_FIELD;
-    if(ver==5){const uint8_t *patch=q+32;for(t=1;t<=2;t++)if(b[24+t*8+3]>=SG_DX7_FIRST&&!dx_patch_valid(patch+(t-1u)*128u))return SIO_FIELD;}
+    if(ver>=5){const uint8_t *patch=q+32;for(t=1;t<=2;t++)if(b[24+t*8+3]>=SG_DX7_FIRST&&!dx_patch_valid(patch+(t-1u)*128u))return SIO_FIELD;}
+    if(ver==6){
+        const uint8_t *y=q+32+256+1;
+        if(q[32+256]>SG_NSYL)return SIO_FIELD;
+        for(i=0;i<q[32+256];i++,y+=16){
+            for(k=0;k<8;k++)if(y[k]>40)return SIO_FIELD;                      /* phoneme codes 0..40 */
+            for(k=8;k<16;k++)if(y[k]&&(y[k]<32||y[k]>126))return SIO_FIELD;   /* printable spelling */
+            if(y[15])return SIO_FIELD;                                        /* NUL-terminated */
+        }
+    }
     if(!d)return SIO_OK;
     q=b+10;
     for(i=0;i<8;i++)d->name[i]=(char)q[i];
@@ -76,16 +98,23 @@ static int parse(const uint8_t *b,uint32_t ver,Song *d){
     for(t=0;t<NTRK;t++)for(p=0;p<NPAT;p++)for(s=0;s<NSTEP;s++,q+=4)for(k=0;k<4;k++)d->pat[t][p][s].v[k]=(uint8_t)(ver<4&&t==TR_VOCAL&&k==SV_FLAG?q[k]&15u:q[k]);
     sg_voice_default(&d->vx);
     if(ver>=2){uint8_t *v=(uint8_t *)&d->vx;uint32_t n=ver==2?16u:32u;for(i=0;i<n;i++)v[i]=q[i];}
-    for(t=0;t<2;t++)for(i=0;i<128;i++)d->dx7[t][i]=ver==5?q[32+t*128+i]:0;
+    for(t=0;t<2;t++)for(i=0;i<128;i++)d->dx7[t][i]=ver>=5?q[32+t*128+i]:0;
+    d->nsyl=ver==6?q[32+256]:0;
+    for(i=0;i<SG_NSYL;i++)for(k=0;k<8;k++){
+        d->syl[i].ph[k]=i<d->nsyl?q[32+256+1+i*16+k]:0;
+        d->syl[i].text[k]=i<d->nsyl?(char)q[32+256+1+i*16+8+k]:0;
+    }
     return SIO_OK;
 }
 int song_decode(Song *g,const uint8_t *b,uint32_t len){
     int e;
     uint32_t ver;
-    if(len!=SONG_ENC_MAX && len!=SONG_ENC_SIZE && len!=SONG_ENC_V2 && len!=SONG_ENC_V1)return SIO_SIZE;
+    if(len<SONG_ENC_V1||len>SONG_ENC_CAP)return SIO_SIZE;
     if(b[0]!='M'||b[1]!='K'||b[2]!='S'||b[3]!='2')return SIO_MAGIC;
     ver=b[4];
-    if(b[5]!=0||ver<1||ver>5||len!=(ver==1?SONG_ENC_V1:ver==2?SONG_ENC_V2:ver==5?SONG_ENC_MAX:SONG_ENC_SIZE))return SIO_VERSION;
+    if(len!=SONG_ENC_MAX && len!=SONG_ENC_SIZE && len!=SONG_ENC_V2 && len!=SONG_ENC_V1 && !(ver==6&&len>SONG_ENC_MAX))return SIO_SIZE;
+    if(b[5]!=0||ver<1||ver>6)return SIO_VERSION;
+    if(ver==6?len!=SONG_ENC_V6(b[SONG_ENC_MAX-4]):len!=(ver==1?SONG_ENC_V1:ver==2?SONG_ENC_V2:ver==5?SONG_ENC_MAX:SONG_ENC_SIZE))return SIO_VERSION;
     if(r32(b+6)!=len)return SIO_LEN;
     if(r32(b+len-4)!=sg_crc32(b,len-4))return SIO_CRC;
     e=parse(b,ver,0);

@@ -19,6 +19,8 @@ enum { EN_PLAY = 1, EN_STOP, EN_BPM, EN_ON, EN_OFF, EN_VOW, EN_PANIC, EN_RATE, E
 #define EN_QN 32u
 typedef struct { uint32_t due; uint8_t on, note, mora, vel, flags; uint16_t id; } EnVq;   /* a delayed vocal note event, including VF_SUSTAIN (on-beat) */
 #define EN_VQN 16u
+#define EN_LIVE0 248u                         /* VOCAL mora bytes EN_LIVE0+k sing live syllable slot k (en_set_live): the PHRASE page */
+#define EN_NLIVE 8u
 typedef struct {
     Seq sq; FvVoice fv, fv2; ChSynth ch; BsSynth bs; DrKit dr;   /* fv2: the harmony voice */
     DxSynth dx[2]; uint32_t dx_crc[2];uint8_t dx_loaded[2];          /* chord/bass DX7 engines; legacy voices stay selectable */
@@ -36,9 +38,15 @@ typedef struct {
     volatile uint32_t q[EN_QN], qh, qt;       /* command ring: main writes q[qh] then qh; ISR reads q[qt] then qt */
     volatile uint32_t lock, ack;              /* main: lock=1 and wait ack==1: the ISR no longer runs the sequencer or reads commands */
     volatile uint32_t pos, mouth, level, act, mora;   /* ISR -> main: playing<<16|row<<8|step; fvoice mouth, level; track activity bits; last sung mora */
+    /* English (0.9): the sounding syllable (its coda plays at note-off), the last one a vocal note-on named (for an
+       on-beat note-off's coda time), the live slots, the current mouth picture (FVV_*) */
+    FvSyl esyl, live[EN_NLIVE];
+    uint8_t eng, qmora;
+    volatile uint32_t vis;
 } Engine;
 void en_init(Engine *e, const Song *g);       /* instruments and sequencer only; does not touch the mailbox */
 uint32_t en_post(Engine *e, uint32_t kind, uint32_t a, uint32_t b, uint32_t c);   /* main side; 0 if the ring is full */
+void en_set_live(Engine *e, uint32_t slot, const FvSyl *s);   /* main side, before posting EN_ON with mora EN_LIVE0+slot; rotate slots so a queued note keeps its own */
 void en_render(Engine *e, int32_t *out, uint32_t n);
 uint32_t en_lock(Engine *e, uint32_t (*wait)(void));   /* main side. 1 = the ISR has stopped touching the song. wait() is called while waiting and returns 0 to give up */
 /* Call while locked (or with no renderer running) after patch writes. Unlock does this automatically. */

@@ -2,6 +2,16 @@
 
 Who did what, with which model. Newest first.
 
+## 2026-11-19: MKS2 v6 and English in the engine (0.9 step 5), model = claude
+- `song.h/.c/song_io.c`: per-song table of up to 120 English syllables (phonemes + spelling); VOCAL mora bytes
+  128..247 name them, 248..255 are the engine's live slots. v6 = v5 layout + table, written only when a step uses
+  English (songs without English still write v4/v5 byte-for-byte). `sg_syl_add/sg_syl/sg_syl_compact`.
+  Decoder validates phoneme codes, spelling, references and length; the encoder refuses dangling references.
+- `engine.c`: English steps sing via `fv_note_on_syl` (harmony too), HOLD keeps the vowel, legato carries the
+  previous coda into the next onset, on-beat timing uses the syllable's onset/coda length, VOWELS strips consonants,
+  live slots (`en_set_live`), viseme published (`en.vis`).
+- `firmware/song/tests/test_song_english.c`. Host ctest 59/59.
+
 ## 2026-11-19: English front end (0.9 step 2), model = codex
 - Ported CHIMERA's English front end (via Shan-Sherif's C port, MIT) to integer C: `firmware/song/english.[ch]`,
   packed 477-word dictionary `english_dict.h` (CMUdict-derived), FM-1 letter-to-sound rules, weak forms, numbers,

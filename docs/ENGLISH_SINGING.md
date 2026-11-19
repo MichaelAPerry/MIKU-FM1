@@ -132,13 +132,48 @@ generated from the existing faces' mouth region so the style matches; the owner 
 When the overlay is approved, the outfits' own A I U E O N face frames become redundant (about 6 of 12 frames each):
 removing them later is the flash reserve for this whole plan (estimated 60–90 KB), done only on approval.
 
+### 3b. Phrase record (exact layout, little-endian, 1024 bytes)
+
+| Offset | Size | Field |
+|---|---|---|
+| 0 | 4 | magic "MPH1" |
+| 4 | 1 | format version (1) |
+| 5 | 1 | language: 0 English, 1 Japanese |
+| 6 | 1 | BPM 40..240 |
+| 7 | 1 | syllable count n, 0..48 |
+| 8 | 1 | default length in sixteenths 1..16 (for syllables with no length) |
+| 9 | 1 | flags: bit0 has melody |
+| 10 | 2 | reserved 0 |
+| 12 | 12 | name, A-Z 0-9 space, padded with spaces |
+| 24 | 8 | reserved 0 |
+| 32 | 128 | text, printable ASCII, NUL-padded (the words as typed, for display and re-editing) |
+| 160 | 48 × 16 | syllables: phonemes[8] (English: EP_* onset[3] vowel coda[4], 40 = schwa; Japanese: ph[0] = mora index, rest 0), spelling[6] (NUL-padded), note (MIDI 0 = none, else 1..127), length in sixteenths (0 = default) with bit 7 = word end |
+| 928 | 92 | reserved 0 |
+| 1020 | 4 | CRC32 (IEEE, as sg_crc32) of bytes 0..1019 |
+
+The bank: 64 records, 4 per 4 KB sector, in four extra 16 KB store slots after the songs (0xBF000–0xCF000). A record
+that fails its magic or CRC is an empty phrase (the area may hold another firmware's old data).
+
 ### 7. USB protocol (SysEx 0x7D)
 
-Miku messages use the non-commercial manufacturer ID 0x7D, 8-bit data packed 7-in-8, a CRC32 on each message, through
-the existing app SysEx hook (`tools/patch_dinghy_sysex.py` widened from 0x43 to 0x43 and 0x7D). Messages: identity /
-version, phrase write, phrase read, bank list, song write (a whole MKS2 record into a slot), and acknowledgements. Writes go
-to RAM and are stored only on the device's SAVE (as DX7 bank import does with REC), so the browser never writes flash
-directly.
+Frame: `F0 7D 4D 4B <proto=1> <cmd> <seq> <packed payload> F7`. The payload (raw bytes, then its CRC32, little-endian) is
+packed 7-in-8: each group of up to 7 raw bytes becomes one byte of their high bits (bit 0 = the first byte's bit 7) and the
+7 low-bit bytes. `seq` 0..127 is echoed in the reply. Through the app SysEx hook (`tools/patch_dinghy_sysex.py` widened
+from 0x43 to 0x43 and 0x7D); the frame buffer is 4104 bytes, so payloads stay ≤ 3000 raw bytes.
+
+| cmd | Direction | Payload | Reply |
+|---|---|---|---|
+| 0x01 HELLO | host → FM-1 | none | 0x41 IDENT: proto u8, phrase count u8, song slots u8, firmware version (ASCII, NUL) |
+| 0x02 PHRASE_GET | host → FM-1 | index u8 | 0x42 PHRASE: index u8, record[1024] (an empty slot: all zero) |
+| 0x03 PHRASE_PUT | host → FM-1 | index u8, record[1024] | 0x7F ACK: cmd u8, status u8 (0 ok, 1 bad CRC/frame, 2 bad record, 3 busy, 4 refused) |
+| 0x04 BANK_LIST | host → FM-1 | none | 0x44 LIST: 64 × (valid u8, language u8, name[12]) |
+| 0x05 SONG_BEGIN | host → FM-1 | total length u16 | ACK |
+| 0x06 SONG_CHUNK | host → FM-1 | offset u16, up to 2048 bytes | ACK |
+| 0x07 SONG_END | host → FM-1 | none (the record's own CRC is checked by song_decode) | ACK |
+
+A PHRASE_PUT is written to the bank when the FM-1 is stopped (a few 50 ms sector erases); while playing the reply is 3
+(busy). A received song is held and shown on the FM-1 and replaces the current song only when the player presses REC
+there (as the DX7 bank import does); it is stored with SAVE as usual.
 
 ## Phase 2: the web editor (`site/editor.html`)
 

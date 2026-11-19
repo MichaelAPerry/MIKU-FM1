@@ -106,6 +106,7 @@ _Static_assert(WD_OUTFIT_N==PERF_OUTFIT_N,"wardrobe metadata mismatch");
 #include "firmware/song/gen_next.c"
 #include "firmware/song/lyric_edit.c"
 #include "firmware/song/factory.c"
+#include "firmware/song/english.c"
 #define VX_POOL __attribute__((section(".pool")))
 #define sat vx_sat
 #define clr vx_clr
@@ -129,6 +130,12 @@ static uint32_t app_idle_ready;
 static Song sg;
 static Undo un;
 static Song gbak;                                   /* GEN: the song before the last take (GLO drops the take) */
+_Static_assert(PHRASES_AT == SLOTS_AT + NSLOT * SLOT_SECT * 0x1000u, "phrase bank: right after the song slots");
+_Static_assert(PHRASES_AT >= FL_DATA_LO && PHRASES_AT + PHRASES_LEN <= FL_DATA_HI && PHRASES_AT + PHRASES_LEN <= FL_OTA_LO, "phrase bank: inside FL_DATA, below the OTA staging area");
+static const char *vstr(uint32_t m){                /* a VOCAL step's syllable as text: romaji, an English spelling, "~" a live one */
+    const SgSyl *y=sg_syl(&sg,m);
+    return y?y->text:m>=EN_LIVE0?"~":mora_str(m);
+}
 static GenCfg gcf={GS_POP,0,GK_MAJOR,0,1};
 static GenNextWorkspace gen_work __attribute__((section(".pool")));
 static uint32_t gen_style_id,gen_energy=70,gen_complexity=60,gen_edit;
@@ -180,7 +187,7 @@ static void ktext(uint32_t b,uint32_t k,char *o){          /* the value as shown
     else catn(o,v);
 }
 static uint32_t take,take_mod,gvar;
-static uint8_t enc[SONG_ENC_MAX];                 /* slot I/O buffer */
+static uint8_t enc[SONG_ENC_CAP];                 /* slot I/O buffer (an English v6 song is the largest) */
 static ScenePrefs pf;   /* settings: 0.3 saved 37 bytes, so its data never loads here */
 #define PF_MAGIC 0x4D4B5632u
 static volatile uint32_t pub_peak,audio_hard_peak,audio_overruns,audio_init_ticks;
@@ -448,7 +455,9 @@ static void after_load(void){
     en_post(&en,EN_PANIC,0,0,0);
     mk(0x3Fu);full=1;
 }
-static uint32_t sload(uint32_t s){                         /* a song in slot s into enc: its size (v3, v2 or v1), 0 = none */
+static uint32_t sload(uint32_t s){                         /* a song in slot s into enc: its size (v6, v5, v3, v2 or v1), 0 = none */
+    uint32_t h[3];                                         /* v6 sizes vary: the slot header names the length */
+    if(s<NSLOT&&!st_read(SLOTS_AT+s*SLOT_SECT*0x1000u,h,sizeof h)&&h[1]>SONG_ENC_MAX&&h[1]<=SONG_ENC_CAP&&!slot_load(s,enc,h[1]))return h[1];
     if(!slot_load(s,enc,SONG_ENC_MAX))return SONG_ENC_MAX;
     if(!slot_load(s,enc,SONG_ENC_SIZE))return SONG_ENC_SIZE;
     if(!slot_load(s,enc,SONG_ENC_V2))return SONG_ENC_V2;
@@ -475,6 +484,7 @@ static void do_save(uint32_t s){
     en_post(&en,EN_HUSH,0,0,0);                         /* PANIC plus a fast fade and retirement of the DX7 voices: a few ms, not their release tails */
     while(en.act && fm1_ms-t<800u)platform_poll();      /* erase only when silent (safety net) */
     if(en.act){toast("TAIL PLAYING - SAVE AGAIN",0);return;}
+    lk();sg_syl_compact(&sg);ulk();                    /* unused English syllables go; a song without English saves as 0.8 did */
     n=song_encode(&sg,enc,sizeof enc);ok=n && slot_save(s,enc,n)==0;
     if(ok){                                             /* the song is on flash from here on: only the look can still fail */
         modified=0;pf.slot=(uint8_t)s;perf_scene_encode(&performance,pf.scene[s]);
@@ -974,13 +984,13 @@ static void pg_pattern(uint32_t b){
         }else{
             if(o && o->v[0]){
                 nname(s,o->v[0]);cat(s," L");
-                if(trk==TR_VOCAL){catn(s,o->v[1]);cat(s," ");cat(s,mora_str(o->v[2]));cat(s," V");catn(s,o->v[3]&15u);}
+                if(trk==TR_VOCAL){catn(s,o->v[1]);cat(s," ");cat(s,vstr(o->v[2]));cat(s," V");catn(s,o->v[3]&15u);}
                 else if(trk==TR_CHORDS){catn(s,o->v[2]);cat(s," ");cat(s,cqn[o->v[1]&15u]);cat(s," ");cat(s,cmn[o->v[1]>>4]);}
                 else{catn(s,o->v[1]);cat(s,o->v[2]&1u?" ACC":"");cat(s,o->v[2]&2u?" SLIDE":"");}
             }else cat(s,"REST");
             txt(4,196,&FONT_S,s,tcol[trk],0);
             s[0]=0;
-            if(trk==TR_VOCAL){cat(s,"NEXT: ");cat(s,ed_mora?mora_str(ed_mora):"(A)");cat(s," L");catn(s,ed_len[0]);}
+            if(trk==TR_VOCAL){cat(s,"NEXT: ");cat(s,ed_mora?vstr(ed_mora):"(A)");cat(s," L");catn(s,ed_len[0]);}
             else if(trk==TR_CHORDS){cat(s,"NEXT: ");cat(s,cqn[ed_q]);cat(s," ");cat(s,cmn[ed_mode]);}
             else{cat(s,"NEXT: L");catn(s,ed_len[2]);cat(s,ed_bf&1u?" ACC":"");cat(s,ed_bf&2u?" SLIDE":"");}
             txt(4,218,&FONT_S,s,RGB(100,110,140),0);
@@ -1251,8 +1261,8 @@ static void pg_dance(void){
     char s[14]="BPM ",r1[16],up[6];
     const char *ms="";
     uint32_t i,r=shown_row(),x=playing?(ppos&255u):cstep,vp=r<sg.nrows?sg.row[r].pat[0]:ROW_OFF;
-    if(en.act&1u)ms=mora_str(en.mora);
-    else if(!playing && vp<NPAT && sg.pat[0][vp][x].v[0])ms=mora_str(sg.pat[0][vp][x].v[2]);
+    if(en.act&1u)ms=vstr(en.mora);
+    else if(!playing && vp<NPAT && sg.pat[0][vp][x].v[0])ms=vstr(sg.pat[0][vp][x].v[2]);
     for(i=0;i<5u&&ms[i];i++)up[i]=(char)(ms[i]-32);
     up[i]=0;
     num(s+4,sg.bpm);

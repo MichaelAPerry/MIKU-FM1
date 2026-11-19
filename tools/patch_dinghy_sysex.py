@@ -5,7 +5,8 @@
 Dinghy's USB layer assembles one SysEx frame at a time into sx_frame[] (the 7-bit bytes between F0 and F7), and
 ota_service() -> ota_take() decodes it as an M-UPGRADE message and discards it otherwise. This patch
   1. enlarges sx_frame from 640 to 4104 bytes: a full 32-voice bulk dump is 43 0n 09 20 00 + 4096 + checksum = 4102 bytes;
-  2. in ota_service(), before ota_take(), offers a frame whose first byte is 0x43 (Yamaha) to the app's
+  2. in ota_service(), before ota_take(), offers a frame whose first byte is 0x43 (Yamaha) or 0x7D (Miku-FM's own
+     messages, docs/ENGLISH_SINGING.md section 7) to the app's
      `static void app_sysex(const uint8_t *p, uint32_t n)` and releases it. M-UPGRADE frames never start with 0x43: their
      first decoded byte is 0x00, so their first 7-bit group is 0x00. Frames are not offered in recovery mode, and the update
      loader (which also compiles usb.c and ota.c, with FELUCCA_LOADER set) keeps the 640-byte buffer and has no hook.
@@ -25,7 +26,7 @@ OTA_OLD = '''static void ota_service(void)
     uint32_t d = ota_take();
 '''
 OTA_NEW = '''#ifndef FELUCCA_LOADER
-static void app_sysex(const uint8_t *p, uint32_t n);   /* the app's (native/dinghy.c): a Yamaha (0x43) SysEx frame, main loop */
+static void app_sysex(const uint8_t *p, uint32_t n);   /* the app's (native/dinghy.c): a Yamaha (0x43) or Miku (0x7D) SysEx frame, main loop */
 #endif
 static void ota_service(void)
 {
@@ -34,7 +35,7 @@ static void ota_service(void)
     {
         const uint8_t *fp;
         uint32_t fn;
-        if (!recovery_active && ota_frame_get(&fp, &fn) && fn && fp[0] == 0x43u) {   /* never an M-UPGRADE frame (those start 0x00) */
+        if (!recovery_active && ota_frame_get(&fp, &fn) && fn && (fp[0] == 0x43u || fp[0] == 0x7Du)) {   /* never an M-UPGRADE frame (those start 0x00) */
             app_sysex(fp, fn);
             ota_frame_done();
             return;

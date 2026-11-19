@@ -3,6 +3,13 @@
 #include "firmware/song/mora.h"
 int ly_rest_step(const Step *s){return s&&!s->v[SV_NOTE]&&s->v[SV_LEN]&&(s->v[SV_FLAG]&(VF_WORD_END|VF_PHRASE_END));}
 static int le_event(const Step *s){return s->v[SV_NOTE]||ly_rest_step(s);}
+/* a syllable's vowel for HOLD checks: Japanese MV_*, English 16 + its vowel phoneme (never equal across languages);
+   0xFF: none (moraic n, or a syllable the song does not have) */
+static uint32_t le_vowel(const Song *g,uint32_t mo){
+    const SgSyl *y=sg_syl(g,mo);
+    if(mo>=SG_SYL0)return y&&y->ph[3]?16u+y->ph[3]:0xFFu;
+    return mora_vowel(mo)==MV_N?0xFFu:mora_vowel(mo);
+}
 int ly_apply(Song *g,uint32_t pat,const LyUnit *u,uint32_t count,const uint8_t *notes,uint32_t fallback,uint32_t velocity){
     Step tmp[NSTEP];uint32_t i,k,at=0,last=0,previous_note=0;
     if(!g||pat>=NPAT||!u||!count||count>NSTEP||fallback<1u||fallback>127u||velocity>15u)return LE_ARGUMENT;
@@ -13,9 +20,9 @@ int ly_apply(Song *g,uint32_t pat,const LyUnit *u,uint32_t count,const uint8_t *
         if(!u[i].ticks||u[i].ticks>NSTEP)return LE_RANGE;
         if(at+u[i].ticks>NSTEP)return LE_CAPACITY;
         if(f&~(LY_REST|LY_SEPARATE|LY_SUSTAIN|LY_WORD_END|LY_PHRASE_END))return LE_FLAGS;
-        if(mo>=MORA_N)return LE_RANGE;
+        if(mo>=MORA_N&&!sg_syl(g,mo))return LE_RANGE;
         if((f&LY_REST)&&(mo||(f&(LY_SEPARATE|LY_SUSTAIN))))return LE_FLAGS;
-        if((f&LY_SUSTAIN)&&((f&LY_SEPARATE)||!previous_note||mora_vowel(last)==MV_N||mora_vowel(last)!=mora_vowel(mo)||(i&&u[i-1u].flags&LY_PHRASE_END)))return LE_SUSTAIN;
+        if((f&LY_SUSTAIN)&&((f&LY_SEPARATE)||!previous_note||le_vowel(g,last)==0xFFu||le_vowel(g,last)!=le_vowel(g,mo)||(i&&u[i-1u].flags&LY_PHRASE_END)))return LE_SUSTAIN;
         s=&tmp[at];s->v[SV_LEN]=(uint8_t)u[i].ticks;
         s->v[SV_FLAG]=(uint8_t)(((f&LY_WORD_END)||(f&LY_REST)?VF_WORD_END:0)|(f&LY_PHRASE_END?VF_PHRASE_END:0));
         if(f&LY_REST){last=0;previous_note=0;}
@@ -53,7 +60,7 @@ int ly_read(const Song *g,uint32_t pat,LyUnit *units,uint8_t *notes,uint32_t cap
                 pitch[n]=s->v[SV_NOTE];
                 if(prev_note&&!prev_legato)flags|=LY_SEPARATE;
                 if(f&VF_SUSTAIN){
-                    if(!prev_note||!prev_legato||mora_vowel(last)==MV_N||mora_vowel(last)!=mora_vowel(mo))return LE_SUSTAIN;
+                    if(!prev_note||!prev_legato||le_vowel(g,last)==0xFFu||le_vowel(g,last)!=le_vowel(g,mo))return LE_SUSTAIN;
                     flags|=LY_SUSTAIN;
                 }
             }

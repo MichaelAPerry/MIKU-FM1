@@ -26,6 +26,7 @@ git clean -qfd
 git fetch --depth 1 origin "$DINGHY_COMMIT"
 git checkout -q --detach "$DINGHY_COMMIT"
 python3 "$ROOT/tools/patch_dinghy_slots.py" "$ROOT/build/dinghy"
+python3 "$ROOT/tools/patch_dinghy_phrases.py" "$ROOT/build/dinghy"
 cp "$ROOT/native/dinghy.c" firmware/src/dinghy.c
 cp "$ROOT/native/lyrics_ui.inc" "$ROOT/native/visuals_ui.inc" "$ROOT/native/library_ui.inc" "$ROOT/native/bank_ui.inc" firmware/src/
 # the modules keep their repo paths (their .c files #include "firmware/..."; -Ifirmware/src finds them); dinghy.c includes the .c files

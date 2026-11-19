@@ -33,7 +33,7 @@ static uint32_t ph_next(void){
     if(!ph_ok||!ph_cur.n)return ed_mora;
     for(tries=0;tries<ph_cur.n;tries++){
         const PhSyl *s=&ph_cur.s[ph_pos];
-        ph_pos=ph_pos+1u<ph_cur.n?ph_pos+1u:0;mk(0x0Eu);
+        ph_pos=ph_pos+1u<ph_cur.n?ph_pos+1u:0;mk(0x1Eu);
         if(ph_cur.lang==PH_JP){if(s->ph[0])return s->ph[0];continue;}   /* a Japanese rest is mora 0: skipped live */
         {FvSyl f;ph_fvsyl(s,&f);ph_live=(ph_live+1u)%EN_NLIVE;en_set_live(&en,ph_live,&f);return EN_LIVE0+ph_live;}
     }
@@ -119,7 +119,7 @@ static void pg_phrase(uint32_t band){
         if(band<=3u){ph_line(text,shown,(band-1u)*2u*28u,28u);txt(4,52+(int32_t)(band-1u)*48,&FONT_S,text,C_WHITE,0);
             ph_line(text,shown,((band-1u)*2u+1u)*28u,28u);txt(4,76+(int32_t)(band-1u)*48,&FONT_S,text,C_WHITE,0);}
         else{txt(4,200,&FONT_S,ph_elang==PH_JP?"KEYS a-z  ALG MARKS  K1 JP":"KEYS A-Z  ALG 0-9 ,.?  K1 EN",C_TEL,0);
-             txt(4,220,&FONT_S,"REC DEL  EDIT STORE  GLO CANCEL",RGB(170,180,200),0);}
+             txt(4,220,&FONT_S,"REC DEL  EDIT SAVE  GLO EXIT",RGB(170,180,200),0);}
         return;
     }
     if(!ph_ok||!ph_cur.n){
@@ -142,7 +142,7 @@ static void pg_phrase(uint32_t band){
     }else{
         text[0]=0;cat(text,"SYL ");catn(text,ph_pos+1u);cat(text,"/");catn(text,ph_cur.n);cat(text,"  BPM ");catn(text,ph_cur.bpm);
         txt(4,200,&FONT_S,text,C_TEL,0);
-        txt(4,220,&FONT_S,"KEYS SING  REC PLACE  EDIT TYPE",RGB(170,180,200),0);
+        txt(4,220,&FONT_S,"KEYS SING  REC PLACE  EDIT",RGB(170,180,200),0);
     }
 }
 /* ---- USB: Miku SysEx 0x7D (docs/ENGLISH_SINGING.md section 7). Called from app_sysex in the main loop. The web

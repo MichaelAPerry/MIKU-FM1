@@ -4,9 +4,9 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Miku-FM · a singer in your FM-1</title>
-<meta name="description" content="Miku-FM: a free singing songwriter firmware for the M-VAVE FM-1. A tiny pixel singer sings your songs in Japanese over FM chords, bass and drums: shape her voice, add a harmony, let her write a whole song, watch her dance. Play it in your browser, install it over USB.">
+<meta name="description" content="Miku-FM: a free singing songwriter firmware for the M-VAVE FM-1. A tiny pixel singer sings your songs in Japanese and English over FM chords, bass and drums: type the words, shape her voice, add a harmony, let her write a whole song, watch her dance. Play it in your browser, install it over USB.">
 <meta property="og:title" content="Miku-FM · a singer in your FM-1">
-<meta property="og:description" content="A free singing songwriter firmware for the M-VAVE FM-1: she sings your songs in Japanese, writes her own, and dances. Play it in your browser, install it over USB.">
+<meta property="og:description" content="A free singing songwriter firmware for the M-VAVE FM-1: she sings your songs in Japanese and English, writes her own, and dances. Play it in your browser, install it over USB.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://michaelaperry.github.io/MIKU-FM1/">
 <meta property="og:image" content="https://michaelaperry.github.io/MIKU-FM1/media/trailer.jpg">
@@ -28,12 +28,13 @@
     <p class="label">SINGING SONGWRITER · M-VAVE FM-1 · VERSION {{VERSION}}</p>
     <h1>Miku<span>-FM</span><i>.</i></h1>
     <p class="tag">A tiny singer lives in your FM-1.</p>
-    <p class="tag dim">She sings your songs in Japanese, with FM chords, bass and drums. Write them step by step, or let her dream one up.</p>
+    <p class="tag dim">She sings your songs in Japanese and English, with FM chords, bass and drums. Write them step by step, type the words on the keys, or let her dream one up.</p>
     <div class="btns">
       <a class="btn" href="#play">Play in your browser ▶</a>
       <a class="btn alt" href="#trailer">Watch the trailer ↓</a>
       <a class="btn alt" href="#listen">Hear her songs ↓</a>
       <a class="btn pink" href="#install">Install {{VERSION}} ↓</a>
+      <a class="btn alt" href="editor.html">Phrase editor ↗</a>
       <a class="btn alt" href="guide.html">Read the guide ↗</a>
     </div>
   </div>
@@ -43,8 +44,17 @@
 
 <section id="new">
   <p class="label"><b>NEW</b> / WHAT'S NEW IN {{VERSION}}</p>
-  <h2>She dances smoothly now.</h2>
+  <h2>She sings English now.</h2>
   <p class="note">Everything below is in the firmware you can play on this page and install at the bottom. <a href="guide.html">The guide</a> shows every control.</p>
+  <div class="grid">
+    <div class="card feat"><span class="num">ENGLISH</span><h3>English, in her own voice.</h3><p>The same synthesised voice, no samples, now sings English: clusters like "str", word endings like the "d" of "world", gliding vowels in "I" and "light". The words come through <a href="https://github.com/jamesondh/chimera-vocal-synth">CHIMERA</a>'s English front end, ported to the FM-1. <a href="#listen">Hear her</a>.</p></div>
+    <div class="card feat"><span class="num">PHRASE</span><h3>A bank of 64 phrases.</h3><p>A new PHRASE page keeps 64 phrases on the FM-1, English or Japanese, up to 48 syllables each. REC places one into the song, a syllable per note.</p></div>
+    <div class="card feat"><span class="num">LIVE</span><h3>A syllable a key.</h3><p>Every key sings the next syllable at its pitch; letting go ends the word. A MIDI keyboard or a DAW does the same, so any MIDI track can be her lyric track.</p></div>
+    <div class="card feat"><span class="num">TYPE</span><h3>Type on the keys.</h3><p>The 27 keys are A to Z and space: write the words right on the FM-1.</p></div>
+    <div class="card feat"><span class="num">EDITOR</span><h3>A phrase editor.</h3><p>One web page that also works offline: the full pronouncing dictionary, a piano roll, MIDI and karaoke import, a preview in her real voice, and USB to the FM-1. <a href="editor.html">Open the editor</a>.</p></div>
+    <div class="card feat"><span class="num">MOUTH</span><h3>Lips for every sound.</h3><p>One new set of mouth pictures, shared by all 12 outfits, follows English and Japanese alike. And the firmware got smaller than 0.8.</p></div>
+  </div>
+  <p class="label" style="margin-top:2em"><b>0.8</b> / SMOOTH AND SEEN</p>
   <div class="grid">
     <div class="card feat"><span class="num">DANCE</span><h3>Every frame on time.</h3><p>The dancer used to stutter while a song played: a frame could take longer to draw than its beat. Now she draws while the screen updates, and every frame lands on time.</p></div>
     <div class="card feat"><span class="num">LOOK</span><h3>No more size jumps.</h3><p>All 12 outfits keep the same height from pose to pose. The bow at the end still bows.</p></div>
@@ -74,6 +84,9 @@
     <figure class="shot"><img src="media/screens/dance.png" alt="DANCE page: the singer full body" loading="lazy"><figcaption><b>DANCE</b> · she sways on the beat, sings, throws her arms up in the chorus, bows at the end</figcaption></figure>
     <figure class="shot"><img src="media/screens/song.png" alt="SONG page: the arrangement" loading="lazy"><figcaption><b>SONG</b> · rows of patterns: intro, verse, chorus, outro</figcaption></figure>
     <figure class="shot"><img src="media/screens/pattern.png" alt="PATTERN page: piano roll" loading="lazy"><figcaption><b>PATTERN</b> · a piano roll per track; every vocal note carries its syllable</figcaption></figure>
+    <figure class="shot"><img src="media/screens/phrase.png" alt="PHRASE page: the next syllable large, the ones after it, the words" loading="lazy"><figcaption><b>PHRASE</b> · 64 phrases; each key sings the next syllable</figcaption></figure>
+    <figure class="shot"><img src="media/screens/phrase-type.png" alt="PHRASE typing editor: words typed on the keys" loading="lazy"><figcaption><b>PHRASE · typing</b> · the keys are A to Z and space</figcaption></figure>
+    <figure class="shot"><img src="media/screens/stage-english.png" alt="STAGE: the singer mid-word in English" loading="lazy"><figcaption><b>STAGE · English</b> · her lips follow every sound</figcaption></figure>
     <figure class="shot"><img src="media/screens/mixer.png" alt="MIXER page" loading="lazy"><figcaption><b>MIXER</b> · level, pan, sound, mute and solo per track</figcaption></figure>
     <figure class="shot"><img src="media/screens/gen.png" alt="GEN page: the song generator" loading="lazy"><figcaption><b>GEN</b> · pick one of nine styles, a key and a seed: a whole song, ready to edit</figcaption></figure>
     <figure class="shot"><img src="media/screens/look.png" alt="LOOK page: outfit, background, frame and stage effect" loading="lazy"><figcaption><b>LOOK</b> · 12 outfits, backgrounds, frames and stage effects, chosen per song</figcaption></figure>
@@ -88,10 +101,11 @@
   <h2>Your FM-1, in the browser.</h2>
   <p>This is the firmware package itself, emulated by <a href="https://github.com/joakimeriksson/fm1-emu">fm1-emu</a>. Click it, then:</p>
   <ol>
-    <li><b>PLAY</b>: she sings the demo 「おとのはこ」. <b>HOME</b> steps through STAGE, DANCE, SONG, PATTERN, MIXER, GEN, LYRICS, LOOK, the song LIBRARY and the DX7 BANK. On STAGE or DANCE, <b>ARP</b> jumps to the LIBRARY: <b>SELECT</b> a slot, <b>PLAY</b> plays it (slots 1 to 4 are the folk songs).</li>
+    <li><b>PLAY</b>: she sings the demo 「おとのはこ」. <b>HOME</b> steps through STAGE, DANCE, SONG, PATTERN, MIXER, GEN, LYRICS, PHRASE, LOOK, the song LIBRARY and the DX7 BANK. On STAGE or DANCE, <b>ARP</b> jumps to the LIBRARY: <b>SELECT</b> a slot, <b>PLAY</b> plays it (slots 1 to 4 are the folk songs).</li>
     <li>On SONG, PATTERN, MIXER and GEN, <b>FX · SCL · ENV · LFO</b> pick the track (vocal, chords, bass, drums); the keys play it. On PATTERN a key writes the step.</li>
     <li>On STAGE the knobs shape her voice: <b>FX</b>, <b>ENV</b>, <b>LFO</b> switch the four knobs (effects, envelope, vibrato), and holding one of them, or <b>SEL</b>, opens a deeper layer (source, effect details, articulation, harmony). <b>SELECT</b> turns the syllable dial.</li>
     <li>On GEN: knob 1 the style (nine of them), 2 the key, 3 major or minor, 4 the seed; <b>REC</b> writes a new song, <b>PLAY</b> plays it.</li>
+    <li>On PHRASE, <b>EDIT</b> opens the typing editor: the keys type A to Z and space, <b>EDIT</b> again stores the words. Then every key sings the next syllable; <b>REC</b> places the phrase into the song.</li>
     <li>On LYRICS, <b>SELECT</b> picks a syllable and <b>ALGORITHM</b> changes it; on LOOK, <b>SELECT</b> picks an outfit and the knobs set the background, frame and effect.</li>
     <li>On MIXER, <b>REC</b> opens the DX7 BANK: <b>SELECT</b> browses, <b>REC</b> loads, <b>EDIT</b> opens the operator pages and the knobs edit them. To bring in your own voices, use the <a href="bank.html">DX7 bank tool</a> on a real FM-1.</li>
   </ol>
@@ -118,7 +132,13 @@
     <div class="card song"><b>GEN · DANCE</b><span class="note">A minor, seed 42. Four on the floor.</span><audio controls preload="none" src="media/listen/gen-dance.mp3"></audio></div>
     <div class="card song"><b>GEN · CHIP</b><span class="note">G major, seed 300. Square waves and fast arps.</span><audio controls preload="none" src="media/listen/gen-chip.mp3"></audio></div>
   </div>
-  <h3 style="margin-top:28px">New in {{VERSION}}: five more styles, and the DX7 bank.</h3>
+  <h3 style="margin-top:28px">New in {{VERSION}}: English.</h3>
+  <p class="note">Short voice-only renders by the same engine: the words typed as text, turned into syllables by the English front end, one syllable per note.</p>
+  <div class="grid3">
+    <div class="card song"><b>"Hello world, I sing for you"</b><span class="note">A rising scale, one syllable per eighth note.</span><audio controls preload="none" src="media/listen/english-hello-world.mp3"></audio></div>
+    <div class="card song"><b>"Miku sings electric dreams tonight"</b><span class="note">Her name the way she says it, then clusters and word endings.</span><audio controls preload="none" src="media/listen/english-miku-sings.mp3"></audio></div>
+  </div>
+  <h3 style="margin-top:28px">From 0.7: five more styles, and the DX7 bank.</h3>
   <p class="note">Rendered the same way, A minor, energy 75, complexity 70, each with its own DX7 chords and bass.</p>
   <div class="grid3">
     <div class="card song"><b>GEN · HYPERPOP</b><span class="note">164 BPM, seed 1. Bright plucks, chopped stabs, a busy digital fill.</span><audio controls preload="none" src="media/listen/gen-hyperpop.mp3"></audio></div>
@@ -134,10 +154,10 @@
   <p class="label"><b>05</b> / WHAT SHE CAN DO</p>
   <h2>A whole little studio.</h2>
   <div class="grid">
-    <div class="card feat"><span class="num">VOICE</span><h3>She really sings.</h3><p>A formant voice, synthesised live: 70 Japanese morae with their consonants, five characters, whisper, fry, a harmony voice, chorus, delay, reverb, drive. No samples.</p></div>
+    <div class="card feat"><span class="num">VOICE</span><h3>She really sings.</h3><p>A formant voice, synthesised live: Japanese morae and English syllables with their consonants, five characters, whisper, fry, a harmony voice, chorus, delay, reverb, drive. No samples.</p></div>
     <div class="card feat"><span class="num">SONG</span><h3>Four tracks, one song.</h3><p>Vocal, chords, bass and drums. Classic FM sounds or six-operator DX7 voices on chords and bass. 16 patterns per track, 64 rows with sections, swing, undo, 10 song slots with four Japanese folk songs ready to play.</p></div>
     <div class="card feat"><span class="num">GEN</span><h3>Dream one up.</h3><p>HYPERPOP, FUTURE BASS, JERSEY CLUB, DIGICORE, IDOL POP, or the classic POP, BALLAD, DANCE and CHIP, in any key. Each new style brings its own DX7 chords and bass. Lock what you like, regenerate the rest. Keep it or drop it.</p></div>
-    <div class="card feat"><span class="num">STAGE</span><h3>She is on stage.</h3><p>A pixel face that mouths every vowel and a full-body dancer that moves to your song, in 12 outfits, with backgrounds, frames and stage effects chosen per song.</p></div>
+    <div class="card feat"><span class="num">STAGE</span><h3>She is on stage.</h3><p>A pixel face whose lips follow every sound, Japanese or English, and a full-body dancer that moves to your song, in 12 outfits, with backgrounds, frames and stage effects chosen per song.</p></div>
     <div class="card feat"><span class="num">DX7</span><h3>A real six-operator FM bank.</h3><p>All 32 DX7 algorithms, feedback, envelopes, LFO, pitch bend, sustain and bass glide. Ten original voices, every operator editable on the device, and your edits saved inside the song.</p></div>
     <div class="card feat"><span class="num">MIDI</span><h3>Bring your cartridges.</h3><p>Send a DX7 bank or single voice from Dexed or the <a href="bank.html">bank tool</a> over USB and keep 32 voices of your own; save them back as a .syx. Play any track from a MIDI keyboard; DX7 voices answer the sustain pedal and pitch bend.</p></div>
   </div>
@@ -171,7 +191,10 @@
     (<a href="https://hugelton.com">Hügelton Instruments</a>) with the changes of <a href="https://github.com/isod89/sloop-fm1">SLOOP</a>
     (isod89). This site's installer is Felucca's web installer; releases are built and attested by the Firmware Hub's shared
     builder. The emulator is <a href="https://github.com/joakimeriksson/fm1-emu">fm1-emu</a> by Joakim Eriksson (MIT).
-    The DX7 voices are rendered by an adaptation of Google's <a href="https://github.com/google/music-synthesizer-for-android">Music Synthesizer for Android</a> (Apache-2.0).</p>
+    The DX7 voices are rendered by an adaptation of Google's <a href="https://github.com/google/music-synthesizer-for-android">Music Synthesizer for Android</a> (Apache-2.0).
+    Her English comes from the English front end of <a href="https://github.com/jamesondh/chimera-vocal-synth">CHIMERA</a> by Jameson Hodge (MIT),
+    through Shan-Sherif's <a href="https://github.com/shan-sherif/fm-1-chimera-vocal">FM-1 port</a> (MIT), and the
+    <a href="https://github.com/cmusphinx/cmudict">CMU Pronouncing Dictionary</a> (BSD-2-Clause).</p>
 </section>
 
 <footer>

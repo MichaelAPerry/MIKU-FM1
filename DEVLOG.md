@@ -2,6 +2,12 @@
 
 Who did what, with which model. Newest first.
 
+## 2026-11-19: merged the web editor, model = claude
+- Reviewed codex's editor (site/editor.html, 1.42 MB single file, 99 KB WASM of the firmware engine, full CMUdict).
+  Checked in a real headless Chromium (tools/editor_browser_check.mjs): no console errors; "Hello world, Miku sings for
+  you" -> Hel|lo|world|Mi|ku|sings|for|you with CMUdict pronunciations; Japanese romaji compiles; Preview renders 5 s
+  (peak 0.67, RMS 0.15). Rebuilt on this branch byte-identical. Host ctest 67/67. Not checked: Web MIDI to a real FM-1.
+
 ## 2026-11-19: merged the mouth-frame retirement, model = claude
 - Reviewed codex's change (Japanese lip-sync on the shared overlay; frames 2..7 of every face set = NEUTRAL at pack
   time so the row dedupe stores nothing for them; identity test for every other frame). Native build: 512340 B used,
@@ -109,3 +115,16 @@ Who did what, with which model. Newest first.
 - New: `tests/test_fvoice_english.c` (all vowels x consonants bounded/sounding/ending, clusters, codas, visemes,
   determinism, legato), `tools/english_voice_render`. Host ctest: 57/57.
 - Baseline native build reproduced locally: 544980 B (= v0.8 release), 36584 B free.
+
+## 2026-11-19 — Offline phrase editor (Phase 2), model = codex
+
+- Built `site/editor.html` with the FM-1 phrase compiler, song encoder and 44.1 kHz voice engine in WASM.
+  English uses the pinned full CMUdict and word overrides through the firmware lookup path. Japanese uses the
+  firmware romaji grammar. The page includes the 64-slot bank, local autosave, .mikuphr files with exact MPH1
+  records, a piano roll, voice preview, MIDI/KAR import and the FM-1 SysEx bank and song transfers.
+- The HTML is 1,420,713 bytes and the embedded WASM is 98,827 bytes. `tools/build_editor.py` checks the dictionary
+  SHA-256 and generates the page from `site/editor/`. GitHub Pages copies the generated file, and the site
+  navigation links to it beside the DX7 bank tool.
+- Host CTest passed 66/66, including the reproducible build and Node checks against native C. Also verified the
+  Pages assembly and exercised editing, preview and SysEx with mocked browser APIs. The installed headless
+  Chromium could not start because its NSS libraries are missing. Physical FM-1 USB and browser playback remain unverified.

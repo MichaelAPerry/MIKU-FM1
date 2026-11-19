@@ -112,8 +112,18 @@ int ph_decode(const uint8_t rec[PH_REC], Phrase *p)
     return 0;
 }
 
+#ifdef PH_EXTERNAL_LOOKUP
+/* The offline editor supplies CMUdict and user pronunciations. */
+__attribute__((import_module("env"), import_name("ph_external_lookup")))
+extern const char *ph_external_lookup(const char *word);
+#endif
+
 static const char *ph_lookup(const char *word, void *user)
 {
+#ifdef PH_EXTERNAL_LOOKUP
+    const char *external = ph_external_lookup(word);
+    if (external) return external;
+#endif
     static const struct { char word[11]; const char *arpa; } ph_words[] = {
         {"miku", "M IY1 K UW0"},
         {"hatsune", "HH AA0 T S UW1 N EH0"},

@@ -178,3 +178,15 @@ add_test(NAME bank_tool COMMAND ${Python3_EXECUTABLE} -I ${CMAKE_SOURCE_DIR}/tes
 if(NOT MSVC)
  add_test(NAME face_clock COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tests/test_face_clock.py ${CMAKE_SOURCE_DIR} ${CMAKE_C_COMPILER})
 endif()
+
+# Offline phrase editor: generated distributable and native/JS interoperability.
+add_test(NAME editor_html COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tools/build_editor.py --check)
+set_tests_properties(editor_html PROPERTIES SKIP_RETURN_CODE 77)
+find_program(EDITOR_NODE_EXECUTABLE node)
+if(EDITOR_NODE_EXECUTABLE)
+  add_executable(editor_vectors tests/editor_vectors.c)
+  target_link_libraries(editor_vectors PRIVATE miku_song)
+  add_test(NAME editor_js COMMAND ${CMAKE_COMMAND}
+    "-DVECTORS=$<TARGET_FILE:editor_vectors>" "-DNODE=${EDITOR_NODE_EXECUTABLE}"
+    -P "${CMAKE_SOURCE_DIR}/tests/test_editor.cmake")
+endif()

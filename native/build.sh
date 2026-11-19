@@ -28,7 +28,7 @@ git checkout -q --detach "$DINGHY_COMMIT"
 python3 "$ROOT/tools/patch_dinghy_slots.py" "$ROOT/build/dinghy"
 python3 "$ROOT/tools/patch_dinghy_phrases.py" "$ROOT/build/dinghy"
 cp "$ROOT/native/dinghy.c" firmware/src/dinghy.c
-cp "$ROOT/native/lyrics_ui.inc" "$ROOT/native/visuals_ui.inc" "$ROOT/native/library_ui.inc" "$ROOT/native/bank_ui.inc" firmware/src/
+cp "$ROOT/native/lyrics_ui.inc" "$ROOT/native/phrase_ui.inc" "$ROOT/native/visuals_ui.inc" "$ROOT/native/library_ui.inc" "$ROOT/native/bank_ui.inc" firmware/src/
 # the modules keep their repo paths (their .c files #include "firmware/..."; -Ifirmware/src finds them); dinghy.c includes the .c files
 mkdir -p firmware/src/firmware/audio/fvoice firmware/src/firmware/audio/vfx firmware/src/firmware/audio/fmband firmware/src/firmware/ui firmware/src/firmware/song firmware/src/firmware/app
 for f in fvoice.c fvoice.h fvoice_tables.h; do cp "$ROOT/firmware/audio/fvoice/$f" firmware/src/firmware/audio/fvoice/; done

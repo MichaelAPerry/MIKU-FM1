@@ -54,6 +54,11 @@ int en_text(const char *text, en_lookup_fn lookup, void *user,
 enum { EN_SPEECH, EN_SUNG };
 int en_text_ex(const char *text, int mode, en_lookup_fn lookup, void *user,
                EnSylOut *out, int cap, int *n, int *err_at);
+/* Streaming en_text_ex output. Emits word boundaries, stress and truncation.
+ * Phrase punctuation is only marked by the array API. Null emit counts only. */
+typedef void (*en_emit_fn)(void *user, int index, const EnSylOut *s);
+int en_text_ex_emit(const char *text, int mode, en_lookup_fn lookup, void *user,
+                    en_emit_fn emit, void *emit_user, int cap, int *n, int *err_at);
 /* AH/ER include unstressed variants, L includes dark L. T/D retain their
  * underlying codes in tap contexts. EP_NONE and invalid codes map to "". */
 const char *en_ph_name(uint8_t ph);

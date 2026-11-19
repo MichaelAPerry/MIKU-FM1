@@ -2,6 +2,27 @@
 
 Who did what, with which model. Newest first.
 
+## 2026-11-19: PHRASE page, USB glue, engine test (0.9 step 6), model = claude
+- `native/phrase_ui.inc`: the PHRASE page (bank of 64 at PHRASES_AT, live syllable per key/MIDI note through the
+  engine's live slots, REC places into up to 4 empty patterns with exact undo snapshots, typing editor: A-Z + space
+  on the keys, ALGORITHM for digits/punctuation/romaji marks, K1 EN/JP, EDIT compiles and stores while stopped).
+  Miku SysEx 0x7D glue: phrase get/put/list on flash, song upload held until REC; buffers in the pool.
+- Merged codex's phrase/mkx modules (resolved an english.c overlap in favour of codex's initializer).
+- `tests/test_english_engine.c`: song syllables, codas, legato coda carry, live slots, harmony, visemes.
+- CONTROLS.md: PHRASE section (drafted by the local model qwen3.5:9b, corrected by claude).
+- Native: 577968 B of 581564 (3596 free); static RAM 38544 free; pool 59412 free. Host ctest 64/64. Emulator smoke ok.
+
+## 2026-11-19 — Phrase records and Miku SysEx, model = codex
+
+- Added the 1024-byte MPH1 codec, English and romaji compilation, and transactional VOCAL placement. English streams
+  through the sung front end to keep compiler scratch small. Japanese rests, holds and separate attacks use spelling
+  markers within the existing layout.
+- Added 7-in-8 MKX framing and command codecs, a callback dispatcher, and ordered staging and validation of MKS2
+  uploads. Added the browser codec and checked its bytes against C-generated vectors.
+- Host ctest passed 62/62. JieLi pi32v2 `-Os` object sizes from `size` were 2,785 B for `phrase.o`, 1,947 B for
+  `mkx.o`, and 12,500 B for `english.o` (+118 B). The three files compiled together with warnings treated as errors
+  and had no libc references.
+
 ## 2026-11-19 — Shared mouth overlay approval sheet, model = codex
 
 - Built 12 visemes from the original portrait pixels in a 17×10 box with nine RGB565 palette entries,

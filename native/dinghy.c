@@ -108,6 +108,9 @@ _Static_assert(WD_OUTFIT_N==PERF_OUTFIT_N,"wardrobe metadata mismatch");
 #include "firmware/song/lyric_edit.c"
 #include "firmware/song/factory.c"
 #include "firmware/song/english.c"
+#include "firmware/song/lyrics.c"
+#include "firmware/song/phrase.c"
+#include "firmware/song/mkx.c"
 #define VX_POOL __attribute__((section(".pool")))
 #define sat vx_sat
 #define clr vx_clr
@@ -125,8 +128,9 @@ _Static_assert(WD_OUTFIT_N==PERF_OUTFIT_N,"wardrobe metadata mismatch");
 #define UI_PINK RGB(255,91,172)
 #define UI_EDGE RGB(65,51,100)
 #define FACE_Y 184u
-enum { PG_STAGE, PG_DANCE, PG_SONG, PG_PATTERN, PG_MIXER, PG_GEN, PG_LYRICS, PG_VISUALS, PG_LIBRARY, PG_BANK, PG_N };
+enum { PG_STAGE, PG_DANCE, PG_SONG, PG_PATTERN, PG_MIXER, PG_GEN, PG_LYRICS, PG_PHRASE, PG_VISUALS, PG_LIBRARY, PG_BANK, PG_N };
 static Engine en;
+static uint32_t vmora(uint32_t kt);                 /* phrase_ui.inc: the syllable a vocal note-on sings */
 static uint32_t app_idle_ready;
 static Song sg;
 static Undo un;
@@ -578,8 +582,10 @@ static void sx_prompt(const char *a,uint32_t slot,const char *b){
 }
 /* A DX7 frame from USB (main loop, inside platform_poll): validate now, apply on REC within ~10 s. A bulk dump replaces the whole
  * user bank. A single voice goes to the edit buffer of the open BANK edit page's track, anywhere else to the selected user slot. */
+static void mkx_app(const uint8_t *p,uint32_t n);   /* phrase_ui.inc: Miku SysEx 0x7D */
 static void app_sysex(const uint8_t *p,uint32_t n){
     DxsInfo in;uint32_t r;
+    if(n&&p[0]==0x7Du){mkx_app(p,n);return;}
     if(imp_busy)return;
     r=dxs_parse(p,n,imp,&in);
     if(in.kind==DXS_NONE)return;                           /* another Yamaha message: not ours */
@@ -674,7 +680,7 @@ static void mi_on(uint32_t n,uint32_t kt){
     if(!n)return;
     if(kt==TR_DRUMS){uint32_t k=n%12u;en_post(&en,EN_ON,kt,k<6u?k:k-6u,0);return;}      /* the 12 keys' drum map, in every octave */
     if(mi_own[n]&7u)mi_off(n);                              /* retrigger, or the note belonged to another track */
-    if(en_post(&en,EN_ON,kt,n,ed_mora))mi_own[n]=(uint8_t)(kt+1u);
+    if(en_post(&en,EN_ON,kt,n,vmora(kt)))mi_own[n]=(uint8_t)(kt+1u);
 }
 static void midi_controls(uint32_t kt){
     uint32_t t;
@@ -883,7 +889,7 @@ static void ui_header(void){
 }
 static void ui_badge(void){
     /* 5x5 page pictograms, scaled 2x. No font or image assets required. */
-    static const uint32_t glyph[PG_N]={0xEABAE,0x457D44,0x1F8FE3F,0x1555555,0xAFAAA,0x1557D5,0x1D5D41C,0x115F544,0x1F8C63F,0x1D7F5D7};
+    static const uint32_t glyph[PG_N]={0xEABAE,0x457D44,0x1F8FE3F,0x1555555,0xAFAAA,0x1557D5,0x1D5D41C,0x27462E,0x115F544,0x1F8C63F,0x1D7F5D7};   /* PHRASE: a speech bubble */
     uint32_t x,y,bits=glyph[page];
     cv_rect(7,7,18,18,RGB(12,20,46));
     for(y=0;y<5;y++)for(x=0;x<5;x++)if(bits&(1u<<(y*5u+x)))cv_rect(11+(int32_t)x*2,11+(int32_t)y*2,2,2,y<3?UI_BLUE:UI_PINK);
@@ -1303,6 +1309,7 @@ static void pg_dance(void){
     ui_rim(0,26);cv_blit(0,214);
 }
 #include "lyrics_ui.inc"
+#include "phrase_ui.inc"
 #include "visuals_ui.inc"
 #include "library_ui.inc"
 #include "bank_ui.inc"
@@ -1329,8 +1336,8 @@ static void redraw(void){
     for(b=0;b<5u;b++)if(dirty&(1u<<b)){
         dirty&=~(1u<<b);
         band_begin(b);
-        if(page==PG_SONG)pg_song(b);else if(page==PG_PATTERN)pg_pattern(b);else if(page==PG_GEN)pg_gen(b);else if(page==PG_LYRICS)pg_lyrics(b);else if(page==PG_VISUALS)pg_visuals(b);else if(page==PG_LIBRARY)pg_library(b);else if(page==PG_BANK)pg_bank(b);else pg_mixer(b);
-        if(!b&&(page==PG_LIBRARY||page==PG_LYRICS||page==PG_VISUALS||page==PG_BANK)&&toast_s&&(int32_t)(fm1_ms-toast_until)<0){cv_rect(0,0,240,24,BG);txt(120,4,&FONT_S,toast_s,toast_err?RGB(255,110,110):RGB(249,207,94),1);}
+        if(page==PG_SONG)pg_song(b);else if(page==PG_PATTERN)pg_pattern(b);else if(page==PG_GEN)pg_gen(b);else if(page==PG_LYRICS)pg_lyrics(b);else if(page==PG_PHRASE)pg_phrase(b);else if(page==PG_VISUALS)pg_visuals(b);else if(page==PG_LIBRARY)pg_library(b);else if(page==PG_BANK)pg_bank(b);else pg_mixer(b);
+        if(!b&&(page==PG_LIBRARY||page==PG_LYRICS||page==PG_PHRASE||page==PG_VISUALS||page==PG_BANK)&&toast_s&&(int32_t)(fm1_ms-toast_until)<0){cv_rect(0,0,240,24,BG);txt(120,4,&FONT_S,toast_s,toast_err?RGB(255,110,110):RGB(249,207,94),1);}
         ui_rim(0,240);band_end(b);
         return;                                            /* one band per pass: the main loop polls between */
     }
@@ -1419,7 +1426,7 @@ static void app_main(void){
             prev_keys=keys;
             continue;
         }
-        if(b&(1u<<BTN_HOME)){if(page==PG_GEN){take=0;gen_edit=0;}bank_naming=0;page=page+1u<PG_N?page+1u:0;if(page==PG_LYRICS){trk=TR_VOCAL;lyric_load();}if(page==PG_LIBRARY)library_cursor=pf.slot;if(page==PG_BANK){if(trk!=1&&trk!=2)trk=1;bank_sync();}full=1;mk(0x3Fu);bank_leds();}
+        if(b&(1u<<BTN_HOME)){if(page==PG_GEN){take=0;gen_edit=0;}bank_naming=0;page=page+1u<PG_N?page+1u:0;if(page==PG_LYRICS){trk=TR_VOCAL;lyric_load();}if(page==PG_PHRASE){trk=TR_VOCAL;ph_editing=0;ph_load(ph_idx);}if(page==PG_LIBRARY)library_cursor=pf.slot;if(page==PG_BANK){if(trk!=1&&trk!=2)trk=1;bank_sync();}full=1;mk(0x3Fu);bank_leds();}
         for(tb=0;tb<4u;tb++){
             uint32_t bit=1u<<(BTN_FX+tb),held=(fm1_in.buttons&bit)!=0;
             if(page<=PG_DANCE){
@@ -1455,14 +1462,17 @@ static void app_main(void){
             else do_play();
         }
         if(b&(1u<<BTN_SEQ)){if(page==PG_LIBRARY){page=PG_SONG;full=1;mk(0x1fu);}else stop_play();}
+        if((b&(1u<<BTN_GLO))&&page==PG_PHRASE){if(ph_editing){ph_editing=0;toast("NOT STORED",0);mk(0x1Fu);}else do_undo();b&=~(1u<<BTN_GLO);}
         if(b&(1u<<BTN_GLO)){if(page==PG_SONG||page==PG_PATTERN||page==PG_LYRICS){do_undo();if(page==PG_LYRICS)lyric_load();}else if(page==PG_GEN)gen_drop();else if(page==PG_BANK){if(bank_naming)bank_naming=0;else if(dx_page)st_start();else bank_export();mk(0x1fu);}}
         if(b&(1u<<BTN_ARP)){if(page==PG_BANK&&bank_naming){bank_naming=0;}else if(page==PG_BANK&&!dx_page){if(dx_src)dx_src=0;else if(ub_ok)dx_src=1;else toast("NO USER BANK - SEND DX7 SYSEX",1);mk(0x1fu);}else if(page==PG_BANK){uint32_t r;lk();r=db_toggle(&sg,trk,dx_op,dx_page);ulk();if(r){modified=1;mk(0x1fu);}}if(page==PG_STAGE||page==PG_DANCE){page=PG_LIBRARY;library_cursor=pf.slot;full=1;mk(0x3fu);}anchor=cstep;arp_c=0;if(page==PG_SONG && sg.nrows && sg.nrows<NROW){u_pushrows();lk();sg_row_dup(&sg,(int)crow);ulk();crow++;modified=1;mk(0x1Fu);}
             if(page==PG_MIXER){sg.trk[trk].solo^=1u;modified=1;mk(0x1Fu);}
             if(page==PG_GEN)gen_go(1);
             }
         if((b&(1u<<BTN_REC))&&imp_pending(now)){import_apply();mk(0x1fu);}            /* REC on an import prompt (any page) */
+        else if((b&(1u<<BTN_REC))&&mkx_song_pending(now)){mkx_song_apply();}       /* REC on a received song */
         else if((b&(1u<<BTN_REC))&&page==PG_BANK&&bank_naming){bank_name_save();mk(0x1fu);}
         else if((b&(1u<<BTN_REC))&&page==PG_BANK&&dx_page&&st_pending(now)){st_apply();mk(0x1fu);}
+        else if((b&(1u<<BTN_REC))&&page==PG_PHRASE){if(ph_editing)ph_backspace();else ph_place_here();}
         else if(b&(1u<<BTN_REC)){
             if(page==PG_MIXER){page=PG_BANK;if(trk!=1&&trk!=2)trk=1;bank_sync();full=1;mk(0x1fu);}
             else if(page==PG_BANK){if(!dx_page){
@@ -1480,6 +1490,7 @@ static void app_main(void){
             else if(page==PG_LYRICS)lyric_delete();
             else if(page==PG_SONG && sg.nrows){u_pushrows();lk();sg_row_delete(&sg,(int)crow);ulk();modified=1;if(crow && crow>=sg.nrows)crow=sg.nrows-1u;mk(0x1Fu);}
         }
+        if((b&(1u<<BTN_EDIT))&&page==PG_PHRASE){if(ph_editing)ph_edit_done();else ph_edit_begin();b&=~(1u<<BTN_EDIT);}
         if(b&(1u<<BTN_EDIT)){
             if(page==PG_BANK){if(!dx_page&&dx_src)bank_name_begin();else if(db_active(&sg,trk))dx_page=(dx_page+1u)%DB_PAGES;else toast("LOAD DX7 WITH REC",0);mk(0x1fu);}
             else if(page==PG_DANCE){page=PG_VISUALS;full=1;mk(0x3fu);}
@@ -1563,6 +1574,17 @@ static void app_main(void){
                 if(p!=ROW_OFF){u_pushpat(trk,p);lk();i=(uint32_t)sg_transpose(&sg,(int)trk,(int)p,dK[2]>0?1:-1);ulk();modified|=i;mk(0x1Eu);if(!i)toast("OUT OF RANGE",1);}
             }
             if(dK[3]&&sg.nrows){crow=(uint32_t)cl((int32_t)crow+dK[3],0,(int32_t)sg.nrows-1);mk(0x1Fu);}
+        }else if(page==PG_PHRASE){
+            if(ph_editing){
+                if(dS){uint32_t n=0;while(ph_etext[n])n++;ph_ecur=(uint32_t)cl((int32_t)ph_ecur+dS,0,(int32_t)n);mk(0x1Eu);}
+                if(dA)ph_cycle(dA);
+                if(dK[0]){ph_elang=ph_elang==PH_EN?PH_JP:PH_EN;mk(0x11u);}
+            }else{
+                if(dS){ph_load((uint32_t)wr((int32_t)ph_idx+dS,PH_N));}
+                if(dA&&ph_ok&&ph_cur.n){ph_pos=(uint32_t)wr((int32_t)ph_pos+dA,ph_cur.n);mk(0x1Eu);}
+                if(dK[3]&&sg.nrows){crow=(uint32_t)cl((int32_t)crow+dK[3],0,(int32_t)sg.nrows-1);mk(0x10u);toast(crow<sg.nrows?"PLACE FROM THIS ROW":"",0);}
+            }
+            if(dP){tweak(&sg.bpm,dP,40,240);if(playing)en_post(&en,EN_BPM,sg.bpm,0,0);mk(1u);}
         }else if(page==PG_LYRICS){
             if(dS&&lyric_count){lyric_cursor=(uint32_t)wr((int32_t)lyric_cursor+dS,(int32_t)lyric_count);if(!(lyric_units[lyric_cursor].flags&LY_REST))ed_mora=lyric_units[lyric_cursor].mora;mk(0x1Eu);}
             if(dA)lyric_token(dA);
@@ -1637,8 +1659,9 @@ static void app_main(void){
             for(k=0;k<27u;k++)if(down&(1u<<k)){
                 int32_t n=cl((int32_t)kbase[kt]+(int32_t)k+oct*12,1,127);
                 kn[k]=(uint8_t)n;kn_track[k]=(uint8_t)kt;
+                if(page==PG_PHRASE&&ph_editing){ph_key_type(k);kn_track[k]=0xFFu;continue;}   /* typing: no sound */
                 if(kt==TR_DRUMS){if(k<6u)en_post(&en,EN_ON,kt,k,0);else if(k<12u)en_post(&en,EN_ON,kt,k-6u,0);}
-                else en_post(&en,EN_ON,kt,(uint32_t)n,ed_mora);
+                else en_post(&en,EN_ON,kt,(uint32_t)n,vmora(kt));
                 if(page==PG_PATTERN)kwrite(k,(uint32_t)n);else if(page==PG_LYRICS)lyric_key((uint32_t)n);
             }
             pv_off=0;

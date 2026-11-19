@@ -395,14 +395,6 @@ static int dictionary_word(const char *word, int reduce, en_lookup_fn lookup, vo
     return n;
 }
 
-static void en_zero_syl(EnSylOut *s)
-{
-    unsigned char *z = (unsigned char *)s;
-    unsigned k;
-    for (k = 0; k < sizeof *s; k++)
-        z[k] = 0;
-}
-
 static void strip_tail(char *word, int len)
 {
     while (len && word[len - 1] == '\'')
@@ -507,15 +499,21 @@ static void spelling_chunk(char dst[8], const char *start, const char *end)
 
 /* CHIMERA's vowel-group spelling heuristic, keeping the final groups together
  * if there are more written vowel groups than phonetic syllables. */
-static void split_spelling(const char *word, EnSylOut *out, int n)
+typedef struct {
+    const char *start, *end, *vowel;
+    int groups;
+} EnSpelling;
+
+static void en_spelling_init(EnSpelling *sp, const char *word, int n)
 {
     const char *end = word + length(word);
     const char *p = word;
     int groups = 0;
-    if (n == 1) {
-        spelling_chunk(out[0].text, word, end);
-        return;
-    }
+    sp->start = word;
+    sp->end = end;
+    sp->vowel = word;
+    sp->groups = 0;
+    if (n == 1) return;
     while (*p) {
         if (!letter_vowel(*p++))
             continue;
@@ -528,16 +526,20 @@ static void split_spelling(const char *word, EnSylOut *out, int n)
             !letter_vowel(end[-3]) && lower(end[-3]) != 'l';
         groups -= !consonant_le;
     }
-    if (groups < n) {
-        spelling_chunk(out[0].text, word, end);
-        for (int i = 1; i < n; i++)
-            out[i].text[0] = '~';
-        return;
-    }
-    p = word;
-    while (!letter_vowel(*p))
-        p++;
-    for (int i = 0; i < n - 1; i++) {
+    sp->groups = groups;
+    if (groups >= n)
+        while (!letter_vowel(*sp->vowel))
+            sp->vowel++;
+}
+
+static void en_spelling_next(EnSpelling *sp, char text[8], int i, int n)
+{
+    if (n == 1 || (sp->groups < n && !i) || (sp->groups >= n && i == n - 1)) {
+        spelling_chunk(text, sp->start, sp->end);
+    } else if (sp->groups < n) {
+        text[0] = '~';
+    } else {
+        const char *p = sp->vowel;
         while (letter_vowel(*p))
             p++;
         const char *gap = p;
@@ -550,17 +552,27 @@ static void split_spelling(const char *word, EnSylOut *out, int n)
             if ((b == 'h' && contains("tscpwg", a)) || (a == 'c' && b == 'k'))
                 cut = p - 2;
         }
-        spelling_chunk(out[i].text, word, cut);
-        word = cut;
+        spelling_chunk(text, sp->start, cut);
+        sp->start = cut;
+        sp->vowel = p;
     }
-    spelling_chunk(out[n - 1].text, word, end);
 }
 
-int en_syllabify(const uint8_t *ph, const uint8_t *stress, int n, const char *spelling,
-                EnSylOut *out, int cap)
+/* The device compiler lowers an aggregate assignment here to libc memcpy. */
+static void en_syl_copy(EnSylOut *out, const EnSylOut *s)
 {
+    volatile uint8_t *d = (volatile uint8_t *)out;
+    const uint8_t *src = (const uint8_t *)s;
+    for (unsigned i = 0; i < sizeof *s; i++) d[i] = src[i];
+}
+
+static int en_syllabify_emit(const uint8_t *ph, const uint8_t *stress, int n,
+                             const char *spelling, EnSylOut *out, int cap,
+                             en_emit_fn emit, void *user, int base)
+{
+    EnSpelling split;
     int count = 0, v = 0, start = 0;
-    if (!spelling || n < 0 || cap < 0 || (n && !ph) || (cap && !out))
+    if (!spelling || n < 0 || cap < 0 || (n && !ph))
         return EN_ERR_INPUT;
     for (int i = 0; i < n; i++) {
         if (!ph[i] || ph[i] >= EP_COUNT)
@@ -571,10 +583,10 @@ int en_syllabify(const uint8_t *ph, const uint8_t *stress, int n, const char *sp
         return 0;
     if (!cap || count > cap)
         return EN_ERR_CAP;
+    if (!out && !emit) return count ? count : 1;
     if (!count) {
         /* With no vowel, use both fields in reading order. */
-        EnSylOut syl;
-        en_zero_syl(&syl);
+        EnSylOut syl = {{{0}, 0, {0}}, {0}, 0, 0};
         int i = 0;
         for (; i < n && i < COUNT(syl.s.on); i++)
             syl.s.on[i] = ph[i];
@@ -582,14 +594,15 @@ int en_syllabify(const uint8_t *ph, const uint8_t *stress, int n, const char *sp
             syl.s.co[j] = ph[i];
         syl.flags = EN_WORD_END | (i < n ? EN_TRUNCATED : 0);
         spelling_chunk(syl.text, spelling, spelling + length(spelling));
-        out[0] = syl;
+        if (out) en_syl_copy(&out[0], &syl);
+        else emit(user, base, &syl);
         return 1;
     }
+    en_spelling_init(&split, spelling, count);
     while (!EP_IS_VOWEL(ph[v]))
         v++;
     for (int i = 0; i < count; i++) {
-        EnSylOut syl;
-        en_zero_syl(&syl);
+        EnSylOut syl = {{{0}, 0, {0}}, {0}, 0, 0};
         int next = n, end = n;
         int onset = v - start;
         if (onset > COUNT(syl.s.on)) {
@@ -624,13 +637,21 @@ int en_syllabify(const uint8_t *ph, const uint8_t *stress, int n, const char *sp
             }
             syl.s.co[j - v - 1] = ph[j];
         }
-        out[i] = syl;
+        en_spelling_next(&split, syl.text, i, count);
+        if (i == count - 1) syl.flags |= EN_WORD_END;
+        if (out) en_syl_copy(&out[i], &syl);
+        else emit(user, base + i, &syl);
         start = end;
         v = next;
     }
-    split_spelling(spelling, out, count);
-    out[count - 1].flags |= EN_WORD_END;
     return count;
+}
+
+int en_syllabify(const uint8_t *ph, const uint8_t *stress, int n, const char *spelling,
+                EnSylOut *out, int cap)
+{
+    if (cap && !out) return EN_ERR_INPUT;
+    return en_syllabify_emit(ph, stress, n, spelling, out, cap, 0, 0, 0);
 }
 
 typedef struct {
@@ -639,6 +660,8 @@ typedef struct {
     en_lookup_fn lookup;
     void *user;
     int reduce;                 /* weak forms of function words (speech); 0 when sung */
+    en_emit_fn emit;
+    void *emit_user;
 } TextOutput;
 
 static int emit_word(TextOutput *o, const char *word)
@@ -647,7 +670,8 @@ static int emit_word(TextOutput *o, const char *word)
     int n = en_word(word, o->reduce, o->lookup, o->user, ph, stress, WORD_PHONES);
     if (n <= 0)
         return n;
-    n = en_syllabify(ph, stress, n, word, o->out ? o->out + o->n : 0, o->cap - o->n);
+    n = en_syllabify_emit(ph, stress, n, word, o->out ? o->out + o->n : 0,
+                          o->cap - o->n, o->emit, o->emit_user, o->n);
     if (n < 0)
         return n;
     o->n += n;
@@ -732,16 +756,14 @@ int en_text(const char *text, en_lookup_fn lookup, void *user,
     return en_text_ex(text, EN_SPEECH, lookup, user, out, cap, n, err_at);
 }
 
-int en_text_ex(const char *text, int mode, en_lookup_fn lookup, void *user,
-               EnSylOut *out, int cap, int *n, int *err_at)
+static int en_text_walk(const char *text, TextOutput *o, int *n, int *err_at)
 {
-    TextOutput o = {out, cap, 0, lookup, user, mode == EN_SPEECH};
     int i = 0, start = 0, result = 0;
     if (err_at)
         *err_at = -1;
     if (n)
         *n = 0;
-    if (!text || !n || cap < 0 || (cap && !out))
+    if (!text || !n || o->cap < 0)
         return EN_ERR_INPUT;
     while (text[i]) {
         start = i;
@@ -749,7 +771,7 @@ int en_text_ex(const char *text, int mode, en_lookup_fn lookup, void *user,
             do {
                 i++;
             } while (digit(text[i]));
-            result = emit_number(&o, text + start, i - start);
+            result = emit_number(o, text + start, i - start);
         } else if (word_byte(text[i])) {
             char word[WORD_MAX + 1];
             int len = 0;
@@ -759,21 +781,35 @@ int en_text_ex(const char *text, int mode, en_lookup_fn lookup, void *user,
                 i++;
             } while (word_byte(text[i]));
             word[len] = 0;
-            result = emit_word(&o, word);
+            result = emit_word(o, word);
         } else {
-            if (o.n && contains(".!?,;:", text[i]))
-                out[o.n - 1].flags |= EN_PHRASE_END;
+            if (o->out && o->n && contains(".!?,;:", text[i]))
+                o->out[o->n - 1].flags |= EN_PHRASE_END;
             i++;
         }
         if (result < 0)
             break;
     }
-    *n = o.n;
+    *n = o->n;
     if (result < 0) {
         if (err_at)
             *err_at = start;
-    } else if (o.n) {
-        out[o.n - 1].flags |= EN_PHRASE_END;
+    } else if (o->out && o->n) {
+        o->out[o->n - 1].flags |= EN_PHRASE_END;
     }
     return result;
+}
+
+int en_text_ex(const char *text, int mode, en_lookup_fn lookup, void *user,
+               EnSylOut *out, int cap, int *n, int *err_at)
+{
+    TextOutput o = {out, (cap && !out) ? -1 : cap, 0, lookup, user, mode == EN_SPEECH, 0, 0};
+    return en_text_walk(text, &o, n, err_at);
+}
+
+int en_text_ex_emit(const char *text, int mode, en_lookup_fn lookup, void *user,
+                    en_emit_fn emit, void *emit_user, int cap, int *n, int *err_at)
+{
+    TextOutput o = {0, cap, 0, lookup, user, mode == EN_SPEECH, emit, emit_user};
+    return en_text_walk(text, &o, n, err_at);
 }

@@ -96,12 +96,9 @@ Cost target: under 8 KB of tables and code, no extra per-sample work (all in the
 v1–v5 songs read as before (no table); a v6 song with no English writes the table as zero-length. The 16 KB song slot
 has room. Undo keeps working on steps; the table is append-only per song (deleting unused entries on save).
 
-**Phrase bank:** 64 phrases in two new 16 KB store slots after the song slots (0xBF000–0xC7000), using Dinghy's
-tested slot code (`NSLOT` 10 → 12, as `patch_dinghy_slots.py` already does for songs). A phrase record (512 bytes):
-name (12), language (EN/JP), BPM, default note length, flags, text (≤120 characters, for display and re-editing),
-compiled syllables (≤40 × 8 bytes, the web editor's pronunciations kept exactly), optional per-syllable notes and
-lengths (from the web editor's piano roll). The device compiles typed text itself; text from the web editor arrives
-already compiled.
+**Phrase bank:** 64 phrases, each with a name, source text, compiled syllables and optional melody. The device compiles
+typed text itself. The web editor sends compiled records, preserving its pronunciations. See section 3b for the wire
+and flash layout.
 
 ### 4. Playing
 
@@ -151,6 +148,19 @@ removing them later is the flash reserve for this whole plan (estimated 60–90 
 | 928 | 92 | reserved 0 |
 | 1020 | 4 | CRC32 (IEEE, as sg_crc32) of bytes 0..1019 |
 
+The encoder zero-fills unused syllable slots, and readers require that padding to be zero. Text can fill all 128 bytes.
+Shorter text has a zero-filled tail. Spelling always ends with a NUL.
+
+Japanese `/` and `|` are timed entries with mora zero and the literal token in the spelling field. `|` also marks a
+phrase break. A hold uses the preceding mora with spelling `_`. A separated onset uses its mora spelling with an
+appended `!`. All seven other phoneme bytes stay zero. The compiler accepts printable, space-separated romaji
+with the `ly_compile` grammar, including durations through 127 sixteenths. Recompiling keeps the name, BPM and
+any valid default length, with a one-sixteenth default otherwise. It clears the melody.
+
+Placement replaces the touched VOCAL patterns. It uses a continuous sixteenth-note grid with the song's 64-sixteenth
+event limit. A missing melody pitch uses the old pitch at that onset, then the supplied fallback. English notes
+reattack. Japanese uses the lyric editor's explicit rests, legato and sustain flags.
+
 The bank: 64 records, 4 per 4 KB sector, in four extra 16 KB store slots after the songs (0xBF000–0xCF000). A record
 that fails its magic or CRC is an empty phrase (the area may hold another firmware's old data).
 
@@ -174,6 +184,11 @@ from 0x43 to 0x43 and 0x7D); the frame buffer is 4104 bytes, so payloads stay �
 A PHRASE_PUT is written to the bank when the FM-1 is stopped (a few 50 ms sector erases); while playing the reply is 3
 (busy). A received song is held and shown on the FM-1 and replaces the current song only when the player presses REC
 there (as the DX7 bank import does); it is stored with SAVE as usual.
+
+The dispatcher applies the busy flag to phrase writes. A song upload stages contiguous, nonempty chunks starting at
+offset zero. A refused chunk leaves the accepted offset available for retry. An incomplete end is refused and can
+be retried after the missing bytes arrive. A complete end consumes the upload and reports a bad record if
+`song_decode` fails. The staging song is updated only on a successful end.
 
 ## Phase 2: the web editor (`site/editor.html`)
 

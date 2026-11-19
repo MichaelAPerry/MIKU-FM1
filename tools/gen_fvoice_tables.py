@@ -46,9 +46,33 @@ SHAPES = {
     "NM":  ((360, 1000, 1250, 2200, 3000, 5600), (0.0, -26.0, -26.0, -32.0, -38.0, -45.0), (200, 250, 250, 300, 400, 800)),
     "FL":  ((400, 900, 1400, 2400, 3000, 5600), (0.0, -12.0, -4.0, -6.0, -8.0, -20.0), (110, 200, 160, 200, 350, 800)),
 }
-SHN = list("AIUEO") + ["BAR", "NN", "NM", "FL"]
+# English (0.9): vowel shapes beyond the five Japanese ones. F1/F2 from CHIMERA's calibrated female vowels
+# (crates/chimera, via Shan-Sherif's ch_phon_data.h), F3 from Hillenbrand et al. 1995 (adult female), all scaled by
+# EN_K to Miku's tract like the table above. NAS/SING/AIR and the dB pattern come from the nearest Japanese vowel.
+EN_K = 1.08
+EN_VOW = {  # name: (F1, F2, F3) adult female Hz, nearest Japanese vowel
+    "IH": ((480, 2355, 3053), "I"),
+    "EH": ((710, 2025, 2979), "E"),
+    "AE": ((657, 2214, 2972), "E"),
+    "AH": ((749, 1447, 2933), "A"),
+    "AX": ((587, 1744, 2950), "A"),     # schwa (unstressed AH)
+    "AO": ((722, 1162, 2824), "O"),
+    "UH": ((516, 1229, 2827), "U"),
+    "UW": ((457, 1107, 2735), "U"),     # rounded, unlike Japanese u
+    "ER": ((510, 1567, 1929), "U"),     # r-coloured: low F3
+}
+for _n, ((_f1, _f2, _f3), _j) in EN_VOW.items():
+    _fs, _db, _ = VOW[_j]
+    VOW[_n] = ((_f1 * EN_K, _fs[1] * _f1 / VOW[_j][0][0] if _j != "U" else _fs[1], _f2 * EN_K, _f3 * EN_K, _fs[4], _fs[5]), _db, 0.0)
+    TRIM.setdefault(_n, TRIM[_j])
+SHAPES["L"] = ((380, 900, 1150, 2900, 3100, 5600), (0.0, -18.0, -8.0, -10.0, -14.0, -26.0), (120, 250, 180, 250, 400, 900))   # lateral: low F2
+SHAPES["RR"] = ((480, 900, 1250, 1750, 3000, 5600), (0.0, -16.0, -5.0, -6.0, -14.0, -26.0), (120, 250, 160, 200, 400, 900))  # English r: F3 near F2
+SHAPES["NG"] = ((340, 1100, 1900, 2600, 3200, 5800), (0.0, -24.0, -28.0, -30.0, -36.0, -44.0), (200, 250, 250, 300, 400, 800))  # velar nasal
+SHN = list("AIUEO") + ["BAR", "NN", "NM", "FL"] + list(EN_VOW) + ["L", "RR", "NG"]
 SHI = {n: i for i, n in enumerate(SHN)}
-SHI["V"] = 15                      # "the sung vowel"
+SHI["V"] = 255                     # "the sung vowel"
+# each shape's nearest Japanese vowel (burst colour, loudness compensation, mouth): 0..4 = A I U E O
+SHCLS = [("AIUEO".index(n) if n in "AIUEO" else "AIUEO".index(EN_VOW[n][1]) if n in EN_VOW else 0) for n in SHN]
 # Noise bands (2-pole resonators on the LFSR): name: (centre Hz per vowel A I U E O, bandwidth Hz)
 NBN = ["K", "T", "P", "S", "SH", "F", "H"]
 NB = {
@@ -59,7 +83,9 @@ NB = {
     "SH": ((3800, 3800, 3800, 3800, 3800), 2200),
     "F":  ((1800, 1800, 1800, 1800, 1800), 4000),
     "H":  ((3600, 3600, 3600, 3600, 3600), 2500, (0.0, 1.0, 0.0, 0.0, 0.0)),   # c-like friction of "hi" only
+    "TH": ((5200, 5200, 5200, 5200, 5200), 6000),   # English th: weak, flat, broad
 }
+NBN.append("TH")
 NASAL_DB = ((55, -5.0), (72, 7.0))   # murmur level vs note: the nasal formant sits below f0 when singing high, so the murmur is raised there
 BURST_END = 0.25                    # burst into a vowel: the noise falls to this fraction of its start
 NRMS = 8192                         # noise level 1.0 = this RMS at the band output
@@ -95,6 +121,59 @@ CONS = [
     [P(14, vg=0, lv=0, lip=1), P(6, vg=0, lv=0, nk="P", nl=0.32, bst=1), P(16, vg=0, lv=0.35, nk="P", nl=0.06, asp=0.08)],         # P
     [P(HOLD, "NN", lv=0.55, lip=1)],                                                                                          # NN (moraic n: hum)
 ]
+NJP = len(CONS)                    # 21: the Japanese classes (MC_* of mora.h) end here
+# ---- 0.9: English onsets (before a vowel) -----------------------------------------------------------------------
+EN_ON = {
+    "TH": [P(50, vg=0, lv=0, nk="TH", nl=0.07, asp=0.04), P(10, vg=0.5, lv=0.6)],
+    "DH": [P(30, "BAR", lv=0.35, nk="TH", nl=0.04, km="fast"), P(10, lv=0.8, km="fast")],
+    "V":  [P(40, "BAR", lv=0.4, nk="F", nl=0.05, km="fast", lip=0), P(10, lv=0.8, km="fast")],
+    "ZH": [P(45, "BAR", lv=0.5, nk="SH", nl=0.15, km="fast"), P(12, lv=0.8, nk="SH", nl=0.05, km="fast")],
+    "JH": [P(20, "BAR", lv=0.22, km="fast"), P(4, lv=0.4, nk="SH", nl=0.30, km="fast", bst=1), P(25, lv=0.6, nk="SH", nl=0.12, km="fast"), P(10, lv=0.9, km="fast")],
+    "L":  [P(45, "L", lv=0.5, km="fast"), P(30)],
+    "RR": [P(40, "RR", lv=0.5, km="slow"), P(45, km="slow")],
+    "WE": [P(30, "UW", lv=0.5), P(50, km="slow")],
+}
+# ---- 0.9: English codas (after the vowel, at note-off). Each ends in a HOLD phase with no noise: the voice then
+# releases (fvoice drops the gate there) and the shape stays closed while the envelope dies.
+END = lambda sh="V", lv=0.0, lip=0: P(HOLD, sh, vg=0 if lv == 0 else 1.0, lv=lv, lip=lip)
+EN_CO = {
+    "K":  [P(45, vg=0, lv=0, km="fast"), P(6, vg=0, lv=0, nk="K", nl=0.22, bst=1), P(20, vg=0, lv=0, nk="K", nl=0.04), END()],
+    "T":  [P(40, vg=0, lv=0, km="fast"), P(5, vg=0, lv=0, nk="T", nl=0.22, bst=1), P(18, vg=0, lv=0, nk="T", nl=0.04), END()],
+    "P":  [P(45, vg=0, lv=0, lip=1, km="fast"), P(6, vg=0, lv=0, nk="P", nl=0.20, bst=1, lip=0), P(18, vg=0, lv=0, nk="P", nl=0.03), END()],
+    "G":  [P(40, "BAR", lv=0.22, km="fast"), P(5, vg=0, lv=0, nk="K", nl=0.14, bst=1), P(15, vg=0, lv=0, nk="K", nl=0.03), END()],
+    "D":  [P(35, "BAR", lv=0.22, km="fast"), P(5, vg=0, lv=0, nk="T", nl=0.14, bst=1), P(15, vg=0, lv=0, nk="T", nl=0.03), END()],
+    "B":  [P(40, "BAR", lv=0.22, km="fast", lip=1), P(5, vg=0, lv=0, nk="P", nl=0.12, bst=1), P(15, vg=0, lv=0, nk="P", nl=0.02), END()],
+    "S":  [P(12, vg=0.5, lv=0.5, nk="S", nl=0.10), P(90, vg=0, lv=0, nk="S", nl=0.22), END()],
+    "Z":  [P(70, "BAR", lv=0.4, nk="S", nl=0.14, km="fast"), P(30, vg=0, lv=0, nk="S", nl=0.08), END()],
+    "SH": [P(12, vg=0.5, lv=0.5, nk="SH", nl=0.10), P(90, vg=0, lv=0, nk="SH", nl=0.26), END()],
+    "ZH": [P(70, "BAR", lv=0.4, nk="SH", nl=0.15, km="fast"), P(30, vg=0, lv=0, nk="SH", nl=0.08), END()],
+    "F":  [P(80, vg=0, lv=0, nk="F", nl=0.08, asp=0.04), END()],
+    "V":  [P(70, "BAR", lv=0.35, nk="F", nl=0.05, km="fast"), END()],
+    "TH": [P(80, vg=0, lv=0, nk="TH", nl=0.07), END()],
+    "DH": [P(60, "BAR", lv=0.35, nk="TH", nl=0.04, km="fast"), END()],
+    "CH": [P(40, vg=0, lv=0, km="fast"), P(4, vg=0, lv=0, nk="SH", nl=0.40, bst=1), P(80, vg=0, lv=0, nk="SH", nl=0.30), END()],
+    "JH": [P(30, "BAR", lv=0.22, km="fast"), P(4, vg=0, lv=0, nk="SH", nl=0.30, bst=1), P(60, "BAR", lv=0.3, nk="SH", nl=0.15), END()],
+    "M":  [P(90, "NM", lv=0.38, lip=1, km="fast"), END("NM", 0.38, 1)],
+    "N":  [P(90, "NN", lv=0.38, km="fast"), END("NN", 0.38)],
+    "NG": [P(90, "NG", lv=0.38, km="fast"), END("NG", 0.38)],
+    "L":  [P(90, "L", lv=0.5, km="fast"), END("L", 0.5)],
+    "RR": [P(90, "RR", lv=0.6, km="slow"), END("RR", 0.6)],
+}
+ONI = {k: NJP + i for i, k in enumerate(EN_ON)}
+COI = {k: NJP + len(EN_ON) + i for i, k in enumerate(EN_CO)}
+CONS += list(EN_ON.values()) + list(EN_CO.values())
+# English phonemes (firmware/song/english.h EP_* order; 40 = AX, the schwa) -> onset class, coda class, vowel shapes
+EPN = ["", "AA", "AE", "AH", "AO", "AW", "AY", "EH", "ER", "EY", "IH", "IY", "OW", "OY", "UH", "UW",
+       "B", "CH", "D", "DH", "F", "G", "HH", "JH", "K", "L", "M", "N", "NG", "P", "R", "S", "SH", "T",
+       "TH", "V", "W", "Y", "Z", "ZH", "AX"]
+JPC = {"K": 1, "S": 2, "SH": 3, "T": 4, "CH": 5, "N": 7, "HH": 8, "F": 9, "M": 10, "Y": 11, "G": 14, "Z": 15, "D": 17, "B": 18, "P": 19}
+EP_ON = {e: JPC.get(e, ONI.get({"R": "RR", "W": "WE"}.get(e, e), 0)) for e in EPN}
+EP_CO = {e: COI.get({"R": "RR"}.get(e, e), 0) for e in EPN}
+EP_V = {  # vowel: (shape, glide-to shape or None)
+    "AA": ("A", None), "AE": ("AE", None), "AH": ("AH", None), "AO": ("AO", None), "AW": ("A", "UH"), "AY": ("A", "IH"),
+    "EH": ("EH", None), "ER": ("ER", None), "EY": ("E", "I"), "IH": ("IH", None), "IY": ("I", None), "OW": ("O", "UH"),
+    "OY": ("AO", "IH"), "UH": ("UH", None), "UW": ("UW", None), "AX": ("AX", None),
+}
 
 def res(f, bw):
     r = math.exp(-math.pi * bw / FS)
@@ -206,15 +285,32 @@ def main():
                 n = HOLD if ms == HOLD else max(1, int(round(ms / (BT * 1000))))
                 assert n <= 255 and (ms != HOLD or n == 255)
                 tail = sh == "V" and vg >= 1 and lv >= 1 and nk is None and not nl and not asp and ms != HOLD   # pure vowel: the consonant is over
-                cph += [n, SHI[sh] | KMI[kmn] << 4 | lip << 6 | tail << 7, int(round(vg * 128)), int(round(lv * 128)), 0 if nk is None else NBN.index(nk) + 1]
+                cph += [n, SHI[sh], KMI[kmn] | lip << 2 | tail << 3, int(round(vg * 128)), int(round(lv * 128)), 0 if nk is None else NBN.index(nk) + 1]
                 nx = ph[i + 1][5] if i + 1 < len(ph) else 0.0
                 kd = 0 if not bst else int(round(32768 * (1 - ((nx if nx else BURST_END * nl) / nl) ** (1 / n))))
                 assert not bst or 0 < kd < 32768
                 cpn += [min(65535, int(round(nl * 32768))), min(65535, int(round(asp * 32768))), kd]
             else:
-                cph += [0, 15, 128, 128, 0]; cpn += [0, 0, 0]
+                cph += [0, 255, 0, 128, 128, 0]; cpn += [0, 0, 0]
     out.append("#define FV_NPH 4\n#define FV_NCLS %d\n" % len(CONS))
-    out.append(arr("fv_cph", "uint8_t", cph, 20))          # [class][phase]{blocks (255 = hold), shape | morph<<4 | lips<<6 | vowel-tail<<7, voicing, level (128 = 1.0), noise kind+1}
+    out.append("#define FV_NJP %d\n#define FV_SHV 255\n#define FV_NSH %d\n" % (NJP, len(SHN)))
+    out.append(arr("fv_cph", "uint8_t", cph, 24))          # [class][phase]{blocks (255 = hold), shape (255 = the sung vowel), morph | lips<<2 | vowel-tail<<3, voicing, level (128 = 1.0), noise kind+1}
+    out.append(arr("fv_shcls", "uint8_t", SHCLS, 32))      # shape -> nearest Japanese vowel 0..4
+    out.append("#define FV_NEP %d\n" % len(EPN))
+    out.append(arr("fv_epon", "uint8_t", [EP_ON[e] for e in EPN], 21))   # English phoneme -> onset class (0: none)
+    out.append(arr("fv_epco", "uint8_t", [EP_CO[e] for e in EPN], 21))   # English phoneme -> coda class (0: none)
+    out.append(arr("fv_epv", "uint8_t", [SHI[EP_V[e][0]] if e in EP_V else 255 for e in EPN], 21))   # vowel shape (255: not a vowel)
+    out.append(arr("fv_epv2", "uint8_t", [SHI[EP_V[e][1]] if e in EP_V and EP_V[e][1] else 255 for e in EPN], 21))   # diphthong target
+    # mouth pictures (visemes): fvoice.h FVV_* order
+    VIS = ["REST", "MBP", "FV", "TH", "EE", "EH", "AH", "OH", "OO", "UH", "L", "R"]
+    SHV = {"A": "AH", "I": "EE", "U": "UH", "E": "EH", "O": "OH", "BAR": "REST", "NN": "EH", "NM": "MBP", "FL": "EH",
+           "IH": "EE", "EH": "EH", "AE": "EH", "AH": "AH", "AX": "UH", "AO": "OH", "UH": "UH", "UW": "OO", "ER": "R",
+           "L": "L", "RR": "R", "NG": "EH"}
+    out.append(arr("fv_shvis", "uint8_t", [VIS.index(SHV[n]) for n in SHN], 32))
+    cvis = {9: "FV", 13: "OO"}         # Japanese F, W
+    for k, i in ONI.items(): cvis[i] = {"TH": "TH", "DH": "TH", "V": "FV", "L": "L", "RR": "R", "WE": "OO"}.get(k)
+    for k, i in COI.items(): cvis[i] = {"F": "FV", "V": "FV", "TH": "TH", "DH": "TH", "L": "L", "RR": "R"}.get(k)
+    out.append(arr("fv_clvis", "uint8_t", [VIS.index(cvis[c]) if cvis.get(c) else 255 for c in range(len(CONS))], 25))   # 255: the shape decides
     out.append(arr("fv_cpn", "uint16_t", cpn, 12))         # [class][phase]{noise level, aspiration, burst decay per block} Q15
     def nbo(n):
         (n0, d0), (n1, d1) = NASAL_DB
@@ -238,5 +334,6 @@ def main():
 
 if __name__ == "__main__":
     dst = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "firmware", "audio", "fvoice", "fvoice_tables.h")
+    text = main()                      # build first: a failed assertion must not truncate the header
     with open(dst, "w", newline="\n") as f:
-        f.write(main())
+        f.write(text)

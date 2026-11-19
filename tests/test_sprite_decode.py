@@ -21,6 +21,7 @@ source=r'''
 #include <stdio.h>
 #include "firmware/ui/singer_sprites.h"
 #include "firmware/ui/wardrobe_sprites.h"
+#include "firmware/ui/mouth_sprites.h"
 #include "firmware/ui/performance.h"
 static PerfState performance;
 static uint16_t swap16(uint16_t p){return (uint16_t)((p>>8)|(p<<8));}
@@ -28,7 +29,7 @@ static uint16_t swap16(uint16_t p){return (uint16_t)((p>>8)|(p<<8));}
 #define FX 30u
 #define FY 2u
 #define DX 28u
-static uint16_t cv_px[CV_MAX],screen[240*240],pw[16],dpw[16],c_bg=1,c_disc=2;
+static uint16_t cv_px[CV_MAX],screen[240*240],pw[16],dpw[16],mpw[16],c_bg=1,c_disc=2;
 static uint8_t hw[180];static int32_t cv_oy;
 static const uint16_t *pending;static uint16_t held[CV_MAX];
 static uint32_t px,py,pwth,ph;
@@ -43,6 +44,8 @@ static void lcd_blit(uint32_t x,uint32_t y,uint32_t w,uint32_t h,const uint16_t 
     lcd_sync();assert(w*h<=CV_MAX);pending=p;px=x;py=y;pwth=w;ph=h;
     memcpy(held,p,w*h*sizeof *p);
 }
+FACE_MOUTH_DEFS
+MOUTHBOX
 FACE
 DANCE
 static unsigned idx(const uint8_t*d,unsigned w,unsigned x,unsigned y){unsigned p=y*w+x;return p&1?d[p/2]&15:d[p/2]>>4;}
@@ -50,6 +53,7 @@ int main(void){
     for(unsigned i=0;i<16;i++)pw[i]=(uint16_t)(i+10),dpw[i]=swap16(SC_STAGE_PAL[i]);
     for(unsigned i=0;i<180;i++)hw[i]=90;
     for(unsigned f=0;f<SF_COUNT;f++){
+        if(f>=SF_A&&f<=SF_N)continue; /* These slots alias NEUTRAL and are never drawn. */
         memset(screen,0,sizeof screen);face_draw(f,0,0,90,90);lcd_sync();
         for(unsigned y=0;y<90;y++)for(unsigned x=0;x<90;x++){
             unsigned i=idx(SINGER_FACES[f],90,x,y);uint16_t want=i?pw[i]:c_disc;
@@ -63,6 +67,27 @@ int main(void){
         }
         assert(screen[0]==0);
     }
+    /* Both languages: every outfit x every mouth picture uses the cleaned NEUTRAL face. */
+    for(unsigned i=0;i<16;i++)mpw[i]=(uint16_t)(1000+i);
+    for(unsigned outfit=0;outfit<WD_OUTFIT_N&&outfit<MOUTH_OUTFIT_COUNT;outfit++)for(unsigned v=0;v<MOUTH_COUNT;v++){
+        uint8_t frow[90],mrow[MOUTH_W];unsigned mx=MOUTH_ANCHORS[2*outfit],my=MOUTH_ANCHORS[2*outfit+1];
+        performance.outfit=(uint8_t)outfit;
+        memset(screen,0,sizeof screen);face_draw(FACE_MOUTH|v,0,0,90,90);lcd_sync();
+        for(unsigned y=0;y<90;y++){
+            assert(spr_decode_row(WD_OUTFITS[outfit].faces,SF_NEUTRAL,y,frow,90));
+            for(unsigned k=MOUTH_CLEAN_OFFSETS[outfit];k<MOUTH_CLEAN_OFFSETS[outfit+1];k++){
+                unsigned at=MOUTH_CLEAN_PIXELS[2*k];
+                if(y>=my&&at/MOUTH_W==y-my)frow[mx+at%MOUTH_W]=MOUTH_CLEAN_PIXELS[2*k+1];
+            }
+            if(y>=my&&y<my+MOUTH_H)assert(spr_decode_row(&MOUTH_ATLAS,v,y-my,mrow,MOUTH_W));
+            for(unsigned x=0;x<90;x++){
+                unsigned i=frow[x];uint16_t want=i?pw[i]:c_disc;
+                if(y>=my&&y<my+MOUTH_H&&x>=mx&&x<mx+MOUTH_W&&mrow[x-mx])want=mpw[mrow[x-mx]];
+                assert(screen[(FY+2*y)*240+FX+2*x]==want&&screen[(FY+2*y+1)*240+FX+2*x+1]==want);
+            }
+        }
+    }
+    performance.outfit=0;
     for(unsigned f=0;f<ST_COUNT;f++){
         memset(screen,0,sizeof screen);dance_draw(f);lcd_sync();
         for(unsigned y=0;y<71;y++)for(unsigned x=0;x<61;x++){
@@ -88,7 +113,7 @@ int main(void){
     printf("host DANCE CPU draw mean_us=%.3f (800 full draws, no ISR or DMA timing)\n",(double)(clock()-start)*1e6/CLOCKS_PER_SEC/800.0);
     puts("native LCD face/dance: all frames, scales, odd-width rows and dirty rectangles pixel-exact");
 }
-'''.replace('FACE\n',function('face_draw')+'\n').replace('DANCE\n',function('dance_draw')+'\n')
+'''.replace('FACE_MOUTH_DEFS\n','#define FACE_MOUTH 0x100u\n').replace('MOUTHBOX\n',function('mouth_box')+'\n').replace('FACE\n',function('face_draw')+'\n').replace('DANCE\n',function('dance_draw')+'\n')
 with tempfile.TemporaryDirectory() as td:
     path=pathlib.Path(td);(path/'sprite.c').write_text(source)
     subprocess.run([cc,'-std=c11','-O2','-Wall','-Wextra','-I'+str(root),str(path/'sprite.c'),str(root/'firmware/ui/sprite_codec.c'),str(root/'firmware/ui/performance.c'),str(root/'firmware/ui/stagefx.c'),'-o',str(path/'sprite')],check=True)

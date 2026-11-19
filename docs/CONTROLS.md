@@ -1,8 +1,8 @@
 # Controls
 
-Every control on every page, version 0.7. How to use them is in the [guide](MANUAL.md).
+Every control on every page, version 0.9 (in development). How to use them is in the [guide](MANUAL.md).
 
-Miku-FM is a four-track songwriter with a singer. **HOME** cycles the ten pages: STAGE, DANCE, SONG, PATTERN, MIXER, GEN, LYRICS, LOOK, LIBRARY, BANK (the page name is on
+Miku-FM is a four-track songwriter with a singer. **HOME** cycles the eleven pages: STAGE, DANCE, SONG, PATTERN, MIXER, GEN, LYRICS, PHRASE, LOOK, LIBRARY, BANK (the page name is on
 the screen). One control map holds everywhere; the tables below list what each control does on each page.
 
 Everywhere:
@@ -173,6 +173,35 @@ The sung syllables of the vocal pattern in the cursor row, four lines at a time 
 | ARP | Copy the whole phrase (tap) |
 | ARP + EDIT | Paste the copied phrase over this pattern |
 | GLO | Undo |
+
+## PHRASE
+
+The phrase bank: 64 phrases stored on the FM-1, in English or Japanese, typed here or sent from the web editor. The
+screen shows the syllable the next note sings (large), the next three, the words, the position and the phrase BPM. The
+track is VOCAL.
+
+| Control | What it does |
+|---|---|
+| SELECT | Choose the phrase, 1-64 |
+| Key | Sing the next syllable at the key's pitch; releasing the key ends the word (its last consonants). Hold one key and press another to glide into the next syllable. Notes from a MIDI keyboard or a DAW do the same |
+| ALGORITHM | Move to another syllable (where the next note starts) |
+| KNOB 4 | Cursor row (where REC places the phrase) |
+| PRESETS | Song tempo |
+| REC | Place the phrase into the song, one syllable per note, from the VOCAL pattern of the cursor row; a long phrase continues into the following empty patterns and rows (up to 4) |
+| EDIT | Open the typing editor |
+| GLO | Undo |
+
+### Typing
+
+| Control | What it does |
+|---|---|
+| Key | Type a letter: the 27 keys are A to Z, then space (lower-case romaji in Japanese) |
+| ALGORITHM | Change the character before the cursor (letters, digits, ' , . ? ! and the romaji marks - : _ / \|) |
+| SELECT | Move the cursor |
+| REC | Delete the character before the cursor |
+| KNOB 1 | English or Japanese |
+| EDIT | Read the words and store the phrase (only while stopped); if a word cannot be read, the cursor goes to it |
+| GLO | Leave without storing |
 
 ## LOOK
 

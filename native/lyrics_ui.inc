@@ -61,14 +61,15 @@ static void lyric_delete(void){
 static void lyric_token(int32_t delta){
     LyUnit *u;uint32_t token;
     if(!lyric_count)return;u=&lyric_units[lyric_cursor];
-    token=u->flags&LY_REST?0:u->flags&LY_SUSTAIN?1:2u+u->mora;
-    token=(uint32_t)wr((int32_t)token+delta,MORA_N+2);
+    /* tokens: REST, HOLD, the morae, then the song's English syllables (mora SG_SYL0+i) */
+    token=u->flags&LY_REST?0:u->flags&LY_SUSTAIN?1:u->mora>=SG_SYL0?2u+MORA_N+(u->mora-SG_SYL0):2u+u->mora;
+    token=(uint32_t)wr((int32_t)token+delta,(int32_t)(MORA_N+2u+sg.nsyl));
     u->flags&=(uint8_t)~(LY_REST|LY_SUSTAIN);
     if(!token){u->flags|=LY_REST|LY_WORD_END;u->mora=0;lyric_notes[lyric_cursor]=0;}
     else if(token==1u){
         if(!lyric_cursor || (lyric_units[lyric_cursor-1u].flags&LY_REST)){lyric_load();toast("HOLD NEEDS PREVIOUS VOWEL",1);return;}
         u->mora=lyric_units[lyric_cursor-1u].mora;u->flags|=LY_SUSTAIN;u->flags&=(uint8_t)~LY_SEPARATE;
-    }else{u->mora=(uint8_t)(token-2u);ed_mora=u->mora;}
+    }else{u->mora=(uint8_t)(token-2u<MORA_N?token-2u:SG_SYL0+(token-2u-MORA_N));ed_mora=u->mora;}
     if(!(u->flags&LY_REST)&&!lyric_notes[lyric_cursor])lyric_notes[lyric_cursor]=(uint8_t)cl(60+oct*12,1,127);
     lyric_commit(0);
 }
@@ -101,7 +102,7 @@ static void pg_lyrics(uint32_t band){
     if(at>=lyric_count)return;
     {LyUnit *u=&lyric_units[at];int32_t y=52+(int32_t)(band-1u)*48;
      ui_panel(2,y-2,236,44,at==lyric_cursor);
-     text[0]=0;catn(text,at+1u);cat(text," ");cat(text,u->flags&LY_REST?"REST":u->flags&LY_SUSTAIN?"HOLD":mora_str(u->mora));
+     text[0]=0;catn(text,at+1u);cat(text," ");cat(text,u->flags&LY_REST?"REST":u->flags&LY_SUSTAIN?"HOLD":vstr(u->mora));
      txt(5,y,&FONT_L,text,at==lyric_cursor?C_PNK:C_WHITE,0);
      text[0]=0;cat(text,"LEN ");catn(text,u->ticks);
      if(!(u->flags&LY_REST)){static const char *const pitch[12]={"C","C#","D","D#","E","F","F#","G","G#","A","A#","B"};uint32_t n=lyric_notes[at];cat(text," ");cat(text,pitch[n%12u]);if(n>=12u)catn(text,n/12u-1u);}

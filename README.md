@@ -1,7 +1,7 @@
 # Miku-FM
 
-**A singing songwriter firmware for the M-VAVE FM-1.** A tiny pixel singer sings your songs in Japanese, consonants and
-all, over FM chords, bass and drums. Shape her voice, write patterns or let her generate a whole song, and watch her dance.
+**A singing songwriter firmware for the M-VAVE FM-1.** A tiny pixel singer sings your songs in Japanese and English,
+consonants and all, over FM chords, bass and drums. Shape her voice, write patterns or let her generate a whole song, and watch her dance.
 
 <p>
 <img src="site/media/screens/stage.png" width="200" alt="STAGE: her face and the syllable dial">
@@ -26,7 +26,7 @@ real firmware package; the installer works in Chrome or Edge over USB).
 ### Quick start
 
 1. Open the [website](https://michaelaperry.github.io/MIKU-FM1/), connect the FM-1 by USB and press **Install 0.8** (Chrome or Edge).
-2. Press **PLAY**: she sings. **HOME** steps through STAGE, DANCE, SONG, PATTERN, MIXER, GEN, LYRICS, LOOK, LIBRARY and DX7 BANK.
+2. Press **PLAY**: she sings. **HOME** steps through STAGE, DANCE, SONG, PATTERN, MIXER, GEN, LYRICS, PHRASE, LOOK, LIBRARY and DX7 BANK.
 3. Load your own DX7 sounds: open the [DX7 bank tool](https://michaelaperry.github.io/MIKU-FM1/bank.html), pick a `.syx`, send it,
    and press **REC** on the FM-1 within 10 seconds. Sending a cartridge from Dexed over USB works too.
 4. The [guide](https://michaelaperry.github.io/MIKU-FM1/guide.html) explains every page and control.
@@ -34,6 +34,13 @@ real firmware package; the installer works in Chrome or Edge over USB).
 - **Her voice:** a formant voice synthesised live (no samples): 73 Japanese mora selections with their consonants, five characters
   from DEEP to TINY, languages (Japanese, animal babble, scat, vowels), tension, fry, whisper, a harmony voice, vowels on
   the beat; chorus, delay, reverb, drive, tremolo. Every knob shows a picture of what it does.
+- **English and the phrase bank (0.9, in development):** English words through CHIMERA's English front end (a built-in
+  dictionary and spelling rules, ported to integer C) sung by the same formant voice, with consonant clusters, word endings
+  and gliding vowels. PHRASE keeps 64 phrases on the FM-1: each key or MIDI note sings the next syllable (a DAW track
+  becomes Miku's lyric track), REC places a phrase into the song, and you can type words on the keys. The
+  [web editor](https://michaelaperry.github.io/MIKU-FM1/editor.html) (one file, works offline) has the full dictionary,
+  a piano roll, MIDI/karaoke import and a preview in her real voice, and sends phrases and songs over USB. Lip-sync uses one
+  shared set of mouth pictures on every outfit.
 - **The song:** four tracks (vocal, chords, bass, drums), 16 patterns per track, 64 rows with sections, mixer, swing,
   undo. **GEN** writes a whole song in nine styles: HYPERPOP, FUTURE BASS, JERSEY CLUB, DIGICORE and IDOL POP (new in 0.7, each with
   its own DX7 chords and bass), and POP, BALLAD, DANCE and CHIP, with track locks, new phrases, energy and complexity.

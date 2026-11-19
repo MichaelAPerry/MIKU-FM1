@@ -12,7 +12,7 @@
 </head>
 <body class="inst">
 <main>
-  <p class="crumb"><a href="./">← Miku-FM</a> <span><a href="guide.html">Guide</a> · <a href="bank.html">DX7 bank tool</a> · <button class="lang" id="lang"></button></span></p>
+  <p class="crumb"><a href="./">← Miku-FM</a> <span><a href="guide.html">Guide</a> · <a href="bank.html">DX7 bank tool</a> · <a href="editor.html" data-t="editor">Phrase editor</a> · <button class="lang" id="lang"></button></span></p>
   <div class="inst-head">
     <div class="dancer small" aria-hidden="true"></div>
     <div>
@@ -63,6 +63,7 @@ import { productOf, logicalImage, validateStockPackage, STOCK_V15_SIZE } from ".
 const $ = (id) => document.getElementById(id);
 const TEXT = {
   en: {
+    editor: "Phrase editor",
     title: "One small singer, one USB cable.", other: "日本語",
     intro: "Connect the FM-1 by USB, then press Install. It works in Chrome or Edge; the browser asks once to allow MIDI: allow it.",
     warn: "Do not unplug the USB cable while writing. Connect only the FM-1 you mean to update.",
@@ -92,6 +93,7 @@ const TEXT = {
     license: "GPL-3.0, no warranty. Source:",
   },
   ja: {
+    editor: "フレーズエディター",
     title: "小さな歌姫を、USB ケーブル一本で。", other: "English",
     intro: "FM-1 を USB で接続して「インストール」を押してください。Chrome か Edge で使えます。MIDI の許可を求められたら許可してください。",
     warn: "書き込み中は USB を抜かないでください。更新する FM-1 だけを接続してください。",

@@ -16,6 +16,10 @@ Replace it with your own art to make a different singer: `tools/sprite_pack.py` 
   the art is **not** under the code's GPL / MIT licences. The full terms and the list of files that hold the art (also
   `firmware/ui/singer_sprites.h` and `site/media/`) are in [LICENSING.md](../LICENSING.md).
 
+The shared mouth overlays in `assets/singer/mouths.png` and `firmware/ui/mouth_sprites.h`,
+and the review sheet in `docs/evidence/mouths/approval_sheet.png`, derive from the same
+singer art and retain the PCL credit and terms above.
+
 ## The demo song (`assets/songs/`)
 
 - 「おとのはこ」(The Little Sound Box): original lyrics written for Miku-FM with ChatGPT, provided by Michael Perry;

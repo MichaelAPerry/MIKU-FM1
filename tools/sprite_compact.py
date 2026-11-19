@@ -9,6 +9,12 @@ from pathlib import Path
 import argparse
 import re
 ROOT = Path(__file__).resolve().parents[1]
+# SF_A through SF_N use the shared mouth overlay. Preserve their frame indices.
+RETIRED_FACE_FRAMES = range(2, 8)
+
+
+def with_neutral_mouth_frames(frames):
+    return [frames[0] if i in RETIRED_FACE_FRAMES else frame for i, frame in enumerate(frames)]
 
 
 def parse(text, name):
@@ -109,6 +115,8 @@ def generate(text):
             if len(a) != (width * height + 1) // 2 or any(v > 255 for v in a):
                 raise ValueError('invalid source frame dimensions or pixel byte')
             frames.append([v for b in a for v in (b >> 4, b & 15)][:width * height])
+        if kind == 'FACE':
+            frames = with_neutral_mouth_frames(frames)
         packed = pack_atlas(frames, width, height)
         ids, offsets, data, originals = packed
         for i, expected in enumerate(originals):
@@ -122,7 +130,10 @@ def generate(text):
         total = len(data) + 2 * len(ids) + 2 * len(offsets)
         no_delta = len(direct_pack[2]) + 2 * len(direct_pack[0]) + 2 * len(direct_pack[1])
         reports.append(f'{kind}: original={count*((width*height+1)//2)} compact={total} direct-row={no_delta} unique_rows={len(originals)} delta_rows={sum(data[offsets[i]]==2 for i in range(len(originals)))}')
-    out += [array('SC_FACE_DIRTY', 'uint8_t', parse(text, 'SINGER_FACE_DIRTY')), '#endif\n']
+    dirty = parse(text, 'SINGER_FACE_DIRTY')
+    for frame in RETIRED_FACE_FRAMES:
+        dirty[4 * frame:4 * frame + 4] = [0] * 4
+    out += [array('SC_FACE_DIRTY', 'uint8_t', dirty), '#endif\n']
     return ''.join(out), reports
 
 

@@ -26,6 +26,7 @@ The singer's pictures are fan art of **Hatsune Miku**, a character of Crypton Fu
 **These files are the character art.** They are **not** GPL or MIT, and nobody can relicense them:
 
 - `assets/singer/` (including the paired outfit source sheets), `firmware/ui/singer_sprites.h` , `firmware/ui/singer_compact.h` and `firmware/ui/wardrobe_sprites.h` (that art as pixel data in the firmware),
+- `firmware/ui/mouth_sprites.h` (shared mouth overlay pixel data) and `docs/evidence/mouths/approval_sheet.png`,
 - `site/media/` pictures and video (banner, icons, `dancer.png`, `screens/`, `trailer.*`), `docs/card*.png`, `docs/screens/`.
 
 **What the PCL means for Miku-FM** (from the PCL text, articles 3 and 4, and the guidelines):
@@ -86,3 +87,14 @@ The MSFA engine's Apache-2.0 licence is separate and unchanged. The regression
 fixtures in `firmware/audio/dx7/reference_vectors.h` are raw outputs of unmodified MSFA
 for these original voices (Apache-2.0 header retained). Engine and patch licenses do not
 change the character art's PCL terms. DX7 is a Yamaha product name; this remains unofficial software.
+
+## English front end
+
+`firmware/song/english.c` and `english.h` adapt Jameson Hodge's CHIMERA and
+Shan-Sherif's C port for the M-VAVE FM-1 under MIT. The packed dictionary
+and pronunciation fixtures include Carnegie Mellon University's CMUdict
+data under BSD-2-Clause. The combined firmware is GPL-3.0-only.
+
+[CHIMERA MIT notice](LICENSES/MIT-CHIMERA.txt) ·
+[Shan-Sherif MIT notice](LICENSES/MIT-Shan-Sherif.txt) ·
+[CMUdict BSD-2-Clause notice](LICENSES/CMUdict.txt)

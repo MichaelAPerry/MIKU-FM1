@@ -34,6 +34,11 @@ target_link_libraries(miku_mora_voice_tests PRIVATE miku_core m)
 add_test(NAME mora_voice COMMAND miku_mora_voice_tests)
 add_executable(fvoice_demo tools/fvoice_demo.c)
 target_link_libraries(fvoice_demo PRIVATE miku_core m)
+add_executable(miku_fvoice_english_tests tests/test_fvoice_english.c)
+target_link_libraries(miku_fvoice_english_tests PRIVATE miku_core m)
+add_test(NAME fvoice_english COMMAND miku_fvoice_english_tests)
+add_executable(english_voice_render tools/english_voice_render.c)
+target_link_libraries(english_voice_render PRIVATE miku_core m)
 # Six-operator DX7 backend (MSFA-derived integer C, no desktop wrapper).
 add_library(miku_dx7 STATIC firmware/audio/dx7/dx7.c)
 target_include_directories(miku_dx7 PUBLIC ${CMAKE_SOURCE_DIR})
@@ -52,6 +57,8 @@ if(NOT MSVC)
 endif()
 if(NOT MSVC)
   add_test(NAME sprite_decode COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tests/test_sprite_decode.py
+    ${CMAKE_SOURCE_DIR} ${CMAKE_C_COMPILER})
+  add_test(NAME mouth_sprites COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tests/test_mouth_sprites.py
     ${CMAKE_SOURCE_DIR} ${CMAKE_C_COMPILER})
 endif()
 
@@ -88,6 +95,7 @@ add_executable(sprite_codec_tests tests/test_sprite_codec.c)
 target_link_libraries(sprite_codec_tests PRIVATE miku_sprite_codec)
 add_test(NAME sprite_codec COMMAND sprite_codec_tests)
 add_test(NAME sprite_generator COMMAND ${Python3_EXECUTABLE} -I ${CMAKE_SOURCE_DIR}/tests/test_sprite_codec.py)
+add_test(NAME sprite_identity COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tests/test_sprite_identity.py)
 add_subdirectory(firmware/usb/video)
 add_library(miku_jpeg STATIC firmware/usb/jpeg/mjpeg.c firmware/usb/jpeg/performance_frame.c)
 target_include_directories(miku_jpeg PUBLIC ${CMAKE_SOURCE_DIR})
@@ -169,4 +177,16 @@ add_test(NAME bank_tool COMMAND ${Python3_EXECUTABLE} -I ${CMAKE_SOURCE_DIR}/tes
 
 if(NOT MSVC)
  add_test(NAME face_clock COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tests/test_face_clock.py ${CMAKE_SOURCE_DIR} ${CMAKE_C_COMPILER})
+endif()
+
+# Offline phrase editor: generated distributable and native/JS interoperability.
+add_test(NAME editor_html COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tools/build_editor.py --check)
+set_tests_properties(editor_html PROPERTIES SKIP_RETURN_CODE 77)
+find_program(EDITOR_NODE_EXECUTABLE node)
+if(EDITOR_NODE_EXECUTABLE)
+  add_executable(editor_vectors tests/editor_vectors.c)
+  target_link_libraries(editor_vectors PRIVATE miku_song)
+  add_test(NAME editor_js COMMAND ${CMAKE_COMMAND}
+    "-DVECTORS=$<TARGET_FILE:editor_vectors>" "-DNODE=${EDITOR_NODE_EXECUTABLE}"
+    -P "${CMAKE_SOURCE_DIR}/tests/test_editor.cmake")
 endif()

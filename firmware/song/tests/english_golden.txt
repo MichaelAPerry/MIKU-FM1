@@ -1,0 +1,1045 @@
+# CHIMERA reference, FM-1 device rules enabled
+# CHIMERA C port copyright (c) 2026 Shan-Sherif and upstream copyright (c) 2026 Jameson Hodge (MIT)
+# CMUdict copyright (C) 1993-2015 Carnegie Mellon University (BSD-2-Clause, LICENSES/CMUdict.txt)
+W	a	AH0
+W	about	AH0 B AW1 T
+W	above	AH0 B AH1 V
+W	across	AH0 K R AO1 S
+W	after	AE1 F T ER0
+W	again	AH0 G EH1 N
+W	against	AH0 G EH1 N S T
+W	ah	AA1
+W	all	AO1 L
+W	almost	AO1 L M OW2 S T
+W	alone	AH0 L OW1 N
+W	along	AH0 L AO1 NG
+W	already	AO0 L R EH1 D IY0
+W	also	AO1 L S OW0
+W	always	AO1 L W EY2 Z
+W	am	AE1 M
+W	among	AH0 M AH1 NG
+W	an	AE1 N
+W	and	AH0 N D
+W	angel	EY1 N JH AH0 L
+W	another	AH0 N AH1 DH ER0
+W	any	EH1 N IY0
+W	anyone	EH1 N IY0 W AH2 N
+W	anything	EH1 N IY0 TH IH2 NG
+W	anyway	EH1 N IY0 W EY2
+W	are	AA1 R
+W	around	ER0 AW1 N D
+W	as	AE1 Z
+W	at	AE1 T
+W	away	AH0 W EY1
+W	baby	B EY1 B IY0
+W	back	B AE1 K
+W	be	B IY1
+W	beautiful	B Y UW1 T AH0 F AH0 L
+W	because	B IH0 K AO1 Z
+W	become	B IH0 K AH1 M
+W	been	B IH1 N
+W	before	B IH0 F AO1 R
+W	began	B IH0 G AE1 N
+W	begin	B IH0 G IH1 N
+W	behind	B IH0 HH AY1 N D
+W	being	B IY1 IH0 NG
+W	believe	B IH0 L IY1 V
+W	below	B IH0 L OW1
+W	best	B EH1 S T
+W	better	B EH1 T ER0
+W	between	B IH0 T W IY1 N
+W	bigger	B IH1 G ER0
+W	bird	B ER1 D
+W	blue	B L UW1
+W	body	B AA1 D IY0
+W	both	B OW1 TH
+W	break	B R EY1 K
+W	breath	B R EH1 TH
+W	bring	B R IH1 NG
+W	brought	B R AO1 T
+W	burn	B ER1 N
+W	busy	B IH1 Z IY0
+W	but	B AH1 T
+W	by	B AY1
+W	call	K AO1 L
+W	came	K EY1 M
+W	can	K AE1 N
+W	carry	K AE1 R IY0
+W	cause	K AA1 Z
+W	change	CH EY1 N JH
+W	child	CH AY1 L D
+W	children	CH IH1 L D R AH0 N
+W	closer	K L OW1 S ER0
+W	cold	K OW1 L D
+W	come	K AH1 M
+W	coming	K AH1 M IH0 NG
+W	could	K UH1 D
+W	country	K AH1 N T R IY0
+W	course	K AO1 R S
+W	cry	K R AY1
+W	dance	D AE1 N S
+W	dark	D AA1 R K
+W	day	D EY1
+W	days	D EY1 Z
+W	dear	D IH1 R
+W	did	D IH1 D
+W	do	D UW1
+W	does	D AH1 Z
+W	done	D AH1 N
+W	door	D AO1 R
+W	down	D AW1 N
+W	dream	D R IY1 M
+W	dreams	D R IY1 M Z
+W	during	D UH1 R IH0 NG
+W	each	IY1 CH
+W	early	ER1 L IY0
+W	earth	ER1 TH
+W	easy	IY1 Z IY0
+W	eight	EY1 T
+W	eighteen	EY0 T IY1 N
+W	eighty	EY1 T IY0
+W	either	IY1 DH ER0
+W	eleven	IH0 L EH1 V AH0 N
+W	else	EH1 L S
+W	end	EH1 N D
+W	enough	IH0 N AH1 F
+W	even	IY1 V IH0 N
+W	ever	EH1 V ER0
+W	every	EH1 V ER0 IY0
+W	everyone	EH1 V R IY0 W AH2 N
+W	everything	EH1 V R IY0 TH IH2 NG
+W	eye	AY1
+W	eyes	AY1 Z
+W	face	F EY1 S
+W	fall	F AO1 L
+W	family	F AE1 M AH0 L IY0
+W	far	F AA1 R
+W	faster	F AE1 S T ER0
+W	father	F AA1 DH ER0
+W	feel	F IY1 L
+W	feeling	F IY1 L IH0 NG
+W	feet	F IY1 T
+W	few	F Y UW1
+W	fifteen	F IH0 F T IY1 N
+W	fifty	F IH1 F T IY0
+W	find	F AY1 N D
+W	fire	F AY1 ER0
+W	first	F ER1 S T
+W	five	F AY1 V
+W	floor	F L AO1 R
+W	fly	F L AY1
+W	follow	F AA1 L OW0
+W	food	F UW1 D
+W	for	F AO1 R
+W	forever	F ER0 EH1 V ER0
+W	forty	F AO1 R T IY0
+W	four	F AO1 R
+W	fourteen	F AO1 R T IY1 N
+W	free	F R IY1
+W	friend	F R EH1 N D
+W	friends	F R EH1 N D Z
+W	from	F R AH1 M
+W	front	F R AH1 N T
+W	full	F UH1 L
+W	gave	G EY1 V
+W	get	G EH1 T
+W	girl	G ER1 L
+W	give	G IH1 V
+W	given	G IH1 V AH0 N
+W	go	G OW1
+W	goes	G OW1 Z
+W	going	G OW1 IH0 NG
+W	gold	G OW1 L D
+W	gone	G AO1 N
+W	good	G UH1 D
+W	goodbye	G UH2 D B AY1
+W	got	G AA1 T
+W	great	G R EY1 T
+W	group	G R UW1 P
+W	grow	G R OW1
+W	guess	G EH1 S
+W	had	HH AE1 D
+W	hand	HH AE1 N D
+W	hands	HH AE1 N D Z
+W	happen	HH AE1 P AH0 N
+W	happy	HH AE1 P IY0
+W	hard	HH AA1 R D
+W	harder	HH AA1 R D ER0
+W	has	HH AE1 Z
+W	have	HH AE1 V
+W	he	HH IY1
+W	head	HH EH1 D
+W	hear	HH IY1 R
+W	heard	HH ER1 D
+W	heart	HH AA1 R T
+W	heaven	HH EH1 V AH0 N
+W	hello	HH AH0 L OW1
+W	help	HH EH1 L P
+W	her	HH ER1
+W	here	HH IY1 R
+W	hey	HH EY1
+W	high	HH AY1
+W	higher	HH AY1 ER0
+W	him	HH IH1 M
+W	his	HH IH1 Z
+W	hold	HH OW1 L D
+W	home	HH OW1 M
+W	hope	HH OW1 P
+W	house	HH AW1 S
+W	how	HH AW1
+W	however	HH AW2 EH1 V ER0
+W	hundred	HH AH1 N D R AH0 D
+W	i	AY1
+W	idea	AY0 D IY1 AH0
+W	if	IH1 F
+W	important	IH2 M P AO1 R T AH0 N T
+W	in	IH0 N
+W	inside	IH2 N S AY1 D
+W	into	IH1 N T UW0
+W	is	IH1 Z
+W	it	IH1 T
+W	its	IH1 T S
+W	just	JH AH1 S T
+W	keep	K IY1 P
+W	kind	K AY1 N D
+W	kiss	K IH1 S
+W	knew	N UW1
+W	know	N OW1
+W	known	N OW1 N
+W	la	L AA1
+W	language	L AE1 NG G W AH0 JH
+W	last	L AE1 S T
+W	late	L EY1 T
+W	later	L EY1 T ER0
+W	laugh	L AE1 F
+W	learn	L ER1 N
+W	least	L IY1 S T
+W	leave	L IY1 V
+W	left	L EH1 F T
+W	less	L EH1 S
+W	let	L EH1 T
+W	life	L AY1 F
+W	light	L AY1 T
+W	like	L AY1 K
+W	line	L AY1 N
+W	listen	L IH1 S AH0 N
+W	little	L IH1 T AH0 L
+W	live	L IH1 V
+W	lonely	L OW1 N L IY0
+W	long	L AO1 NG
+W	longer	L AO1 NG G ER0
+W	look	L UH1 K
+W	lord	L AO1 R D
+W	lose	L UW1 Z
+W	lost	L AO1 S T
+W	louder	L AW1 D ER0
+W	love	L AH1 V
+W	lower	L OW1 ER0
+W	made	M EY1 D
+W	make	M EY1 K
+W	man	M AE1 N
+W	many	M EH1 N IY0
+W	may	M EY1
+W	maybe	M EY1 B IY0
+W	me	M IY1
+W	mean	M IY1 N
+W	men	M EH1 N
+W	might	M AY1 T
+W	mind	M AY1 N D
+W	money	M AH1 N IY0
+W	moon	M UW1 N
+W	more	M AO1 R
+W	morning	M AO1 R N IH0 NG
+W	most	M OW1 S T
+W	mother	M AH1 DH ER0
+W	move	M UW1 V
+W	much	M AH1 CH
+W	music	M Y UW1 Z IH0 K
+W	must	M AH1 S T
+W	my	M AY1
+W	na	N AA1
+W	name	N EY1 M
+W	near	N IH1 R
+W	need	N IY1 D
+W	never	N EH1 V ER0
+W	new	N UW1
+W	next	N EH1 K S T
+W	night	N AY1 T
+W	nine	N AY1 N
+W	nineteen	N AY1 N T IY1 N
+W	ninety	N AY1 N T IY0
+W	no	N OW1
+W	nor	N AO1 R
+W	not	N AA1 T
+W	nothing	N AH1 TH IH0 NG
+W	now	N AW1
+W	number	N AH1 M B ER0
+W	ocean	OW1 SH AH0 N
+W	of	AH1 V
+W	often	AO1 F AH0 N
+W	oh	OW1
+W	okay	OW2 K EY1
+W	old	OW1 L D
+W	older	OW1 L D ER0
+W	on	AA1 N
+W	once	W AH1 N S
+W	one	W AH1 N
+W	only	OW1 N L IY0
+W	ooh	UW1
+W	open	OW1 P AH0 N
+W	or	AO1 R
+W	other	AH1 DH ER0
+W	others	AH1 DH ER0 Z
+W	our	AW1 ER0
+W	out	AW1 T
+W	over	OW1 V ER0
+W	own	OW1 N
+W	people	P IY1 P AH0 L
+W	person	P ER1 S AH0 N
+W	picture	P IH1 K CH ER0
+W	place	P L EY1 S
+W	play	P L EY1
+W	please	P L IY1 Z
+W	point	P OY1 N T
+W	power	P AW1 ER0
+W	pretty	P R IH1 T IY0
+W	put	P UH1 T
+W	question	K W EH1 S CH AH0 N
+W	quite	K W AY1 T
+W	rain	R EY1 N
+W	rather	R AE1 DH ER0
+W	really	R IH1 L IY0
+W	right	R AY1 T
+W	river	R IH1 V ER0
+W	road	R OW1 D
+W	room	R UW1 M
+W	rose	R OW1 Z
+W	round	R AW1 N D
+W	run	R AH1 N
+W	said	S EH1 D
+W	same	S EY1 M
+W	saw	S AO1
+W	say	S EY1
+W	says	S EH1 Z
+W	school	S K UW1 L
+W	sea	S IY1
+W	second	S EH1 K AH0 N D
+W	see	S IY1
+W	seem	S IY1 M
+W	seen	S IY1 N
+W	sense	S EH1 N S
+W	set	S EH1 T
+W	seven	S EH1 V AH0 N
+W	seventeen	S EH1 V AH0 N T IY1 N
+W	seventy	S EH1 V AH0 N T IY0
+W	several	S EH1 V R AH0 L
+W	shall	SH AE1 L
+W	she	SH IY1
+W	should	SH UH1 D
+W	show	SH OW1
+W	side	S AY1 D
+W	since	S IH1 N S
+W	sing	S IH1 NG
+W	six	S IH1 K S
+W	sixteen	S IH0 K S T IY1 N
+W	sixty	S IH1 K S T IY0
+W	sky	S K AY1
+W	small	S M AO1 L
+W	smile	S M AY1 L
+W	snow	S N OW1
+W	so	S OW1
+W	softer	S AA1 F T ER0
+W	some	S AH1 M
+W	someone	S AH1 M W AH2 N
+W	something	S AH1 M TH IH0 NG
+W	sometimes	S AH0 M T AY1 M Z
+W	song	S AO1 NG
+W	soon	S UW1 N
+W	soul	S OW1 L
+W	sound	S AW1 N D
+W	speak	S P IY1 K
+W	spring	S P R IH1 NG
+W	stand	S T AE1 N D
+W	star	S T AA1 R
+W	stars	S T AA1 R Z
+W	start	S T AA1 R T
+W	stay	S T EY1
+W	still	S T IH1 L
+W	stop	S T AA1 P
+W	story	S T AO1 R IY0
+W	street	S T R IY1 T
+W	strong	S T R AO1 NG
+W	stronger	S T R AO1 NG ER0
+W	such	S AH1 CH
+W	sugar	SH UH1 G ER0
+W	summer	S AH1 M ER0
+W	sun	S AH1 N
+W	sure	SH UH1 R
+W	sweet	S W IY1 T
+W	take	T EY1 K
+W	talk	T AO1 K
+W	tears	T EH1 R Z
+W	tell	T EH1 L
+W	ten	T EH1 N
+W	than	DH AE1 N
+W	that	DH AE1 T
+W	the	DH AH0
+W	their	DH EH1 R
+W	them	DH EH1 M
+W	then	DH EH1 N
+W	there	DH EH1 R
+W	they	DH EY1
+W	thing	TH IH1 NG
+W	things	TH IH1 NG Z
+W	think	TH IH1 NG K
+W	thirteen	TH ER1 T IY1 N
+W	thirty	TH ER1 D IY2
+W	this	DH IH1 S
+W	those	DH OW1 Z
+W	though	DH OW1
+W	thought	TH AO1 T
+W	thousand	TH AW1 Z AH0 N D
+W	three	TH R IY1
+W	through	TH R UW1
+W	time	T AY1 M
+W	to	T UW1
+W	today	T AH0 D EY1
+W	together	T AH0 G EH1 DH ER0
+W	told	T OW1 L D
+W	tomorrow	T AH0 M AA1 R OW2
+W	tonight	T AH0 N AY1 T
+W	too	T UW1
+W	took	T UH1 K
+W	touch	T AH1 CH
+W	toward	T AH0 W AO1 R D
+W	true	T R UW1
+W	try	T R AY1
+W	turn	T ER1 N
+W	twelve	T W EH1 L V
+W	twenty	T W EH1 N T IY0
+W	two	T UW1
+W	under	AH1 N D ER0
+W	until	AH0 N T IH1 L
+W	up	AH1 P
+W	upon	AH0 P AA1 N
+W	us	AH1 S
+W	use	Y UW1 S
+W	very	V EH1 R IY0
+W	voice	V OY1 S
+W	wait	W EY1 T
+W	walk	W AO1 K
+W	want	W AA1 N T
+W	warm	W AO1 R M
+W	was	W AA1 Z
+W	watch	W AA1 CH
+W	water	W AO1 T ER0
+W	way	W EY1
+W	we	W IY1
+W	well	W EH1 L
+W	went	W EH1 N T
+W	were	W ER1
+W	what	W AH1 T
+W	when	W EH1 N
+W	where	W EH1 R
+W	whether	W EH1 DH ER0
+W	which	W IH1 CH
+W	while	W AY1 L
+W	white	W AY1 T
+W	who	HH UW1
+W	whole	HH OW1 L
+W	whose	HH UW1 Z
+W	why	W AY1
+W	wild	W AY1 L D
+W	will	W IH1 L
+W	wind	W IH1 N D
+W	window	W IH1 N D OW0
+W	wish	W IH1 SH
+W	with	W IH1 DH
+W	without	W IH0 TH AW1 T
+W	woman	W UH1 M AH0 N
+W	women	W IH1 M AH0 N
+W	wonder	W AH1 N D ER0
+W	word	W ER1 D
+W	words	W ER1 D Z
+W	work	W ER1 K
+W	world	W ER1 L D
+W	would	W UH1 D
+W	write	R AY1 T
+W	wrong	R AO1 NG
+W	yeah	Y AE1
+W	year	Y IH1 R
+W	years	Y IH1 R Z
+W	yes	Y EH1 S
+W	yesterday	Y EH1 S T ER0 D EY2
+W	yet	Y EH1 T
+W	you	Y UW1
+W	young	Y AH1 NG
+W	younger	Y AH1 NG G ER0
+W	your	Y AO1 R
+W	yourself	Y ER0 S EH1 L F
+W	zero	Z IH1 R OW0
+W	abacus	EY1 B EY0 K AH0 Z
+W	abandon	EY1 B AE0 N D AA0 N
+W	abbreviate	AE1 B R EH0 V IH0 EY0 T
+W	abdomen	AE1 B D OW0 M EH0 N
+W	aberration	EY1 B ER0 R EY0 SH AH0 N
+W	abhor	AE1 B HH AO0 R
+W	abrasion	AE1 B R EY0 ZH AH0 N
+W	abruptly	AE1 B R AH0 P T L IY0
+W	absolute	AE1 B S OW0 L UW0 T
+W	absorb	AE1 B S AO0 R B
+W	abstract	AE1 B S T R AE0 K T
+W	abundant	EY1 B AH0 N D AE0 N T
+W	abyss	EY1 B AY0 S
+W	academic	EY1 K EY0 D EH0 M IH0 K
+W	accelerate	AE1 K S EH0 L EH0 R EY0 T
+W	access	AE1 K S EH0 S
+W	accordion	AE1 K AO0 R D IH0 AA0 N
+W	accumulate	AE1 K UW0 M UW0 L EY0 T
+W	accurate	AE1 K ER0 EY0 T
+W	acetone	EY1 S EH0 T OW0 N
+W	acknowledge	AE1 K N AW0 L EH0 JH
+W	acoustic	EY1 K AW0 S T IH0 K
+W	acrobat	AE1 K R OW0 B AE0 T
+W	activate	AE1 K T AY0 V EY0 T
+W	acute	EY1 K UW0 T
+W	adapt	EY1 D AE0 P T
+W	addition	AE1 D AY0 SH AH0 N
+W	adhesive	AE1 D HH EH0 S AY0 V
+W	adjacent	AE1 D JH EY0 S EH0 N T
+W	adjust	AE1 D JH AH0 S T
+W	administer	AE1 D M AY0 N IH0 S T ER0
+W	admirable	AE1 D M ER0 AE0 B AH0 L
+W	adolescent	EY1 D OW0 L EH0 S S EH0 N T
+W	adopt	EY1 D AA0 P T
+W	adventure	AE1 D V EH0 N CH ER0
+W	aerobic	AE1 EH0 R OW0 B IH0 K
+W	aerosol	AE1 EH0 R OW0 S AA0 L
+W	aerospace	AE1 EH0 R AA0 S P EY0 S
+W	affable	AE1 F AE0 B AH0 L
+W	affection	AE1 F EH0 K SH AH0 N
+W	affirm	AE1 F ER0 M
+W	affluent	AE1 F L AH0 EH0 N T
+W	afford	AE1 F AO0 R D
+W	afghan	AE1 F AE0 N
+W	aftermath	AE1 F T ER0 M AE0 TH
+W	agency	EY1 JH EH0 N S IY0
+W	aggregate	AE1 G R EH0 G EY0 T
+W	agitation	EY1 JH AY0 T EY0 SH AH0 N
+W	agrarian	AE1 G R AA0 R IH0 AE0 N
+W	agriculture	AE1 G R AY0 K AH0 L CH ER0
+W	aisle	EY1 S AH0 L
+W	algebra	AE1 L JH EH0 B R AE0
+W	algorithm	AE1 L G AO0 R IH0 TH M
+W	alien	EY1 L IY0 N
+W	alignment	EY1 L IH0 G N M EH0 N T
+W	alkaline	AE1 L K EY0 L AY0 N
+W	allergy	AO1 L ER0 G IY0
+W	alloy	AO1 L OY0
+W	alphabet	AE1 L F EY0 B EH0 T
+W	altitude	AE1 L T AY0 T UW0 D
+W	amateur	EY1 M EY0 T EH0 ER0
+W	ambiguity	AE1 M B AY0 G AH0 AY0 T IY0
+W	ambulance	AE1 M B UW0 L AE0 N S
+W	ambush	AE1 M B AH0 SH
+W	ammonite	AE1 M OW0 N AY0 T
+W	amphora	AE1 M F AO0 R AE0
+W	amplify	AE1 M P L AY0 F IY0
+W	analogy	EY1 N EY0 L OW0 G IY0
+W	analyst	EY1 N EY0 L AY0 S T
+W	anatomy	EY1 N EY0 T OW0 M IY0
+W	ancestry	AE1 N S EH0 S T R IY0
+W	anchor	AE1 N CH AO0 R
+W	anecdote	EY1 N EH0 K D OW0 T
+W	angular	AE1 NG G UW0 L AA0 R
+W	animate	EY1 N AY0 M EY0 T
+W	ankle	AE1 NG K AH0 L
+W	annex	AE1 N EH0 K S
+W	annotate	AE1 N OW0 T EY0 T
+W	anomaly	EY1 N OW0 M EY0 L IY0
+W	antelope	AE1 N T EH0 L OW0 P
+W	antenna	AE1 N T EH0 N AE0
+W	anthem	AE1 N TH EH0 M
+W	antique	AE1 N T AY0 K W
+W	anxiety	AE1 N K S IY0 T IY0
+W	apology	EY1 P OW0 L OW0 G IY0
+W	apparatus	AE1 P AA0 R EY0 T AH0 Z
+W	apparel	AE1 P AA0 R EH0 L
+W	appetite	AE1 P EH0 T AY0 T
+W	applaud	AE1 P L AO0 D
+W	appliance	AE1 P L IH0 AE0 N S
+W	apricot	AE1 P R AY0 K AA0 T
+W	aquarium	EY1 K W AA0 R IH0 AH0 M
+W	aquatic	EY1 K W EY0 T IH0 K
+W	arcadia	AA1 R K EY0 D IH0 AE0
+W	architect	AA1 R CH AY0 T EH0 K T
+W	archive	AA1 R CH AY0 V
+W	arctic	AA1 R K T IH0 K
+W	arena	AA1 R EH0 N AE0
+W	arithmetic	AA1 R IH0 TH M EH0 T IH0 K
+W	armadillo	AA1 R M EY0 D IH0 L AA0
+W	aromatic	AA1 R OW0 M EY0 T IH0 K
+W	articulate	AA1 R T AY0 K UW0 L EY0 T
+W	artwork	AA1 R T W ER0 K
+W	ascension	AE1 S S EH0 N ZH AH0 N
+W	ashtray	AE1 SH T R EY0
+W	asparagus	AE1 S P AA0 R EY0 G AH0 Z
+W	asteroid	AE1 S T EH0 R OY0 D
+W	astronaut	AE1 S T R OW0 N AO0 T
+W	atlas	AE1 T L AE0 Z
+W	atmosphere	AE1 T M AA0 S F EH0 R
+W	atomic	EY1 T OW0 M IH0 K
+W	attachment	AE1 T AE0 CH M EH0 N T
+W	attic	AE1 T IH0 K
+W	audible	AO1 D IH0 B AH0 L
+W	audition	AO1 D AY0 SH AH0 N
+W	aurora	AO1 R AO0 R AE0
+W	authentic	AO1 TH EH0 N T IH0 K
+W	avocado	EY1 V OW0 K EY0 D AA0
+W	axle	AE1 K S AH0 L
+W	babble	B AE1 B AH0 L
+W	backdrop	B AE1 K D R AA0 P
+W	backpack	B AE1 K P AE0 K
+W	bacteria	B AE1 K T EH0 R IH0 AE0
+W	badge	B AE1 JH
+W	bagel	B EY1 JH EH0 L
+W	balcony	B AE1 L K OW0 N IY0
+W	ballet	B AO1 L EH0 T
+W	balloon	B AO1 L UW0 N
+W	bamboo	B AE1 M B UW0
+W	banana	B EY1 N EY0 N AE0
+W	bandage	B AE1 N D EY0 JH
+W	bandit	B AE1 N D IH0 T
+W	banjo	B AE1 N JH AA0
+W	banks	B AE1 NG K S
+W	barbecue	B AA1 R B EH0 K UW0
+W	barge	B AA1 R JH
+W	barnacle	B AA1 R N AE0 K AH0 L
+W	basalt	B EY1 S AE0 L T
+W	basket	B AE1 S K EH0 T
+W	bassoon	B AE1 S UW0 N
+W	battery	B AE1 T EH0 R IY0
+W	beacon	B IY1 K AA0 N
+W	beagle	B IY1 G AH0 L
+W	beaker	B IY1 K ER0
+W	beanstalk	B IY1 N S T AE0 L K
+W	beetle	B IY1 T AH0 L
+W	bellow	B EH1 L OW0
+W	bending	B EH1 N D IH0 NG
+W	beverage	B EH1 V EH0 R EY0 JH
+W	bicycle	B AY1 S AY0 K AH0 L
+W	binocular	B AY1 N OW0 K UW0 L AA0 R
+W	birch	B ER1 CH
+W	biscuit	B IH1 S K AH0 IH0 T
+W	bison	B AY1 S AA0 N
+W	bizarre	B AY1 Z AA0 R R
+W	blackberry	B L AE1 K B ER0 R IY0
+W	blanket	B L AE1 NG K EH0 T
+W	blender	B L EH1 N D ER0
+W	blister	B L IH1 S T ER0
+W	blossom	B L AA1 S AA0 M
+W	blueprint	B L AH1 EH0 P R IH0 N T
+W	boathouse	B OW1 TH AW0 S
+W	bobcat	B AA1 B K AE0 T
+W	bogey	B OW1 JH IY0
+W	boiler	B OY1 L ER0
+W	bolt	B AA1 L T
+W	bonnet	B AA1 N EH0 T
+W	bookshelf	B UH1 K SH EH0 L F
+W	boomerang	B UW1 M EH0 R AE0 NG
+W	bootstrap	B UW1 T S T R AE0 P
+W	boulder	B AW1 L D ER0
+W	boundary	B AW1 N D AA0 R IY0
+W	boutique	B AW1 T AY0 K W
+W	boxes	B OW1 K S IH0 Z
+W	bracelet	B R EY1 S EH0 L EH0 T
+W	bramble	B R AE1 M B AH0 L
+W	brass	B R AE1 S
+W	brazier	B R EY1 Z IY0 R
+W	breadcrumb	B R IY1 D K R AH0 M
+W	breakwater	B R IY1 K W EY0 T ER0
+W	brewery	B R EH1 W EH0 R IY0
+W	briar	B R IH1 AA0 R
+W	brilliant	B R IH1 L IH0 AE0 N T
+W	bristle	B R IH1 S T AH0 L
+W	brittle	B R IH1 T AH0 L
+W	bronze	B R AA1 N Z
+W	broomstick	B R UW1 M S T IH0 K
+W	browser	B R AW1 S ER0
+W	bubble	B AH1 B AH0 L
+W	bucket	B AH1 K EH0 T
+W	buckle	B AH1 K AH0 L
+W	buffalo	B AH1 F EY0 L AA0
+W	buffet	B AH1 F EH0 T
+W	bulldozer	B AH1 L D OW0 Z ER0
+W	bungalow	B AH1 NG G EY0 L OW0
+W	buoy	B AH1 OY0
+W	burden	B ER1 D EH0 N
+W	burglary	B ER1 G L AA0 R IY0
+W	burlap	B ER1 L AE0 P
+W	bushes	B AH1 SH IH0 Z
+W	butterfly	B AH1 T ER0 F L IY0
+W	button	B AH1 T AA0 N
+W	buzzard	B AH1 Z AA0 R D
+W	cabbage	K AE1 B EY0 JH
+W	cabin	K EY1 B IH0 N
+W	cactus	K AE1 K T AH0 Z
+W	cadence	K EY1 D EH0 N S
+W	cafeteria	K EY1 F EH0 T EH0 R IH0 AE0
+W	calcium	K AE1 L S IH0 AH0 M
+W	calendar	K EY1 L EH0 N D AA0 R
+W	calibration	K EY1 L IH0 B R EY0 SH AH0 N
+W	camel	K EY1 M EH0 L
+W	camera	K EY1 M EH0 R AE0
+W	camouflage	K EY1 M AW0 F L EY0 JH
+W	campfire	K AE1 M P F ER0
+W	canal	K EY1 N AE0 L
+W	candle	K AE1 N D AH0 L
+W	canoe	K EY1 N AA0
+W	canopy	K EY1 N OW0 P IY0
+W	canvas	K AE1 N V AE0 Z
+W	capsule	K AE1 P S UW0 AH0 L
+W	captain	K AE1 P T EY0 N
+W	caramel	K AA1 R EY0 M EH0 L
+W	caravan	K AA1 R EY0 V AE0 N
+W	carbon	K AA1 R B AA0 N
+W	cardboard	K AA1 R D B OW0 R D
+W	cardinal	K AA1 R D AY0 N AE0 L
+W	cargo	K AA1 R G AA0
+W	carnation	K AA1 R N EY0 SH AH0 N
+W	carnival	K AA1 R N AY0 V AE0 L
+W	carousel	K AA1 R AW0 S EH0 L
+W	carpenter	K AA1 R P EH0 N T ER0
+W	cartilage	K AA1 R T AY0 L EY0 JH
+W	casserole	K AE1 S EH0 R OW0 AH0 L
+W	cassette	K AE1 S EH0 T
+W	catalog	K EY1 T EY0 L AA0 G
+W	catalyst	K EY1 T EY0 L AY0 S T
+W	cathedral	K AE1 TH EH0 D R AE0 L
+W	cauliflower	K AO1 L IH0 F L AW0 ER0
+W	cavern	K EY1 V ER0 N
+W	cedar	S EH1 D AA0 R
+W	ceiling	S EY1 L IH0 NG
+W	celery	S EH1 L EH0 R IY0
+W	cement	S EH1 M EH0 N T
+W	census	S EH1 N S AH0 Z
+W	ceramic	S EH1 R EY0 M IH0 K
+W	cereal	S EH1 R IY0 L
+W	chalk	CH AE1 L K
+W	charcoal	CH AA1 R K OW0 L
+W	chariot	CH AA1 R IH0 AA0 T
+W	checksum	CH EH1 K S AH0 M
+W	chestnut	CH EH1 S T N AH0 T
+W	chickadee	CH IH1 K EY0 D IY0
+W	chimney	CH IH1 M N IY0
+W	chipmunk	CH IH1 P M AH0 NG K
+W	chisel	CH AY1 S EH0 L
+W	chrome	CH R OW1 M
+W	chrysalis	CH R AY1 S EY0 L IH0 Z
+W	cinnamon	S IH1 N EY0 M AA0 N
+W	circuit	S ER1 K AH0 IH0 T
+W	circus	S ER1 K AH0 Z
+W	citation	S AY1 T EY0 SH AH0 N
+W	clarinet	K L AA1 R AY0 N EH0 T
+W	classroom	K L AE1 S R UW0 M
+W	claw	K L AO1
+W	clayton	K L EY1 T AA0 N
+W	cleaver	K L IY1 V ER0
+W	clerk	K L ER1 K
+W	cliff	K L IH1 F
+W	clockwise	K L AA1 K W AY0 S
+W	clover	K L OW1 V ER0
+W	cobbler	K AA1 B L ER0
+W	coconut	K OW1 K OW0 N AH0 T
+W	codebook	K OW1 D EH0 B UH0 K
+W	comet	K OW1 M EH0 T
+W	compass	K AA1 M P AE0 S
+W	compound	K AA1 M P AW0 N D
+W	concert	K AA1 N S ER0 T
+W	concrete	K AA1 N K R EH0 T
+W	conductor	K AA1 N D AH0 K T AO0 R
+W	continent	K AA1 N T AY0 N EH0 N T
+W	conveyor	K AA1 N V EH0 IH0 AO0 R
+W	copper	K AA1 P ER0
+W	coral	K AO1 R AE0 L
+W	cornet	K AO1 R N EH0 T
+W	cosmic	K AA1 S M IH0 K
+W	cottage	K AA1 T EY0 JH
+W	cotton	K AA1 T AA0 N
+W	cougar	K AW1 G AA0 R
+W	counterpoint	K AW1 N T ER0 P OY0 N T
+W	courier	K AW1 R IY0 R
+W	crater	K R EY1 T ER0
+W	cricket	K R IH1 K EH0 T
+W	crocus	K R OW1 K AH0 Z
+W	crooked	K R UH1 K T
+W	crossword	K R AA1 S W ER0 D
+W	crystal	K R AY1 S T AE0 L
+W	cucumber	K UW1 K AH0 M B ER0
+W	cupboard	K AH1 P B OW0 R D
+W	cyclone	S AY1 K L OW0 N
+W	cymbal	S AY1 M B AE0 L
+W	dachshund	D AE1 CH SH AH0 N D
+W	daffodil	D AE1 F OW0 D IH0 L
+W	dagger	D AE1 G ER0
+W	dairy	D EY1 R IY0
+W	dandelion	D AE1 N D EH0 L IH0 AA0 N
+W	decimal	D EH1 S AY0 M AE0 L
+W	decorate	D EH1 K AO0 R EY0 T
+W	detergent	D EH1 T ER0 JH EH0 N T
+W	diamond	D IH1 EY0 M AA0 N D
+W	dictionary	D IH1 K SH AH0 N AA0 R IY0
+W	diesel	D IY1 S EH0 L
+W	diner	D AY1 N ER0
+W	dinosaur	D AY1 N OW0 S AO0 R
+W	diode	D IH1 OW0 D
+W	diploma	D IH1 P L OW0 M AE0
+W	diver	D AY1 V ER0
+W	dolphin	D AA1 L F IH0 N
+W	domino	D OW1 M AY0 N AA0
+W	dragonfly	D R EY1 G AA0 N F L IY0
+W	drizzle	D R IH1 Z AH0 L
+W	drummer	D R AH1 M ER0
+W	duchess	D AH1 CH EH0 S
+W	dungeon	D AH1 NG G EH0 AA0 N
+W	duplex	D AH1 P L EH0 K S
+W	dustpan	D AH1 S T P AE0 N
+W	earmark	IY1 R M AA0 R K
+W	earthworm	IY1 R TH W ER0 M
+W	eclipse	EH1 K L IH0 P S
+W	ecology	EH1 K OW0 L OW0 G IY0
+W	eggplant	EH1 G P L AE0 N T
+W	elastic	EH1 L AE0 S T IH0 K
+W	elbow	EH1 L B OW0
+W	electrode	EH1 L EH0 K T R OW0 D
+W	elephant	EH1 L EH0 F AE0 N T
+W	elevator	EH1 L EH0 V EY0 T AO0 R
+W	elk	EH1 L K
+W	ember	EH1 M B ER0
+W	emerald	EH1 M EH0 R AE0 L D
+W	enamel	EH1 N EY0 M EH0 L
+W	engine	EH1 NG G AY0 N
+W	envelope	EH1 N V EH0 L OW0 P
+W	enzyme	EH1 N Z AY0 M
+W	equator	EH1 K W EY0 T AO0 R
+W	erosion	EH1 R OW0 ZH AH0 N
+W	escalator	EH1 S K EY0 L EY0 T AO0 R
+W	espresso	EH1 S P R EH0 S AA0
+W	estuary	EH1 S T AH0 AA0 R IY0
+W	eucalyptus	EH1 UW0 K EY0 L AY0 P T AH0 Z
+W	evergreen	EH1 V ER0 G R IY0 N
+W	excavator	EH1 K S K EY0 V EY0 T AO0 R
+W	exclamation	EH1 K S K L EY0 M EY0 SH AH0 N
+W	exhibit	EH1 K S HH AY0 B IH0 T
+W	expedition	EH1 K S P EH0 D AY0 SH AH0 N
+W	explorer	EH1 K S P L AO0 R ER0
+W	fable	F AE1 B AH0 L
+W	falcon	F AE1 L K AA0 N
+W	feather	F IY1 TH ER0
+W	fern	F ER1 N
+W	filament	F AY1 L EY0 M EH0 N T
+W	filter	F IH1 L T ER0
+W	firefly	F ER1 EH0 F L IY0
+W	firewall	F ER1 EH0 W AO0 L
+W	flask	F L AE1 S K
+W	flute	F L UW1 T
+W	foghorn	F AA1 AO0 R N
+W	follicle	F AA1 L IH0 K AH0 L
+W	fossil	F AA1 S IH0 L
+W	fountain	F AW1 N T EY0 N
+W	foxglove	F AA1 K S G L OW0 V
+W	fractal	F R AE1 K T AE0 L
+W	freckle	F R EH1 K AH0 L
+W	freighter	F R EY1 T ER0
+W	fringe	F R IH1 NG G
+W	frostbite	F R AA1 S T B AY0 T
+W	gadget	G AE1 JH T
+W	galactic	G EY1 L AE0 K T IH0 K
+W	gallop	G AO1 L AA0 P
+W	gantry	G AE1 N T R IY0
+W	garland	G AA1 R L AE0 N D
+W	gasoline	G EY1 S OW0 L AY0 N
+W	gazebo	G EY1 Z EH0 B AA0
+W	gearshift	JH IY1 R SH IH0 F T
+W	gecko	JH EH1 K AA0
+W	glacier	G L EY1 S IY0 R
+W	glassware	G L AE1 S W AA0 R
+W	globular	G L OW1 B UW0 L AA0 R
+W	glows	G L OW1 Z
+W	glyph	G L AY1 F
+W	gnome	G N OW1 M
+W	goggles	G AA1 G L Z
+W	gondola	G AA1 N D OW0 L AE0
+W	gooseberry	G UW1 S EH0 B ER0 R IY0
+W	gorilla	G AO1 R IH0 L AE0
+W	gossamer	G AA1 S EY0 M ER0
+W	graphite	G R AE1 F AY0 T
+W	grasshopper	G R AE1 S HH AA0 P ER0
+W	gravel	G R EY1 V EH0 L
+W	gremlin	G R EH1 M L IH0 N
+W	grocery	G R OW1 S EH0 R IY0
+W	guava	G AH1 EY0 V AE0
+W	guitar	G AH1 AY0 T AA0 R
+W	habitat	HH EY1 B AY0 T AE0 T
+W	haddock	HH AE1 D AA0 K
+W	hailstone	HH EY1 L S T OW0 N
+W	halibut	HH EY1 L AY0 B AH0 T
+W	hammock	HH AE1 M AA0 K
+W	hamster	HH AE1 M S T ER0
+W	handrail	HH AE1 N D R EY0 L
+W	harpsichord	HH AA1 R P S IH0 CH AO0 R D
+W	hawthorn	HH AO1 TH AO0 R N
+W	hazelnut	HH EY1 Z EH0 L N AH0 T
+W	hedgehog	HH EH1 JH HH AA0 G
+W	heliotrope	HH EH1 L IH0 AA0 T R OW0 P
+W	helix	HH EH1 L IH0 K S
+W	helmet	HH EH1 L M EH0 T
+W	heron	HH EH1 R AA0 N
+W	hexagon	HH EH1 K S EY0 G AA0 N
+W	hippocampus	HH IH1 P OW0 K AE0 M P AH0 Z
+W	holster	HH AA1 L S T ER0
+W	honeysuckle	HH OW1 N EH0 IH0 S AH0 K AH0 L
+W	horizon	HH AO1 R AY0 Z AA0 N
+W	huckleberry	HH AH1 K L EH0 B ER0 R IY0
+W	hummingbird	HH AH1 M IH0 NG G B ER0 D
+W	hydrofoil	HH AY1 D R OW0 F OY0 L
+W	hyphen	HH AY1 F EH0 N
+W	iceberg	AY1 S EH0 B ER0 G
+W	igloo	IH1 G L UW0
+W	iguana	AY1 G AH0 EY0 N AE0
+W	impala	IH1 M P EY0 L AE0
+W	incense	IH1 N S EH0 N S
+W	incubator	IH1 N K UW0 B EY0 T AO0 R
+W	infinity	IH1 N F AY0 N AY0 T IY0
+W	inkwell	IH1 NG K W EH0 L
+W	insect	IH1 N S EH0 K T
+W	inspector	IH1 N S P EH0 K T AO0 R
+W	iota	IH1 OW0 T AE0
+W	isthmus	IH1 S TH M AH0 Z
+W	ivy	AY1 V IY0
+W	jackal	JH AE1 K AE0 L
+W	jasmine	JH AE1 S M AY0 N
+W	javelin	JH EY1 V EH0 L IH0 N
+W	jellyfish	JH EH1 L AY0 F IH0 SH
+W	joystick	JH OY1 S T IH0 K
+W	juniper	JH UW1 N AY0 P ER0
+W	kaleidoscope	K EY1 L EY0 D AA0 S K OW0 P
+W	kayak	K EY1 AE0 K
+W	kerosene	K EH1 R OW0 S EH0 N
+W	kestrel	K EH1 S T R EH0 L
+W	kettle	K EH1 T AH0 L
+W	kimono	K AY1 M OW0 N AA0
+W	kiosk	K IH1 AA0 S K
+W	kiwi	K AY1 W IH0
+W	knapsack	N AE1 P S AE0 K
+W	kneaded	N IY1 D IH0 D
+W	knighted	N AY1 T IH0 D
+W	knitted	N IH1 T IH0 D
+W	knuckle	N AH1 K AH0 L
+W	labyrinth	L EY1 B AY0 R IH0 N TH
+W	lacquer	L AE1 K K W ER0
+W	ladle	L AE1 D AH0 L
+W	ladybug	L EY1 D AY0 B AH0 G
+W	lantern	L AE1 N T ER0 N
+W	larch	L AA1 R CH
+W	lasagna	L EY1 S AE0 G N AE0
+W	latitude	L EY1 T AY0 T UW0 D
+W	lavender	L EY1 V EH0 N D ER0
+W	ledger	L EH1 JH R
+W	lemur	L EH1 M ER0
+W	lentil	L EH1 N T IH0 L
+W	leopard	L EH1 OW0 P AA0 R D
+W	library	L IH1 B R AA0 R IY0
+W	licorice	L AY1 K AO0 R AY0 S
+W	lilac	L AY1 L AE0 K
+W	limpet	L IH1 M P EH0 T
+W	linoleum	L AY1 N OW0 L EH0 AH0 M
+W	lizard	L AY1 Z AA0 R D
+W	llama	L EY1 M AE0
+W	lobster	L AA1 B S T ER0
+W	locomotive	L OW1 K OW0 M OW0 T AY0 V
+W	lodestone	L OW1 D EH0 S T OW0 N
+W	lotus	L OW1 T AH0 Z
+W	lunar	L UW1 N AA0 R
+W	lupine	L UW1 P AY0 N
+W	macaroni	M EY1 K AA0 R OW0 N IH0
+W	machine	M AE1 CH AY0 N
+W	mackerel	M AE1 K EH0 R EH0 L
+W	magnet	M AE1 G N EH0 T
+W	magnolia	M AE1 G N OW0 L IH0 AE0
+W	mahogany	M EY1 HH OW0 G EY0 N IY0
+W	mailbox	M EY1 L B AA0 K S
+W	mallet	M AO1 L EH0 T
+W	mandolin	M AE1 N D OW0 L IH0 N
+W	mangrove	M AE1 NG G R OW0 V
+W	mannequin	M AE1 N EH0 K W IH0 N
+W	mantis	M AE1 N T IH0 Z
+W	maple	M AE1 P AH0 L
+W	marmalade	M AA1 R M EY0 L EY0 D
+W	marshmallow	M AA1 R SH M AO0 L OW0
+W	marten	M AA1 R T EH0 N
+W	matrix	M AE1 T R IH0 K S
+W	meadowlark	M IY1 D AW0 L AA0 R K
+W	megaphone	M EH1 G AE0 F OW0 N
+W	mercury	M ER1 K ER0 IY0
+W	meteor	M EH1 T EH0 AO0 R
+W	microscope	M IH1 K R AA0 S K OW0 P
+W	microwave	M IH1 K R AW0 EY0 V
+W	mildew	M IH1 L D EH0 W
+W	millipede	M IH1 L AY0 P EH0 D
+W	miniature	M AY1 N IH0 EY0 CH ER0
+W	minnow	M IH1 N OW0
+W	mistletoe	M IH1 S T L EH0 T AA0
+W	modular	M OW1 D UW0 L AA0 R
+W	molecule	M OW1 L EH0 K UW0 AH0 L
+W	mongoose	M AA1 NG G UW0 S
+W	monitor	M OW1 N AY0 T AO0 R
+W	monolith	M OW1 N OW0 L IH0 TH
+W	mopboard	M AA1 P B OW0 R D
+W	mosaic	M OW1 S EY0 K
+W	mosquito	M AA1 S K W AY0 T AA0
+W	moth	M AA1 TH
+W	muffler	M AH1 F L ER0
+W	notes	N OW1 T S
+W	quasar	K W EY1 S AA0 R
+W	red	R D
+W	shed	SH D
+W	sphinx	S F IH1 N K S
+W	tapes	T EY1 P S
+W	wishes	W IH1 SH IH0 Z
+W	wolfhound	W AA1 L F HH AW0 N D
+W	wordsmith	W ER1 D S M IH0 TH
+W	xylophone	K S AY1 L AA0 F OW0 N
+W	yawning	Y AO1 N IH0 NG
+W	zigzag	Z IH1 G Z AE0 G
+W	zombified	Z AA1 M B AY0 F IY0 D
+T	I have 2 apples, and 3 pears.	AY0 | HH AH0 V | T UW1 | AE1 P L Z / AH0 N D | TH R IY1 | P IY1 R Z /
+T	Can you read 42?	K AH0 N | Y UW0 | R IY1 D | F AO1 R DX IY0 | T UW1 /
+T	We live at 100 Main Street.	W IY0 | L IH1 V | AH0 T | W AH1 N | HH AH1 N D R AH0 D | M EY1 N | S T R IY1 T /
+T	It was 101, then 110.	IH0 T | W AH0 Z | W AH1 N | HH AH1 N D R AH0 D | W AH1 N / DH AH0 N | W AH1 N | HH AH1 N D R AH0 D | T EH1 N /
+T	Wind the clock to 999!	W IH1 N D | DH AH0 | K L AA1 K | T UW0 | N AY1 N | HH AH1 N D R AH0 D | N AY1 N T IY0 | N AY1 N /
+T	My number is 1000.	M AY0 | N AH1 M B ER0 | IH0 Z | W AH1 N | TH AW1 Z AH0 N D /
+T	Did 1001 arrive?	D IH0 D | W AH1 N | TH AW1 Z AH0 N D | W AH1 N | AA1 R R AY0 V /
+T	There are 1010 stars; count them.	DH AH0 R | AH0 R | W AH1 N | TH AW1 Z AH0 N D | T EH1 N | S T AA1 R Z / K AW1 N T | DH AH0 M /
+T	The tag said 1100, not 1101.	DH AH0 | T AE1 G | S EH1 D | W AH1 N | TH AW1 Z AH0 N D | W AH1 N | HH AH1 N D R AH0 D / N AA0 T | W AH1 N | TH AW1 Z AH0 N D | W AH1 N | HH AH1 N D R AH0 D | W AH1 N /
+T	Lead with 12034.	L IY1 D | W IH0 DH | T W EH1 L V | TH AW1 Z AH0 N D | TH ER1 D IY2 | F AO1 R /
+T	Can we close at 200000?	K AH0 N | W IY0 | K L OW1 Z | AH0 T | T UW1 | HH AH1 N D R AH0 D | TH AW1 Z AH0 N D /
+T	I saw 999999 lights.	AY0 | S AO1 | N AY1 N | HH AH1 N D R AH0 D | N AY1 N T IY0 | N AY1 N | TH AW1 Z AH0 N D | N AY1 N | HH AH1 N D R AH0 D | N AY1 N T IY0 | N AY1 N | L AY1 T S /
+T	That costs 1000000!	DH AH0 T | K AA1 S T S | W AH1 N | Z IH1 R OW0 | Z IH1 R OW0 | Z IH1 R OW0 | Z IH1 R OW0 | Z IH1 R OW0 | Z IH1 R OW0 /
+T	Look at 000007 and 0000007.	L UH1 K | AH0 T | S EH1 V AH0 N | AH0 N D | Z IH1 R OW0 | Z IH1 R OW0 | Z IH1 R OW0 | Z IH1 R OW0 | Z IH1 R OW0 | Z IH1 R OW0 | S EH1 V AH0 N /
+T	The clock shows 12:30.	DH AH0 | K L AA1 K | SH OW1 Z | T W EH1 L V / TH ER1 D IY2 /
+T	It reads 3.14, yes?	IH0 T | R IY1 D Z | TH R IY1 / F AO1 R T IY1 N / Y EH1 S /
+T	Play 1-2-3!	P L EY1 | W AH1 N | T UW1 | TH R IY1 /
+T	We have 0 dollars.	W IY0 | HH AH0 V | Z IH1 R OW0 | D AA1 L AA0 R Z /
+T	Is it -17 or 17?	IH0 Z | IH0 T | S EH1 V AH0 N T IY1 N | AH0 R | S EH1 V AH0 N T IY1 N /
+T	Read 007, please.	R IY1 D | S EH1 V AH0 N / P L IY1 Z /
+T	I can see A1B2.	AY0 | K AH0 N | S IY1 | AH0 | W AH1 N | B | T UW1 /
+T	Did 9 go? Yes, 8 stayed.	D IH0 D | N AY1 N | G OW1 / Y EH1 S / EY1 T | S T EY1 D /
+T	Well... 500 came in?!	W EH1 L / F AY1 V | HH AH1 N D R AH0 D | K EY1 M | IH0 N /
+T	I bought 19 and 20.	AY0 | B AW1 T | N AY1 N T IY1 N | AH0 N D | T W EH1 N T IY0 /
+T	She wound it to 86.	SH IY0 | W UW1 N D | IH0 T | T UW0 | EY1 DX IY0 | S IH1 K S /
+T	They said 'hello', then 4.	DH EY0 | S EH1 D | HH AH0 L OW1 / DH AH0 N | F AO1 R /
+T	We saw 23 blue-green birds.	W IY0 | S AO1 | T W EH1 N T IY0 | TH R IY1 | B L UW1 G R IY1 N | B ER1 D Z /
+T	Around 2, the city had a little water.	ER0 AW1 N D | T UW1 / DH AH0 | S AY1 DX IY0 | HH AH0 DX | AH0 | L IH1 DX AH0 L | W AO1 DX ER0 /
+T	I had 8 medals, a medal for 1 event.	AY0 | HH AH0 D | EY1 T | M EH1 DX AE0 L Z / AH0 | M EH1 DX AE0 L | F AH0 R | W AH1 N | EH1 V EH0 N T /
+T	A rider put 7 bottles on the table!	AH0 | R AY1 DX ER0 | P UH1 T | S EH1 V AH0 N | B AA1 T L Z | AH0 N | DH AH0 | T AE1 B AH0 L /

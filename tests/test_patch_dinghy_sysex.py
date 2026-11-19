@@ -14,7 +14,7 @@ with tempfile.TemporaryDirectory() as t:
     d = tree(t, USB, OTA); ps.patch(t)
     u = (d / 'usb.c').read_text(); o = (d / 'ota.c').read_text()
     assert 'sx_frame[4104]' in u and 'sx_frame[640]' in u and '#ifdef FELUCCA_LOADER' in u    # the loader keeps 640
-    assert o.count('app_sysex(fp, fn)') == 1 and 'fp[0] == 0x43u' in o and 'd = ota_take();' in o and '#ifndef FELUCCA_LOADER' in o
+    assert o.count('app_sysex(fp, fn)') == 1 and 'fp[0] == 0x43u' in o and 'fp[0] == 0x7Du' in o and 'd = ota_take();' in o and '#ifndef FELUCCA_LOADER' in o
     try: ps.patch(t); raise SystemExit('second application must refuse')
     except ValueError: pass
 with tempfile.TemporaryDirectory() as t:                      # after the video patch both branches carry the buffer

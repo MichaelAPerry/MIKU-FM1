@@ -67,7 +67,11 @@ function draw(){
   }}
  }
  faceContext.imageSmoothingEnabled=false;faceContext.fillStyle='#0c1428';faceContext.fillRect(0,0,90,90);
- if(portrait.complete&&portrait.naturalWidth)faceContext.drawImage(portrait,(e&&e.level?e.mouth<5?e.mouth+2:7:0)*90,0,90,90,0,0,90,90);
+ if(portrait.complete&&portrait.naturalWidth){
+  const sounding=e&&e.level>=(e.mouth===5?6:1);
+  const viseme=e&&e.level>=100?e.mouth:5;
+  faceContext.drawImage(portrait,sounding?viseme*90:0,sounding?90:0,90,90,0,0,90,90);
+ }
  if(atlas.complete&&atlas.naturalWidth)ctx.drawImage(atlas,(e?e.sprite:0)*61,0,61,71,29,1,183,213);
  ctx.fillStyle='#f77bb4';ctx.font='12px monospace';ctx.textAlign='center';
  ctx.fillText(e?`${e.lyric.toUpperCase()||'A'} · ${mouth[e.mouth]}`:outfit.options[outfit.selectedIndex].textContent,120,230);

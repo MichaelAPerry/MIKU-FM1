@@ -8,6 +8,12 @@
 enum { FV_A, FV_I, FV_U, FV_E, FV_O };
 /* consonant classes: same numbering as MC_* of firmware/song/mora.h (checked by tests/test_mora_voice.c) */
 enum { FC_NONE, FC_K, FC_S, FC_SH, FC_T, FC_CH, FC_TS, FC_N, FC_H, FC_F, FC_M, FC_Y, FC_R, FC_W, FC_G, FC_Z, FC_J, FC_D, FC_B, FC_P, FC_NN };
+/* English (0.9): a syllable as phoneme codes, 0 = none. Codes are firmware/song/english.h's EP_* (ARPAbet order,
+   1..15 vowels, 16..39 consonants) plus 40 = AX, the schwa (an unstressed AH); tests check the numbering. */
+#define FV_EP_AX 40
+typedef struct { uint8_t on[3], v, co[4]; } FvSyl;
+/* mouth pictures (fv_viseme) */
+enum { FVV_REST, FVV_MBP, FVV_FV, FVV_TH, FVV_EE, FVV_EH, FVV_AH, FVV_OH, FVV_OO, FVV_UH, FVV_L, FVV_R, FVV_N };
 typedef struct { int32_t g, a1, a2; } FvRes;
 typedef struct {
     /* params: set directly (fv_init gives defaults) */
@@ -42,6 +48,10 @@ typedef struct {
     int32_t vg, vgs, vgt, nl, nls, nlt, ap, aps, apt, cl, clt, ny1, ny2, nbc[3];
     uint16_t km, nkd;
     uint8_t cons, cph, cleft, cshp, lip, nzon, tail, nab, fcyc;
+    /* English: the vowel's formant shape (Japanese: = vowel), a diphthong's second shape (255: none) and the blocks
+       until its glide; queued onset / coda consonant classes; coda: the release starts at the coda's held end */
+    uint8_t vsh, vsh2, oqn, kqn, coda, oq[2], kq[3];
+    uint16_t dgl;
 } FvVoice;
 void fv_init(FvVoice *v);
 void fv_note_on(FvVoice *v, uint8_t midi_note, uint8_t vowel, uint8_t velocity); /* gated: legato */
@@ -54,6 +64,14 @@ uint32_t fv_cons_ms(uint8_t cons);                  /* ms from the note start un
 void fv_note_off(FvVoice *v);
 void fv_set_vowel(FvVoice *v, uint8_t vowel);       /* 0..4 = A I U E O */
 void fv_render(FvVoice *v, int32_t *out, uint32_t frames); /* ADDS stereo Q15 L R */
+/* English: onset consonants (a cluster plays them in turn) then the vowel (a diphthong glides to its second shape);
+   fv_note_off_syl closes into the coda, then releases. fv_syl_onset_ms / fv_syl_coda_ms: the time from the note start
+   to the vowel, and the coda's length, so a sequencer can put the vowel on the beat and end the word on time. */
+void fv_note_on_syl(FvVoice *v, uint8_t midi_note, const FvSyl *s, uint8_t velocity);
+void fv_note_off_syl(FvVoice *v, const FvSyl *s);
+uint32_t fv_syl_onset_ms(const FvSyl *s);
+uint32_t fv_syl_coda_ms(const FvSyl *s);
+uint8_t fv_viseme(const FvVoice *v);               /* FVV_*: the mouth picture for what sounds now */
 uint8_t fv_mouth(const FvVoice *v);                 /* 0..4 vowel, 5 closed (silent, or lips shut: m b p closure, the n hum) */
 uint8_t fv_cons(const FvVoice *v);                  /* FC_* while a consonant sounds, else FC_NONE */
 uint8_t fv_level(const FvVoice *v);                 /* envelope 0..255 */

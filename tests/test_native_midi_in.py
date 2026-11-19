@@ -8,7 +8,7 @@ code = '''#include <stdint.h>
 #include <assert.h>
 enum {TR_VOCAL, TR_CHORDS, TR_BASS, TR_DRUMS};
 enum {EN_ON = 4, EN_OFF, EN_BEND = 10, EN_SUSTAIN};
-static int en; static uint8_t kn_track[27]; static struct { uint32_t notes; } fm1_in; static uint32_t ed_mora;
+static int en; static uint8_t kn_track[27]; static struct { uint32_t notes; } fm1_in; static uint32_t ed_mora; static uint32_t vmora(uint32_t kt){(void)kt;return ed_mora;}
 static unsigned n_ev, ev[64][5]; static int accept = 1;
 static unsigned en_post(void *e, unsigned k, unsigned a, unsigned b, unsigned c) {
     (void)e; if (!accept) return 0; ev[n_ev][0] = k; ev[n_ev][1] = a; ev[n_ev][2] = b; ev[n_ev][3] = c; n_ev++; return 1; }

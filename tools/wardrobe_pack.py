@@ -303,7 +303,9 @@ typedef struct {
         ff, sf, hashes = load_entry(entry, base)
         faces, fp, fi = normalize(ff, 90, 90)
         faces, composite = compose_portraits(faces, fp, tuple(entry.get('face_expression_box', [25, 28, 42, 39])))
+        faces = compact.with_neutral_mouth_frames(faces)
         fi.update(composite)
+        fi['opaque_pixels'] = [int(np.count_nonzero(frame)) for frame in faces]
         fi['distinct_frames'] = len({a.tobytes() for a in faces})
         stage, sp, si = normalize(sf, 61, 71, feet=True)
         if fi['distinct_frames'] < 2 or si['distinct_frames'] < 2:

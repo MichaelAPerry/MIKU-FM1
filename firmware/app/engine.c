@@ -24,13 +24,30 @@ static const int8_t hiv[7] = { 0, -12, 3, 4, 5, 7, 12 };
 static int32_t hint_st(const Voice *x) { return hiv[x->hint * 7u / 101u]; }
 static uint32_t csc(const Voice *x) { return 25u + x->clen * 3u / 2u; }                  /* consonant length, % */
 static uint32_t obd(const Voice *x) { return x->obeat * 2911u / 100u * csc(x) / 100u; }  /* band delay, frames */
+static int syl_of(const Engine *e, uint32_t mora, FvSyl *s) {   /* 1: an English syllable (live slot or the song's table) */
+    const SgSyl *t;
+    uint32_t k;
+    if (mora >= EN_LIVE0) { *s = e->live[mora - EN_LIVE0]; return 1; }
+    if (!(t = sg_syl(e->g, mora))) return 0;
+    for (k = 0; k < 3u; k++) s->on[k] = t->ph[k];
+    s->v = t->ph[3];
+    for (k = 0; k < 4u; k++) s->co[k] = t->ph[4u + k];
+    return 1;
+}
 static void hnote(Engine *e, int32_t note, uint32_t cons, uint32_t vw, uint32_t vel) {
     int32_t iv = hint_st(&e->g->vx);
     if (!iv) return;
     note += iv;
     fv_note_on_mora(&e->fv2, (uint8_t)(note < 1 ? 1 : note > 127 ? 127 : note), (uint8_t)cons, (uint8_t)vw, (uint8_t)vel);
 }
-static void voff(Engine *e) { fv_note_off(&e->fv); fv_note_off(&e->fv2); }
+static void voff(Engine *e) {                  /* English: the coda, then the release */
+    if (e->eng) { fv_note_off_syl(&e->fv, &e->esyl); fv_note_off_syl(&e->fv2, &e->esyl); }
+    else { fv_note_off(&e->fv); fv_note_off(&e->fv2); }
+}
+void en_set_live(Engine *e, uint32_t slot, const FvSyl *s) {
+    if (slot < EN_NLIVE) e->live[slot] = *s;
+    __asm__ volatile("" ::: "memory");          /* the slot is written before the command that names it */
+}
 uint32_t en_pre(uint32_t t, uint32_t p) { return (t==TR_CHORDS||t==TR_BASS)&&p>=SG_DX7_FIRST&&p<=SG_DX7_LAST?p:p < npre[t] ? p : 0; }
 void en_init(Engine *e, const Song *g) {
     uint32_t t;
@@ -70,8 +87,27 @@ void en_unlock(Engine *e, uint32_t (*wait)(void)) {
 }
 typedef char en_cons_chk[((int)MC_NONE == (int)FC_NONE && (int)MC_K == (int)FC_K && (int)MC_NN == (int)FC_NN && (int)MC_P == (int)FC_P && (int)MC_Y == (int)FC_Y) ? 1 : -1];
 static void sing(Engine *e, uint32_t note, uint32_t mora, uint32_t vel, uint32_t flags) {   /* consonant + vowel; moraic n is a hum (vowel ignored) */
+    FvSyl s;
     e->deferred[TR_VOCAL][0]=0; /* a new mono note replaces any pedal-held release */
     if(flags & SQ_VOCAL_REATTACK)voff(e);
+    if (syl_of(e, mora, &s)) {                 /* English */
+        uint32_t k, n = 0;
+        if ((flags & VF_SUSTAIN) && e->fv.gated && e->eng) { for (k = 0; k < 3u; k++) s.on[k] = 0; s.v = e->esyl.v; }   /* HOLD: the same vowel, no onset */
+        else if (e->fv.gated && e->eng) {      /* legato: the previous coda leads into this onset ("world is" -> worl-dis), the 3 nearest the vowel */
+            uint8_t c[7];
+            for (k = 0; k < 4u; k++) if (e->esyl.co[k]) c[n++] = e->esyl.co[k];
+            for (k = 0; k < 3u; k++) if (s.on[k]) c[n++] = s.on[k];
+            for (k = 0; k < 3u; k++) s.on[k] = n > 2u - k ? c[n - 3u + k] : 0;
+            if (n < 3u) { for (k = 0; k < 3u; k++) s.on[k] = k < n ? c[k] : 0; }
+        }
+        if (e->g->vx.lang == VL_VOWEL) for (k = 0; k < 4u; k++) { if (k < 3u) s.on[k] = 0; s.co[k] = 0; }
+        fv_note_on_syl(&e->fv, (uint8_t)note, &s, (uint8_t)vel);
+        { int32_t iv = hint_st(&e->g->vx), hn = (int32_t)note + iv; if (iv) fv_note_on_syl(&e->fv2, (uint8_t)(hn < 1 ? 1 : hn > 127 ? 127 : hn), &s, (uint8_t)vel); }
+        e->esyl = s; e->eng = 1;
+        e->mora = mora; e->vnote = (uint8_t)note; e->vvel = (uint8_t)vel; e->bt = 0;
+        return;
+    }
+    e->eng = 0;
     uint32_t v = (flags & VF_SUSTAIN) && e->fv.gated ? e->vh : mora_vowel(mora);
     uint32_t lang = e->g->vx.lang, cons = lang == VL_VOWEL || (flags & VF_SUSTAIN) ? FC_NONE : mora_cons(mora);
     if (v < 5u) e->vh = (uint8_t)v;
@@ -145,9 +181,16 @@ static void vocal_event(Engine *e, const SqEvent *v, uint32_t on) {   /* a seque
         return;
     }
     if (on) {
-        uint32_t c = x->lang == VL_VOWEL || (v->aux & VF_SUSTAIN) ? 0u : fv_cons_ms((uint8_t)mora_cons(v->mora)) * 441u / 10u * csc(x) / 100u * x->obeat / 100u;
+        FvSyl s;
+        uint32_t ms = syl_of(e, v->mora, &s) ? fv_syl_onset_ms(&s) : fv_cons_ms((uint8_t)mora_cons(v->mora));
+        uint32_t c = x->lang == VL_VOWEL || (v->aux & VF_SUSTAIN) ? 0u : ms * 441u / 10u * csc(x) / 100u * x->obeat / 100u;
+        e->qmora = v->mora;
         vq_push(e, 1, d > c ? d - c : 0, v, ++e->vid);
-    } else vq_push(e, 0, d, v, e->vid);
+    } else {                                    /* English: the coda starts early enough to end with the note */
+        FvSyl s;
+        uint32_t c = syl_of(e, e->qmora, &s) && x->lang != VL_VOWEL ? fv_syl_coda_ms(&s) * 441u / 10u * csc(x) / 100u : 0u;
+        vq_push(e, 0, d > c ? d - c : 0, v, e->vid);
+    }
 }
 static void vq_run(Engine *e) {                    /* apply every queued event that is due, earliest first */
     for (;;) {
@@ -299,6 +342,6 @@ void en_render(Engine *e, int32_t *out, uint32_t n) {
         out[i] = (x * mg) >> 12;
     }
     mx_limit(out, n);
-    e->mouth = fv_mouth(&e->fv); e->level = fv_level(&e->fv);
+    e->mouth = fv_mouth(&e->fv); e->level = fv_level(&e->fv); e->vis = fv_viseme(&e->fv);
     e->act = (fv_level(&e->fv) > 40u) | (uint32_t)((ch_active(&e->ch)|dx_active(&e->dx[0])) != 0) << 1 | (uint32_t)((bs_active(&e->bs)|dx_active(&e->dx[1])) != 0) << 2 | (uint32_t)(dr_active(&e->dr) != 0) << 3;
 }

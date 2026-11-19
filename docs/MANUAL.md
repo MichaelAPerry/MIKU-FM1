@@ -1,4 +1,4 @@
-# Miku-FM 0.7 guide
+# Miku-FM 0.9 guide
 
 Miku-FM is a songwriter for the M-VAVE FM-1 with a singer on its screen. Four tracks (VOCAL, CHORDS, BASS, DRUMS), patterns, an
 arrangement, a mixer, a song generator, lyrics, DX7 voices you can edit and import, and ten song slots. This guide covers what
@@ -136,6 +136,43 @@ shows the syllable (or REST or HOLD), its length in steps, its note, and its mar
 A phrase has to fit in one bar of 16 steps. If a pattern has long or overlapping notes, LYRICS asks you to fix their lengths on
 PATTERN first.
 
+## PHRASE: English and the phrase bank
+
+Miku sings English as well as Japanese, in the same voice. English words become sounds through a pronouncing dictionary
+(CHIMERA's English front end): about 480 common words are built into the FM-1, and other words are read by spelling rules.
+The web editor has the full dictionary (about 135,000 words) and sends exact pronunciations. PHRASE holds 64 phrases on
+the FM-1, each up to 48 syllables, in English or Japanese.
+
+- **SELECT** picks the phrase. Every key sings its next syllable at that key's pitch; releasing the key ends the word (its
+  last consonants, such as the "d" of "world"). Hold a key and press another to glide into the next syllable.
+  **ALGORITHM** moves to another syllable.
+- A MIDI keyboard, or a DAW over USB, does the same: each note sings the next syllable, so any MIDI track becomes a lyric
+  track for Miku.
+- **REC** places the phrase into the song from the VOCAL pattern of the cursor row (**KNOB 4** moves the row), one
+  syllable per note, with the phrase's own melody if it has one, otherwise the notes already in the pattern. A long phrase
+  continues into the following empty patterns (up to 4). **GLO** undoes. The English syllables then show on LYRICS and
+  can be edited there like the Japanese ones.
+- **EDIT** opens the typing editor: the 27 keys type A to Z and space. **ALGORITHM** changes the character before the
+  cursor (digits, punctuation, and the romaji marks for Japanese), **SELECT** moves the cursor, **REC** deletes, **KNOB 1**
+  switches English or Japanese. **EDIT** again reads the words and stores the phrase; stop the song first, because
+  storing pauses the sound for a moment. If a word cannot be read, the cursor goes to it. **GLO** leaves without storing.
+
+English uses a set of mouth pictures on every outfit (lips closed for m, b and p; teeth on the lip for f and v; round for
+oo and w). A song with English saves in a newer song format; a song without English saves exactly as before, so older
+versions of Miku-FM can still open it.
+
+## The web editor
+
+The site's Editor page (editor.html) is a single file: saved to your computer it works without internet. Chrome or Edge
+talk to the FM-1; any browser can edit, listen and save files.
+
+- Type the words and see their syllables and pronunciation; change a word's pronunciation; write a melody on the piano
+  roll (one note per syllable); listen. The preview is Miku's own voice, the firmware's code running in the browser.
+- **Connect** reads the FM-1's 64 phrases and writes changed ones back (stop the song on the FM-1 before writing). It can
+  also send a phrase as a whole song: press **REC** on the FM-1 within 10 seconds to load it, then **SAVE** to keep it.
+- Import a MIDI file or a karaoke (.kar) file: pick a track, and its notes and lyrics become a phrase.
+- Save and load phrases and whole banks as .mikuphr files.
+
 ## LOOK
 
 LOOK is the singer's stage for the song you have loaded. **SELECT** picks one of 12 outfits (a portrait, a dancing body, a set of
@@ -255,7 +292,7 @@ Dexed too.
 ## MIDI keyboard in
 
 A MIDI keyboard on USB or the TRS jack plays the current track exactly like the keys: the singer on STAGE, DANCE and LIBRARY, otherwise
-the selected track (drums use the note modulo 12). The **sustain pedal** (CC 64) holds the notes of the singer, the chords and the bass, classic or DX7.
+the selected track (drums use the note modulo 12). On PHRASE each note sings the next syllable of the phrase. The **sustain pedal** (CC 64) holds the notes of the singer, the chords and the bass, classic or DX7.
 The **pitch bend wheel** bends DX7 chords and bass; the classic sounds ignore it. CC 120 and 123 release every held note. MIDI does not write pattern
 steps, and MIDI clock is ignored.
 

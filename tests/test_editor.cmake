@@ -1,0 +1,17 @@
+# SPDX-License-Identifier: GPL-3.0-only
+set(reference "${CMAKE_CURRENT_BINARY_DIR}/editor_reference.hex")
+set(record "${CMAKE_CURRENT_BINARY_DIR}/editor_record.hex")
+execute_process(COMMAND "${VECTORS}" OUTPUT_FILE "${reference}" RESULT_VARIABLE host_status)
+if(NOT host_status STREQUAL "0")
+  message(FATAL_ERROR "Host phrase compiler failed: ${host_status}")
+endif()
+execute_process(COMMAND "${NODE}" "${CMAKE_CURRENT_LIST_DIR}/test_editor.js" "${reference}" "${record}"
+  RESULT_VARIABLE node_status)
+if(NOT node_status STREQUAL "0")
+  message(FATAL_ERROR "Editor Node tests failed: ${node_status}")
+endif()
+execute_process(COMMAND "${VECTORS}" decode INPUT_FILE "${record}" OUTPUT_VARIABLE decoded RESULT_VARIABLE host_status)
+file(READ "${record}" expected)
+if(NOT host_status STREQUAL "0" OR NOT decoded STREQUAL expected)
+  message(FATAL_ERROR "Host ph_decode/ph_encode did not preserve the editor's record")
+endif()

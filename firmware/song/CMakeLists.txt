@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-only
 # Step 2a: song model, MKS2 file format, sequencer, mora table, demo song. Self-contained (no libc on device).
-add_library(miku_song STATIC dx7_edit.c dx7_sysex.c song.c song_io.c seq.c mora.c demo.c factory.c gen.c lyrics.c lyric_edit.c gen_next.c)
+add_library(miku_song STATIC dx7_edit.c dx7_sysex.c song.c song_io.c seq.c mora.c demo.c factory.c gen.c lyrics.c lyric_edit.c gen_next.c english.c)
 target_link_libraries(miku_song PUBLIC miku_dx7)
 target_include_directories(miku_song PUBLIC ${CMAKE_SOURCE_DIR})
 if(NOT MSVC)
@@ -55,3 +55,10 @@ target_link_libraries(factory_tests PRIVATE miku_song)
 add_test(NAME factory COMMAND factory_tests)
 add_executable(factory_export ${CMAKE_SOURCE_DIR}/tools/factory_export.c)
 target_link_libraries(factory_export PRIVATE miku_song)
+
+add_executable(miku_english_tests tests/test_english.c)
+target_link_libraries(miku_english_tests PRIVATE miku_song)
+if(NOT MSVC)
+  target_compile_options(miku_english_tests PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+add_test(NAME english COMMAND miku_english_tests "${CMAKE_CURRENT_SOURCE_DIR}/tests/english_golden.txt")

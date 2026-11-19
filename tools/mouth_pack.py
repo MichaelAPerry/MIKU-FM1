@@ -63,12 +63,12 @@ def portraits():
     registry = (ui / 'wardrobe_sprites.h').read_text().split('WD_OUTFITS[WD_OUTFIT_N] = {', 1)[1]
     entries = dict((entry['id'], entry) for entry in
                    json.loads((OUTFITS / 'manifest.json').read_text())['outfits'])
-    for slug, label, dirty_name in re.findall(
-            r'\{ "([^"]+)", "([^"]+)", &\w+, &\w+, \w+, \w+, (\w+), [01] \}', registry):
+    # The source portraits still have the vowel art used to design the overlay.
+    for slug, label in re.findall(
+            r'\{ "([^"]+)", "([^"]+)", &\w+, &\w+, \w+, \w+, \w+, [01] \}', registry):
         if slug == 'original':
             frames, rgb, _, _ = singer.build_faces()
             palette = [singer.to565((255, 0, 255))] + [singer.to565(c) for c in rgb]
-            dirty_source = (ui / 'singer_compact.h').read_text()
             expression = EXPRESSION
         else:
             entry = entries[slug]
@@ -76,11 +76,6 @@ def portraits():
             frames, palette, _ = wardrobe.normalize(source, 90, 90)
             expression = tuple(entry.get('face_expression_box', EXPRESSION))
             frames, _ = wardrobe.compose_portraits(frames, palette, expression)
-            dirty_source = (ui / 'wardrobe_sprites.h').read_text()
-        dirty = compact.parse(dirty_source, dirty_name)
-        for fi in FRAME_IDS:
-            if singer.dirty_rect(frames[0], frames[fi]) != tuple(dirty[4*fi:4*fi+4]):
-                raise ValueError(f'{slug}: stale portrait dirty rectangle for {singer.FACE_NAMES[fi]}')
         yield slug, label, np.asarray(frames), palette, expression
 
 

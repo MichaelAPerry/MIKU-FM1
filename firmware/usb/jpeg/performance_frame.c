@@ -1,8 +1,9 @@
 /* SPDX-License-Identifier: GPL-3.0-only */
 #include "performance_frame.h"
-#include "firmware/ui/singer_sprites.h"
 #if MIKU_COMPACT_SPRITES
 #include "firmware/ui/wardrobe_sprites.h"
+#else
+#include "firmware/ui/singer_sprites.h"
 #endif
 uint16_t mj_perf_pixel(void *state,uint32_t x,uint32_t y){
     const PerfState *s=(const PerfState*)state;

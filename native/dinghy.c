@@ -729,7 +729,7 @@ static void app_lcd_idle(void){
 /* ---- face: 4bpp sprite rows, 2x, into the canvas buffer, blitted (the panel wants bytes swapped: swap16) */
 #define FX 30u
 #define FY 2u
-/* English lip-sync (0.9): a face id FACE_MOUTH|v is the NEUTRAL frame with the shared mouth picture v (FVV_*) drawn at the
+/* A face id FACE_MOUTH|v is the NEUTRAL frame with the shared mouth picture v (FVV_*) drawn at the
    outfit's anchor: first the outfit's neutral lip line is cleared to skin (MOUTH_CLEAN_*), then the overlay (index 0 = see-through). */
 #define FACE_MOUTH 0x100u
 static void mouth_box(uint32_t *x,uint32_t *y){
@@ -787,7 +787,7 @@ static void face_set(uint32_t f){
     {uint32_t t=draw_start(&stage_profile);face_draw(f,x0,y0,x1-x0,y1-y0);draw_end(&stage_profile,t);}
 }
 static void face_update(void){
-    static const uint8_t vf[5]={SF_A,SF_I,SF_U,SF_E,SF_O};
+    static const uint8_t vf[5]={FVV_AH,FVV_EE,FVV_UH,FVV_EH,FVV_OH};
     static uint32_t lip_until;
     uint32_t now=fm1_ms,m=en.mouth,w;
     if(m==5u && en.level>=6u)lip_until=now+70u;              /* lips shut while sounding (m b p closure, the n hum): hold so a 40 ms face update sees it */
@@ -797,10 +797,9 @@ static void face_update(void){
     if(now-face_ms<40u)return;
     face_ms=now-(now-face_ms)%40u;
     if((int32_t)(now-happy_until)<0)w=SF_HAPPY;
-    else if(en.eng&&(int32_t)(now-lip_until)<0)w=FACE_MOUTH|FVV_MBP;
-    else if((int32_t)(now-lip_until)<0)w=SF_N;
-    else if(en.eng&&en.vis!=FVV_REST)w=FACE_MOUTH|en.vis;  /* English: the shared mouth pictures */
-    else if(m<5u)w=en.level>=100u?vf[m]:SF_N;
+    else if((int32_t)(now-lip_until)<0)w=FACE_MOUTH|FVV_MBP;
+    else if(en.eng&&en.vis!=FVV_REST)w=FACE_MOUTH|en.vis;
+    else if(m<5u)w=FACE_MOUTH|(en.level>=100u?vf[m]:FVV_MBP);
     else if((int32_t)(now-blink_until)<0)w=SF_BLINK;
     else if((int32_t)(now-next_blink)>=0){
         blink_until=now+120u;next_blink=now+2500u+(rng()>>16)%2500u;w=SF_BLINK;

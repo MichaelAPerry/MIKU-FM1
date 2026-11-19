@@ -34,16 +34,22 @@ int main(void){
  for(fm1_ms=0;fm1_ms<=1000;fm1_ms++){en.mouth=(fm1_ms/13)%5;face_update();}
  assert(count>10&&count<=25&&face_ms==1000);
  /* A short closure between ticks must survive to the next presentation. */
- face_cur=SF_A;en.mouth=5;fm1_ms=1010;face_update();
- assert(face_cur==SF_A&&face_ms==1000);
- en.mouth=0;fm1_ms=1040;face_update();assert(face_cur==SF_N&&last==1040);
- fm1_ms=1080;face_update();assert(face_cur==SF_A&&last==1080);
+ face_cur=FACE_MOUTH|FVV_AH;en.mouth=5;fm1_ms=1010;face_update();
+ assert(face_cur==(FACE_MOUTH|FVV_AH)&&face_ms==1000);
+ en.mouth=0;fm1_ms=1040;face_update();assert(face_cur==(FACE_MOUTH|FVV_MBP)&&last==1040);
+ fm1_ms=1080;face_update();assert(face_cur==(FACE_MOUTH|FVV_AH)&&last==1080);
  /* English: the shared mouth pictures, a short m/b/p closure latched like the Japanese one */
  en.eng=1;en.vis=FVV_AH;fm1_ms=1120;face_update();assert(face_cur==(FACE_MOUTH|FVV_AH));
  en.vis=FVV_MBP;fm1_ms=1130;face_update();en.vis=FVV_EE;fm1_ms=1160;face_update();assert(face_cur==(FACE_MOUTH|FVV_MBP));
  fm1_ms=1240;face_update();assert(face_cur==(FACE_MOUTH|FVV_EE));
  en.vis=FVV_REST;en.mouth=5;en.level=0;fm1_ms=1280;face_update();assert(!(face_cur&FACE_MOUTH));
  en.eng=0;en.level=100;
+ const unsigned vowels[]={FVV_AH,FVV_EE,FVV_UH,FVV_EH,FVV_OH};
+ for(en.mouth=0;en.mouth<5;en.mouth++){
+  fm1_ms+=40;face_update();assert(face_cur==(FACE_MOUTH|vowels[en.mouth]));
+ }
+ en.mouth=2;en.level=99;fm1_ms+=40;face_update();assert(face_cur==(FACE_MOUTH|FVV_MBP));
+ en.mouth=5;en.level=5;fm1_ms+=40;face_update();assert(face_cur==SF_NEUTRAL);
  /* A late status change must leave the musical-clock frame slot free. */
  dance_ms=1000;assert(dance_status_ready(1079));assert(!dance_status_ready(1080));
  assert(!dance_status_ready(1099));assert(!dance_status_ready(1100));

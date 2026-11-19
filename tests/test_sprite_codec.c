@@ -7,12 +7,13 @@
 #include <time.h>
 static int fails;
 #define CHECK(c) do{if(!(c)){fprintf(stderr,"FAIL line%d: %s\n",__LINE__,#c);fails++;}}while(0)
-static void exact(const SprAtlas*a,const uint8_t *const *original){
+static void exact(const SprAtlas*a,const uint8_t *const *original,unsigned face){
     CHECK(spr_validate(a));
     for(unsigned f=0;f<a->frames;f++)for(unsigned y=0;y<a->height;y++){
         uint8_t row[257];memset(row,0xa5,sizeof row);CHECK(spr_decode_row(a,f,y,row+1,255));CHECK(row[0]==0xa5&&row[a->width+1]==0xa5);
         for(unsigned x=0;x<a->width;x++){
-            unsigned p=y*a->width+x,b=original[f][p>>1],want=p&1u?b&15u:b>>4;uint8_t one=0xa5;
+            unsigned source=face&&f>=SF_A&&f<=SF_N?SF_NEUTRAL:f;
+            unsigned p=y*a->width+x,b=original[source][p>>1],want=p&1u?b&15u:b>>4;uint8_t one=0xa5;
             CHECK(row[x+1]==want);CHECK(spr_pixel(a,f,x,y,&one)&&one==want);
         }
     }
@@ -68,8 +69,12 @@ static void cost(const SprAtlas*a){
     printf("%ux%u row decode: %.2f us/frame host (includes validation)\n",a->width,a->height,1e6*(clock()-start)/CLOCKS_PER_SEC/iterations);
 }
 int main(void){
-    exact(&SC_FACE_ATLAS,SINGER_FACES);exact(&SC_STAGE_ATLAS,SINGER_STAGE);
-    CHECK(!memcmp(SC_FACE_PAL,SINGER_FACE_PAL,sizeof SC_FACE_PAL));CHECK(!memcmp(SC_STAGE_PAL,SINGER_STAGE_PAL,sizeof SC_STAGE_PAL));CHECK(!memcmp(SC_FACE_DIRTY,SINGER_FACE_DIRTY,sizeof SC_FACE_DIRTY));
+    exact(&SC_FACE_ATLAS,SINGER_FACES,1);exact(&SC_STAGE_ATLAS,SINGER_STAGE,0);
+    CHECK(!memcmp(SC_FACE_PAL,SINGER_FACE_PAL,sizeof SC_FACE_PAL));CHECK(!memcmp(SC_STAGE_PAL,SINGER_STAGE_PAL,sizeof SC_STAGE_PAL));
+    for(unsigned f=0;f<SF_COUNT;f++){
+        const uint8_t empty[4]={0};
+        CHECK(!memcmp(SC_FACE_DIRTY+4*f,f>=SF_A&&f<=SF_N?empty:SINGER_FACE_DIRTY[f],4));
+    }
     corrupt();cost(&SC_FACE_ATLAS);cost(&SC_STAGE_ATLAS);
     printf("sprite codec: %s\n",fails?"FAILED":"ok");return fails!=0;
 }

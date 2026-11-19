@@ -53,6 +53,7 @@ int main(void){
     for(unsigned i=0;i<16;i++)pw[i]=(uint16_t)(i+10),dpw[i]=swap16(SC_STAGE_PAL[i]);
     for(unsigned i=0;i<180;i++)hw[i]=90;
     for(unsigned f=0;f<SF_COUNT;f++){
+        if(f>=SF_A&&f<=SF_N)continue; /* These slots alias NEUTRAL and are never drawn. */
         memset(screen,0,sizeof screen);face_draw(f,0,0,90,90);lcd_sync();
         for(unsigned y=0;y<90;y++)for(unsigned x=0;x<90;x++){
             unsigned i=idx(SINGER_FACES[f],90,x,y);uint16_t want=i?pw[i]:c_disc;
@@ -66,7 +67,7 @@ int main(void){
         }
         assert(screen[0]==0);
     }
-    /* English lip-sync: every outfit x every mouth picture = NEUTRAL, its lip line cleared, the overlay on top */
+    /* Both languages: every outfit x every mouth picture uses the cleaned NEUTRAL face. */
     for(unsigned i=0;i<16;i++)mpw[i]=(uint16_t)(1000+i);
     for(unsigned outfit=0;outfit<WD_OUTFIT_N&&outfit<MOUTH_OUTFIT_COUNT;outfit++)for(unsigned v=0;v<MOUTH_COUNT;v++){
         uint8_t frow[90],mrow[MOUTH_W];unsigned mx=MOUTH_ANCHORS[2*outfit],my=MOUTH_ANCHORS[2*outfit+1];

@@ -2,6 +2,43 @@
 
 Who did what, with which model. Newest first.
 
+## 2026-11-19: merged the mouth-frame retirement, model = claude
+- Reviewed codex's change (Japanese lip-sync on the shared overlay; frames 2..7 of every face set = NEUTRAL at pack
+  time so the row dedupe stores nothing for them; identity test for every other frame). Native build: 512340 B used,
+  69224 B free (was 3596). Host ctest 65/65, emulator smoke ok, Japanese lip-sync checked in fm1-emu
+  (`docs/evidence/mouths/emu_japanese_lipsync.png`). Owner note: the old wavy closed mouth (N) is now the plain MBP line.
+
+## 2026-11-19 — Japanese shared mouth overlay, model = codex
+
+- STAGE now maps Japanese A/I/U/E/O to AH/EE/UH/EH/OH on the approved shared overlay. The 70 ms
+  closure latch and quiet-vowel closure use MBP. The companion review exports the same six
+  composites from the firmware atlas. USB JPEG rendering uses DANCE frames only.
+- Both compact packers alias face slots 2–7 to NEUTRAL and zero their dirty rectangles. The original
+  art and raw header are intact. The previous native symbol map contains the compact face data
+  and no raw face arrays. The mouth generator still reads the original expression art.
+- The identity test compares decoded retained portraits and DANCE frames against the pre-change
+  headers, and checks palette bytes, retained dirty rectangles, and packed DANCE arrays.
+  The table counts generated face arrays, including row IDs, offsets, payload, face palette,
+  and dirty rectangles. The native build is pending owner verification.
+- The [Japanese before/after sheet](docs/evidence/mouths/japanese_before_after.png) shows ORIGINAL,
+  ENCORE, PRISM, and NEON PUNK at 2×, including the closed mouth.
+
+| Face set | Before (B) | After (B) | Saved (B) |
+| --- | ---: | ---: | ---: |
+| Original | 18,521 | 14,375 | 4,146 |
+| Encore | 19,021 | 13,789 | 5,232 |
+| Off Duty | 19,037 | 13,714 | 5,323 |
+| Retro Wave | 20,714 | 14,829 | 5,885 |
+| Prism | 18,535 | 13,252 | 5,283 |
+| Neon Punk | 19,963 | 14,481 | 5,482 |
+| City Beat | 17,653 | 11,932 | 5,721 |
+| Signal Suit | 18,890 | 13,834 | 5,056 |
+| Summer Beat | 17,006 | 11,283 | 5,723 |
+| Snow Glow | 17,730 | 11,949 | 5,781 |
+| Festival | 19,146 | 13,119 | 6,027 |
+| Moon Circuit | 18,923 | 12,974 | 5,949 |
+| **Total** | **225,139** | **159,531** | **65,608** |
+
 ## 2026-11-19: PHRASE page, USB glue, engine test (0.9 step 6), model = claude
 - `native/phrase_ui.inc`: the PHRASE page (bank of 64 at PHRASES_AT, live syllable per key/MIDI note through the
   engine's live slots, REC places into up to 4 empty patterns with exact undo snapshots, typing editor: A-Z + space

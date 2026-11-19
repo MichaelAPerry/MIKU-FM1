@@ -41,7 +41,7 @@ cp "$ROOT"/firmware/app/engine.[ch] firmware/src/firmware/app/
 cp "$ROOT/firmware/ui/singer_sprites.h" firmware/src/firmware/ui/
 cp "$ROOT"/firmware/ui/performance.[ch] "$ROOT"/firmware/ui/scene_prefs.[ch] firmware/src/firmware/ui/
 cp "$ROOT"/firmware/ui/sprite_codec.[ch] firmware/src/firmware/ui/
-cp "$ROOT/firmware/ui/singer_compact.h" "$ROOT/firmware/ui/wardrobe_sprites.h" "$ROOT/firmware/ui/wardrobe_meta.h" "$ROOT/firmware/ui/stagefx_sprites.h" firmware/src/firmware/ui/
+cp "$ROOT/firmware/ui/singer_compact.h" "$ROOT/firmware/ui/wardrobe_sprites.h" "$ROOT/firmware/ui/mouth_sprites.h" "$ROOT/firmware/ui/wardrobe_meta.h" "$ROOT/firmware/ui/stagefx_sprites.h" firmware/src/firmware/ui/
 cp "$ROOT"/firmware/ui/stagefx.[ch] firmware/src/firmware/ui/
 if [ "$VIDEO" -eq 1 ]; then
     mkdir -p firmware/src/firmware/usb/video firmware/src/firmware/usb/jpeg

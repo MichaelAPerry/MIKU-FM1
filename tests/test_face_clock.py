@@ -15,8 +15,10 @@ source=r'''
 #include <assert.h>
 #include "firmware/ui/singer_sprites.h"
 #include "firmware/ui/performance.h"
+#include "firmware/audio/fvoice/fvoice.h"
+#define FACE_MOUTH 0x100u
 static uint32_t fm1_ms,face_ms,face_cur,blink_until,next_blink=100000,happy_until,count,last;
-static struct{unsigned mouth,level;}en;
+static struct{unsigned mouth,level,eng,vis;}en;
 static uint32_t playing=1,dance_cur,dance_ms,dance_profile,draw_cost,draws;
 static PerfState performance;
 static uint32_t draw_start(void*p){(void)p;return fm1_ms;}
@@ -36,6 +38,12 @@ int main(void){
  assert(face_cur==SF_A&&face_ms==1000);
  en.mouth=0;fm1_ms=1040;face_update();assert(face_cur==SF_N&&last==1040);
  fm1_ms=1080;face_update();assert(face_cur==SF_A&&last==1080);
+ /* English: the shared mouth pictures, a short m/b/p closure latched like the Japanese one */
+ en.eng=1;en.vis=FVV_AH;fm1_ms=1120;face_update();assert(face_cur==(FACE_MOUTH|FVV_AH));
+ en.vis=FVV_MBP;fm1_ms=1130;face_update();en.vis=FVV_EE;fm1_ms=1160;face_update();assert(face_cur==(FACE_MOUTH|FVV_MBP));
+ fm1_ms=1240;face_update();assert(face_cur==(FACE_MOUTH|FVV_EE));
+ en.vis=FVV_REST;en.mouth=5;en.level=0;fm1_ms=1280;face_update();assert(!(face_cur&FACE_MOUTH));
+ en.eng=0;en.level=100;
  /* A late status change must leave the musical-clock frame slot free. */
  dance_ms=1000;assert(dance_status_ready(1079));assert(!dance_status_ready(1080));
  assert(!dance_status_ready(1099));assert(!dance_status_ready(1100));

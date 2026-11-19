@@ -26,6 +26,7 @@ The singer's pictures are fan art of **Hatsune Miku**, a character of Crypton Fu
 **These files are the character art.** They are **not** GPL or MIT, and nobody can relicense them:
 
 - `assets/singer/` (including the paired outfit source sheets), `firmware/ui/singer_sprites.h` , `firmware/ui/singer_compact.h` and `firmware/ui/wardrobe_sprites.h` (that art as pixel data in the firmware),
+- `firmware/ui/mouth_sprites.h` (shared mouth overlay pixel data) and `docs/evidence/mouths/approval_sheet.png`,
 - `site/media/` pictures and video (banner, icons, `dancer.png`, `screens/`, `trailer.*`), `docs/card*.png`, `docs/screens/`.
 
 **What the PCL means for Miku-FM** (from the PCL text, articles 3 and 4, and the guidelines):

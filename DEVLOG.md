@@ -2,6 +2,26 @@
 
 Who did what, with which model. Newest first.
 
+## 2026-11-19 — Shared mouth overlay approval sheet, model = codex
+
+- Built 12 visemes from the original portrait pixels in a 17×10 box with nine RGB565 palette entries,
+  including transparency. The generator detects mouth changes inside hand-checked search windows and
+  emits 12 anchors in `WD_OUTFITS` order (ORIGINAL plus the 11 outfit sheets present in this worktree).
+  A sparse table replaces each neutral lip mark with its outfit's skin index before compositing.
+- The compact atlas arrays use 692 bytes. The full data accounts for 861 bytes on the 32-bit target,
+  including the palette, anchors, neutral lip table, and atlas descriptor. The generated header is
+  4,108 bytes. The indexed source sheet is 3,705 bytes and the 2× approval sheet is 310,112 bytes.
+- Reviewed each combined face at 2× and shortened the tall open vowels to clear the smallest chins.
+  The host test uses `spr_decode_row` to compare all 12 frames against both scales of the indexed PNG.
+- Owner review is open. Does FV need a stronger lower-lip bite to distinguish it from EE, and should OO
+  be more pursed to distinguish it from UH? Does R read as a forward lip shape at 2×? Should REST add
+  the shared mouth line to Encore and Prism, whose neutral source faces have no visible lip mark?
+- Merged and wired in by claude: `face_draw` draws NEUTRAL + the mouth picture for English (face id FACE_MOUTH|viseme),
+  dirty box = the mouth rect, m/b/p closures latched 70 ms like the Japanese ones. Japanese keeps its own frames until
+  the owner approves the sheet. Tests: every outfit x viseme pixel-exact (test_sprite_decode), English face clock.
+  Native: 563244 B (18320 free). Emulator smoke passes.
+
+
 ## 2026-11-19: MKS2 v6 and English in the engine (0.9 step 5), model = claude
 - `song.h/.c/song_io.c`: per-song table of up to 120 English syllables (phonemes + spelling); VOCAL mora bytes
   128..247 name them, 248..255 are the engine's live slots. v6 = v5 layout + table, written only when a step uses

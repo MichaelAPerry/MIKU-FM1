@@ -395,6 +395,14 @@ static int dictionary_word(const char *word, int reduce, en_lookup_fn lookup, vo
     return n;
 }
 
+static void en_zero_syl(EnSylOut *s)
+{
+    unsigned char *z = (unsigned char *)s;
+    unsigned k;
+    for (k = 0; k < sizeof *s; k++)
+        z[k] = 0;
+}
+
 static void strip_tail(char *word, int len)
 {
     while (len && word[len - 1] == '\'')
@@ -565,7 +573,8 @@ int en_syllabify(const uint8_t *ph, const uint8_t *stress, int n, const char *sp
         return EN_ERR_CAP;
     if (!count) {
         /* With no vowel, use both fields in reading order. */
-        EnSylOut syl = {0};
+        EnSylOut syl;
+        en_zero_syl(&syl);
         int i = 0;
         for (; i < n && i < COUNT(syl.s.on); i++)
             syl.s.on[i] = ph[i];
@@ -579,7 +588,8 @@ int en_syllabify(const uint8_t *ph, const uint8_t *stress, int n, const char *sp
     while (!EP_IS_VOWEL(ph[v]))
         v++;
     for (int i = 0; i < count; i++) {
-        EnSylOut syl = {0};
+        EnSylOut syl;
+        en_zero_syl(&syl);
         int next = n, end = n;
         int onset = v - start;
         if (onset > COUNT(syl.s.on)) {

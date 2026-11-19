@@ -58,6 +58,8 @@ endif()
 if(NOT MSVC)
   add_test(NAME sprite_decode COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tests/test_sprite_decode.py
     ${CMAKE_SOURCE_DIR} ${CMAKE_C_COMPILER})
+  add_test(NAME mouth_sprites COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tests/test_mouth_sprites.py
+    ${CMAKE_SOURCE_DIR} ${CMAKE_C_COMPILER})
 endif()
 
 add_library(miku_performance STATIC firmware/ui/performance.c firmware/ui/stagefx.c firmware/ui/scene_prefs.c)

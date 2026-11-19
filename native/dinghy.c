@@ -32,6 +32,7 @@ _Static_assert(!FL_JEDEC_OK(0xFFFFFFu),"unknown flash must remain rejected");
 #include "firmware/ui/singer_sprites.h"
 #include "firmware/ui/sprite_codec.c"
 #include "firmware/ui/wardrobe_sprites.h"
+#include "firmware/ui/mouth_sprites.h"
 #include "firmware/ui/performance.h"
 _Static_assert(WD_OUTFIT_N==PERF_OUTFIT_N,"wardrobe metadata mismatch");
 #include "firmware/ui/stagefx.c"
@@ -202,7 +203,7 @@ static uint32_t page,trk,crow,cstep,top,playing,ppos,prev_keys,dirty,full,cpu_ms
 static const char *toast_s;
 static uint32_t ed_len[3]={2,8,2},ed_vel=12,ed_mora,ed_q,ed_mode,ed_bf;
 static uint8_t kn[27],kn_track[27],hw[2u*SINGER_FACE_H];
-static uint16_t pw[16],dpw[16],c_bg,c_disc;
+static uint16_t pw[16],dpw[16],mpw[16],c_bg,c_disc;
 static uint32_t dance_cur=99,dance_ms;
 static PerfState performance;
 #if MIKU_UVC
@@ -722,9 +723,17 @@ static void app_lcd_idle(void){
 /* ---- face: 4bpp sprite rows, 2x, into the canvas buffer, blitted (the panel wants bytes swapped: swap16) */
 #define FX 30u
 #define FY 2u
+/* English lip-sync (0.9): a face id FACE_MOUTH|v is the NEUTRAL frame with the shared mouth picture v (FVV_*) drawn at the
+   outfit's anchor: first the outfit's neutral lip line is cleared to skin (MOUTH_CLEAN_*), then the overlay (index 0 = see-through). */
+#define FACE_MOUTH 0x100u
+static void mouth_box(uint32_t *x,uint32_t *y){
+    uint32_t o=performance.outfit<MOUTH_OUTFIT_COUNT?performance.outfit:0u;
+    *x=MOUTH_ANCHORS[2u*o];*y=MOUTH_ANCHORS[2u*o+1u];
+}
 static void face_draw(uint32_t f,uint32_t sx,uint32_t sy,uint32_t w,uint32_t h){
-    uint8_t row[SINGER_FACE_W];
-    uint32_t cr=CV_MAX/(4u*w),r0,r,c,k;
+    uint8_t row[SINGER_FACE_W],mrow[MOUTH_W];
+    uint32_t cr=CV_MAX/(4u*w),r0,r,c,k,mv=f&FACE_MOUTH?f&0xFFu:0xFFu,mx=0,my=0,mo=performance.outfit<MOUTH_OUTFIT_COUNT?performance.outfit:0u;
+    if(mv!=0xFFu){f=SF_NEUTRAL;mouth_box(&mx,&my);if(mv>=MOUTH_COUNT)mv=0;}
     cv_oy=0;
     for(r0=sy;r0<sy+h;r0+=cr){
         uint32_t nr=sy+h-r0<cr?sy+h-r0:cr;
@@ -732,11 +741,20 @@ static void face_draw(uint32_t f,uint32_t sx,uint32_t sy,uint32_t w,uint32_t h){
         for(r=0;r<nr;r++){
             uint16_t *o=cv_px+r*2u*2u*w;
             int32_t hh=hw[2u*(r0+r)];
-            if(!spr_decode_row(WD_OUTFITS[performance.outfit].faces,f,r0+r,row,sizeof row))return;
+            uint32_t y=r0+r,in=mv!=0xFFu&&y>=my&&y<my+MOUTH_H;
+            if(!spr_decode_row(WD_OUTFITS[performance.outfit].faces,f,y,row,sizeof row))return;
+            if(in){
+                for(k=MOUTH_CLEAN_OFFSETS[mo];k<MOUTH_CLEAN_OFFSETS[mo+1u];k++){
+                    uint32_t at=MOUTH_CLEAN_PIXELS[2u*k];
+                    if(at/MOUTH_W==y-my)row[mx+at%MOUTH_W]=MOUTH_CLEAN_PIXELS[2u*k+1u];
+                }
+                if(!spr_decode_row(&MOUTH_ATLAS,mv,y-my,mrow,sizeof mrow))in=0;
+            }
             for(c=0;c<w;c++){
                 uint32_t x=sx+c,i=row[x];
                 int32_t dx=(int32_t)(2u*x)-89;
                 uint16_t p=i?pw[i]:((dx<0?-dx:dx)<=hh?c_disc:c_bg);
+                if(in&&x>=mx&&x<mx+MOUTH_W&&mrow[x-mx])p=mpw[mrow[x-mx]];
                 o[2u*c]=o[2u*c+1u]=p;
             }
             for(k=0;k<2u*w;k++)o[2u*w+k]=o[k];
@@ -746,7 +764,11 @@ static void face_draw(uint32_t f,uint32_t sx,uint32_t sy,uint32_t w,uint32_t h){
 }
 static void face_set(uint32_t f){
     uint32_t a=face_cur,x0,y0,x1,y1;
-    const uint8_t *p=WD_OUTFITS[performance.outfit].face_dirty+4u*a,*q=WD_OUTFITS[performance.outfit].face_dirty+4u*f;
+    uint8_t pm[4],qm[4];                                    /* a mouth picture's dirty box: the mouth rect */
+    const uint8_t *p,*q;
+    {uint32_t mx,my;mouth_box(&mx,&my);pm[0]=qm[0]=(uint8_t)mx;pm[1]=qm[1]=(uint8_t)my;pm[2]=qm[2]=MOUTH_W;pm[3]=qm[3]=MOUTH_H;}
+    p=a&FACE_MOUTH?pm:WD_OUTFITS[performance.outfit].face_dirty+4u*a;
+    q=f&FACE_MOUTH?qm:WD_OUTFITS[performance.outfit].face_dirty+4u*f;
     if(f==a)return;
     face_cur=f;
     if(page)return;
@@ -763,12 +785,15 @@ static void face_update(void){
     static uint32_t lip_until;
     uint32_t now=fm1_ms,m=en.mouth,w;
     if(m==5u && en.level>=6u)lip_until=now+70u;              /* lips shut while sounding (m b p closure, the n hum): hold so a 40 ms face update sees it */
+    if(en.eng&&en.vis==FVV_MBP)lip_until=now+70u;
     /* Sample lips on the fixed clock even when the sprite stays unchanged.
        Short consonant closures above are still latched between presentation ticks. */
     if(now-face_ms<40u)return;
     face_ms=now-(now-face_ms)%40u;
     if((int32_t)(now-happy_until)<0)w=SF_HAPPY;
+    else if(en.eng&&(int32_t)(now-lip_until)<0)w=FACE_MOUTH|FVV_MBP;
     else if((int32_t)(now-lip_until)<0)w=SF_N;
+    else if(en.eng&&en.vis!=FVV_REST)w=FACE_MOUTH|en.vis;  /* English: the shared mouth pictures */
     else if(m<5u)w=en.level>=100u?vf[m]:SF_N;
     else if((int32_t)(now-blink_until)<0)w=SF_BLINK;
     else if((int32_t)(now-next_blink)>=0){
@@ -779,6 +804,7 @@ static void face_update(void){
 static void stage_init(void){
     uint32_t i,v,h;
     for(i=0;i<16;i++){pw[i]=swap16(WD_OUTFITS[performance.outfit].face_palette[i]);dpw[i]=swap16(WD_OUTFITS[performance.outfit].stage_palette[i]);}
+    for(i=0;i<sizeof MOUTH_PAL/sizeof MOUTH_PAL[0];i++)mpw[i]=swap16(MOUTH_PAL[i]);
     c_bg=swap16(RGB(12,20,40));c_disc=swap16(RGB(40,66,120));
     for(i=0;i<2u*SINGER_FACE_H;i++){        /* half-width of a disc (r=90) behind the head, per output row */
         int32_t dy=(int32_t)i-90;

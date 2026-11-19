@@ -21,6 +21,12 @@ Status words: **emulator** = checked in fm1-emu on the real package; **hardware*
 | Demo song 「おとのはこ」 (intro, verse, chorus, outro) | emulator |
 | GEN page: song generator (4 styles, key, major/minor, seed, track locks, new phrase, keep/drop a take); writes ordinary editable patterns | emulator |
 | Host render of the demo through the same engine code (`song_render`) | host |
+| English singing (0.9): CHIMERA's English front end (built-in dictionary, letter-to-sound, syllables) in integer C; English vowel shapes, onset clusters, codas and diphthongs in fvoice; Japanese output bit-identical to 0.8 | host, emulator |
+| Songs with English (MKS2 v6: a per-song syllable table); songs without English still saved as v4/v5 | host, emulator |
+| PHRASE page: 64-phrase bank in flash, a syllable per key / MIDI note, place into the song, typing editor | emulator |
+| Shared mouth overlay (12 visemes) for English and Japanese lip-sync on every outfit | host (pixel-exact), emulator |
+| Miku SysEx (0x7D): phrase read/write, bank list, song upload (C and JavaScript, cross-checked) | host |
+| Web editor (site/editor.html): offline single file, full CMUdict, piano roll, real-voice preview (WASM), USB, MIDI/KAR import | host |
 | Own identity FM-1_39XXYYZZ, own store magic | built |
 | Dinghy platform: USB/TRS MIDI, USB audio, USB rescue, update loader | from Dinghy; not checked with Miku-FM |
 

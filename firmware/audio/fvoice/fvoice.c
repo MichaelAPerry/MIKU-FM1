@@ -47,7 +47,7 @@ static void ramp(int32_t *x, int32_t *s, int32_t t, int32_t k) {   /* x -> t eas
     if (d > -32 && d < 32) { *x = t; e = 0; } else if (!e) e = d > 0 ? 1 : -1;
     *s = e;
 }
-static void pop(FvVoice *v, uint8_t *q, uint8_t *n) {   /* the next queued consonant class becomes the current one */
+static void fv_pop(FvVoice *v, uint8_t *q, uint8_t *n) {   /* the next queued consonant class becomes the current one */
     v->cons = q[0]; v->cph = 0;
     for (int i = 1; i < *n; i++) q[i - 1] = q[i];
     (*n)--;
@@ -59,15 +59,15 @@ static void enter(FvVoice *v) {                 /* load phase v->cph of class v-
     for (;;) {
         const uint8_t *r = v->cph < FV_NPH && v->cons < FV_NCLS ? CPH(v->cons, v->cph) : 0;
         if (r && r[0]) {
-            if (v->oqn && r[2] >> 3 & 1) { pop(v, v->oq, &v->oqn); continue; }      /* a cluster: the next onset, not the vowel */
-            if (v->kqn && r[0] == 255) { pop(v, v->kq, &v->kqn); continue; }        /* a coda cluster: on to the next */
+            if (v->oqn && r[2] >> 3 & 1) { fv_pop(v, v->oq, &v->oqn); continue; }      /* a cluster: the next onset, not the vowel */
+            if (v->kqn && r[0] == 255) { fv_pop(v, v->kq, &v->kqn); continue; }        /* a coda cluster: on to the next */
             p = r; q = CPN(v->cons, v->cph); v->cleft = p[0];
             if (p[0] != 255 && v->cscale != 100) { int32_t n = (p[0] * v->cscale + 50) / 100; v->cleft = (uint8_t)(n < 1 ? 1 : n > 254 ? 254 : n); }
             if (v->coda && p[0] == 255) { v->gated = 0; v->coda = 0; }               /* the coda's held end: release */
             break;
         }
-        if (v->oqn) { pop(v, v->oq, &v->oqn); continue; }
-        if (v->kqn) { pop(v, v->kq, &v->kqn); continue; }
+        if (v->oqn) { fv_pop(v, v->oq, &v->oqn); continue; }
+        if (v->kqn) { fv_pop(v, v->kq, &v->kqn); continue; }
         if (v->coda) { v->gated = 0; v->coda = 0; }
         v->cons = 0; break;
     }
@@ -89,9 +89,9 @@ void fv_init(FvVoice *v) {
     load(v, 1, 0);
 }
 void fv_set_vowel(FvVoice *v, uint8_t vw) { v->vowel = vw > FV_O ? FV_O : vw; v->vsh = v->vowel; v->vsh2 = 255; v->dgl = 0; }
-#define DGL_BLK 413             /* a diphthong glides to its second shape 150 ms after the vowel starts (or at the coda) */
-#define KM_GLIDE 25             /* its morph: tau ~60 ms (4096 * (1 - exp(-block / 60 ms))) */
-static void start(FvVoice *v, uint8_t note, uint8_t cons, uint8_t vel) {
+#define FV_DGL_BLK 413             /* a diphthong glides to its second shape 150 ms after the vowel starts (or at the coda) */
+#define FV_KM_GLIDE 25             /* its morph: tau ~60 ms (4096 * (1 - exp(-block / 60 ms))) */
+static void fv_start(FvVoice *v, uint8_t note, uint8_t cons, uint8_t vel) {
     int32_t n = (int32_t)(note > 127 ? 127 : note) + v->transpose;
     int32_t p = fv_notep[clampi(n, 0, 127)];
     int sounding = v->gated || v->env > 0;
@@ -116,48 +116,48 @@ static void start(FvVoice *v, uint8_t note, uint8_t cons, uint8_t vel) {
     v->ptgt = p; v->gated = 1;
 }
 void fv_note_on_mora(FvVoice *v, uint8_t note, uint8_t cons, uint8_t vw, uint8_t vel) {
-    fv_set_vowel(v, vw); v->oqn = 0; start(v, note, cons, vel);
+    fv_set_vowel(v, vw); v->oqn = 0; fv_start(v, note, cons, vel);
 }
 void fv_note_on(FvVoice *v, uint8_t note, uint8_t vw, uint8_t vel) { fv_note_on_mora(v, note, FC_NONE, vw, vel); }
-static uint8_t ep_on(uint8_t e) { return e < FV_NEP ? fv_epon[e] : 0; }
-static uint8_t ep_co(uint8_t e) { return e < FV_NEP ? fv_epco[e] : 0; }
+static uint8_t fv_ep_on(uint8_t e) { return e < FV_NEP ? fv_epon[e] : 0; }
+static uint8_t fv_ep_co(uint8_t e) { return e < FV_NEP ? fv_epco[e] : 0; }
 void fv_note_on_syl(FvVoice *v, uint8_t note, const FvSyl *s, uint8_t vel) {
     uint8_t sh = s->v < FV_NEP ? fv_epv[s->v] : 255, c[3], n = 0;
     if (sh == 255) sh = fv_epv[FV_EP_AX];                  /* no vowel (a syllabic consonant): a schwa carries it */
     v->vsh = sh; v->vowel = fv_shcls[sh];
-    v->vsh2 = s->v < FV_NEP ? fv_epv2[s->v] : 255; v->dgl = v->vsh2 != 255 ? DGL_BLK : 0;
-    for (int i = 0; i < 3; i++) { uint8_t k = ep_on(s->on[i]); if (k) c[n++] = k; }
+    v->vsh2 = s->v < FV_NEP ? fv_epv2[s->v] : 255; v->dgl = v->vsh2 != 255 ? FV_DGL_BLK : 0;
+    for (int i = 0; i < 3; i++) { uint8_t k = fv_ep_on(s->on[i]); if (k) c[n++] = k; }
     v->oqn = 0;
     for (int i = 1; i < n; i++) v->oq[v->oqn++] = c[i];
-    start(v, note, n ? c[0] : FC_NONE, vel);
+    fv_start(v, note, n ? c[0] : FC_NONE, vel);
 }
-static void glide(FvVoice *v) {                 /* a diphthong's second shape */
-    if (v->vsh2 != 255) { v->vsh = v->vsh2; v->vowel = fv_shcls[v->vsh]; v->vsh2 = 255; if (!v->cons) v->km = KM_GLIDE; }
+static void fv_glide(FvVoice *v) {                 /* a diphthong's second shape */
+    if (v->vsh2 != 255) { v->vsh = v->vsh2; v->vowel = fv_shcls[v->vsh]; v->vsh2 = 255; if (!v->cons) v->km = FV_KM_GLIDE; }
     v->dgl = 0;
 }
 void fv_note_off_syl(FvVoice *v, const FvSyl *s) {
     uint8_t c[4], n = 0;
-    for (int i = 0; i < 4; i++) { uint8_t k = ep_co(s->co[i]); if (k) c[n++] = k; }
+    for (int i = 0; i < 4; i++) { uint8_t k = fv_ep_co(s->co[i]); if (k) c[n++] = k; }
     if (!v->gated) return;
-    glide(v);
+    fv_glide(v);
     if (!n) { v->gated = 0; return; }
     v->oqn = 0; v->kqn = 0;
     for (int i = 1; i < n; i++) v->kq[v->kqn++] = c[i];
     v->coda = 1; v->cons = c[0]; v->cph = 0; enter(v);
 }
-static uint32_t blocks_ms(uint32_t b) { return (b * FV_BLK * 1000 + 22050) / 44100; }
+static uint32_t fv_blocks_ms(uint32_t b) { return (b * FV_BLK * 1000 + 22050) / 44100; }
 uint32_t fv_syl_onset_ms(const FvSyl *s) {
     uint32_t t = 0;
-    for (int i = 0; i < 3; i++) { uint8_t k = ep_on(s->on[i]); if (k) t += fv_cons_ms(k); }
+    for (int i = 0; i < 3; i++) { uint8_t k = fv_ep_on(s->on[i]); if (k) t += fv_cons_ms(k); }
     return t;
 }
 uint32_t fv_syl_coda_ms(const FvSyl *s) {
     uint32_t b = 0;
     for (int i = 0; i < 4; i++) {
-        uint8_t k = ep_co(s->co[i]);
+        uint8_t k = fv_ep_co(s->co[i]);
         for (int j = 0; k && j < FV_NPH; j++) { const uint8_t *p = CPH(k, j); if (!p[0] || p[0] == 255) break; b += p[0]; }
     }
-    return blocks_ms(b);
+    return fv_blocks_ms(b);
 }
 uint32_t fv_cons_ms(uint8_t cons) {
     uint32_t b = 0;
@@ -166,13 +166,13 @@ uint32_t fv_cons_ms(uint8_t cons) {
         if (!p[0] || p[0] == 255 || p[2] >> 3 & 1) break;
         b += p[0];
     }
-    return blocks_ms(b);
+    return fv_blocks_ms(b);
 }
 void fv_note_off(FvVoice *v) { v->gated = 0; }
 static void block(FvVoice *v) {
     int32_t h = v->human;
     if (v->cons && v->cleft != 255 && !--v->cleft) { v->cph++; enter(v); }
-    if (v->dgl && !v->cons && !--v->dgl) glide(v);
+    if (v->dgl && !v->cons && !--v->dgl) fv_glide(v);
     /* deterministic slow drift / jitter / shimmer: three smoothed LFSR random walks */
     v->rng = xs(v->rng); v->dr[0] += ((int32_t)(int16_t)(v->rng >> 16) - v->dr[0]) >> 8;
     v->rng = xs(v->rng); v->dr[1] += ((int32_t)(int16_t)(v->rng >> 16) - v->dr[1]) >> 5;

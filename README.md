@@ -16,7 +16,7 @@ consonants and all, over FM chords, bass and drums. Shape her voice, write patte
 <img src="site/media/screens/library.png" width="200" alt="LIBRARY: ten song slots">
 </p>
 
-**Current release: [Miku-FM 0.8](https://github.com/MichaelAPerry/MIKU-FM1/releases/tag/v0.8)**: smooth dancing, even pose
+**Current release: [Miku-FM 0.9](https://github.com/MichaelAPerry/MIKU-FM1/releases/tag/v0.9)**, the English release: smooth dancing, even pose
 heights across all outfits, user DX7 voice names and a sustain pedal for every sound, on top of 0.7's six-operator DX7 engine,
 DX7 cartridge import, MIDI keyboard input, 10-song library, lyrics editing and 12 stage outfits.
 
@@ -25,7 +25,7 @@ real firmware package; the installer works in Chrome or Edge over USB).
 
 ### Quick start
 
-1. Open the [website](https://michaelaperry.github.io/MIKU-FM1/), connect the FM-1 by USB and press **Install 0.8** (Chrome or Edge).
+1. Open the [website](https://michaelaperry.github.io/MIKU-FM1/), connect the FM-1 by USB and press **Install 0.9** (Chrome or Edge).
 2. Press **PLAY**: she sings. **HOME** steps through STAGE, DANCE, SONG, PATTERN, MIXER, GEN, LYRICS, PHRASE, LOOK, LIBRARY and DX7 BANK.
 3. Load your own DX7 sounds: open the [DX7 bank tool](https://michaelaperry.github.io/MIKU-FM1/bank.html), pick a `.syx`, send it,
    and press **REC** on the FM-1 within 10 seconds. Sending a cartridge from Dexed over USB works too.
@@ -34,7 +34,7 @@ real firmware package; the installer works in Chrome or Edge over USB).
 - **Her voice:** a formant voice synthesised live (no samples): 73 Japanese mora selections with their consonants, five characters
   from DEEP to TINY, languages (Japanese, animal babble, scat, vowels), tension, fry, whisper, a harmony voice, vowels on
   the beat; chorus, delay, reverb, drive, tremolo. Every knob shows a picture of what it does.
-- **English and the phrase bank (0.9, in development):** English words through CHIMERA's English front end (a built-in
+- **English and the phrase bank (new in 0.9):** English words through CHIMERA's English front end (a built-in
   dictionary and spelling rules, ported to integer C) sung by the same formant voice, with consonant clusters, word endings
   and gliding vowels. PHRASE keeps 64 phrases on the FM-1: each key or MIDI note sings the next syllable (a DAW track
   becomes Miku's lyric track), REC places a phrase into the song, and you can type words on the keys. The
@@ -51,10 +51,10 @@ real firmware package; the installer works in Chrome or Edge over USB).
 - **MIDI keyboard (0.7):** USB or TRS notes play the current track; the sustain pedal holds every sound, pitch bend works on DX7 voices.
 - **Songs and stage (0.7):** 10 song slots with a LIBRARY page and four Japanese folk songs ready in slots 1 to 4; a LYRICS page to
   edit the sung syllables; per-song LOOK with 12 outfits, backgrounds, frames and stage effects. Her face mouths every vowel on
-  STAGE; on DANCE she dances to the song. USB video output is not in 0.8 (experimental, coming later).
+  STAGE; on DANCE she dances to the song. USB video output is not included yet (experimental, coming later).
 - **Guide:** [docs/MANUAL.md](docs/MANUAL.md) (also the website's [guide page](https://michaelaperry.github.io/MIKU-FM1/guide.html)),
   every control: [docs/CONTROLS.md](docs/CONTROLS.md), what is measured: [docs/VALIDATION.md](docs/VALIDATION.md).
-- **Status:** 0.8 is a release built and attested on GitHub and booted in the fm1-emu emulator. Earlier versions run on real
+- **Status:** 0.9 (English singing, the phrase bank and the web editor) is the current release. 0.8 was built and attested on GitHub and booted in the fm1-emu emulator. Earlier versions run on real
   FM-1s. Not yet tried on a real FM-1: DX7 SysEx over USB with Dexed and the bank tool, and MIDI keyboard input.
 - **Other firmwares' data:** Miku-FM does not read other firmwares' projects or samples (see below). Back up first.
 - **Licence:** code GPL-3.0-only; the singer is Hatsune Miku fan art under Crypton's Piapro Character License (free and
